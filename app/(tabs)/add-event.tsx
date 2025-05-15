@@ -1,12 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
   Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext'; // Assuming similar theme context
 
@@ -73,6 +77,9 @@ const TransactionAdder = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [amount, setAmount] = useState('0');
   const [currency, setCurrency] = useState('USD');
+  const [description, setDescription] = useState('');
+  const amountInputRef = useRef<TextInput>(null);
+
 
   const handleCategoryPress = (category: Category) => {
     setSelectedCategory(category);
@@ -80,14 +87,20 @@ const TransactionAdder = () => {
   };
 
   const handleConfirm = () => {
-    // Here you would handle the transaction data
-    console.log({
-      account: selectedAccount,
-      category: selectedCategory,
-      amount: amount,
-      currency: currency,
-    });
-    setModalVisible(false);
+    if (amount) {
+      console.log({
+        account: selectedAccount,
+        category: selectedCategory,
+        amount,
+        currency,
+        description,
+      });
+
+      // Reset modal state
+      setModalVisible(false);
+      setAmount('');
+      setDescription('');
+    }
   };
 
   const renderCategories = () => {
@@ -95,15 +108,15 @@ const TransactionAdder = () => {
     for (let i = 0; i < categories.length; i += 3) {
       const rowItems = categories.slice(i, i + 3);
       rows.push(
-        <View key={`row-${i}`} className="flex-row justify-start mb-4">
+        <View key={`row-${i}`} className="flex-row justify-start mb-5">
           {rowItems.map((category) => (
             <TouchableOpacity
               key={category.id}
-              className="w-[30%] items-center mr-[5%]"
+              className="w-[32%] items-center mr-[1%]"
               onPress={() => handleCategoryPress(category)}
             >
               <View 
-                className="w-16 h-16 rounded-lg justify-center items-center mb-2" 
+                className="w-20 h-20 rounded-3xl justify-center items-center mb-2" 
                 style={{ backgroundColor: category.color }}
               >
                 <Ionicons name={categoryIcons[category.name] as any} size={24} color="white" />
@@ -120,7 +133,7 @@ const TransactionAdder = () => {
   };
 
   return (
-    <SafeAreaView className={isDarkMode ? "flex-1 bg-[#121212]" : "flex-1 bg-white"}>
+    <SafeAreaView className={isDarkMode ? "flex-1 bg-[#0A0F1F]" : "flex-1 bg-white"}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <View className="flex-row justify-between items-center px-4 py-3">
         <TouchableOpacity className="p-2">
@@ -152,7 +165,7 @@ const TransactionAdder = () => {
             className={`px-4 py-2 rounded-2xl mr-2 ${
               selectedAccount === account.name
                 ? isDarkMode ? 'bg-blue-600' : 'bg-[#E4E4E4]' 
-                : isDarkMode ? 'bg-[#252525]' : 'bg-gray-200'
+                : isDarkMode ? "bg-gray-800 border-gray-600" : "bg-white border-gray-300"
             }`}
             onPress={() => setSelectedAccount(account.name)}
           >
@@ -170,11 +183,71 @@ const TransactionAdder = () => {
       </ScrollView>
 
       {/* Categories grid */}
-      <View className="flex-1 px-4 pt-4">
+      <ScrollView className="flex-1 px-4 pt-4">
         {renderCategories()}
-      </View>
+      </ScrollView>
 
-     
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+        onShow={() => {
+          amountInputRef.current?.focus(); 
+        }}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          className="flex-1 justify-end"
+        >
+          <View className="bg-white dark:bg-[#1E1E1E] p-5 rounded-t-3xl">
+            <Text className="text-lg font-semibold text-center mb-4 text-black dark:text-white">
+              Add transaction for {selectedCategory?.name}
+            </Text>
+
+            <TextInput
+              ref={amountInputRef}
+              keyboardType="numeric"
+              placeholder="Enter amount"
+              placeholderTextColor={isDarkMode ? "#aaa" : "#888"}
+              value={amount}
+              onChangeText={setAmount}
+              className="border dark:border-gray-600 border-gray-300 rounded-xl px-4 py-5 mb-3 text-black dark:text-white text-3xl font-semibold text-center"
+            />
+
+            <TextInput
+              placeholder="Enter description (optional)"
+              placeholderTextColor={isDarkMode ? "#aaa" : "#888"}
+              value={description}
+              maxLength={200}
+              onChangeText={setDescription}
+              className="border dark:border-gray-600 border-gray-300 rounded-xl p-3 mb-4 text-black dark:text-white text-center"
+            />
+            <Text className="text-right text-xs mb-3 text-gray-500 dark:text-gray-400">
+              {description.length}/200
+            </Text>
+
+            <View className="flex-row justify-between">
+              <TouchableOpacity
+                className="flex-1 py-3 mr-2 rounded-xl border border-gray-400 dark:border-gray-600"
+                onPress={() => {
+                  setModalVisible(false); 
+                  setAmount('');
+                  setDescription('');}}
+              >
+                <Text className="text-center text-black dark:text-white">Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-1 py-3 ml-2 rounded-xl bg-blue-600"
+                onPress={handleConfirm}
+              >
+                <Text className="text-center text-white font-semibold">Enter</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
