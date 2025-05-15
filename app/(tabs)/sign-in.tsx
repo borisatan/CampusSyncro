@@ -85,25 +85,25 @@ const SignIn = () => {
         </View>
 
         {/* Divider */}
-        {/* <View className="flex-row items-center my-6">
+        <View className="flex-row items-center my-6">
           <View className={isDarkMode ? 'flex-1 h-px bg-gray-600' : 'flex-1 h-px bg-gray-300'} />
           <Text className={isDarkMode ? 'mx-4 text-sm text-gray-400' : 'mx-4 text-sm text-gray-600'}>
             Or continue with
           </Text>
           <View className={isDarkMode ? 'flex-1 h-px bg-gray-600' : 'flex-1 h-px bg-gray-300'} />
-        </View> */}
+        </View>
 
         {/* Google Sign In Button */}
-        {/* <TouchableOpacity
+        <TouchableOpacity
             className={`flex-row items-center justify-center p-3 rounded-lg border ${
               isDarkMode 
                 ? "bg-gray-800 border-gray-600" 
                 : "bg-white border-gray-300"
             }`}
           >
-            <Image source={icons.google} className="w-5 h-5 mr-2" resizeMode="contain" />
+            {/* <Image source={icons.google} className="w-5 h-5 mr-2" resizeMode="contain" /> */}
             <Text className={isDarkMode ? "text-sm font-semibold text-gray-200" : "text-sm font-semibold text-gray-900"}>Sign in with Google</Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
 
         {/* Sign Up Link */}
         <View className="flex-row justify-center mt-6">
