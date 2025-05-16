@@ -30,7 +30,7 @@ export default function RootLayout() {
           }}
         />
           <Tabs.Screen
-            name="add-event"
+            name="add-transaction"
             options={{
               title: "Add",
               tabBarIcon: ({ color, size }) => (

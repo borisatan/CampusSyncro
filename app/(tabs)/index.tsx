@@ -7,7 +7,8 @@ export default function Index() {
       <Text className="text-7xl font-bold text-secondary">Welcome.</Text>
       <Link href="/settings" className="text-primary">Settings</Link>
       <Link href="/dashboard" className="text-primary">Dashboard</Link>
-      <Link href="/add-event" className="text-primary">Add Event</Link>
+      <Link href="/add-transaction" className="text-primary">Add Event</Link>
+      <Link href="/transaction-list" className="text-primary">Transactions</Link>
     </View>
   );
 }
