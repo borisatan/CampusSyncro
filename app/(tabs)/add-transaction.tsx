@@ -75,7 +75,7 @@ const TransactionAdder = () => {
   const [selectedAccount, setSelectedAccount] = useState('Credit Card');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [amount, setAmount] = useState('0');
+  const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [description, setDescription] = useState('');
   const amountInputRef = useRef<TextInput>(null);
