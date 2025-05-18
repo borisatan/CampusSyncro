@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import DateRangeSelector from "../components/date-selector";
 import { useTheme } from "../context/ThemeContext";
 
 //  Types
@@ -79,7 +80,7 @@ const sampleTransactions: Transaction[] = [
   },
 ];
 
-//  Utility to group by date
+// Groups transactions by their date property to form sections for SectionList.
 const groupTransactionsByDate = (
   transactions: Transaction[]
 ): TransactionSection[] => {
@@ -103,12 +104,10 @@ const TransactionsScreen: React.FC = () => {
     route.params?.category || null
   );
   const [filterAccounts, setFilterAccounts] = useState<string[]>([]);
-  const [filterDate, setFilterDate] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showAccountSelector, setShowAccountSelector] = useState(false);
-
+  // Apply all active filters to the sample transactions data.
   const filteredTransactions = sampleTransactions.filter((tx) => {
     const matchesCategory = filterCategory
       ? tx.category === filterCategory
@@ -118,10 +117,20 @@ const TransactionsScreen: React.FC = () => {
     const matchesSearch =
       tx.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.account.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDate = filterDate ? tx.date === filterDate : true;
+    
+    const matchesDate = dateRange
+      ? new Date(tx.date) >= new Date(dateRange.start) &&
+        new Date(tx.date) <= new Date(dateRange.end)
+      : true;
 
     return matchesCategory && matchesAccount && matchesSearch && matchesDate;
   });
+
+  const handleResetFilters = () => {
+    setDateRange(null);
+    setFilterAccounts([]);
+    setIsFilterVisible(false);
+  };
 
   const sections: TransactionSection[] =
     groupTransactionsByDate(filteredTransactions);
@@ -130,6 +139,7 @@ const TransactionsScreen: React.FC = () => {
     <SafeAreaView
       className={isDarkMode ? "flex-1 bg-[#1F2937]" : "flex-1 bg-white"}
     >
+      {/* SectionList showing transactions grouped by date, with header formatting.  */}
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -156,151 +166,10 @@ const TransactionsScreen: React.FC = () => {
                   className="ml-2 text-black dark:text-white flex-1"
                 />
               </View>
-              <Modal
-                visible={isFilterVisible}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setIsFilterVisible(false)}
-              >
-                <TouchableWithoutFeedback onPress={() => setIsFilterVisible(false)}>
-                  <View className="flex-1" />
-                </TouchableWithoutFeedback>
-                <KeyboardAvoidingView
-                  behavior={Platform.OS === "ios" ? "padding" : undefined}
-                  className="flex-1 justify-end"
-                >
-                  <View className="bg-white dark:bg-[#1E1E1E] p-5 rounded-t-3xl w-full">
-                    <Text className="text-lg font-semibold text-center mb-4 text-black dark:text-white">
-                      Filter Transactions
-                    </Text>
-
-                    <TouchableOpacity
-                      onPress={() => setShowDatePicker(true)} // Placeholder for date picker logic
-                      className="border dark:border-gray-600 border-gray-300 rounded-xl px-4 py-3 mb-3"
-                    >
-                      <Text
-                        className={`text-base ${
-                          isDarkMode ? "text-white" : "text-black"
-                        }`}
-                      >
-                        {filterDate || "Select date"}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Account Selector Section */}
-                    <View className="mb-6">
-                      <View className="flex-row justify-between items-center mb-3">
-                        <Text
-                          className={`text-base font-semibold ${
-                            isDarkMode ? "text-white" : "text-black"
-                          }`}
-                        >
-                          Select account(s)
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => {
-                            if (filterAccounts.length === 3) {
-                              setFilterAccounts([]);
-                            } else {
-                              setFilterAccounts(["Visa", "Revolut", "Bank"]);
-                            }
-                          }}
-                        >
-                          <Text
-                            className={`text-sm font-semibold ${
-                              isDarkMode ? "text-blue-400" : "text-blue-600"
-                            }`}
-                          >
-                            {filterAccounts.length === 3
-                              ? "Deselect All"
-                              : "Select All"}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {/* Account Grid */}
-                      <View className="flex flex-wrap flex-row -mx-2">
-                        {["Visa", "Revolut", "Bank"].map((account) => {
-                          const isSelected = filterAccounts.includes(account);
-
-                          return (
-                            <TouchableOpacity
-                              key={account}
-                              onPress={() => {
-                                if (isSelected) {
-                                  setFilterAccounts((prev) =>
-                                    prev.filter((a) => a !== account)
-                                  );
-                                } else {
-                                  setFilterAccounts((prev) => [...prev, account]);
-                                }
-                              }}
-                              className="w-1/2 px-2 mb-4"
-                            >
-                              <View
-                                className={`flex-row items-center p-3 border rounded-xl dark:border-gray-600 border-gray-300 ${
-                                  isSelected ? "bg-blue-600" : ""
-                                }`}
-                              >
-                                <View
-                                  className={`w-5 h-5 mr-3 rounded border flex items-center justify-center ${
-                                    isSelected
-                                      ? "bg-white border-white"
-                                      : "border-gray-400 dark:border-gray-600"
-                                  }`}
-                                >
-                                  {isSelected && (
-                                    <Ionicons
-                                      name="checkmark"
-                                      size={16}
-                                      color={isSelected ? "#2563EB" : "#FFF"}
-                                    />
-                                  )}
-                                </View>
-                                <Text
-                                  className={`${
-                                    isDarkMode ? "text-white" : "text-black"
-                                  }`}
-                                >
-                                  {account}
-                                </Text>
-                              </View>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    </View>
-
-                    <View className="flex-row justify-between">
-                      <TouchableOpacity
-                        className="flex-1 py-3 mr-2 rounded-xl border border-gray-400 dark:border-gray-600"
-                        onPress={() => {
-                          setFilterDate(null);
-                          setFilterAccounts([]);
-                          setIsFilterVisible(false);
-                        }}
-                      >
-                        <Text className="text-center text-black dark:text-white">
-                          Reset
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        className="flex-1 py-3 ml-2 rounded-xl bg-blue-600"
-                        onPress={() => setIsFilterVisible(false)}
-                      >
-                        <Text className="text-center text-white font-semibold">
-                          Apply
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </KeyboardAvoidingView>
-              </Modal>
 
               <TouchableOpacity
                 className="p-2 rounded-full bg-[#E5E7EB] dark:bg-[#374151]"
-                onPress={() => setIsFilterVisible(!isFilterVisible)}
+                onPress={() => setIsFilterVisible(true)}
               >
                 <Ionicons
                   name="filter"
@@ -352,6 +221,149 @@ const TransactionsScreen: React.FC = () => {
         )}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
       />
+
+      {/* Filter Modal */}
+      <Modal
+        visible={isFilterVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsFilterVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setIsFilterVisible(false)}>
+          <View className="flex-1" />
+        </TouchableWithoutFeedback>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1 justify-end"
+        >
+          <View className="bg-white dark:bg-[#1E1E1E] p-5 rounded-t-3xl w-full">
+            <Text className="text-lg font-semibold text-center mb-4 text-black dark:text-white">
+              Filter Transactions
+            </Text>
+
+            {/* Date Range Selector */}
+            <View className="mb-6">
+              <Text className={`text-base font-semibold mb-3 ${
+                isDarkMode ? "text-white" : "text-black"
+              }`}>
+                Date Range
+              </Text>
+              <DateRangeSelector
+                currentRange={dateRange}
+                onDateRangeSelect={(start, end) => {
+                  setDateRange({ start, end });
+                }}
+              />
+            </View>
+
+            {/* Account Selector Section */}
+            <View className="mb-6">
+              <View className="flex-row justify-between items-center mb-3">
+                <Text
+                  className={`text-base font-semibold ${
+                    isDarkMode ? "text-white" : "text-black"
+                  }`}
+                >
+                  Select account(s)
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (filterAccounts.length === 3) {
+                      setFilterAccounts([]);
+                    } else {
+                      setFilterAccounts(["Visa", "Revolut", "Bank"]);
+                    }
+                  }}
+                >
+                  <Text
+                    className={`text-sm font-semibold ${
+                      isDarkMode ? "text-blue-400" : "text-blue-600"
+                    }`}
+                  >
+                    {filterAccounts.length === 3
+                      ? "Deselect All"
+                      : "Select All"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Account Grid */}
+              <View className="flex flex-wrap flex-row -mx-2">
+                {["Visa", "Revolut", "Bank"].map((account) => {
+                  const isSelected = filterAccounts.includes(account);
+
+                  return (
+                    <TouchableOpacity
+                      key={account}
+                      onPress={() => {
+                        if (isSelected) {
+                          setFilterAccounts((prev) =>
+                            prev.filter((a) => a !== account)
+                          );
+                        } else {
+                          setFilterAccounts((prev) => [...prev, account]);
+                        }
+                      }}
+                      className="w-1/2 px-2 mb-4"
+                    >
+                      <View
+                        className={`flex-row items-center p-3 border rounded-xl dark:border-gray-600 border-gray-300 ${
+                          isSelected ? "bg-blue-600" : ""
+                        }`}
+                      >
+                        <View
+                          className={`w-5 h-5 mr-3 rounded border flex items-center justify-center ${
+                            isSelected
+                              ? "bg-white border-white"
+                              : "border-gray-400 dark:border-gray-600"
+                          }`}
+                        >
+                          {isSelected && (
+                            <Ionicons
+                              name="checkmark"
+                              size={16}
+                              color={isSelected ? "#2563EB" : "#FFF"}
+                            />
+                          )}
+                        </View>
+                        <Text
+                          className={`${
+                            isDarkMode ? "text-white" : "text-black"
+                          }`}
+                        >
+                          {account}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Apply and Reset Buttons */}
+            <View className="flex-row justify-between">
+              <TouchableOpacity
+                className="flex-1 py-3 mr-2 rounded-xl border border-gray-400 dark:border-gray-600"
+                onPress={handleResetFilters}
+              >
+                <Text className="text-center text-black dark:text-white">
+                  Reset
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-1 py-3 ml-2 rounded-xl bg-blue-600"
+                onPress={() => setIsFilterVisible(false)}
+              >
+                <Text className="text-center text-white font-semibold">
+                  Apply
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };

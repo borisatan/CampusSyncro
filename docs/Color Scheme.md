@@ -1,46 +1,27 @@
-Mobile Budgeting App Design Language
-Color Scheme
-Primary Colors
+🌞 Light Mode
+Token	Hex Value	Usage
+primary	#2A9D8F	Accent color for buttons, links
+secondary	#E9C46A	Secondary accents and highlights
+background	#FAFAFA	App background
+surface	#FFFFFF	Cards, inputs, modals
+text-primary	#212121	Main body and title text
+text-secondary	#5F6368	Subtext, labels
+text-muted	#9E9E9E	Disabled text, placeholders
+border	#E0E0E0	Dividers, input outlines
+success	#43A047	Positive indicators, income
+warning	#FB8C00	Warnings, overspending
+error	#E53935	Errors, failed actions
 
-Navy Blue (Primary): #1E3A8A
-Royal Blue (Secondary): #1E40AF
-Success Green: #059669
-Warning Orange: #D97706
-Error Red: #DC2626
-
-Neutral Colors
-
-White: #FFFFFF
-Light Gray: #F3F4F6
-Medium Gray: #9CA3AF
-Dark Gray: #4B5563
-Black: #1F2937
-
-Theme Implementation
-Light Mode
-
-Background: White (#FFFFFF)
-Surface: Light Gray (#F3F4F6)
-Primary: Navy Blue (#1E3A8A)
-Secondary Actions: Royal Blue (#1E40AF)
-Text Primary: Black (#1F2937)
-Text Secondary: Dark Gray (#4B5563)
-
-Dark Mode
-
-Background: Black (#0A0F1F) #0A0F1F
-Surface: Dark Gray (#4B5563)
-Primary: Royal Blue (#1E40AF)
-Secondary Actions: Navy Blue (#1E3A8A) with increased luminosity
-Text Primary: White (#FFFFFF)
-Text Secondary: Light Gray (#F3F4F6)
-
-
-
-Selection States for Clickable Elements
-
-Selected - Light Mode: #E4E4E4 (Light gray)
-Selected - Dark Mode: #2563EB (Blue-600)
-Unselected - Light Mode: #FFFFFF (White) with #D1D5DB (Gray-300) border
-Unselected - Dark Mode: #1F2937 (Gray-800) with #4B5563 (Gray-600) border
-
+🌚 Dark Mode
+Token	Hex Value	Usage
+primary	#2A9D8F	Same as light mode (branding consistency)
+secondary	#E9C46A	Same as light mode
+background	#282A36	Main app background
+surface	#1E1E1E	Cards, inputs, modals
+text-primary	#FFFFFF	Main body and title text
+text-secondary	#BBBBBB	Subtext, labels
+text-muted	#777777	Disabled text, placeholders
+border	#2C2C2C	Dividers, outlines
+success	#66BB6A	Positive indicators, income
+warning	#FFA726	Warnings, overspending
+error	#EF5350	Errors, failed actions
