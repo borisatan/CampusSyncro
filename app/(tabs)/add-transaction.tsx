@@ -12,7 +12,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { CategoryEditModal } from '../components/cateogry-editor';
 import { useTheme } from '../context/ThemeContext'; // Assuming similar theme context
+import { Category } from "../types/types";
 
 // Define category name type for TypeScript
 type CategoryName = 'Transport' | 'Food' | 'Education' | 'Savings' | 'Travel' | 
@@ -40,12 +42,6 @@ interface AccountOption {
   selected: boolean;
 }
 
-interface Category {
-  id: number;
-  name: CategoryName;
-  icon: string;
-  color: string;
-}
 
 // Dummy account data
 const accountOptions: AccountOption[] = [
@@ -73,17 +69,29 @@ const categories: Category[] = [
 const TransactionAdder = () => {
   const { isDarkMode } = useTheme(); // Using the theme context as in your example
   const [selectedAccount, setSelectedAccount] = useState('Credit Card');
-  const [modalVisible, setModalVisible] = useState(false);
+  const [inputModalVisible, setInputModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [categoryEditModalVisible, setCategoryEditModalVisible] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [description, setDescription] = useState('');
   const amountInputRef = useRef<TextInput>(null);
 
 
+  const handleEdit = (updated: Category) => {
+    console.log('Edited category:', updated);
+    // Here you can update the categories list if it's stored in state
+  };
+
   const handleCategoryPress = (category: Category) => {
     setSelectedCategory(category);
-    setModalVisible(true);
+    if (editMode) {
+      console.log('Editing category:', category);
+      setCategoryEditModalVisible(true);
+    } else {
+      setInputModalVisible(true);
+    }
   };
 
   const handleConfirm = () => {
@@ -97,7 +105,7 @@ const TransactionAdder = () => {
       });
 
       // Reset modal state
-      setModalVisible(false);
+      setInputModalVisible(false);
       setAmount('');
       setDescription('');
     }
@@ -142,9 +150,9 @@ const TransactionAdder = () => {
         <Text className={isDarkMode ? "text-base font-semibold text-white" : "text-base font-semibold text-black"}>
           Categories
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setEditMode(!editMode)}>
           <Text className={isDarkMode ? "text-base font-medium text-white" : "text-base font-medium text-black"}>
-            Edit
+            {editMode ? "Done" : "Edit"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -188,10 +196,10 @@ const TransactionAdder = () => {
       </ScrollView>
 
       <Modal
-        visible={modalVisible}
+        visible={inputModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => setInputModalVisible(false)}
         onShow={() => {
           amountInputRef.current?.focus(); 
         }}
@@ -231,7 +239,7 @@ const TransactionAdder = () => {
               <TouchableOpacity
                 className="flex-1 py-3 mr-2 rounded-xl border border-gray-400 dark:border-gray-600"
                 onPress={() => {
-                  setModalVisible(false); 
+                  setInputModalVisible(false); 
                   setAmount('');
                   setDescription('');}}
               >
@@ -248,6 +256,13 @@ const TransactionAdder = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+      {selectedCategory && (
+        <CategoryEditModal
+        visible={categoryEditModalVisible}
+        category={selectedCategory!}
+        onSubmit={handleEdit}
+        onClose={() => setCategoryEditModalVisible(false)}
+      />)}
     </SafeAreaView>
   );
 };
