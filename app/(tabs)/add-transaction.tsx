@@ -12,13 +12,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { CategoryEditModal } from '../components/cateogry-editor';
+import { CategoryModal } from '../components/category-modal';
 import { useTheme } from '../context/ThemeContext'; // Assuming similar theme context
-import { Category } from "../types/types";
-
-// Define category name type for TypeScript
-type CategoryName = 'Transport' | 'Food' | 'Education' | 'Savings' | 'Travel' | 
-  'Health' | 'Care' | 'Home' | 'Personal' | 'Clothes' | 'Medical';
+import { Category, CategoryName } from "../types/types";
 
 // Category icons using Ionicons
 const categoryIcons: Record<CategoryName, string> = {
@@ -42,7 +38,6 @@ interface AccountOption {
   selected: boolean;
 }
 
-
 // Dummy account data
 const accountOptions: AccountOption[] = [
   { id: 1, name: 'Credit Card', selected: true },
@@ -51,8 +46,8 @@ const accountOptions: AccountOption[] = [
   { id: 4, name: 'Euro Cash', selected: false },
 ];
 
-// Dummy category data - arranged in rows of 3
-const categories: Category[] = [
+// Initial categories data
+const initialCategories: Category[] = [
   { id: 1, name: 'Transport', icon: 'bus', color: '#F9C74F' },
   { id: 2, name: 'Food', icon: 'restaurant', color: '#F94144' },
   { id: 3, name: 'Education', icon: 'school', color: '#8338EC' },
@@ -71,27 +66,17 @@ const TransactionAdder = () => {
   const [selectedAccount, setSelectedAccount] = useState('Credit Card');
   const [inputModalVisible, setInputModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [categoryEditModalVisible, setCategoryEditModalVisible] = useState(false);
-  const [editMode, setEditMode] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [description, setDescription] = useState('');
   const amountInputRef = useRef<TextInput>(null);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
 
-
-  const handleEdit = (updated: Category) => {
-    console.log('Edited category:', updated);
-    // Here you can update the categories list if it's stored in state
-  };
-
-  const handleCategoryPress = (category: Category) => {
-    setSelectedCategory(category);
-    if (editMode) {
-      console.log('Editing category:', category);
-      setCategoryEditModalVisible(true);
-    } else {
-      setInputModalVisible(true);
-    }
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setShowCategoryModal(true);
   };
 
   const handleConfirm = () => {
@@ -118,21 +103,18 @@ const TransactionAdder = () => {
       rows.push(
         <View key={`row-${i}`} className="flex-row justify-start mb-5">
           {rowItems.map((category) => (
-            <TouchableOpacity
-              key={category.id}
-              className="w-[32%] items-center mr-[1%]"
-              onPress={() => handleCategoryPress(category)}
-            >
-              <View 
-                className="w-20 h-20 rounded-3xl justify-center items-center mb-2" 
+            <View key={category.id} className="w-[32%] items-center mr-[1%]">
+              <TouchableOpacity
+                className="w-20 h-20 rounded-3xl justify-center items-center mb-2 relative"
                 style={{ backgroundColor: category.color }}
+                onPress={() => handleEditCategory(category)}
               >
                 <Ionicons name={categoryIcons[category.name] as any} size={24} color="white" />
-              </View>
+              </TouchableOpacity>
               <Text className={isDarkMode ? "text-gray-200 text-xs" : "text-gray-800 text-xs"}>
                 {category.name}
               </Text>
-            </TouchableOpacity>
+            </View>
           ))}
         </View>
       );
@@ -150,9 +132,9 @@ const TransactionAdder = () => {
         <Text className={isDarkMode ? "text-base font-semibold text-white" : "text-base font-semibold text-black"}>
           Categories
         </Text>
-        <TouchableOpacity onPress={() => setEditMode(!editMode)}>
+        <TouchableOpacity onPress={() => setShowCategoryModal(true)}>
           <Text className={isDarkMode ? "text-base font-medium text-white" : "text-base font-medium text-black"}>
-            {editMode ? "Done" : "Edit"}
+            Edit
           </Text>
         </TouchableOpacity>
       </View>
@@ -256,13 +238,28 @@ const TransactionAdder = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-      {selectedCategory && (
-        <CategoryEditModal
-        visible={categoryEditModalVisible}
-        category={selectedCategory!}
-        onSubmit={handleEdit}
-        onClose={() => setCategoryEditModalVisible(false)}
-      />)}
+
+      <CategoryModal
+        visible={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onSubmit={(category) => {
+          if (editingCategory) {
+            // Update existing category
+            const updatedCategories = categories.map((c) =>
+              c.id === category.id ? category : c
+            );
+            setCategories(updatedCategories);
+            setEditingCategory(null);
+          } else {
+            // Add new category
+            setCategories([...categories, category]);
+          }
+          setShowCategoryModal(false);
+        }}
+        mode={editingCategory ? 'edit' : 'add'}
+        category={editingCategory || undefined}
+        existingCategories={categories.map(c => c.name)}
+      />
     </SafeAreaView>
   );
 };
