@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProp } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   SafeAreaView,
@@ -13,24 +13,6 @@ import { Category } from '../types/types';
 
 // Define a more flexible type for onboarding categories
 type OnboardingCategoryName = string;
-
-interface CategorySelectionScreenProps {
-  navigation: NavigationProp<RootStackParamList, 'CategorySelection'>;
-}
-
-type RootStackParamList = {
-  CategorySelection: undefined;
-  SetBudget: {
-    selectedCategories: string[];
-    customCategories: string[];
-  };
-  AddAccounts: {
-    selectedCategories: string[];
-    customCategories: string[];
-    monthlyBudget: number;
-    usedHelpMeDecide: boolean;
-  };
-};
 
 interface CustomCategory {
   name: string;
@@ -54,7 +36,8 @@ const categoryIcons: Record<string, string> = {
   'Personal Care': 'person',
 };
 
-const CategorySelectionScreen: React.FC<CategorySelectionScreenProps> = ({ navigation }) => {
+export default function OnboardingCategories() {
+  const router = useRouter();
   const [selectedCategories, setSelectedCategories] = useState<OnboardingCategoryName[]>([]);
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
   const [showCategoryModal, setShowCategoryModal] = useState<boolean>(false);
@@ -94,9 +77,12 @@ const CategorySelectionScreen: React.FC<CategorySelectionScreenProps> = ({ navig
   ];
 
   const handleNext = (): void => {
-    navigation.navigate('SetBudget', { 
-      selectedCategories,
-      customCategories: customCategories.map(c => c.name)
+    router.push({
+      pathname: '/(onboarding)/onboarding-budget',
+      params: {
+        selectedCategories: JSON.stringify(selectedCategories),
+        customCategories: JSON.stringify(customCategories.map(c => c.name))
+      }
     });
   };
 
@@ -202,6 +188,4 @@ const CategorySelectionScreen: React.FC<CategorySelectionScreenProps> = ({ navig
       />
     </SafeAreaView>
   );
-};
-
-export default CategorySelectionScreen;
+}

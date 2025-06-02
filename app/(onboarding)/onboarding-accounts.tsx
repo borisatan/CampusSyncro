@@ -1,18 +1,18 @@
-import { NavigationProp, RouteProp } from '@react-navigation/native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
 
 interface Account {
@@ -30,27 +30,16 @@ interface NewAccount {
 
 type AccountType = 'Cash' | 'Checking' | 'Savings' | 'Credit Card' | 'Investment' | 'Other';
 
-interface AddAccountsScreenProps {
-  navigation: NavigationProp<RootStackParamList, 'AddAccounts'>;
-  route: RouteProp<RootStackParamList, 'AddAccounts'>;
-}
+export default function OnboardingAccounts() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{
+    selectedCategories?: string;
+    customCategories?: string;
+    monthlyBudget?: string;
+    usedHelpMeDecide?: string;
+    categoryBudgets?: string;
+  }>();
 
-type RootStackParamList = {
-  CategorySelection: undefined;
-  SetBudget: {
-    selectedCategories: string[];
-    customCategories: string[];
-  };
-  AddAccounts: {
-    selectedCategories: string[];
-    customCategories: string[];
-    monthlyBudget: number;
-    usedHelpMeDecide: boolean;
-    categoryBudgets?: { [key: string]: number };
-  };
-};
-
-const AddAccountsScreen: React.FC<AddAccountsScreenProps> = ({ navigation, route }) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [newAccount, setNewAccount] = useState<NewAccount>({
@@ -59,13 +48,11 @@ const AddAccountsScreen: React.FC<AddAccountsScreenProps> = ({ navigation, route
     balance: '',
   });
 
-  const { 
-    selectedCategories = [], 
-    customCategories = [], 
-    monthlyBudget = 0, 
-    usedHelpMeDecide = false,
-    categoryBudgets = {}
-  } = route?.params || {};
+  const selectedCategories = params.selectedCategories ? JSON.parse(params.selectedCategories) : [];
+  const customCategories = params.customCategories ? JSON.parse(params.customCategories) : [];
+  const monthlyBudget = params.monthlyBudget ? parseFloat(params.monthlyBudget) : 0;
+  const usedHelpMeDecide = params.usedHelpMeDecide === 'true';
+  const categoryBudgets = params.categoryBudgets ? JSON.parse(params.categoryBudgets) : {};
 
   const accountTypes: AccountType[] = [
     'Cash',
@@ -145,9 +132,9 @@ const AddAccountsScreen: React.FC<AddAccountsScreenProps> = ({ navigation, route
   };
 
   const handleNext = (): void => {
-    // Navigate to the next screen or complete setup
+    // Show completion alert
     const budgetSummary = Object.entries(categoryBudgets)
-      .map(([category, amount]) => `${category}: $${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)
+      .map(([category, amount]) => `${category}: $${(amount as number).toLocaleString('en-US', { minimumFractionDigits: 2 })}`)
       .join('\n');
 
     Alert.alert(
@@ -157,12 +144,18 @@ const AddAccountsScreen: React.FC<AddAccountsScreenProps> = ({ navigation, route
       `• $${monthlyBudget.toLocaleString('en-US', { minimumFractionDigits: 2 })} monthly budget\n` +
       `• ${accounts.length} accounts\n\n` +
       `Category Allocations:\n${budgetSummary}`,
-      [{ text: 'OK' }]
+      [{ 
+        text: 'OK',
+        onPress: () => {
+          // Navigate to home screen after setup is complete
+          router.replace('/(tabs)');
+        }
+      }]
     );
   };
 
   const handleBack = (): void => {
-    navigation.goBack();
+    router.back();
   };
 
   const getTotalBalance = (): number => {
@@ -424,6 +417,4 @@ const AddAccountsScreen: React.FC<AddAccountsScreenProps> = ({ navigation, route
       </Modal>
     </SafeAreaView>
   );
-};
-
-export default AddAccountsScreen;
+}

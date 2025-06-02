@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -73,10 +74,43 @@ const TransactionAdder = () => {
   const [description, setDescription] = useState('');
   const amountInputRef = useRef<TextInput>(null);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const handleDeleteCategory = (category: Category) => {
+    Alert.alert(
+      "Delete Category",
+      `Are you sure you want to delete "${category.name}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setCategories(categories.filter(c => c.id !== category.id));
+          }
+        }
+      ]
+    );
+  };
 
   const handleEditCategory = (category: Category) => {
-    setEditingCategory(category);
-    setShowCategoryModal(true);
+    if (isEditMode) {
+      setEditingCategory(category);
+      setShowCategoryModal(true);
+    } else {
+      setSelectedCategory(category);
+      setInputModalVisible(true);
+    }
+  };
+
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+    if (!isEditMode) {
+      setEditingCategory(null);
+    }
   };
 
   const handleConfirm = () => {
@@ -110,6 +144,14 @@ const TransactionAdder = () => {
                 onPress={() => handleEditCategory(category)}
               >
                 <Ionicons name={categoryIcons[category.name] as any} size={24} color="white" />
+                {isEditMode && (
+                  <TouchableOpacity
+                    onPress={() => handleDeleteCategory(category)}
+                    className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center"
+                  >
+                    <Ionicons name="remove" size={16} color="white" />
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
               <Text className={isDarkMode ? "text-gray-200 text-xs" : "text-gray-800 text-xs"}>
                 {category.name}
@@ -132,9 +174,12 @@ const TransactionAdder = () => {
         <Text className={isDarkMode ? "text-base font-semibold text-white" : "text-base font-semibold text-black"}>
           Categories
         </Text>
-        <TouchableOpacity onPress={() => setShowCategoryModal(true)}>
-          <Text className={isDarkMode ? "text-base font-medium text-white" : "text-base font-medium text-black"}>
-            Edit
+        <TouchableOpacity 
+          onPress={toggleEditMode}
+          className={`px-3 py-1 rounded-lg w-16 items-center ${isEditMode ? 'bg-[#2A9D8F] dark:bg-[#2A9D8F]' : 'bg-[#2A9D8F]'}`}
+        >
+          <Text className={`text-base font-medium ${isEditMode ? 'text-white' : isDarkMode ? 'text-white' : 'text-black'}`}>
+            {isEditMode ? 'Done' : 'Edit'}
           </Text>
         </TouchableOpacity>
       </View>

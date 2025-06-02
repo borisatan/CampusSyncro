@@ -1,35 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProp, RouteProp } from '@react-navigation/native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-
-interface SetBudgetScreenProps {
-  navigation: NavigationProp<RootStackParamList, 'SetBudget'>;
-  route: RouteProp<RootStackParamList, 'SetBudget'>;
-}
-
-type RootStackParamList = {
-  CategorySelection: undefined;
-  SetBudget: {
-    selectedCategories: string[];
-    customCategories: string[];
-  };
-  AddAccounts: {
-    selectedCategories: string[];
-    customCategories: string[];
-    monthlyBudget: number;
-    usedHelpMeDecide: boolean;
-    categoryBudgets?: { [key: string]: number };
-  };
-};
 
 interface CategoryBudget {
   name: string;
@@ -37,7 +17,13 @@ interface CategoryBudget {
   percentage: number | null;
 }
 
-const SetBudgetScreen: React.FC<SetBudgetScreenProps> = ({ navigation, route }) => {
+export default function OnboardingBudget() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{
+    selectedCategories?: string;
+    customCategories?: string;
+  }>();
+
   const [showCustomAllocation, setShowCustomAllocation] = useState(false);
   const [totalBudget, setTotalBudget] = useState<number | null>(null);
   const [budgetText, setBudgetText] = useState<string>('');
@@ -46,18 +32,24 @@ const SetBudgetScreen: React.FC<SetBudgetScreenProps> = ({ navigation, route }) 
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudget[]>([]);
   const [allocationMode, setAllocationMode] = useState<'amount' | 'percentage'>('amount');
 
-  const { selectedCategories = [], customCategories = [] } = route?.params || {};
+  const selectedCategories = params.selectedCategories ? JSON.parse(params.selectedCategories) : [];
+  const customCategories = params.customCategories ? JSON.parse(params.customCategories) : [];
 
   // Initialize category budgets when categories are loaded
   React.useEffect(() => {
-    const allCategories = [...selectedCategories, ...customCategories];
-    setCategoryBudgets(
-      allCategories.map(category => ({
+    if (selectedCategories.length > 0 || customCategories.length > 0) {
+      const allCategories = [...selectedCategories, ...customCategories];
+      const initialBudgets = allCategories.map(category => ({
         name: category,
         amount: null,
         percentage: null
-      }))
-    );
+      }));
+      
+      // Only update if the categories have changed
+      if (JSON.stringify(initialBudgets) !== JSON.stringify(categoryBudgets)) {
+        setCategoryBudgets(initialBudgets);
+      }
+    }
   }, [selectedCategories, customCategories]);
 
   const formatCurrency = (text: string): string => {
@@ -145,12 +137,15 @@ const SetBudgetScreen: React.FC<SetBudgetScreenProps> = ({ navigation, route }) 
         [curr.name]: curr.amount || 0
       }), {});
 
-      navigation.navigate('AddAccounts', {
-        selectedCategories,
-        customCategories,
-        monthlyBudget: totalBudget,
-        usedHelpMeDecide,
-        categoryBudgets: categoryBudgetMap
+      router.push({
+        pathname: '/(onboarding)/onboarding-accounts',
+        params: {
+          selectedCategories: JSON.stringify(selectedCategories),
+          customCategories: JSON.stringify(customCategories),
+          monthlyBudget: totalBudget.toString(),
+          usedHelpMeDecide: usedHelpMeDecide.toString(),
+          categoryBudgets: JSON.stringify(categoryBudgetMap)
+        }
       });
     }
   };
@@ -159,7 +154,7 @@ const SetBudgetScreen: React.FC<SetBudgetScreenProps> = ({ navigation, route }) 
     if (showCustomAllocation) {
       setShowCustomAllocation(false);
     } else {
-      navigation.goBack();
+      router.back();
     }
   };
 
@@ -350,6 +345,4 @@ const SetBudgetScreen: React.FC<SetBudgetScreenProps> = ({ navigation, route }) 
       </View>
     </SafeAreaView>
   );
-};
-
-export default SetBudgetScreen;
+}
