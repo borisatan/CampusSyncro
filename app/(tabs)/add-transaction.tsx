@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { CategoryModal } from '../components/category-modal';
+import { CategoryModal } from '../components/Shared/category-modal';
 import { useTheme } from '../context/ThemeContext'; // Assuming similar theme context
 import { Category, CategoryName } from "../types/types";
 
@@ -34,32 +34,32 @@ const categoryIcons: Record<CategoryName, string> = {
 
 // Define types for our data
 interface AccountOption {
-  id: number;
+  id: string;
   name: string;
   selected: boolean;
 }
 
 // Dummy account data
 const accountOptions: AccountOption[] = [
-  { id: 1, name: 'Credit Card', selected: true },
-  { id: 2, name: 'Cash', selected: false },
-  { id: 3, name: 'Savings', selected: false },
-  { id: 4, name: 'Euro Cash', selected: false },
+  { id: '1', name: 'Credit Card', selected: true },
+  { id: '2', name: 'Cash', selected: false },
+  { id: '3', name: 'Savings', selected: false },
+  { id: '4', name: 'Euro Cash', selected: false },
 ];
 
 // Initial categories data
 const initialCategories: Category[] = [
-  { id: 1, name: 'Transport', icon: 'bus', color: '#F9C74F' },
-  { id: 2, name: 'Food', icon: 'restaurant', color: '#F94144' },
-  { id: 3, name: 'Education', icon: 'school', color: '#8338EC' },
-  { id: 4, name: 'Savings', icon: 'wallet', color: '#3A86FF' },
-  { id: 5, name: 'Travel', icon: 'airplane', color: '#3A86FF' },
-  { id: 6, name: 'Health', icon: 'heart', color: '#FF66C4' },
-  { id: 7, name: 'Care', icon: 'flask', color: '#8338EC' },
-  { id: 8, name: 'Home', icon: 'home', color: '#F8961E' },
-  { id: 9, name: 'Personal', icon: 'person', color: '#3A86FF' },
-  { id: 10, name: 'Clothes', icon: 'shirt', color: '#577590' },
-  { id: 11, name: 'Medical', icon: 'medkit', color: '#90BE6D' },
+  { id: '1', name: 'Transport', icon: 'bus', color: '#F9C74F' },
+  { id: '2', name: 'Food', icon: 'restaurant', color: '#F94144' },
+  { id: '3', name: 'Education', icon: 'school', color: '#8338EC' },
+  { id: '4', name: 'Savings', icon: 'wallet', color: '#3A86FF' },
+  { id: '5', name: 'Travel', icon: 'airplane', color: '#3A86FF' },
+  { id: '6', name: 'Health', icon: 'heart', color: '#FF66C4' },
+  { id: '7', name: 'Care', icon: 'flask', color: '#8338EC' },
+  { id: '8', name: 'Home', icon: 'home', color: '#F8961E' },
+  { id: '9', name: 'Personal', icon: 'person', color: '#3A86FF' },
+  { id: '10', name: 'Clothes', icon: 'shirt', color: '#577590' },
+  { id: '11', name: 'Medical', icon: 'medkit', color: '#90BE6D' },
 ];
 
 const TransactionAdder = () => {
@@ -199,7 +199,7 @@ const TransactionAdder = () => {
             key={account.id}
             className={`px-4 py-2 rounded-2xl mr-2 ${
               selectedAccount === account.name
-                ? isDarkMode ? 'bg-blue-600' : 'bg-[#E4E4E4]' 
+                ? isDarkMode ? 'bg-[#2A9D8F]' : 'bg-[#E4E4E4]' 
                 : isDarkMode ? "bg-gray-800 border-gray-600" : "bg-white border-gray-300"
             }`}
             onPress={() => setSelectedAccount(account.name)}
@@ -240,15 +240,19 @@ const TransactionAdder = () => {
               Add transaction for {selectedCategory?.name}
             </Text>
 
-            <TextInput
-              ref={amountInputRef}
-              keyboardType="numeric"
-              placeholder="Enter amount"
-              placeholderTextColor={isDarkMode ? "#aaa" : "#888"}
-              value={amount}
-              onChangeText={setAmount}
-              className="border dark:border-gray-600 border-gray-300 rounded-xl px-4 py-5 mb-3 text-black dark:text-white text-3xl font-semibold text-center"
-            />
+            <View className="flex-row items-center border dark:border-gray-600 border-gray-300 rounded-xl px-4 py-5 mb-3 bg-white dark:bg-[#1F2937]">
+              <TextInput
+                ref={amountInputRef}
+                keyboardType="numeric"
+                autoFocus={true}
+                placeholder="Enter amount"
+                placeholderTextColor={isDarkMode ? "#aaa" : "#888"}
+                value={amount}
+                onChangeText={setAmount}
+                className="flex-1 text-black dark:text-white text-3xl text-center font-semibold bg-transparent"
+              />
+              <Text className="ml-2 text-3xl text-gray-400">€</Text>
+            </View>
 
             <TextInput
               placeholder="Enter description (optional)"

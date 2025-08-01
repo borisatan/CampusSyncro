@@ -13,7 +13,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import DateRangeSelector from "../components/date-selector";
+import DateRangeSelector from "../components/Shared/date-selector";
 import { useTheme } from "../context/ThemeContext";
 
 //  Types

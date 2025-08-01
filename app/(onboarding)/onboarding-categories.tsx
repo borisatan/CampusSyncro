@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { CategoryModal } from '../components/category-modal';
+import { CategoryModal } from '../components/Shared/category-modal';
 import { Category } from '../types/types';
 
 // Define a more flexible type for onboarding categories

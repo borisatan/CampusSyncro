@@ -1,6 +1,6 @@
 // Category Types
 export type CategoryName = 'Transport' | 'Food' | 'Education' | 'Savings' | 'Travel' | 
-  'Health' | 'Care' | 'Home' | 'Personal' | 'Clothes' | 'Medical';
+  'Health' | 'Care' | 'Home' | 'Personal' | 'Clothes' | 'Medical' | 'Groceries' | 'Rent';
 
 export interface Category {
   id: string;
@@ -10,6 +10,8 @@ export interface Category {
   isCustom?: boolean;
   createdAt: Date;
   updatedAt: Date;
+  amount: number;
+  percent: number;
 }
 
 // Transaction Types
@@ -37,7 +39,7 @@ export interface Transaction {
   updatedAt: Date;
 }
 
-// Account Types
+// Account Types 
 export type AccountType = 'checking' | 'savings' | 'credit' | 'cash' | 'investment';
 
 export type Currency = 'USD' | 'EUR' | 'GBP'; // Add more as needed
@@ -74,6 +76,10 @@ export interface Budget {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  target: number;
+  spent: number;
+  projectedStatus: 'Under Budget' | 'Over Budget';
+  percentUsed: number;
 }
 
 // Navigation Types
@@ -86,3 +92,10 @@ export type RootStackParamList = {
   BudgetDetails: { budgetId: string };
   CategoryDetails: { categoryId: string };
 };
+
+// Dashboard Types
+export interface ChartSegment {
+  key: string;
+  value: number;
+  color: string;
+}

@@ -1,17 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Category, CategoryName } from '../types/types';
+import { Category, CategoryName } from '../../types/types';
 
 interface CategoryModalProps {
     visible: boolean;
@@ -76,10 +76,14 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
         }
 
         onSubmit({
-            id: category?.id || Date.now(),
+            id: category?.id ?? Date.now().toString(),
             name: categoryName.trim() as CategoryName,
             icon: selectedIcon,
             color: selectedColor,
+            createdAt: category?.createdAt ?? new Date(),
+            updatedAt: new Date(),
+            amount: category?.amount ?? 0,
+            percent: category?.percent ?? 0,
         });
 
         // Reset form if in add mode
@@ -161,12 +165,11 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                                 <Text className="text-sm font-medium text-[#212121] dark:text-[#FFFFFF] mb-2">
                                     Select Icon
                                 </Text>
-                                <View className="gap-2">
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        className="mb-2"
-                                    >
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                >
+                                    <View className="flex-col gap-2"> 
                                         <View className="flex-row gap-2">
                                             {availableIcons.slice(0, Math.ceil(availableIcons.length / 2)).map((icon) => (
                                                 <TouchableOpacity
@@ -185,12 +188,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                                                 </TouchableOpacity>
                                             ))}
                                         </View>
-                                    </ScrollView>
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        className="mb-2"
-                                    >
+
                                         <View className="flex-row gap-2">
                                             {availableIcons.slice(Math.ceil(availableIcons.length / 2)).map((icon) => (
                                                 <TouchableOpacity
@@ -209,20 +207,18 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                                                 </TouchableOpacity>
                                             ))}
                                         </View>
-                                    </ScrollView>
-                                </View>
+                                    </View>
+                                </ScrollView>
                             </View>
-
                             <View className="mb-6">
                                 <Text className="text-sm font-medium text-[#212121] dark:text-[#FFFFFF] mb-2">
                                     Select Color
                                 </Text>
-                                <View className="gap-2">
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        className="mb-2"
-                                    >
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                >
+                                    <View className="flex-col gap-2"> 
                                         <View className="flex-row gap-2">
                                             {categoryColors.slice(0, Math.ceil(categoryColors.length / 2)).map((color) => (
                                                 <TouchableOpacity
@@ -237,12 +233,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                                                 />
                                             ))}
                                         </View>
-                                    </ScrollView>
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        className="mb-2"
-                                    >
+
                                         <View className="flex-row gap-2">
                                             {categoryColors.slice(Math.ceil(categoryColors.length / 2)).map((color) => (
                                                 <TouchableOpacity
@@ -257,8 +248,8 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                                                 />
                                             ))}
                                         </View>
-                                    </ScrollView>
-                                </View>
+                                    </View>
+                                </ScrollView>
                             </View>
 
                             <View className="flex-row gap-3">
