@@ -13,15 +13,18 @@ const STROKE_WIDTH = 18;
 const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const SpendingCircleChart: React.FC<SpendingCircleChartProps> = ({ segments, total }) => {
-  let offset = 0;
-  const totalValue = segments.reduce((sum, seg) => sum + seg.value, 0);
-
+export const SpendingCircleChart: React.FC<SpendingCircleChartProps> = ({ segments, total }) => {
+  // Sort segments by value (largest first) to match the category list order
+  const sortedSegments = [...segments].sort((a, b) => b.value - a.value);
+  
+  // Start from top center (rotate -90 degrees so 0 is at top)
+  let offset = - CIRCUMFERENCE / 4; // Start at top (90 degrees offset)
+  const totalValue = sortedSegments.reduce((sum, seg) => sum + seg.value, 0);
   return (
     <View className="items-center justify-center my-6">
       <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
       <G rotation="0" origin={`${CIRCLE_SIZE / 2},${CIRCLE_SIZE / 2}`}>
-        {segments.map((seg, idx) => {
+        {sortedSegments.map((seg, idx) => {
           const percent = seg.value / totalValue;
           const strokeDasharray = percent * CIRCUMFERENCE;
           const circle = (
@@ -35,7 +38,7 @@ const SpendingCircleChart: React.FC<SpendingCircleChartProps> = ({ segments, tot
               fill="none"
               strokeDasharray={`${strokeDasharray},${CIRCUMFERENCE - strokeDasharray}`}
               strokeDashoffset={-offset}
-              strokeLinecap="round"
+              strokeLinecap="butt"
             />
           );
           offset += strokeDasharray;
@@ -50,5 +53,3 @@ const SpendingCircleChart: React.FC<SpendingCircleChartProps> = ({ segments, tot
     </View>
   );
 };
-
-export default SpendingCircleChart; 

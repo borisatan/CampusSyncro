@@ -4,7 +4,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import BudgetProgressBar from '../components/HomePage/BudgetProgressBar';
 import ExpenseCategoryCard from '../components/HomePage/ExpenseCategoryCard';
 import HeaderSection from '../components/HomePage/HeaderSection';
-import SpendingCircleChart from '../components/HomePage/SpendingCircleChart';
+import { SpendingCircleChart } from '../components/HomePage/SpendingCircleChart';
 import TimePeriodToggles from '../components/HomePage/TimePeriodToggles';
 import { fetchCategories, fetchCategoryAggregates, fetchTotalBalance, fetchTotalExpenses } from '../services/backendService';
 import { Category, CategoryAggregation, ChartSegment } from '../types/types';
