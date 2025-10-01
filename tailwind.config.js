@@ -5,28 +5,26 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primary brand color (CTA, highlights)
-        primary: '#3A86FF',
-        primaryDark: '#1E3A8A',
+        background: '#FFFFFF',       // light mode main
+        backgroundMuted: '#E4E4E4',  // selected account light mode
+        backgroundDark: '#0A0F1F',   // dark mode main
+        surfaceDark: '#20283A',      // modal dark background
+        inputDark: '#1F2937',        // dark input background
 
-        // Secondary accent
-        secondary: '#5C7AFF',
+        accentTeal: '#2A9D8F',       // edit/done button
+        accentBlue: '#2563EB',       // confirm/enter button
+        accentPurple: "#B2A4FF",
+        accentRed: '#EF4444',        // delete button
 
-        // Backgrounds
-        background: '#FFFFFF',
-        backgroundDark: '#0A0F1F',
+        textLight: '#000000',        // primary light text
+        textDark: '#FFFFFF',         // primary dark text
+        placeholderLight: '#888888', // input placeholder (light)
+        placeholderDark: '#AAAAAA',  // input placeholder (dark)
+        secondaryLight: '#4B5563',   // gray-700
+        secondaryDark: '#9CA3AF',    // gray-400
 
-        // Surfaces
-        surface: '#F5F6FA',
-        surfaceDark: '#1E1E1E',
-
-        // Text
-        text: '#111827',
-        textLight: '#EDEDED',
-
-        // Borders
-        borderLight: '#E4E4E4',
-        borderDark: '#333333',
+        borderLight: '#D1D5DB',      // gray-300
+        borderDark: '#4B5563',       // gray-600
 
         // Category Colors (desaturated / modern)
         category: {

@@ -12,7 +12,7 @@ interface ExpenseCategoryCardProps {
 
 const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, color, amount, percent }) => {
   return (
-    <View className="flex-row items-center rounded-2xl p-4 my-1 mx-0.5 shadow-md bg-[#3B1C5A]">
+    <View className="flex-row items-center rounded-2xl p-4 my-1 mx-0.5 shadow-md bg-surfaceDark">
       <View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: color }}>
         <Ionicons name={icon as any} size={22} color="#fff" />
       </View>
@@ -21,7 +21,7 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
       </View>
       <View className="items-end">
         <Text className="text-white text-base font-bold">-${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
-        <Text className="text-[#B2A4FF] text-xs mt-0.5 font-medium">{percent}%</Text>
+        <Text className="text-accentPurple text-xs mt-0.5 font-medium">{percent}%</Text>
       </View>
     </View>
   );

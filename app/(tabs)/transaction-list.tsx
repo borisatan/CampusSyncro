@@ -1,34 +1,15 @@
-import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import React, { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  SafeAreaView,
-  SectionList,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from "react-native";
-import DateRangeSelector from "../components/Shared/date-selector";
+import React, { useEffect, useState } from "react";
+import { View } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import FilterModal from "../components/TransactionListPage/FilterModal";
+import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
+import TransactionsList from "../components/TransactionListPage/TransactionsList";
 import { useTheme } from "../context/ThemeContext";
+import { fetchCategoryIcons, fetchTransactions } from "../services/backendService";
+import { CategoryIconInfo, Transaction } from "../types/types";
 
-//  Types
-type Transaction = {
-  id: string;
-  date: string; // 'YYYY-MM-DD'
-  name: string;
-  amount: number;
-  currency: string;
-  time: string; // e.g. '14:30'
-  category: string;
-  account: string;
-  logo: string;
-};
-
+// Section type
 type TransactionSection = {
   title: string;
   data: Transaction[];
@@ -43,62 +24,32 @@ type TransactionsScreenRouteProp = RouteProp<
   "Transactions"
 >;
 
-//  Mock data
-const sampleTransactions: Transaction[] = [
-  {
-    id: "1",
-    date: "2024-10-03",
-    name: "Amazon",
-    amount: -121.7,
-    currency: "лв",
-    time: "20:35",
-    category: "Shopping",
-    account: "Visa",
-    logo: "🛒",
-  },
-  {
-    id: "2",
-    date: "2024-10-03",
-    name: "Amazon EU",
-    amount: -61.99,
-    currency: "€",
-    time: "20:36",
-    category: "Shopping",
-    account: "Revolut",
-    logo: "🛒",
-  },
-  {
-    id: "3",
-    date: "2024-05-14",
-    name: "Alex K",
-    amount: 125,
-    currency: "€",
-    time: "10:03",
-    category: "Salary",
-    account: "Bank",
-    logo: "AK",
-  },
-];
-
-// Groups transactions by their date property to form sections for SectionList.
+// Group transactions by date for SectionList
 const groupTransactionsByDate = (
   transactions: Transaction[]
 ): TransactionSection[] => {
   const groups: Record<string, Transaction[]> = {};
 
   transactions.forEach((tx) => {
-    if (!groups[tx.date]) groups[tx.date] = [];
-    groups[tx.date].push(tx);
+    const dateObj = new Date(tx.created_at);
+    const date = dateObj.toISOString().split("T")[0];
+
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(tx);
   });
 
-  return Object.entries(groups).map(([date, data]) => ({ title: date, data }));
+  return Object.entries(groups)
+    .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
+    .map(([title, data]) => ({ title, data }));
 };
 
-//  Main Screen
+// Main screen
 const TransactionsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const route = useRoute<TransactionsScreenRouteProp>();
 
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categoryIcons, setCategoryIcons] = useState<Record<string, CategoryIconInfo>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string | null>(
     route.params?.category || null
@@ -106,25 +57,74 @@ const TransactionsScreen: React.FC = () => {
   const [filterAccounts, setFilterAccounts] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Apply all active filters to the sample transactions data.
-  const filteredTransactions = sampleTransactions.filter((tx) => {
-    const matchesCategory = filterCategory
-      ? tx.category === filterCategory
-      : true;
-    const matchesAccount =
-      filterAccounts.length > 0 ? filterAccounts.includes(tx.account) : true;
+  const LIMIT = 50;
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  // --- Load initial transactions (first page / refresh)
+  const loadInitialTransactions = async () => {
+    setIsRefreshing(true);
+    try {
+      const [transactionsData, iconsData] = await Promise.all([
+        fetchTransactions(LIMIT, 0),
+        fetchCategoryIcons(),
+      ]);
+
+      setTransactions(transactionsData);
+      setCategoryIcons(iconsData);
+      setPage(1);
+      setHasMore(transactionsData.length === LIMIT);
+    } catch (err) {
+      console.error("Failed to load transactions:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // --- Load more transactions (next page)
+  const loadMoreTransactions = async () => {
+    if (!hasMore || isFetchingMore) return;
+
+    setIsFetchingMore(true);
+    try {
+      const data = await fetchTransactions(LIMIT, page * LIMIT);
+
+      if (data.length < LIMIT) setHasMore(false);
+
+      setTransactions(prev => [...prev, ...data]);
+      setPage(prev => prev + 1);
+    } catch (err) {
+      console.error("Failed to fetch more transactions:", err);
+    } finally {
+      setIsFetchingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    loadInitialTransactions();
+  }, []);
+
+  // Apply all filters
+  const filteredTransactions = transactions.filter((tx) => {
+    const matchesCategory = filterCategory ? tx.category_name === filterCategory : true;
+    const matchesAccount = filterAccounts.length > 0 ? filterAccounts.includes(tx.account_name) : true;
     const matchesSearch =
-      tx.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tx.account.toLowerCase().includes(searchQuery.toLowerCase());
-    
+      tx.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.account_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.category_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.amount.toString().includes(searchQuery);
     const matchesDate = dateRange
-      ? new Date(tx.date) >= new Date(dateRange.start) &&
-        new Date(tx.date) <= new Date(dateRange.end)
+      ? new Date(tx.created_at) >= new Date(dateRange.start) &&
+        new Date(tx.created_at) <= new Date(dateRange.end)
       : true;
 
     return matchesCategory && matchesAccount && matchesSearch && matchesDate;
   });
+
+  const sections: TransactionSection[] = groupTransactionsByDate(filteredTransactions);
 
   const handleResetFilters = () => {
     setDateRange(null);
@@ -132,239 +132,41 @@ const TransactionsScreen: React.FC = () => {
     setIsFilterVisible(false);
   };
 
-  const sections: TransactionSection[] =
-    groupTransactionsByDate(filteredTransactions);
-
   return (
-    <SafeAreaView
-      className={isDarkMode ? "flex-1 bg-[#1F2937]" : "flex-1 bg-white"}
-    >
-      {/* SectionList showing transactions grouped by date, with header formatting.  */}
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <>
-            <View className="mb-4 mt-4 justify-center items-center">
-              <Text className="text-2xl font-bold text-black dark:text-white">
-                Transactions
-              </Text>
-            </View>
+    <SafeAreaProvider>
+      <SafeAreaView className={isDarkMode ? "flex-1 bg-backgroundDark" : "flex-1 bg-background"}>
 
-            <View className="flex-row items-center mb-4">
-              <View className="flex-row items-center bg-[#F3F4F6] dark:bg-[#4B5563] rounded-full px-4 py-2 flex-1 mr-2">
-                <Ionicons
-                  name="search"
-                  size={16}
-                  color={isDarkMode ? "#F3F4F6" : "#4B5563"}
-                />
-                <TextInput
-                  placeholder="Search"
-                  placeholderTextColor={isDarkMode ? "#F3F4F6" : "#4B5563"}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  className="ml-2 text-black dark:text-white flex-1"
-                />
-              </View>
+        <View className="px-4">
+          <TransactionsHeader
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onFilterPress={() => setIsFilterVisible(true)}
+          />
+        </View>
+      
+        {/* Transactions list */}
+        <TransactionsList
+          sections={sections}
+          categoryIcons={categoryIcons}
+          refreshing={isRefreshing} 
+          onRefresh={loadInitialTransactions} 
+          onEndReached={loadMoreTransactions} 
+          isFetchingMore={isFetchingMore}    
+        />
 
-              <TouchableOpacity
-                className="p-2 rounded-full bg-[#E5E7EB] dark:bg-[#374151]"
-                onPress={() => setIsFilterVisible(true)}
-              >
-                <Ionicons
-                  name="filter"
-                  size={20}
-                  color={isDarkMode ? "#FFFFFF" : "#1F2937"}
-                />
-              </TouchableOpacity>
-            </View>
-          </>
-        }
-        renderSectionHeader={({ section: { title } }) => (
-          <Text className="text-xs text-[#9CA3AF] mb-2 mt-4">
-            {new Date(title).toDateString()}
-          </Text>
-        )}
-        renderItem={({ item }) => (
-          <View className="bg-[#F3F4F6] dark:bg-[#374151] p-4 rounded-2xl mb-2 flex-row justify-between items-center">
-            <View className="flex-row items-center">
-              <View className="w-10 h-10 rounded-full bg-pink-500 justify-center items-center mr-3">
-                <Text className="text-white font-bold">{item.logo}</Text>
-              </View>
-              <View>
-                <Text className="text-sm font-medium text-black dark:text-white">
-                  {item.name}
-                </Text>
-                <Text className="text-xs text-gray-500 dark:text-[#F3F4F6]">
-                  {item.time}
-                </Text>
-              </View>
-            </View>
-            <View className="items-end">
-              <Text
-                className={`text-sm font-medium mb-1 ${
-                  isDarkMode ? "text-white" : "text-black"
-                }`}
-              >
-                {item.amount > 0 ? "+" : " "}
-                {item.amount} {item.currency}
-              </Text>
-              <Text
-                className={`text-sm font-small  ${
-                  isDarkMode ? "text-white" : "text-black"
-                }`}
-              >
-                {item.account}
-              </Text>
-            </View>
-          </View>
-        )}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-      />
-
-      {/* Filter Modal */}
-      <Modal
-        visible={isFilterVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsFilterVisible(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setIsFilterVisible(false)}>
-          <View className="flex-1" />
-        </TouchableWithoutFeedback>
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          className="flex-1 justify-end"
-        >
-          <View className="bg-white dark:bg-[#1E1E1E] p-5 rounded-t-3xl w-full">
-            <Text className="text-lg font-semibold text-center mb-4 text-black dark:text-white">
-              Filter Transactions
-            </Text>
-
-            {/* Date Range Selector */}
-            <View className="mb-6">
-              <Text className={`text-base font-semibold mb-3 ${
-                isDarkMode ? "text-white" : "text-black"
-              }`}>
-                Date Range
-              </Text>
-              <DateRangeSelector
-                currentRange={dateRange}
-                onDateRangeSelect={(start, end) => {
-                  setDateRange({ start, end });
-                }}
-              />
-            </View>
-
-            {/* Account Selector Section */}
-            <View className="mb-6">
-              <View className="flex-row justify-between items-center mb-3">
-                <Text
-                  className={`text-base font-semibold ${
-                    isDarkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  Select account(s)
-                </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (filterAccounts.length === 3) {
-                      setFilterAccounts([]);
-                    } else {
-                      setFilterAccounts(["Visa", "Revolut", "Bank"]);
-                    }
-                  }}
-                >
-                  <Text
-                    className={`text-sm font-semibold ${
-                      isDarkMode ? "text-blue-400" : "text-blue-600"
-                    }`}
-                  >
-                    {filterAccounts.length === 3
-                      ? "Deselect All"
-                      : "Select All"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Account Grid */}
-              <View className="flex flex-wrap flex-row -mx-2">
-                {["Visa", "Revolut", "Bank"].map((account) => {
-                  const isSelected = filterAccounts.includes(account);
-
-                  return (
-                    <TouchableOpacity
-                      key={account}
-                      onPress={() => {
-                        if (isSelected) {
-                          setFilterAccounts((prev) =>
-                            prev.filter((a) => a !== account)
-                          );
-                        } else {
-                          setFilterAccounts((prev) => [...prev, account]);
-                        }
-                      }}
-                      className="w-1/2 px-2 mb-4"
-                    >
-                      <View
-                        className={`flex-row items-center p-3 border rounded-xl dark:border-gray-600 border-gray-300 ${
-                          isSelected ? "bg-blue-600" : ""
-                        }`}
-                      >
-                        <View
-                          className={`w-5 h-5 mr-3 rounded border flex items-center justify-center ${
-                            isSelected
-                              ? "bg-white border-white"
-                              : "border-gray-400 dark:border-gray-600"
-                          }`}
-                        >
-                          {isSelected && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color={isSelected ? "#2563EB" : "#FFF"}
-                            />
-                          )}
-                        </View>
-                        <Text
-                          className={`${
-                            isDarkMode ? "text-white" : "text-black"
-                          }`}
-                        >
-                          {account}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Apply and Reset Buttons */}
-            <View className="flex-row justify-between">
-              <TouchableOpacity
-                className="flex-1 py-3 mr-2 rounded-xl border border-gray-400 dark:border-gray-600"
-                onPress={handleResetFilters}
-              >
-                <Text className="text-center text-black dark:text-white">
-                  Reset
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="flex-1 py-3 ml-2 rounded-xl bg-blue-600"
-                onPress={() => setIsFilterVisible(false)}
-              >
-                <Text className="text-center text-white font-semibold">
-                  Apply
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-    </SafeAreaView>
+        {/* Filter Modal */}
+        <FilterModal
+          visible={isFilterVisible}
+          onClose={() => setIsFilterVisible(false)}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          filterAccounts={filterAccounts}
+          setFilterAccounts={setFilterAccounts}
+          isDarkMode={isDarkMode}
+          handleReset={handleResetFilters}
+        />
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

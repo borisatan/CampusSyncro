@@ -16,11 +16,11 @@ const TimePeriodToggles: React.FC<TimePeriodTogglesProps> = ({ selected, onSelec
         return (
           <TouchableOpacity
             key={period}
-            className={`flex-1 mx-1 py-2 rounded-full items-center shadow ${isActive ? 'bg-[#36D1C4]' : 'bg-[#3B1C5A]'}`}
+            className={`flex-1 mx-1 py-2 rounded-full items-center shadow ${isActive ? 'bg-accentTeal' : 'bg-surfaceDark'}`}
             onPress={() => onSelect(period)}
             activeOpacity={0.8}
           >
-            <Text className={`text-base font-semibold ${isActive ? 'text-white' : 'text-[#B2A4FF]'}`}>{period}</Text>
+            <Text className={`text-base font-semibold text-white`}>{period}</Text>
           </TouchableOpacity>
         );
       })}

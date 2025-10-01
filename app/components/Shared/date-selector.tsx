@@ -178,7 +178,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
         onPress={() => setIsVisible(true)}
         className="flex-row items-center justify-center"
       >
-        <Text className="text-sm font-medium text-[#212121] dark:text-[#FFFFFF]">
+        <Text className="text-md font-medium text-[#212121] dark:text-[#FFFFFF]">
           {getDisplayText()}
         </Text>
       </TouchableOpacity>

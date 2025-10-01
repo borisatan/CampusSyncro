@@ -1,86 +1,74 @@
 // Category Types
-export type CategoryName = 'Transport' | 'Food' | 'Education' | 'Savings' | 'Travel' | 
-  'Health' | 'Care' | 'Home' | 'Personal' | 'Clothes' | 'Medical' | 'Groceries' | 'Rent';
+export type CategoryName = String;
 
 export interface Category {
-  id: string;
-  name: CategoryName;
+  id: number;
+  category_name: CategoryName;
   icon: string;
   color: string;
-  isCustom?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  amount: number;
+}
+
+export interface CategoryAggregation {
+  categoryName: CategoryName;
+  totalAmount: number;
   percent: number;
 }
 
 // Transaction Types
-export type TransactionType = 'income' | 'expense' | 'transfer';
+// export type TransactionType = 'income' | 'expense' | 'transfer';
 
-export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'cancelled';
+// export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'cancelled';
 
 export interface Transaction {
-  id: string;
-  type: TransactionType;
+  id: number;
   amount: number;
+  category_name: string;
+  account_name: string;
   description: string;
-  categoryId: string;
-  accountId: string;
-  date: Date;
-  status: TransactionStatus;
-  isRecurring: boolean;
-  recurringDetails?: {
-    frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
-    endDate?: Date;
-  };
-  attachments?: string[]; // URLs to attached files/images
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
 }
 
 // Account Types 
-export type AccountType = 'checking' | 'savings' | 'credit' | 'cash' | 'investment';
-
-export type Currency = 'USD' | 'EUR' | 'GBP'; // Add more as needed
 
 export interface Account {
-  id: string;
-  name: string;
-  type: AccountType;
+  id: number;
+  account_name: string;
   balance: number;
-  currency: Currency;
-  isArchived: boolean;
-  color: string;
-  icon: string;
-  lastSyncDate?: Date;
-  institution?: string;
-  accountNumber?: string;
-  createdAt: Date;
-  updatedAt: Date;
+}
+export interface AccountOption {
+  id: number;
+  account_name: string;
+  selected: boolean;
 }
 
 // Budget Types
-export interface Budget {
-  id: string;
-  name: string;
-  amount: number;
-  period: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  startDate: Date;
-  endDate?: Date;
-  categoryBudgets: {
-    categoryId: string;
-    amount: number;
-    percentage?: number;
-  }[];
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  target: number;
-  spent: number;
-  projectedStatus: 'Under Budget' | 'Over Budget';
-  percentUsed: number;
-}
+// export interface Budget {
+//   id: string;
+//   name: string;
+//   amount: number;
+//   period: 'daily' | 'weekly' | 'monthly' | 'yearly';
+//   startDate: Date;
+//   endDate?: Date;
+//   categoryBudgets: {
+//     categoryId: string;
+//     amount: number;
+//     percentage?: number;
+//   }[];
+//   isActive: boolean;
+//   createdAt: Date;
+//   updatedAt: Date;
+//   target: number;
+//   spent: number;
+//   projectedStatus: 'Under Budget' | 'Over Budget';
+//   percentUsed: number;
+// }
+
+export type TransactionSection = {
+  title: string;          
+  data: Transaction[];     
+};
+
+
 
 // Navigation Types
 export type RootStackParamList = {
@@ -99,3 +87,8 @@ export interface ChartSegment {
   value: number;
   color: string;
 }
+
+export type CategoryIconInfo = {
+  icon: string;
+  color: string;
+};

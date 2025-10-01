@@ -4,10 +4,9 @@ import { Text, View } from 'react-native';
 interface BudgetProgressBarProps {
   percent: number;
   target: number;
-  projectedStatus: string;
 }
 
-const BudgetProgressBar: React.FC<BudgetProgressBarProps> = ({ percent, target, projectedStatus }) => {
+const BudgetProgressBar: React.FC<BudgetProgressBarProps> = ({ percent, target }) => {
   return (
     <View className="my-5 px-2">
       <View className="flex-row items-center">
@@ -18,7 +17,6 @@ const BudgetProgressBar: React.FC<BudgetProgressBarProps> = ({ percent, target, 
         </View>
         <Text className="text-white font-bold text-base w-28 text-right">${target.toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
       </View>
-      <Text className="text-[#A0A0B2] text-xs mt-1 ml-1">Projected: {projectedStatus}</Text>
     </View>
   );
 };

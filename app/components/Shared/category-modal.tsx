@@ -1,17 +1,18 @@
+import { supabase } from '@/app/utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Category, CategoryName } from '../../types/types';
+import { Category } from '../../types/types';
 
 interface CategoryModalProps {
     visible: boolean;
@@ -58,42 +59,68 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
     useEffect(() => {
         if (mode === 'edit' && category) {
-            setCategoryName(category.name);
+            setCategoryName(category.category_name.trim());
             setSelectedIcon(category.icon);
             setSelectedColor(category.color);
         }
     }, [mode, category]);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!categoryName.trim()) {
-            setError('Please enter a category name');
-            return;
+          setError('Please enter a category name');
+          return;
         }
-
+      
         if (mode === 'add' && existingCategories?.includes(categoryName.trim())) {
-            setError('This category already exists');
-            return;
+          setError('This category already exists');
+          return;
         }
-
-        onSubmit({
-            id: category?.id ?? Date.now().toString(),
-            name: categoryName.trim() as CategoryName,
+      
+        try {
+          const newCategory = {
+            category_name: categoryName.trim(),
             icon: selectedIcon,
             color: selectedColor,
-            createdAt: category?.createdAt ?? new Date(),
-            updatedAt: new Date(),
-            amount: category?.amount ?? 0,
-            percent: category?.percent ?? 0,
-        });
-
-        // Reset form if in add mode
-        if (mode === 'add') {
+          };
+          
+          if (mode === 'edit' && category) {
+              const { data, error } = await supabase
+              .from('Categories')
+              .update(newCategory)
+              .eq('id', category.id)
+              .select()
+              .single();
+              
+              if (error) throw error;
+              
+              onSubmit({ ...category, ...newCategory }); // update locally
+            } else {
+                console.log(newCategory);
+                const { data, error } = await supabase
+              .from('Categories')
+              .insert(newCategory)
+              .select()
+              .single();
+      
+            if (error) throw error;
+      
+            onSubmit(data); // add new one locally with ID from Supabase
+          }
+      
+          // Reset form if in add mode
+          if (mode === 'add') {
             setCategoryName('');
             setSelectedIcon(availableIcons[0]);
             setSelectedColor(categoryColors[0]);
+          }
+      
+          setError('');
+        } catch (err) {
+          console.error('Error saving category:', err);
+          setError('Failed to save category. Please try again.');
         }
-        setError('');
-    };
+      };
+      
 
     return (
         <Modal
