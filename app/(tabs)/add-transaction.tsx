@@ -42,7 +42,6 @@ const TransactionAdder = () => {
         setIsLoadingCategories(true);
         const data = await fetchCategories();
         setCategories(data);
-        console.log(data);
       } catch (err) {
         console.error('Failed to fetch categories:', err);
       } finally {

@@ -1,4 +1,4 @@
-import { CategoryIconInfo, Transaction } from "../types/types";
+import { CategoryAggregation, CategoryIconInfo, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
 
 export const fetchCategories = async () => {
@@ -59,7 +59,7 @@ export const fetchTransactions = async (
       .from("Categories")
       .select("category_name, icon, color");
   
-    if (error) throw error; // ✅ Should also handle error instead of silently ignoring
+    if (error) throw error; 
   
     const icons: Record<string, CategoryIconInfo> = {};
     if (data) {
@@ -70,3 +70,27 @@ export const fetchTransactions = async (
   
     return icons;
   }
+
+export const fetchTotalBalance = async (): Promise<number> => {
+  const { data, error } = await supabase.rpc('fetch_total_balance');
+  if (error) throw error;
+  return data ?? 0;
+};
+
+export const fetchTotalExpenses = async (startDate: Date, endDate: Date): Promise<number> => {
+  const { data, error } = await supabase.rpc('fetch_total_expenses', {
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+  });
+  if (error) throw error;
+  return data ?? 0;
+};
+
+export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): Promise<CategoryAggregation[]> => {
+  const { data, error } = await supabase.rpc('fetch_category_aggregates', {
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+  });
+  if (error) throw error;
+  return data ?? [];
+};

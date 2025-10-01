@@ -9,15 +9,11 @@ export interface Category {
 }
 
 export interface CategoryAggregation {
-  categoryName: CategoryName;
-  totalAmount: number;
+  category_name: CategoryName;
+  total_amount: number;
   percent: number;
 }
 
-// Transaction Types
-// export type TransactionType = 'income' | 'expense' | 'transfer';
-
-// export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'cancelled';
 
 export interface Transaction {
   id: number;
