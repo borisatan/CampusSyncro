@@ -23,7 +23,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   return (
     <SectionList
       sections={sections}
-      keyExtractor={(item) => item.id.toString()}
+      keyExtractor={(item, index) => `${item.id}-${index}`}
       renderItem={({ item }) => <TransactionItem transaction={item} categoryIcons={categoryIcons} />}
       renderSectionHeader={({ section: { title } }) => (
         <Text className="text-md text-secondaryLight dark:text-secondaryDark mb-2 mt-4">

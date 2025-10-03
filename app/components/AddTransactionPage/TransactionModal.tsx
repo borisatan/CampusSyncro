@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
-import { Category } from '../../types/types';
+import { AccountOption, Category } from '../../types/types';
 
 interface TransactionModalProps {
   visible: boolean;
@@ -12,6 +12,9 @@ interface TransactionModalProps {
   description: string;
   setDescription: (value: string) => void;
   onConfirm: () => void;
+  accountOptions: AccountOption[];
+  selectedAccount: string;
+  onSelectAccount: (accountName: string) => void;
 }
 
 const TransactionModal: React.FC<TransactionModalProps> = ({
@@ -22,7 +25,10 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   setAmount,
   description,
   setDescription,
-  onConfirm
+  onConfirm,
+  accountOptions,
+  selectedAccount,
+  onSelectAccount
 }) => {
   const { isDarkMode } = useTheme();
   const amountInputRef = useRef<TextInput>(null);
@@ -51,6 +57,11 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           <Text className="text-lg font-semibold text-center mb-4 text-textLight dark:text-textDark">
             Add transaction for {category?.category_name}
           </Text>
+          {/* <AccountSelector
+          accountOptions={accountOptions}
+          selectedAccount={selectedAccount}
+          onSelectAccount={setSelectedAccount}
+        /> */}
 
           <View className="flex-row items-center border dark:border-borderDark border-borderLight rounded-xl px-4 py-5 mb-3 bg-background dark:bg-inputDark">
             <TextInput

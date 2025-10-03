@@ -15,7 +15,7 @@ import CategoryModalWrapper from '../components/AddTransactionPage/CategoryModal
 import Header from '../components/AddTransactionPage/Header';
 import TransactionModal from '../components/AddTransactionPage/TransactionModal';
 import { useTheme } from '../context/ThemeContext';
-import { deleteCategory, fetchAccounts, fetchCategories } from '../services/backendService';
+import { deleteCategory, fetchAccountOptions, fetchCategories } from '../services/backendService';
 import { AccountOption, Category } from "../types/types";
 import { supabase } from "../utils/supabase";
 
@@ -57,7 +57,7 @@ const TransactionAdder = () => {
     const loadAccounts = async () => {
       try {
         setIsLoadingAccounts(true);
-        const data = await fetchAccounts();
+        const data = await fetchAccountOptions();
         setAccountOptions(data);
       } catch (err) {
         console.error('Failed to fetch accounts:', err);
@@ -196,6 +196,9 @@ const TransactionAdder = () => {
           description={description}
           setDescription={setDescription}
           onConfirm={handleConfirm}
+          accountOptions={accountOptions}
+          selectedAccount={selectedAccount}
+          onSelectAccount={setSelectedAccount}
         />
 
         <CategoryModalWrapper

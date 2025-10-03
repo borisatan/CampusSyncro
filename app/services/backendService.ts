@@ -7,10 +7,16 @@ export const fetchCategories = async () => {
     return data ?? [];
 };
 
-export const fetchAccounts = async () => {
+export const fetchAccountOptions = async () => {
     const { data, error } = await supabase.from("Accounts").select("id, account_name, selected");
     if (error) throw error;
     return data ?? [];
+}
+
+export const fetchAccounts = async () => {
+  const { data, error } = await supabase.from("Accounts").select("*");
+  if (error) throw error;
+  return data ?? [];
 }
 
 export const fetchAccountNames = async () => {

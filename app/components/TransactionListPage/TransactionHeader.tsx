@@ -45,7 +45,7 @@ const TransactionsHeader: React.FC<TransactionsHeaderProps> = ({
 
         {/* Filter Button */}
         <TouchableOpacity
-          className="p-2 rounded-full bg-backgroundMuted dark:bg-surfaceDark"
+          className="p-5 rounded-full bg-backgroundMuted dark:bg-surfaceDark"
           onPress={onFilterPress}
         >
           <Ionicons
