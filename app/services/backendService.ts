@@ -25,6 +25,27 @@ export const fetchAccountNames = async () => {
   return data ?? [];
 }
 
+export const updateAccountName = async (accountName: string, newName: string) => {
+    const { data, error } = await supabase
+      .from('Accounts')
+      .update({ account_name: newName })
+      .eq('account_name', accountName)
+      .select();
+  
+    if (error) throw error;
+    return data;
+}
+export const updateAccountBalance = async (accountName: string, newBalance: number) => {
+    const { data, error } = await supabase
+      .from('Accounts')
+      .update({ balance: newBalance })
+      .eq('account_name', accountName)
+      .select();
+  
+    if (error) throw error;
+    return data;
+}
+
 export async function deleteCategory(id: number) {
     const { data, error } = await supabase
       .from('Categories')

@@ -104,6 +104,7 @@ const TransactionsScreen: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("Mounting TransactionsScreen");
     loadInitialTransactions();
   }, []);
 
@@ -129,6 +130,7 @@ const TransactionsScreen: React.FC = () => {
   const handleResetFilters = () => {
     setDateRange(null);
     setFilterAccounts([]);
+    setFilterCategory(null);
     setIsFilterVisible(false);
   };
 
@@ -162,9 +164,12 @@ const TransactionsScreen: React.FC = () => {
           setDateRange={setDateRange}
           filterAccounts={filterAccounts}
           setFilterAccounts={setFilterAccounts}
+          filterCategory={filterCategory}
+          setFilterCategory={setFilterCategory}
           isDarkMode={isDarkMode}
           handleReset={handleResetFilters}
         />
+
       </SafeAreaView>
     </SafeAreaProvider>
   );

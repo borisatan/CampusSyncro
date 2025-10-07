@@ -19,9 +19,12 @@ type FilterModalProps = {
   setDateRange: (range: { start: string; end: string } | null) => void;
   filterAccounts: string[];
   setFilterAccounts: (accounts: string[]) => void;
+  filterCategory: string | null;
+  setFilterCategory: (category: string | null) => void;
   isDarkMode: boolean;
   handleReset: () => void;
 };
+
 
 const FilterModal: React.FC<FilterModalProps> = ({
   visible,
@@ -30,10 +33,15 @@ const FilterModal: React.FC<FilterModalProps> = ({
   setDateRange,
   filterAccounts,
   setFilterAccounts,
+  filterCategory,
+  setFilterCategory,
   isDarkMode,
   handleReset
 }) => {
   const [accountsList, setAccountsList] = useState<string[]>([]);
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
+  const [showCategories, setShowCategories] = useState(false);
+
   
   useEffect(() => {
     const loadAccounts = async () => {
@@ -86,6 +94,55 @@ const FilterModal: React.FC<FilterModalProps> = ({
             setFilterAccounts={setFilterAccounts}
             isDarkMode={isDarkMode}
           />
+          {/* Category Selector */}
+<View className="mb-6">
+  <Text
+    className={`text-base font-semibold mb-3 ${
+      isDarkMode ? "text-textDark" : "text-textLight"
+    }`}
+  >
+    Category
+  </Text>
+
+  <TouchableOpacity
+    onPress={() => setShowCategories(prev => !prev)}
+    className={`px-5 py-3 rounded-full border ${
+      isDarkMode ? "border-borderDark" : "border-borderLight"
+    }`}
+  >
+    <Text
+      className={`${
+        isDarkMode ? "text-textDark" : "text-textLight"
+      }`}
+    >
+      {filterCategory || "Select Category"}
+    </Text>
+  </TouchableOpacity>
+
+  {showCategories && (
+    <View className="mt-3 border rounded-xl border-borderLight dark:border-borderDark">
+      {categoriesList.map((cat) => (
+        <TouchableOpacity
+          key={cat}
+          onPress={() => {
+            setFilterCategory(cat === filterCategory ? null : cat);
+            setShowCategories(false);
+          }}
+          className={`p-3 ${cat === filterCategory ? "bg-accentTeal/20" : ""}`}
+        >
+          <Text
+            className={`${
+              isDarkMode ? "text-textDark" : "text-textLight"
+            }`}
+          >
+            {cat}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  )}
+</View>
+
 
           {/* Apply & Reset */}
           <View className="flex-row justify-between">

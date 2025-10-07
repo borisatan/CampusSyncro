@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import BudgetProgressBar from '../components/HomePage/BudgetProgressBar';
 import ExpenseCategoryCard from '../components/HomePage/ExpenseCategoryCard';
 import HeaderSection from '../components/HomePage/HeaderSection';
 import { SpendingCircleChart } from '../components/HomePage/SpendingCircleChart';
@@ -9,11 +8,11 @@ import TimePeriodToggles from '../components/HomePage/TimePeriodToggles';
 import { fetchCategories, fetchCategoryAggregates, fetchTotalBalance, fetchTotalExpenses } from '../services/backendService';
 import { Category, CategoryAggregation, ChartSegment } from '../types/types';
 
-const budget = {
-  target: 20000,
-  spent: 6000,
-  percentUsed: 30,
-};
+// const budget = {
+//   target: 20000,
+//   spent: 6000,
+//   percentUsed: 30,
+// };
 
 const getDateRange = (period: 'Daily' | 'Weekly' | 'Monthly'): { startDate: Date, endDate: Date } => {
   const now = new Date();
@@ -184,7 +183,7 @@ const Dashboard: React.FC = () => {
             }
           >
             <HeaderSection totalBalance={totalBalance} totalExpenses={totalExpenses} />
-            <BudgetProgressBar percent={budget.percentUsed} target={budget.target} />
+            {/* <BudgetProgressBar percent={budget.percentUsed} target={budget.target} /> */}
             <SpendingCircleChart segments={chartSegments} total={chartTotal} />
             <TimePeriodToggles selected={selectedPeriod} onSelect={setSelectedPeriod} />
             <View className="mt-2 mx-2">
