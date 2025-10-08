@@ -121,3 +121,26 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
   if (error) throw error;
   return data ?? [];
 };
+
+
+export const deleteTransaction = async (id: number) => {
+  const { data, error } = await supabase
+    .from('Transactions')
+    .delete()
+    .eq('id', id)
+    .select();
+  
+  if (error) throw error;
+  return data;
+}
+
+export const updateTransaction = async (id: number, newAmount: number, newDescription: string, newAccount: string) => {
+  const { data, error } = await supabase
+    .from('Transactions')
+    .update({ amount: newAmount, description: newDescription, account_name: newAccount })
+    .eq('id', id)
+    .select();
+  
+  if (error) throw error;
+  return data;
+}

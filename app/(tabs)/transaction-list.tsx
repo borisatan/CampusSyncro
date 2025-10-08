@@ -2,11 +2,12 @@ import { RouteProp, useRoute } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import EditTransactionModal from "../components/AddTransactionPage/EditTransactionModal";
 import FilterModal from "../components/TransactionListPage/FilterModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
 import TransactionsList from "../components/TransactionListPage/TransactionsList";
 import { useTheme } from "../context/ThemeContext";
-import { fetchCategoryIcons, fetchTransactions } from "../services/backendService";
+import { fetchAccountNames, fetchCategoryIcons, fetchTransactions } from "../services/backendService";
 import { CategoryIconInfo, Transaction } from "../types/types";
 
 // Section type
@@ -55,6 +56,7 @@ const TransactionsScreen: React.FC = () => {
     route.params?.category || null
   );
   const [filterAccounts, setFilterAccounts] = useState<string[]>([]);
+  const [accountsList, setAccountsList] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -63,6 +65,9 @@ const TransactionsScreen: React.FC = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   // --- Load initial transactions (first page / refresh)
   const loadInitialTransactions = async () => {
@@ -108,6 +113,19 @@ const TransactionsScreen: React.FC = () => {
     loadInitialTransactions();
   }, []);
 
+  useEffect(() => {
+    const loadAccounts = async () => {
+      try {
+        const names = await fetchAccountNames();
+        setAccountsList(names.map((a: any) => a.account_name));
+      } catch (err) {
+        console.error("Failed to fetch accounts:", err);
+      }
+    };
+  
+    loadAccounts();
+  }, []);
+
   // Apply all filters
   const filteredTransactions = transactions.filter((tx) => {
     const matchesCategory = filterCategory ? tx.category_name === filterCategory : true;
@@ -134,6 +152,24 @@ const TransactionsScreen: React.FC = () => {
     setIsFilterVisible(false);
   };
 
+
+  const handleEditTransaction = (transactionId: string) => {
+    const tx = transactions.find(t => t.id === Number(transactionId));
+    if (tx) {
+      setSelectedTransaction(tx);
+      setIsEditModalVisible(true);
+    }
+  };
+
+  const handleDeleteTransaction = (id: number) => {
+    setTransactions(prev => prev.filter(tx => tx.id !== id));
+  };
+  
+  const handleSaveTransaction = (updatedTx: Transaction) => {
+    setTransactions(prev =>
+      prev.map(t => (t.id === updatedTx.id ? updatedTx : t))
+    );
+  };
   return (
     <SafeAreaProvider>
       <SafeAreaView className={isDarkMode ? "flex-1 bg-backgroundDark" : "flex-1 bg-background"}>
@@ -154,6 +190,7 @@ const TransactionsScreen: React.FC = () => {
           onRefresh={loadInitialTransactions} 
           onEndReached={loadMoreTransactions} 
           isFetchingMore={isFetchingMore}    
+          onItemLongPress={handleEditTransaction}
         />
 
         {/* Filter Modal */}
@@ -167,7 +204,17 @@ const TransactionsScreen: React.FC = () => {
           filterCategory={filterCategory}
           setFilterCategory={setFilterCategory}
           isDarkMode={isDarkMode}
+          accountsList={accountsList}
           handleReset={handleResetFilters}
+        />
+
+        <EditTransactionModal
+          visible={isEditModalVisible}
+          onClose={() => setIsEditModalVisible(false)}
+          accountsList={accountsList}
+          transaction={selectedTransaction}
+          onSave={handleSaveTransaction}
+          onDelete={handleDeleteTransaction}
         />
 
       </SafeAreaView>

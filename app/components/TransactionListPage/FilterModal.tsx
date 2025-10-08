@@ -1,5 +1,4 @@
-import { fetchAccountNames } from "@/app/services/backendService";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -19,6 +18,7 @@ type FilterModalProps = {
   setDateRange: (range: { start: string; end: string } | null) => void;
   filterAccounts: string[];
   setFilterAccounts: (accounts: string[]) => void;
+  accountsList: string[];
   filterCategory: string | null;
   setFilterCategory: (category: string | null) => void;
   isDarkMode: boolean;
@@ -33,28 +33,17 @@ const FilterModal: React.FC<FilterModalProps> = ({
   setDateRange,
   filterAccounts,
   setFilterAccounts,
+  accountsList,
   filterCategory,
   setFilterCategory,
   isDarkMode,
   handleReset
 }) => {
-  const [accountsList, setAccountsList] = useState<string[]>([]);
   const [categoriesList, setCategoriesList] = useState<string[]>([]);
   const [showCategories, setShowCategories] = useState(false);
 
   
-  useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        const names = await fetchAccountNames();
-        setAccountsList(names.map((a: any) => a.account_name));
-      } catch (err) {
-        console.error("Failed to fetch accounts:", err);
-      }
-    };
-  
-    loadAccounts();
-  }, []);
+
   
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

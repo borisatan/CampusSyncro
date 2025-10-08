@@ -15,6 +15,7 @@ module.exports = {
         accentBlue: '#2563EB',       // confirm/enter button
         accentPurple: "#B2A4FF",
         accentRed: '#EF4444',        // delete button
+        darkRed: '#8B0000',
 
         textLight: '#000000',        // primary light text
         textDark: '#FFFFFF',         // primary dark text
