@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
@@ -14,20 +13,25 @@ const Header: React.FC<HeaderProps> = ({ isEditMode, onToggleEditMode, onBack, t
   const { isDarkMode } = useTheme();
 
   return (
-    <View className="flex-row justify-between items-center px-4 py-3">
-      <TouchableOpacity className="p-2" onPress={onBack}>
-        <Ionicons name="chevron-back" size={24} color={isDarkMode ? "white" : "black"} />
-      </TouchableOpacity>
-
-      <Text className={isDarkMode ? "text-2xl font-semibold text-textDark" : "text-base font-semibold text-textLight"}>
+    <View className="relative px-4 py-3">
+      <Text
+        className={`text-3xl font-semibold text-center ${
+          isDarkMode ? 'text-textDark' : 'text-textLight'
+        }`}
+      >
         {title}
       </Text>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={onToggleEditMode}
-        className={`px-3 py-1 rounded-lg w-16 items-center bg-accentTeal`}
+        className={`absolute right-4 top-7 -translate-y-1/2 px-6 py-1 rounded-lg bg-accentTeal items-center`}
+        
       >
-        <Text className={`text-base font-medium ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
+        <Text
+          className={`text-base font-medium ${
+            isDarkMode ? 'text-textDark' : 'text-textLight'
+          }`}
+        >
           {isEditMode ? 'Done' : 'Edit'}
         </Text>
       </TouchableOpacity>

@@ -37,11 +37,29 @@ const availableIcons = [
 
 // Predefined colors for categories
 const categoryColors = [
-    '#F94144', '#F3722C', '#F8961E', '#F9C74F', '#90BE6D',
-    '#43AA8B', '#4D908E', '#577590', '#277DA1', '#8338EC',
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
-    '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71',
-    '#E74C3C', '#1ABC9C', '#F1C40F', '#34495E', '#16A085'
+    "#FF9999","#FF6666","#FF3333","#CC0000","#990000",
+"#FFB366","#FF9933","#FF8000","#CC6600","#994C00",
+"#FFFF66","#FFEB33","#FFCC00","#CCCC00","#999900",
+"#B3FF66","#99FF33","#66CC00","#4C9900","#336600",
+"#66FF66","#33CC33","#009933","#006600","#004C00",
+"#66FFB3","#33FF99","#00CC66","#00994C","#006633",
+"#66FFFF","#33CCFF","#0099FF","#0066CC","#004C99",
+"#99CCFF","#6699FF","#3366FF","#0033CC","#001966",
+"#B366FF","#9933FF","#7F00CC","#4C0099","#330066",
+"#FF66B2","#FF3399","#FF007F","#CC0066","#800040",
+"#FF99CC","#FF66CC","#FF33CC","#CC0099","#990073",
+"#FFD966","#FFCC33","#FFB300","#CC9900","#996600",
+"#D9B38C","#CC9966","#B37700","#996633","#663300",
+"#E6E6E6","#CCCCCC","#B3B3B3","#808080","#4D4D4D",
+"#C2C2A3","#999966","#80804D","#666633","#4D4D26",
+"#99E6E6","#66CCCC","#33B2B2","#008080","#004C4C",
+"#99FF99","#66FF80","#33CC66","#00994D","#006633",
+"#CCE6FF","#99CCFF","#66B2FF","#3380CC","#0059B2",
+"#E699FF","#CC66FF","#B233CC","#8000B2","#4D0073"
+
+
+
+
 ];
 
 export const CategoryModal: React.FC<CategoryModalProps> = ({
@@ -124,185 +142,169 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
     return (
         <Modal
-            visible={visible}
-            transparent
-            animationType="slide"
-            onRequestClose={onClose}
+        visible={visible}
+        transparent
+        animationType="slide"
+        onRequestClose={onClose}
+    >
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            className="flex-1 justify-end"
         >
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1 justify-end"
+            <TouchableOpacity
+                className="flex-1"
+                activeOpacity={1}
+                onPress={() => {
+                    Keyboard.dismiss();
+                    onClose();
+                }}
             >
-                <TouchableOpacity
-                    className="flex-1"
-                    activeOpacity={1}
-                    onPress={() => {
-                        Keyboard.dismiss();
-                        onClose();
-                    }}
-                >
-                    <View className="flex-1 justify-end">
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={(e) => e.stopPropagation()}
-                            className="bg-[#FFFFFF] dark:bg-[#1E1E1E] rounded-t-3xl p-6"
-                        >
-                            <View className="flex-row justify-between items-center mb-6">
-                                <Text className="text-xl font-bold text-[#212121] dark:text-[#FFFFFF]">
-                                    {mode === 'add' ? 'Add Custom Category' : 'Edit Category'}
-                                </Text>
-                                <TouchableOpacity
-                                    onPress={onClose}
-                                    className="p-2"
-                                >
-                                    <Ionicons name="close" size={24} color="#5F6368" />
-                                </TouchableOpacity>
-                            </View>
-
-                            <View className="mb-4">
-                                <Text className="text-sm font-medium text-[#212121] dark:text-[#FFFFFF] mb-2">
-                                    Category Name
-                                </Text>
-                                <TextInput
-                                    className="bg-[#FAFAFA] dark:bg-[#282A36] border border-[#E0E0E0] dark:border-[#2C2C2C] rounded-xl px-4 py-3 text-[#212121] dark:text-[#FFFFFF]"
-                                    placeholder="Enter category name"
-                                    placeholderTextColor="#9E9E9E"
-                                    value={categoryName}
-                                    maxLength={50}
-                                    onChangeText={(text) => {
-                                        setCategoryName(text);
-                                        setError('');
-                                    }}
-                                />
-                                <View className="flex-row justify-between mt-1">
-                                    {error ? (
-                                        <Text className="text-[#E53935] dark:text-[#EF5350] text-sm">
-                                            {error}
-                                        </Text>
-                                    ) : (
-                                        <View />
-                                    )}
-                                    <Text className="text-[#9E9E9E] text-sm">
-                                        {categoryName.length}/50
+                <View className="flex-1 justify-end">
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        onPress={(e) => e.stopPropagation()}
+                        className="bg-background dark:bg-inputDark rounded-t-3xl p-6"
+                    >
+                        <View className="flex-row justify-between items-center mb-6">
+                            <Text className="text-xl font-bold text-textLight dark:text-textDark">
+                                {mode === 'add' ? 'Add Custom Category' : 'Edit Category'}
+                            </Text>
+                            <TouchableOpacity onPress={onClose} className="p-2">
+                                <Ionicons name="close" size={24} color="#5F6368" />
+                            </TouchableOpacity>
+                        </View>
+    
+                        <View className="mb-4">
+                            <Text className="text-sm font-medium text-textLight dark:text-textDark mb-2">
+                                Category Name
+                            </Text>
+                            <TextInput
+                                className="bg-backgroundMuted dark:bg-inputDark border border-borderLight dark:border-borderDark rounded-xl px-4 py-3 text-textLight dark:text-textDark"
+                                placeholder="Enter category name"
+                                placeholderTextColor={Platform.OS === "ios" ? "#888888" : "#AAAAAA"}
+                                value={categoryName}
+                                maxLength={50}
+                                onChangeText={(text) => {
+                                    setCategoryName(text);
+                                    setError('');
+                                }}
+                            />
+                            <View className="flex-row justify-between mt-1">
+                                {error ? (
+                                    <Text className="text-accentRed dark:text-darkRed text-sm">
+                                        {error}
                                     </Text>
+                                ) : (
+                                    <View />
+                                )}
+                                <Text className="text-secondaryLight dark:text-secondaryDark text-sm">
+                                    {categoryName.length}/50
+                                </Text>
+                            </View>
+                        </View>
+    
+                        <View className="mb-4">
+                            <Text className="text-sm font-medium text-textLight dark:text-textDark mb-2">
+                                Select Icon
+                            </Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                <View className="flex-col gap-2">
+                                    <View className="flex-row gap-2">
+                                        {availableIcons.slice(0, Math.ceil(availableIcons.length / 2)).map((icon) => (
+                                            <TouchableOpacity
+                                                key={icon}
+                                                className={`w-12 h-12 rounded-xl items-center justify-center`}
+                                                style={{
+                                                    backgroundColor: selectedIcon === icon ? selectedColor : '#D1D5DB' 
+                                                }}
+                                                onPress={() => setSelectedIcon(icon)}
+                                            >
+                                                <Ionicons
+                                                    name={icon as any}
+                                                    size={24}
+                                                    color={selectedIcon === icon ? 'white' : '#4B5563'} 
+                                                />
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+    
+                                    <View className="flex-row gap-2">
+                                        {availableIcons.slice(Math.ceil(availableIcons.length / 2)).map((icon) => (
+                                            <TouchableOpacity
+                                                key={icon}
+                                                className={`w-12 h-12 rounded-xl items-center justify-center`}
+                                                style={{
+                                                    backgroundColor: selectedIcon === icon ? selectedColor : '#D1D5DB'
+                                                }}
+                                                onPress={() => setSelectedIcon(icon)}
+                                            >
+                                                <Ionicons
+                                                    name={icon as any}
+                                                    size={24}
+                                                    color={selectedIcon === icon ? 'white' : '#4B5563'}
+                                                />
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
                                 </View>
-                            </View>
-
-                            <View className="mb-4">
-                                <Text className="text-sm font-medium text-[#212121] dark:text-[#FFFFFF] mb-2">
-                                    Select Icon
-                                </Text>
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                >
-                                    <View className="flex-col gap-2"> 
-                                        <View className="flex-row gap-2">
-                                            {availableIcons.slice(0, Math.ceil(availableIcons.length / 2)).map((icon) => (
+                            </ScrollView>
+                        </View>
+    
+                        <View className="mb-6">
+                            <Text className="text-sm font-medium text-textLight dark:text-textDark mb-2">
+                                Select Color
+                            </Text>
+                            <ScrollView 
+                                showsVerticalScrollIndicator={true} 
+                                style={{ maxHeight: 180 }}
+                                contentContainerStyle={{ alignItems: "center" }}
+                            >
+                                <View className="flex-col gap-2">
+                                    {Array.from({ length: Math.ceil(categoryColors.length / 5) }).map((_, rowIndex) => (
+                                        <View key={rowIndex} className="flex-row gap-2">
+                                            {categoryColors.slice(rowIndex * 5, rowIndex * 5 + 5).map((colorName) => (
                                                 <TouchableOpacity
-                                                    key={icon}
-                                                    className={`w-12 h-12 rounded-xl items-center justify-center`}
-                                                    style={{
-                                                        backgroundColor: selectedIcon === icon ? selectedColor : '#E0E0E0'
-                                                    }}
-                                                    onPress={() => setSelectedIcon(icon)}
-                                                >
-                                                    <Ionicons
-                                                        name={icon as any}
-                                                        size={24}
-                                                        color={selectedIcon === icon ? 'white' : '#212121'}
-                                                    />
-                                                </TouchableOpacity>
-                                            ))}
-                                        </View>
-
-                                        <View className="flex-row gap-2">
-                                            {availableIcons.slice(Math.ceil(availableIcons.length / 2)).map((icon) => (
-                                                <TouchableOpacity
-                                                    key={icon}
-                                                    className={`w-12 h-12 rounded-xl items-center justify-center`}
-                                                    style={{
-                                                        backgroundColor: selectedIcon === icon ? selectedColor : '#E0E0E0'
-                                                    }}
-                                                    onPress={() => setSelectedIcon(icon)}
-                                                >
-                                                    <Ionicons
-                                                        name={icon as any}
-                                                        size={24}
-                                                        color={selectedIcon === icon ? 'white' : '#212121'}
-                                                    />
-                                                </TouchableOpacity>
-                                            ))}
-                                        </View>
-                                    </View>
-                                </ScrollView>
-                            </View>
-                            <View className="mb-6">
-                                <Text className="text-sm font-medium text-[#212121] dark:text-[#FFFFFF] mb-2">
-                                    Select Color
-                                </Text>
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                >
-                                    <View className="flex-col gap-2"> 
-                                        <View className="flex-row gap-2">
-                                            {categoryColors.slice(0, Math.ceil(categoryColors.length / 2)).map((color) => (
-                                                <TouchableOpacity
-                                                    key={color}
+                                                    key={colorName}
                                                     className={`w-12 h-12 rounded-xl ${
-                                                        selectedColor === color
-                                                            ? 'border-2 border-[#2A9D8F]'
+                                                        selectedColor === colorName
+                                                            ? 'border-2 border-accentTeal'
                                                             : ''
                                                     }`}
-                                                    style={{ backgroundColor: color }}
-                                                    onPress={() => setSelectedColor(color)}
+                                                    style={{ backgroundColor: colorName }}
+                                                    onPress={() => setSelectedColor(colorName)}
                                                 />
                                             ))}
                                         </View>
-
-                                        <View className="flex-row gap-2">
-                                            {categoryColors.slice(Math.ceil(categoryColors.length / 2)).map((color) => (
-                                                <TouchableOpacity
-                                                    key={color}
-                                                    className={`w-12 h-12 rounded-xl ${
-                                                        selectedColor === color
-                                                            ? 'border-2 border-[#2A9D8F]'
-                                                            : ''
-                                                    }`}
-                                                    style={{ backgroundColor: color }}
-                                                    onPress={() => setSelectedColor(color)}
-                                                />
-                                            ))}
-                                        </View>
-                                    </View>
-                                </ScrollView>
-                            </View>
-
-                            <View className="flex-row gap-3">
-                                <TouchableOpacity
-                                    className="flex-1 bg-[#E0E0E0] dark:bg-[#2C2C2C] py-3 rounded-xl"
-                                    onPress={onClose}
-                                >
-                                    <Text className="text-[#212121] dark:text-[#FFFFFF] font-semibold text-center">
-                                        Cancel
-                                    </Text>
-                                </TouchableOpacity>
-                                
-                                <TouchableOpacity
-                                    className="flex-1 bg-[#2A9D8F] py-3 rounded-xl"
-                                    onPress={handleSubmit}
-                                >
-                                    <Text className="text-white font-semibold text-center">
-                                        {mode === 'add' ? 'Add Category' : 'Save Changes'}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-                </TouchableOpacity>
-            </KeyboardAvoidingView>
-        </Modal>
+                                    ))}
+                                </View>
+                            </ScrollView>
+                        </View>
+    
+                        <View className="flex-row gap-3">
+                            <TouchableOpacity
+                                className="flex-1 bg-backgroundMuted dark:bg-inputDark py-3 border border-borderLight dark:border-borderDark rounded-xl"
+                                onPress={onClose}
+                            >
+                                <Text className="text-textLight dark:text-textDark font-semibold text-center">
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity
+                                className="flex-1 bg-accentTeal py-3 rounded-xl"
+                                onPress={handleSubmit}
+                            >
+                                <Text className="text-textDark font-semibold text-center">
+                                    {mode === 'add' ? 'Add Category' : 'Save Changes'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </View>
+            </TouchableOpacity>
+        </KeyboardAvoidingView>
+    </Modal>
+    
     );
 }; 
 

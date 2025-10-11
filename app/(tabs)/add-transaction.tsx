@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   ScrollView,
   StatusBar,
@@ -14,6 +13,7 @@ import CategoryGrid from '../components/AddTransactionPage/CategoryGrid';
 import CategoryModalWrapper from '../components/AddTransactionPage/CategoryModalWrapper';
 import Header from '../components/AddTransactionPage/Header';
 import TransactionModal from '../components/AddTransactionPage/TransactionModal';
+import LoadingSpinner from '../components/Shared/LoadingSpinner';
 import { useTheme } from '../context/ThemeContext';
 import { deleteCategory, fetchAccountOptions, fetchCategories } from '../services/backendService';
 import { AccountOption, Category } from "../types/types";
@@ -136,18 +136,6 @@ const TransactionAdder = () => {
   };
 
 
-  // Loading component
-  const LoadingSpinner = () => (
-    <View className="flex-1 justify-center items-center">
-      <ActivityIndicator 
-        size="large" 
-        color={isDarkMode ? "#ffffff" : "#000000"} 
-      />
-      <Text className={isDarkMode ? "text-white mt-2" : "text-black mt-2"}>
-        Loading...
-      </Text>
-    </View>
-  );
 
   return (
     <SafeAreaProvider>
