@@ -57,11 +57,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           <Text className="text-lg font-semibold text-center mb-4 text-textLight dark:text-textDark">
             Add transaction for {category?.category_name}
           </Text>
-          {/* <AccountSelector
-          accountOptions={accountOptions}
-          selectedAccount={selectedAccount}
-          onSelectAccount={setSelectedAccount}
-        /> */}
 
           <View className="flex-row items-center border dark:border-borderDark border-borderLight rounded-xl px-4 py-5 mb-3 bg-background dark:bg-inputDark">
             <TextInput

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  RefreshControl,
   ScrollView,
   StatusBar,
   Text,
@@ -33,6 +34,7 @@ const TransactionAdder = () => {
   const [accountOptions, setAccountOptions] = useState<AccountOption[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
   const amountInputRef = useRef<TextInput>(null);
 
@@ -68,6 +70,24 @@ const TransactionAdder = () => {
 
     loadAccounts();
   }, []);
+
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      const [categoriesData, accountsData] = await Promise.all([
+        fetchCategories(),
+        fetchAccountOptions()
+      ]);
+  
+      setCategories(categoriesData);
+      setAccountOptions(accountsData);
+    } catch (err) {
+      console.error('Failed to refresh data:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  
 
   const handleDeleteCategory = (category: Category) => {
     Alert.alert(
@@ -156,7 +176,10 @@ const TransactionAdder = () => {
         />
 
         {/* Categories grid with loading state */}
-        <ScrollView className="flex-1 px-4 pt-4">
+        <ScrollView className="flex-1 px-4 pt-4"
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
+        }>
           {isLoadingCategories ? (
             <LoadingSpinner />
           ) : categories.length === 0 ? (

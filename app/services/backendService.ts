@@ -25,6 +25,92 @@ export const fetchAccountNames = async () => {
   return data ?? [];
 }
 
+export const fetchTransactions = async (
+  limit: number = 50,
+  offset: number = 0
+): Promise<Transaction[]> => {
+  try {
+    const { data, error } = await supabase
+    .from("Transactions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1); 
+      
+      if (error) {
+        console.error("Error fetching transactions:", error.message);
+      return [];
+    }
+    
+    return data || [];
+  } catch (err) {
+    console.error("Unexpected error fetching transactions:", err);
+    return [];
+  }
+};
+
+export async function fetchCategoryIcons(): Promise<Record<string, CategoryIconInfo>> {
+  const { data, error } = await supabase
+  .from("Categories")
+  .select("category_name, icon, color");
+  
+  if (error) throw error; 
+  
+  const icons: Record<string, CategoryIconInfo> = {};
+  if (data) {
+    data.forEach((c: any) => {
+        icons[c.category_name] = { icon: c.icon, color: c.color };
+      });
+    }
+    
+    return icons;
+  }
+  
+  export const fetchTotalBalance = async (): Promise<number> => {
+    const { data, error } = await supabase.rpc('fetch_total_balance');
+    if (error) throw error;
+    return data ?? 0;
+  };
+  
+  export const fetchTotalExpenses = async (startDate: Date, endDate: Date): Promise<number> => {
+    const { data, error } = await supabase.rpc('fetch_total_expenses', {
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+  });
+  if (error) throw error;
+  return data ?? 0;
+};
+
+export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): Promise<CategoryAggregation[]> => {
+  const { data, error } = await supabase.rpc('fetch_category_aggregates', {
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+  });
+  if (error) throw error;
+  return data ?? [];
+};
+
+export const createAccount = async (accountName: string, balance: number) => {
+  const { data, error } = await supabase
+  .from('Accounts')
+  .insert({ account_name: accountName, balance: balance })
+  .select()
+  .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export const updateTransaction = async (id: number, newAmount: number, newDescription: string, newAccount: string) => {
+  const { data, error } = await supabase
+  .from('Transactions')
+  .update({ amount: newAmount, description: newDescription, account_name: newAccount })
+  .eq('id', id)
+  .select();
+  
+  if (error) throw error;
+  return data;
+}
+
 export const updateAccountName = async (accountName: string, newName: string) => {
     const { data, error } = await supabase
       .from('Accounts')
@@ -46,6 +132,27 @@ export const updateAccountBalance = async (accountName: string, newBalance: numb
     return data;
 }
 
+export const deleteTransaction = async (id: number) => {
+  const { data, error } = await supabase
+  .from('Transactions')
+  .delete()
+  .eq('id', id)
+  .select();
+  
+  if (error) throw error;
+  return data;
+}
+
+export const deleteAccount = async (id: number) => {
+  const { data, error } = await supabase
+  .from('Accounts')
+    .delete()
+    .eq('id', id)
+    .select();
+    
+    if (error) throw error;
+    return data;
+  } 
 export async function deleteCategory(id: number) {
     const { data, error } = await supabase
       .from('Categories')
@@ -56,104 +163,3 @@ export async function deleteCategory(id: number) {
     if (error) throw error;
     return data;
 }
-
-
-export const fetchTransactions = async (
-  limit: number = 50,
-  offset: number = 0
-): Promise<Transaction[]> => {
-  try {
-    const { data, error } = await supabase
-      .from("Transactions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1); 
-
-    if (error) {
-      console.error("Error fetching transactions:", error.message);
-      return [];
-    }
-
-    return data || [];
-  } catch (err) {
-    console.error("Unexpected error fetching transactions:", err);
-    return [];
-  }
-};
-
-  export async function fetchCategoryIcons(): Promise<Record<string, CategoryIconInfo>> {
-    const { data, error } = await supabase
-      .from("Categories")
-      .select("category_name, icon, color");
-  
-    if (error) throw error; 
-  
-    const icons: Record<string, CategoryIconInfo> = {};
-    if (data) {
-      data.forEach((c: any) => {
-        icons[c.category_name] = { icon: c.icon, color: c.color };
-      });
-    }
-  
-    return icons;
-  }
-
-export const fetchTotalBalance = async (): Promise<number> => {
-  const { data, error } = await supabase.rpc('fetch_total_balance');
-  if (error) throw error;
-  return data ?? 0;
-};
-
-export const fetchTotalExpenses = async (startDate: Date, endDate: Date): Promise<number> => {
-  const { data, error } = await supabase.rpc('fetch_total_expenses', {
-    start_date: startDate.toISOString(),
-    end_date: endDate.toISOString(),
-  });
-  if (error) throw error;
-  return data ?? 0;
-};
-
-export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): Promise<CategoryAggregation[]> => {
-  const { data, error } = await supabase.rpc('fetch_category_aggregates', {
-    start_date: startDate.toISOString(),
-    end_date: endDate.toISOString(),
-  });
-  if (error) throw error;
-  return data ?? [];
-};
-
-
-
-export const updateTransaction = async (id: number, newAmount: number, newDescription: string, newAccount: string) => {
-  const { data, error } = await supabase
-  .from('Transactions')
-  .update({ amount: newAmount, description: newDescription, account_name: newAccount })
-    .eq('id', id)
-    .select();
-  
-    if (error) throw error;
-    return data;
-}
-
-
-export const deleteTransaction = async (id: number) => {
-  const { data, error } = await supabase
-    .from('Transactions')
-    .delete()
-    .eq('id', id)
-    .select();
-  
-  if (error) throw error;
-  return data;
-}
-
-export const deleteAccount = async (id: number) => {
-  const { data, error } = await supabase
-    .from('Accounts')
-    .delete()
-    .eq('id', id)
-    .select();
-  
-  if (error) throw error;
-  return data;
-} 
