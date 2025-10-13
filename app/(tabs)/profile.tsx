@@ -172,14 +172,14 @@ const Profile: React.FC = () => {
       </ScrollView>
 
       {/* Add Account button fixed at bottom */}
-      {isEditMode && (
+      { (
         <View className="p-4 bg-background dark:bg-backgroundDark border-t border-borderLight dark:border-borderDark"
         style={{ paddingBottom: insets.bottom + 65 }}>
         <TouchableOpacity
-          className="bg-backgroundMuted dark:bg-white p-5 rounded-xl shadow-sm flex-row justify-between items-center"
+          className="bg-backgroundMuted dark:bg-white p-5 rounded-xl shadow-sm flex-row justify-center items-center"
           onPress={() => setAddAccountModalVisible(true)}
         >
-          <Text className={`text-lg font-semibold ${isDark ? 'text-textLight' : 'text-textDark'} mb-1`}>
+          <Text className={`text-lg font-semibold text-accentTeal ${isDark ? 'text-textLight' : 'text-textDark'} mb-1`}>
             Add Account
           </Text>
         </TouchableOpacity>
