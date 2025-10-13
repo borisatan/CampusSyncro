@@ -172,7 +172,7 @@ const Profile: React.FC = () => {
       </ScrollView>
 
       {/* Add Account button fixed at bottom */}
-      { (
+      { isEditMode && (
         <View className="p-4 bg-background dark:bg-backgroundDark border-t border-borderLight dark:border-borderDark"
         style={{ paddingBottom: insets.bottom + 65 }}>
         <TouchableOpacity
