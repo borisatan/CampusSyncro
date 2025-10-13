@@ -4,7 +4,7 @@
     "slug": "Perfin",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "",
+    "icon": "assets/icons/icon.png",
     "scheme": "campussyncro",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,10 +13,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "",
+        "foregroundImage": "assets/icons/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.borisatanassov.Perfin"
     },
     "web": {
       "bundler": "metro",
@@ -28,15 +29,23 @@
       [
         "expo-splash-screen",
         {
-          "image": "",
+          "image": "assets/icons/icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "93fbee6f-e42a-41a3-9f6d-28b662aaba3a"
+      }
     }
   }
 }
