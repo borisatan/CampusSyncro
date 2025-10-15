@@ -1,5 +1,5 @@
 // Category Types
-export type CategoryName = String;
+export type CategoryName = string;
 
 export interface Category {
   id: number;

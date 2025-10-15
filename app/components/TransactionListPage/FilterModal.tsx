@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  ScrollView,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View
 } from "react-native";
+import { fetchCategories } from "../../services/backendService";
+import { Category } from "../../types/types";
 import DateRangeSelector from "../Shared/date-selector";
 import AccountSelector from "./AccountSelector";
 
@@ -39,10 +43,17 @@ const FilterModal: React.FC<FilterModalProps> = ({
   isDarkMode,
   handleReset
 }) => {
-  const [categoriesList, setCategoriesList] = useState<string[]>([]);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [showCategories, setShowCategories] = useState(false);
 
-  
+  useEffect(() => {
+    const loadCategories = async () => {
+      const cats = await fetchCategories();
+      setCategoriesList(cats);
+    };
+
+    loadCategories();
+  }, []); 
 
   
   return (
@@ -84,53 +95,79 @@ const FilterModal: React.FC<FilterModalProps> = ({
             isDarkMode={isDarkMode}
           />
           {/* Category Selector */}
-<View className="mb-6">
-  <Text
-    className={`text-base font-semibold mb-3 ${
-      isDarkMode ? "text-textDark" : "text-textLight"
-    }`}
-  >
-    Category
-  </Text>
+          <View className="mb-6">
+            <Text
+              className={`text-base font-semibold mb-3 ${
+                isDarkMode ? "text-textDark" : "text-textLight"
+              }`}
+            >
+              Category
+            </Text>
 
-  <TouchableOpacity
-    onPress={() => setShowCategories(prev => !prev)}
-    className={`px-5 py-3 rounded-full border ${
-      isDarkMode ? "border-borderDark" : "border-borderLight"
-    }`}
-  >
-    <Text
-      className={`${
-        isDarkMode ? "text-textDark" : "text-textLight"
-      }`}
-    >
-      {filterCategory || "Select Category"}
-    </Text>
-  </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowCategories(prev => !prev)}
+              className={`px-5 py-3 rounded-full border ${
+                isDarkMode ? "border-borderDark" : "border-borderLight"
+              }`}
+            >
+              <Text
+                className={`${
+                  isDarkMode ? "text-textDark" : "text-textLight"
+                }`}
+              >
+                {filterCategory || "Select Category"}
+              </Text>
+            </TouchableOpacity>
 
-  {showCategories && (
-    <View className="mt-3 border rounded-xl border-borderLight dark:border-borderDark">
-      {categoriesList.map((cat) => (
-        <TouchableOpacity
-          key={cat}
-          onPress={() => {
-            setFilterCategory(cat === filterCategory ? null : cat);
-            setShowCategories(false);
-          }}
-          className={`p-3 ${cat === filterCategory ? "bg-accentTeal/20" : ""}`}
-        >
-          <Text
-            className={`${
-              isDarkMode ? "text-textDark" : "text-textLight"
-            }`}
-          >
-            {cat}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  )}
-</View>
+            {showCategories && (
+            <View className="mt-3 border rounded-xl border-borderLight dark:border-borderDark max-h-60">
+              <ScrollView>
+              <TouchableOpacity
+                  onPress={() => {
+                    setFilterCategory(null);
+                    setShowCategories(false);
+                  }}
+                  className={`p-3 flex-row items-center ${
+                    filterCategory === null ? "bg-accentTeal/20" : ""
+                  }`}>
+                  <Ionicons
+                    name="apps-outline"
+                    size={20}
+                    color={isDarkMode ? "#fff" : "#000"}
+                  />
+                  <Text className={`ml-2 ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
+                    All Categories
+                  </Text>
+                </TouchableOpacity>
+                
+                {categoriesList.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.id}
+                    onPress={() => {
+                      setFilterCategory(
+                        cat.category_name === filterCategory ? null : cat.category_name
+                      );
+                      setShowCategories(false);
+                    }}
+                    className={`p-3 flex-row items-center ${
+                      cat.category_name === filterCategory ? "bg-accentTeal/20" : ""
+                    }`}
+                  >
+                    {cat.icon && (
+                      <Ionicons
+                        name={cat.icon as any} // 👈 casting to any to silence TS
+                        size={20}
+                        color={cat.color}
+                      />
+                    )}
+                    <Text className={`ml-2 ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
+                      {cat.category_name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>)}
+          </View>
 
 
           {/* Apply & Reset */}

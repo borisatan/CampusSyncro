@@ -22,10 +22,14 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   isFetchingMore,
   onItemLongPress, 
 }) => {
+  
   return (
     <SectionList
       sections={sections}
-      keyExtractor={(item, index) => `${item.id}-${index}`}
+      keyExtractor={(item) => {
+        return `${item.id}-${String(item.created_at)}`;
+      }}
+
       renderItem={({ item }) => <AnimatedTransactionItem
         transaction={item}
         categoryIcons={categoryIcons}

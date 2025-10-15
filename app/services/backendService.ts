@@ -121,6 +121,7 @@ export const updateAccountName = async (accountName: string, newName: string) =>
     if (error) throw error;
     return data;
 }
+
 export const updateAccountBalance = async (accountName: string, newBalance: number) => {
     const { data, error } = await supabase
       .from('Accounts')

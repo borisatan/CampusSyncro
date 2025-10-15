@@ -173,7 +173,7 @@ const Profile: React.FC = () => {
 
       {/* Add Account button fixed at bottom */}
       { isEditMode && (
-        <View className="p-4 bg-background dark:bg-backgroundDark border-t border-borderLight dark:border-borderDark"
+        <View className="p-2 bg-background dark:bg-backgroundDark border-t border-borderLight dark:border-borderDark"
         style={{ paddingBottom: insets.bottom + 65 }}>
         <TouchableOpacity
           className="bg-backgroundMuted dark:bg-white p-5 rounded-xl shadow-sm flex-row justify-center items-center"

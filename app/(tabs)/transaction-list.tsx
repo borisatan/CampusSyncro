@@ -1,4 +1,5 @@
 import { RouteProp, useRoute } from "@react-navigation/native";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -9,6 +10,10 @@ import TransactionsList from "../components/TransactionListPage/TransactionsList
 import { useTheme } from "../context/ThemeContext";
 import { fetchAccountNames, fetchCategoryIcons, fetchTransactions } from "../services/backendService";
 import { CategoryIconInfo, Transaction } from "../types/types";
+
+type RouteParams = {
+  initialCategory?: string;
+};
 
 // Section type
 type TransactionSection = {
@@ -47,27 +52,36 @@ const groupTransactionsByDate = (
 // Main screen
 const TransactionsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
-  const route = useRoute<TransactionsScreenRouteProp>();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categoryIcons, setCategoryIcons] = useState<Record<string, CategoryIconInfo>>({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string | null>(
-    route.params?.category || null
-  );
+  const route = useRoute<RouteProp<{ Transactions: { initialCategory?: string } }, "Transactions">>();
+
+  const { initialCategory } = useLocalSearchParams<{ initialCategory?: string }>();
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+
   const [filterAccounts, setFilterAccounts] = useState<string[]>([]);
   const [accountsList, setAccountsList] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
-  const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
+  
   const LIMIT = 50;
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-
+  
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  
+  useEffect(() => {
+    if (initialCategory) {
+      setFilterCategory(initialCategory);
+    } else {
+      setFilterCategory(null);
+    }
+  }, [initialCategory]);
 
   // --- Load initial transactions (first page / refresh)
   const loadInitialTransactions = async () => {
@@ -77,7 +91,7 @@ const TransactionsScreen: React.FC = () => {
         fetchTransactions(LIMIT, 0),
         fetchCategoryIcons(),
       ]);
-
+      
       setTransactions(transactionsData);
       setCategoryIcons(iconsData);
       setPage(1);
@@ -109,7 +123,6 @@ const TransactionsScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log("Mounting TransactionsScreen");
     loadInitialTransactions();
   }, []);
 

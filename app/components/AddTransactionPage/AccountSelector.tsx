@@ -16,7 +16,7 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({ accountOptions, selec
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      className="max-h-12"
+      className="max-h-13 rounded-2xl mb-3"
       contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 5 }}
     >
       {accountOptions.map((account) => (
@@ -24,8 +24,8 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({ accountOptions, selec
           key={account.id}
           className={`px-4 py-2 rounded-2xl mr-2 ${
             selectedAccount === account.account_name
-              ? isDarkMode ? 'bg-accentTeal' : 'bg-backgroundMuted' 
-              : isDarkMode ? "bg-surfaceDark border-borderDark" : "bg-background border-borderLight"
+              ? isDarkMode ? 'bg-accentTeal' : 'bg-backgroundDark' 
+              : isDarkMode ? "bg-inputDark border border-borderDark" : "bg-background border border-borderLight"
           }`}
           onPress={() => onSelectAccount(account.account_name)}
         >

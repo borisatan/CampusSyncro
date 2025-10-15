@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -33,6 +34,8 @@ const getDateRange = (period: 'Daily' | 'Weekly' | 'Monthly'): { startDate: Date
   return { startDate, endDate: now };
 };
 
+
+
 const Dashboard: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'Daily' | 'Weekly' | 'Monthly'>('Monthly');
   const [totalBalance, setTotalBalance] = useState<number>(0);
@@ -42,9 +45,18 @@ const Dashboard: React.FC = () => {
   const [categoriesAggregated, setCategoriesAggregated] = useState<CategoryAggregation[]>([]);
   const [chartSegments, setChartSegments] = useState<ChartSegment[]>([]);
   const [loading, setLoading] = useState(false);
-
+  
   const [cache, setCache] = useState<Record<string, any>>({});
+  const router = useRouter();
+  
+  const onCategoryPress = (category_name: string) => {
+    router.push({
+      pathname: "/transaction-list",
+      params: { initialCategory: category_name, t: Date.now().toString() },
+    });
+  };
 
+  
   const fetchDashboardData = async (forceRefresh = false) => {
     if (!forceRefresh && cache[selectedPeriod]) {
       applyData(cache[selectedPeriod]);
@@ -200,14 +212,15 @@ const Dashboard: React.FC = () => {
                 .map(cat => {
                   const agg = categoriesAggregated.find(c => c.category_name === cat.category_name);
                   return (
-                    <ExpenseCategoryCard
-                      key={cat.id}
-                      name={cat.category_name as string}
-                      icon={cat.icon}
-                      color={cat.color}
-                      amount={agg?.total_amount || 0}
-                      percent={agg ? Number(agg.percent.toPrecision(3)) : 0}
-                    />
+                      <ExpenseCategoryCard
+                        key={cat.id}
+                        name={cat.category_name as string}
+                        icon={cat.icon}
+                        color={cat.color}
+                        amount={agg?.total_amount || 0}
+                        percent={agg ? Number(agg.percent.toPrecision(3)) : 0}
+                        onPress={onCategoryPress}
+                      />
                   );
                 })}
             </View>

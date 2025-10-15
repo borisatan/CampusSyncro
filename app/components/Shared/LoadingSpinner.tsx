@@ -1,5 +1,5 @@
-import { useTheme } from "@/app/context/ThemeContext";
 import { ActivityIndicator, Text, View } from "react-native";
+import { useTheme } from "../../context/ThemeContext";
 
 const LoadingSpinner = () => {
     const { isDarkMode } = useTheme();

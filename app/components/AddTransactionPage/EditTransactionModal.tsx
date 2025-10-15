@@ -1,17 +1,17 @@
-import { deleteTransaction, updateTransaction } from "@/app/services/backendService";
 import React, { useEffect, useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
-    useColorScheme
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+  useColorScheme
 } from "react-native";
+import { deleteTransaction, updateTransaction } from "../../services/backendService";
 import { Transaction } from "../../types/types";
 
 interface EditTransactionModalProps {

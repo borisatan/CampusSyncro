@@ -1,4 +1,3 @@
-import { supabase } from '@/app/utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
@@ -12,6 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { supabase } from '../../../app/utils/supabase';
 import { Category } from '../../types/types';
 
 interface CategoryModalProps {

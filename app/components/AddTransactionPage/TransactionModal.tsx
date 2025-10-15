@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { AccountOption, Category } from '../../types/types';
+import AccountSelector from './AccountSelector'; // <-- import here
 
 interface TransactionModalProps {
   visible: boolean;
@@ -37,7 +38,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     if (visible) {
       setTimeout(() => {
         amountInputRef.current?.focus();
-      }, 100); // ensures Android can render modal first
+      }, 100);
     }
   }, [visible]);
 
@@ -58,7 +59,15 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             Add transaction for {category?.category_name}
           </Text>
 
-          <View className="flex-row items-center border dark:border-borderDark border-borderLight rounded-xl px-4 py-5 mb-3 bg-background dark:bg-inputDark">
+          {/* --- Account Selector --- */}
+          <AccountSelector
+            accountOptions={accountOptions}
+            selectedAccount={selectedAccount}
+            onSelectAccount={onSelectAccount}
+          />
+
+          {/* --- Amount Input --- */}
+          <View className="flex-row items-center border dark:border-borderDark border-borderLight rounded-xl px-4 py-5 mb-3 bg-background dark:bg-inputDark mt-3">
             <TextInput
               ref={amountInputRef}
               keyboardType="numeric"
@@ -72,18 +81,20 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             <Text className="ml-2 text-3xl text-secondaryDark">€</Text>
           </View>
 
+          {/* --- Description Input --- */}
           <TextInput
             placeholder="Enter description (optional)"
             placeholderTextColor={isDarkMode ? "#AAAAAA" : "#888888"}
             value={description}
             maxLength={200}
             onChangeText={setDescription}
-            className="border dark:border-borderDark border-borderLight rounded-xl p-3 mb-4 text-textLight dark:text-textDark text-center"
+            className="border dark:border-borderDark border-borderLight rounded-xl p-3 mb-1 text-textLight dark:text-textDark text-center"
           />
           <Text className="text-right text-xs mb-3 text-secondaryLight dark:text-secondaryDark">
             {description.length}/200
           </Text>
 
+          {/* --- Buttons --- */}
           <View className="flex-row justify-between">
             <TouchableOpacity
               className="flex-1 py-3 mr-2 rounded-xl border border-borderLight dark:border-borderDark"

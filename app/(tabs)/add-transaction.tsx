@@ -9,14 +9,13 @@ import {
   View
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import AccountSelector from '../components/AddTransactionPage/AccountSelector';
 import CategoryGrid from '../components/AddTransactionPage/CategoryGrid';
 import CategoryModalWrapper from '../components/AddTransactionPage/CategoryModalWrapper';
 import Header from '../components/AddTransactionPage/Header';
 import TransactionModal from '../components/AddTransactionPage/TransactionModal';
 import LoadingSpinner from '../components/Shared/LoadingSpinner';
 import { useTheme } from '../context/ThemeContext';
-import { deleteCategory, fetchAccountOptions, fetchCategories } from '../services/backendService';
+import { deleteCategory, fetchAccountOptions, fetchCategories, updateAccountBalance } from '../services/backendService';
 import { AccountOption, Category } from "../types/types";
 import { supabase } from "../utils/supabase";
 
@@ -118,19 +117,47 @@ const TransactionAdder = () => {
   
 
   const handleConfirm = async () => {
-    if (amount) {
-      
-      const { data, error } = await supabase
-      .from('Transactions')
-      .insert([{ amount: amount, description: description, account_name: selectedAccount, category_name: selectedCategory?.category_name}]);
-      
-      if (error) throw error;
-
+    if (!amount) return;
+  
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount)) return;
+  
+    try {
+      const { data: transactionData, error: transactionError } = await supabase
+        .from('Transactions')
+        .insert([{
+          amount: numericAmount,
+          description: description,
+          account_name: selectedAccount,
+          category_name: selectedCategory?.category_name
+        }]);
+  
+      if (transactionError) throw transactionError;
+  
+      const { data: accountData, error: accountFetchError } = await supabase
+        .from('Accounts')
+        .select('balance')
+        .eq('account_name', selectedAccount)
+        .single();
+  
+      if (accountFetchError) throw accountFetchError;
+      if (!accountData) throw new Error('Account not found');
+  
+      const newBalance = accountData.balance - numericAmount;
+  
+      await updateAccountBalance(selectedAccount, newBalance);
+  
       setInputModalVisible(false);
       setAmount('');
       setDescription('');
+  
+    } catch (err) {
+      console.error('Error adding transaction or updating balance:', err);
+      alert('Failed to add transaction. Please try again.');
     }
   };
+  
+  
 
   
   const handleEditCategory = (category: Category | null) => {
@@ -168,12 +195,11 @@ const TransactionAdder = () => {
           onBack={() => console.log('Back pressed')} 
         />
 
-        {/* Account options */}
-        <AccountSelector
+        {/* <AccountSelector
           accountOptions={accountOptions}
           selectedAccount={selectedAccount}
           onSelectAccount={setSelectedAccount}
-        />
+        /> */}
 
         {/* Categories grid with loading state */}
         <ScrollView className="flex-1 px-4 pt-4"
