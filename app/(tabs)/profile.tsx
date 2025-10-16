@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName } from '../services/backendService';
 import { Account } from '../types/types';
@@ -21,26 +21,24 @@ const Profile: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editBalance, setEditBalance] = useState('');
   const [addAmount, setAddAmount] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const { isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        const data: Account[] = await fetchAccounts();
-        setAccounts(data);
-      } catch (err) {
-        console.error('Failed to fetch accounts:', err);
-      }
-    };
-    loadAccounts();
-  }, []);
-
+  const loadAccounts = async () => {
+    try {
+      const data: Account[] = await fetchAccounts();
+      setAccounts(data);
+    } catch (err) {
+      console.error('Failed to fetch accounts:', err);
+    }
+  };
+  
   const handleAddAccount = async (name: string, balance: number) => {
     try {
       const newAccount = await createAccount(name, balance);
-  
+      
       setAccounts(prev => [...prev, newAccount]);
       
       setAddAccountModalVisible(false);
@@ -49,7 +47,7 @@ const Profile: React.FC = () => {
     }
   };
   
-
+  
   const handleCardPress = (account: Account) => {
     if (isEditMode) {
       setSelectedAccount(account);
@@ -58,20 +56,20 @@ const Profile: React.FC = () => {
       setModalVisible(true);
     }
   };
-
+  
   const handleAddMoneyPress = (account: Account) => {
     setSelectedAccount(account);
     setAddAmount('');
     setaddMoneyModalVisible(true);
   };
-
+  
   const handleSave = () => {
     if (!selectedAccount) return;
     setAccounts(prev =>
       prev.map(acc =>
         acc.id === selectedAccount.id
-          ? { ...acc, account_name: editName, balance: parseFloat(editBalance) || 0 }
-          : acc
+        ? { ...acc, account_name: editName, balance: parseFloat(editBalance) || 0 }
+        : acc
       )
     );
     if (selectedAccount.account_name !== editName) updateAccountName(selectedAccount.account_name, editName);
@@ -79,32 +77,43 @@ const Profile: React.FC = () => {
     setModalVisible(false);
     setSelectedAccount(null);
   };
-
+  
   const handleAddMoney = () => {
     if (!selectedAccount) return;
     const amount = parseFloat(addAmount) || 0;
     setAccounts(prev =>
       prev.map(acc =>
         acc.id === selectedAccount.id
-          ? { ...acc, balance: acc.balance + amount }
-          : acc
+        ? { ...acc, balance: acc.balance + amount }
+        : acc
       )
     );
     updateAccountBalance(selectedAccount.account_name, selectedAccount.balance + amount);
     setaddMoneyModalVisible(false);
     setSelectedAccount(null);
   };
-
+  
   const handleCancel = () => {
     setModalVisible(false);
     setaddMoneyModalVisible(false);
     setSelectedAccount(null);
   };
-
+  
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      await loadAccounts();
+    } catch (err) {
+      throw err;
+    }
+    finally {
+      setIsRefreshing(false);
+    }
+  }
   const toggleEditMode = () => {
     setIsEditMode(!isEditMode);
   };
-
+  
   const handleDeleteAccount = (accountId: number) => {
     Alert.alert(
       'Delete Account',
@@ -126,10 +135,14 @@ const Profile: React.FC = () => {
       ]
     );
   };
-
+  
   const formatBalance = (balance: number): string => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(balance);
   };
+  
+  useEffect(() => {
+    loadAccounts();
+  }, []);
 
   return (
     <SafeAreaProvider>
@@ -142,7 +155,7 @@ const Profile: React.FC = () => {
         <TouchableOpacity
           onPress={toggleEditMode}
           className="absolute right-4 top-7 -translate-y-1/2 px-6 py-1 rounded-lg bg-accentTeal items-center"
-        >
+          >
           <Text className={`text-base font-medium ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
             {isEditMode ? 'Done' : 'Edit'}
           </Text>
@@ -150,7 +163,10 @@ const Profile: React.FC = () => {
       </View>
 
       {/* Cards scrollable */}
-      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: 100 }}
+      refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
+      }>
         {accounts.map(account => (
           <View key={account.id} className="relative mb-3">
             <AccountCard

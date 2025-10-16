@@ -55,7 +55,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
     loadCategories();
   }, []); 
 
-  
+  const selectedCategory = filterCategory ? categoriesList.find((cat) => cat.category_name === filterCategory) : null;
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
@@ -106,17 +107,22 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
             <TouchableOpacity
               onPress={() => setShowCategories(prev => !prev)}
-              className={`px-5 py-3 rounded-full border ${
+              className={`px-5 py-3 rounded-full border flex-row items-center ${
                 isDarkMode ? "border-borderDark" : "border-borderLight"
               }`}
             >
-              <Text
-                className={`${
-                  isDarkMode ? "text-textDark" : "text-textLight"
-                }`}
-              >
-                {filterCategory || "Select Category"}
-              </Text>
+                <Ionicons
+                  name={(selectedCategory?.icon as keyof typeof Ionicons.glyphMap) || "apps-outline"}
+                  size={20}
+                  color={selectedCategory?.color || (isDarkMode ? "#fff" : "#000")}
+                />
+                <Text
+                  className={`${
+                    isDarkMode ? "ml-2 text-textDark" : "ml-2text-textLight"
+                  }`}
+                >
+                  {filterCategory || "Select Category"}
+                </Text>
             </TouchableOpacity>
 
             {showCategories && (
@@ -131,7 +137,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     filterCategory === null ? "bg-accentTeal/20" : ""
                   }`}>
                   <Ionicons
-                    name="apps-outline"
+                    name={"apps-outline"} 
                     size={20}
                     color={isDarkMode ? "#fff" : "#000"}
                   />
@@ -155,7 +161,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                   >
                     {cat.icon && (
                       <Ionicons
-                        name={cat.icon as any} // 👈 casting to any to silence TS
+                        name={cat.icon as any} 
                         size={20}
                         color={cat.color}
                       />
