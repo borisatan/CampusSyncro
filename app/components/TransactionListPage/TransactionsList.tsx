@@ -27,7 +27,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
     <SectionList
       sections={sections}
       keyExtractor={(item) => {
-        console.log(`${item.id}-${String(item.created_at)}`)
+        // console.log(`${item.id}-${String(item.created_at)}`)
         return `${item.id}-${String(item.created_at)}`;
       }}
 

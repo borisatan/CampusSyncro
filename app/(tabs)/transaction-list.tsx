@@ -156,8 +156,15 @@ const TransactionsScreen: React.FC = () => {
     return matchesCategory && matchesAccount && matchesSearch && matchesDate;
   });
 
-  const sections: TransactionSection[] = groupTransactionsByDate(filteredTransactions);
-
+  const dedupeById = (transactions: Transaction[]) => {
+    const map = new Map();
+    for (const tx of transactions) {
+      map.set(tx.id, tx);
+    }
+    return Array.from(map.values());
+  };
+  
+  const sections: TransactionSection[] = groupTransactionsByDate(dedupeById(filteredTransactions));
   const handleResetFilters = () => {
     setDateRange(null);
     setFilterAccounts([]);
