@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "assets/icons/icon.png",
-    "scheme": "Perfin",
+    "scheme": "campussyncro",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -30,7 +30,7 @@
         "expo-splash-screen",
         {
           "image": "assets/icons/icon.png",
-          "imageWidth": 200,
+          "imageWidth": 595,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

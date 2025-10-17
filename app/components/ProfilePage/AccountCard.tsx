@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { Account } from '../../types/types';
@@ -42,7 +42,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
         activeOpacity={0.7}
         className={`ml-4 w-10 h-10 rounded-full border items-center justify-center ${isDark ? 'border-borderDark' : 'border-borderLight'}`}
       >
-        <Plus size={20} color={isDark ? '#fff' : '#000'} />
+        <Ionicons name="add" size={24} color={isDark ? '#E5E7EB' : '#374151'} />
       </TouchableOpacity>
     </View>
   );
