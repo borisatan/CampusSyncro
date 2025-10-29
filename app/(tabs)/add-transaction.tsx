@@ -14,6 +14,7 @@ import CategoryModalWrapper from '../components/AddTransactionPage/CategoryModal
 import Header from '../components/AddTransactionPage/Header';
 import TransactionModal from '../components/AddTransactionPage/TransactionModal';
 import LoadingSpinner from '../components/Shared/LoadingSpinner';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { deleteCategory, fetchAccountOptions, fetchCategories, updateAccountBalance } from '../services/backendService';
 import { AccountOption, Category } from "../types/types";
@@ -36,6 +37,8 @@ const TransactionAdder = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
   const amountInputRef = useRef<TextInput>(null);
+  
+  const { userId, isLoading } = useAuth();
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -99,7 +102,7 @@ const TransactionAdder = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteCategory(category.id);
+              await deleteCategory(category.id, userId);
   
               // Update local state
               setCategories((prev) =>
@@ -129,7 +132,8 @@ const TransactionAdder = () => {
           amount: numericAmount,
           description: description,
           account_name: selectedAccount,
-          category_name: selectedCategory?.category_name
+          category_name: selectedCategory?.category_name,
+          user_id: userId
         }]);
   
       if (transactionError) throw transactionError;

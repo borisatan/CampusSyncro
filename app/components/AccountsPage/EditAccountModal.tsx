@@ -6,33 +6,41 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
   useColorScheme,
 } from 'react-native';
 
-interface AddMoneyModalProps {
+interface EditAccountModalProps {
   visible: boolean;
-  accountName?: string;
-  amount: string;
-  onChangeAmount: (text: string) => void;
+  name: string;
+  balance: string;
+  onChangeName: (text: string) => void;
+  onChangeBalance: (text: string) => void;
   onCancel: () => void;
-  onAdd: () => void;
+  onSave: () => void;
 }
 
-const AddMoneyModal: React.FC<AddMoneyModalProps> = ({
+const EditAccountModal: React.FC<EditAccountModalProps> = ({
   visible,
-  accountName,
-  amount,
-  onChangeAmount,
+  name,
+  balance,
+  onChangeName,
+  onChangeBalance,
   onCancel,
-  onAdd,
+  onSave,
 }) => {
   const isDark = useColorScheme() === 'dark';
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
+
+      <TouchableWithoutFeedback onPress={onCancel}>
+        <View className="flex-1" />
+      </TouchableWithoutFeedback>
+
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'position'}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         className="flex-1 justify-end"
       >
@@ -40,17 +48,28 @@ const AddMoneyModal: React.FC<AddMoneyModalProps> = ({
           className={`${isDark ? 'bg-surfaceDark' : 'bg-background'} p-5 rounded-t-3xl border-t border-borderLight dark:border-borderDark`}
         >
           <Text className="text-lg font-semibold text-center mb-4 text-textLight dark:text-textDark">
-            Add Money to {accountName}
+            Edit Account
           </Text>
 
           <Text className="text-sm font-semibold mb-2 text-secondaryLight dark:text-secondaryDark">
-            Amount to Add
+            Account Name
           </Text>
           <TextInput
-            value={amount}
-            onChangeText={onChangeAmount}
+            value={name}
+            onChangeText={onChangeName}
+            placeholder="Enter account name"
+            placeholderTextColor={isDark ? '#AAAAAA' : '#888888'}
+            className="border dark:border-borderDark border-borderLight rounded-xl px-4 py-4 mb-4 bg-background dark:bg-inputDark text-textLight dark:text-textDark"
+          />
+
+          <Text className="text-sm font-semibold mb-2 text-secondaryLight dark:text-secondaryDark">
+            Balance
+          </Text>
+          <TextInput
+            value={balance}
+            onChangeText={onChangeBalance}
             keyboardType="numeric"
-            placeholder="Enter amount"
+            placeholder="Enter balance"
             placeholderTextColor={isDark ? '#AAAAAA' : '#888888'}
             className="border dark:border-borderDark border-borderLight rounded-xl px-4 py-4 mb-6 bg-background dark:bg-inputDark text-textLight dark:text-textDark"
           />
@@ -65,9 +84,9 @@ const AddMoneyModal: React.FC<AddMoneyModalProps> = ({
 
             <TouchableOpacity
               className="flex-1 py-3 ml-2 rounded-xl bg-accentTeal"
-              onPress={onAdd}
+              onPress={onSave}
             >
-              <Text className="text-center text-textDark font-semibold">Add</Text>
+              <Text className="text-center text-textDark font-semibold">Save</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -76,4 +95,4 @@ const AddMoneyModal: React.FC<AddMoneyModalProps> = ({
   );
 };
 
-export default AddMoneyModal;
+export default EditAccountModal;

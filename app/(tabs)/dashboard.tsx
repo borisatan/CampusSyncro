@@ -48,6 +48,7 @@ const Dashboard: React.FC = () => {
   
   const [cache, setCache] = useState<Record<string, any>>({});
   const router = useRouter();
+
   
   const onCategoryPress = (category_name: string) => {
     router.push({

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -11,6 +12,7 @@ import {
   View,
   useColorScheme
 } from "react-native";
+import { useAuth } from "../../context/AuthContext";
 import { deleteTransaction, updateTransaction } from "../../services/backendService";
 import { Transaction } from "../../types/types";
 
@@ -36,6 +38,8 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const [description, setDescription] = useState("");
   const [accountName, setAccountName] = useState("");
   const [amount, setAmount] = useState("");
+  
+  const { userId, isLoading } = useAuth();
 
   useEffect(() => {
     if (transaction) {
@@ -61,17 +65,23 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   };
 
   const handleDelete = async () => {
-    await deleteTransaction(transaction.id);
+    await deleteTransaction(transaction.id, userId);
     onDelete(transaction.id)
     onClose();
   };
 
   
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-        <TouchableWithoutFeedback onPress={onClose}>
-            <View className="flex-1" />
-        </TouchableWithoutFeedback>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View className="flex-1" />
+      </TouchableWithoutFeedback>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "position"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
@@ -82,18 +92,25 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             isDark ? "bg-surfaceDark" : "bg-background"
           } p-5 rounded-t-3xl border-t border-borderLight dark:border-borderDark`}
         >
+          {/* Delete Icon on top-right */}
+          <TouchableOpacity
+            onPress={handleDelete}
+            className="absolute -top-2 -right-0 bg-red-500 rounded-full w-8 h-8 items-center justify-center"
+
+          >
+            <Ionicons name="remove" size={18} color="white" />
+          </TouchableOpacity>
+
           <Text className="text-lg font-semibold text-center mb-4 text-textLight dark:text-textDark">
             Edit Transaction
           </Text>
-
-
 
           {/* Account Selector */}
           <View className="mb-6">
             <View className="flex-row justify-between items-center mb-3">
               <Text
                 className={`text-base font-semibold ${
-                  "text-textDark" 
+                  "text-textDark"
                 }`}
               >
                 Select Account
@@ -108,13 +125,16 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                     key={account}
                     onPress={() => setAccountName(account)}
                     className={`px-6 py-2 mr-3 mb-4 rounded-full ${
-                      isSelected ? "bg-accentTeal" : "bg-surfaceDark border border-borderDark"
+                      isSelected
+                        ? "bg-accentTeal"
+                        : "bg-surfaceDark border border-borderDark"
                     }`}
                   >
                     <Text
                       className={`${
                         isSelected
-                          ? "text-textDark font-semibold" : "text-textDark"
+                          ? "text-textDark font-semibold"
+                          : "text-textDark"
                       }`}
                     >
                       {account}
@@ -125,7 +145,6 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             </ScrollView>
           </View>
 
-          
           {/* Description */}
           <Text className="text-sm font-semibold mb-2 text-secondaryLight dark:text-secondaryDark">
             Description
@@ -137,6 +156,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             placeholderTextColor={isDark ? "#AAAAAA" : "#888888"}
             className="border dark:border-borderDark border-borderLight rounded-xl px-4 py-4 mb-4 bg-background dark:bg-inputDark text-textLight dark:text-textDark"
           />
+
           {/* Amount */}
           <Text className="text-sm font-semibold mb-2 text-secondaryLight dark:text-secondaryDark">
             Amount
@@ -150,16 +170,13 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             className="border dark:border-borderDark border-borderLight rounded-xl px-4 py-4 mb-7 bg-background dark:bg-inputDark text-textLight dark:text-textDark"
           />
 
-
           {/* Buttons */}
           <View className="flex-row justify-between">
-            <TouchableOpacity
-              className="flex-1 py-3 mr-2 rounded-xl  bg-accentRed"
-              onPress={handleDelete}
+          <TouchableOpacity
+              className="flex-1 py-3 mr-2 rounded-xl border border-borderLight dark:border-borderDark"
+              onPress={onClose}
             >
-              <Text className="text-center text-textLight dark:text-textDark">
-                Delete
-              </Text>
+              <Text className="text-center text-textLight dark:text-textDark">Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

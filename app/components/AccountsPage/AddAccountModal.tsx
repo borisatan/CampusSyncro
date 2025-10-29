@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -33,8 +34,12 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ visible, onCancel, on
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
+      <TouchableWithoutFeedback onPress={onCancel}>
+        <View className="flex-1" />
+      </TouchableWithoutFeedback>
+
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'position'}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         className="flex-1 justify-end"
       >

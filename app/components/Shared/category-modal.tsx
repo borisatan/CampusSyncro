@@ -160,11 +160,16 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                 }}
             >
                 <View className="flex-1 justify-end">
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        onPress={(e) => e.stopPropagation()}
-                        className="bg-background dark:bg-inputDark rounded-t-3xl p-6"
-                    >
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={(e) => e.stopPropagation()}
+                    className="bg-background dark:bg-inputDark rounded-t-3xl max-h-[80%]">
+
+                    <ScrollView
+                    className="p-6"
+                    contentContainerStyle={{ paddingBottom: 50 }}
+                    keyboardShouldPersistTaps="handled">
+
                         <View className="flex-row justify-between items-center mb-6">
                             <Text className="text-xl font-bold text-textLight dark:text-textDark">
                                 {mode === 'add' ? 'Add Custom Category' : 'Edit Category'}
@@ -299,6 +304,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                                 </Text>
                             </TouchableOpacity>
                         </View>
+                    </ScrollView>
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>

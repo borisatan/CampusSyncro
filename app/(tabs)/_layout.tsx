@@ -10,6 +10,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarActiveTintColor: "#2A9D8F", // accentBlue
         tabBarInactiveTintColor: "#9CA3AF", // secondaryDark
         tabBarStyle: {
@@ -19,11 +20,7 @@ export default function TabLayout() {
           position: "absolute",
           height: 60 + insets.bottom,   // adjust height with safe area
           paddingBottom: insets.bottom, // keep it above gesture bar
-          paddingTop: 6,
-        },
-        tabBarLabelStyle: {
-          fontSize: 13,
-          fontWeight: "600",
+          paddingTop: 10,
         },
       }}
     >
@@ -32,7 +29,7 @@ export default function TabLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="home-outline" size={30} color={color} />
           ),
         }}
       />
@@ -41,7 +38,7 @@ export default function TabLayout() {
           options={{
             title: "Accounts",
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="wallet-outline" size={size} color={color} />
+              <Ionicons name="wallet-outline" size={30} color={color} />
             ),
           }}
         />
@@ -50,7 +47,7 @@ export default function TabLayout() {
         options={{
           title: "Add",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
+            <Ionicons name="add-circle-outline" size={30} color={color} />
           ),
         }}
       />
@@ -59,7 +56,7 @@ export default function TabLayout() {
           options={{
             title: "Transactions",
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="list-outline" size={size} color={color} />
+              <Ionicons name="list-outline" size={30} color={color} />
             ),
           }}
         />
@@ -68,7 +65,7 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name="person-outline" size={30} color={color} />
           ),
         }}
       />

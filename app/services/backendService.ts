@@ -89,10 +89,10 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
   return data ?? [];
 };
 
-export const createAccount = async (accountName: string, balance: number) => {
+export const createAccount = async (accountName: string, balance: number, user_id) => {
   const { data, error } = await supabase
   .from('Accounts')
-  .insert({ account_name: accountName, balance: balance })
+  .insert({ account_name: accountName, balance: balance, user_id: user_id })
   .select()
   .single();
   
@@ -133,11 +133,12 @@ export const updateAccountBalance = async (accountName: string, newBalance: numb
     return data;
 }
 
-export const deleteTransaction = async (id: number) => {
+export const deleteTransaction = async (id: number, user_id: string) => {
   const { data, error } = await supabase
   .from('Transactions')
   .delete()
   .eq('id', id)
+  .eq('user_id', user_id)
   .select();
   
   if (error) throw error;
@@ -154,11 +155,12 @@ export const deleteAccount = async (id: number) => {
     if (error) throw error;
     return data;
   } 
-export async function deleteCategory(id: number) {
+export async function deleteCategory(id: number, user_id: string) {
     const { data, error } = await supabase
       .from('Categories')
       .delete()
       .eq('id', id)
+      .eq('user_id', user_id)
       .select();
   
     if (error) throw error;

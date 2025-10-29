@@ -24,7 +24,7 @@ export default function SignInScreen() {
     })();
   }, []);
 
-  // Try automatic biometric sign-in
+  // Biometric login
   const handleBiometricSignIn = async () => {
     const storedEmail = await SecureStore.getItemAsync('email');
     const storedPassword = await SecureStore.getItemAsync('password');
@@ -45,7 +45,7 @@ export default function SignInScreen() {
     }
   };
 
-  // Regular sign-in (and save credentials)
+  // Sign in
   const handleSignIn = async (inputEmail?: string, inputPassword?: string) => {
     const userEmail = inputEmail ?? email;
     const userPassword = inputPassword ?? password;
@@ -63,7 +63,7 @@ export default function SignInScreen() {
       });
       if (error) throw error;
 
-      // Save credentials for next biometric login
+      // Save credentials for biometric login
       await SecureStore.setItemAsync('email', userEmail);
       await SecureStore.setItemAsync('password', userPassword);
 
@@ -87,6 +87,7 @@ export default function SignInScreen() {
       </View>
 
       <View className="mt-8 gap-5">
+        {/* Email */}
         <View>
           <Text className={isDarkMode ? 'text-white mb-2' : 'text-black mb-2'}>Email</Text>
           <TextInput
@@ -100,6 +101,7 @@ export default function SignInScreen() {
           />
         </View>
 
+        {/* Password */}
         <View>
           <Text className={isDarkMode ? 'text-white mb-2' : 'text-black mb-2'}>Password</Text>
           <TextInput
@@ -113,6 +115,7 @@ export default function SignInScreen() {
           />
         </View>
 
+        {/* Sign In */}
         <Pressable
           onPress={() => handleSignIn()}
           disabled={isSubmitting}
@@ -121,6 +124,7 @@ export default function SignInScreen() {
           <Text className="text-white font-semibold">{isSubmitting ? 'Signing in…' : 'Sign In'}</Text>
         </Pressable>
 
+        {/* Biometric */}
         {biometricAvailable && (
           <Pressable
             onPress={handleBiometricSignIn}
@@ -130,6 +134,7 @@ export default function SignInScreen() {
           </Pressable>
         )}
 
+        {/* Sign Up Link */}
         <View className="flex-row justify-center mt-2">
           <Text className={isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}>
             Don’t have an account?{' '}

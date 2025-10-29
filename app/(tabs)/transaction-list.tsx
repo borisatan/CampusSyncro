@@ -3,7 +3,7 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import EditTransactionModal from "../components/AddTransactionPage/EditTransactionModal";
+import EditTransactionModal from "../components/TransactionListPage/EditTransactionModal";
 import FilterModal from "../components/TransactionListPage/FilterModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
 import TransactionsList from "../components/TransactionListPage/TransactionsList";

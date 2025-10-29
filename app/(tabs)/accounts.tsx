@@ -5,10 +5,11 @@ import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, upda
 import { Account } from '../types/types';
 
 import { Ionicons } from '@expo/vector-icons';
-import AccountCard from '../components/ProfilePage/AccountCard';
-import AddAccountModal from '../components/ProfilePage/AddAccountModal';
-import AddMoneyModal from '../components/ProfilePage/AddMoneyModal';
-import EditAccountModal from '../components/ProfilePage/EditAccountModal';
+import AccountCard from '../components/AccountsPage/AccountCard';
+import AddAccountModal from '../components/AccountsPage/AddAccountModal';
+import AddMoneyModal from '../components/AccountsPage/AddMoneyModal';
+import EditAccountModal from '../components/AccountsPage/EditAccountModal';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
 const Accounts: React.FC = () => {
@@ -26,6 +27,7 @@ const Accounts: React.FC = () => {
   const { isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const {userId, isLoading} = useAuth();
   const loadAccounts = async () => {
     try {
       const data: Account[] = await fetchAccounts();
@@ -37,7 +39,7 @@ const Accounts: React.FC = () => {
   
   const handleAddAccount = async (name: string, balance: number) => {
     try {
-      const newAccount = await createAccount(name, balance);
+      const newAccount = await createAccount(name, balance, userId);
       
       setAccounts(prev => [...prev, newAccount]);
       
@@ -49,12 +51,10 @@ const Accounts: React.FC = () => {
   
   
   const handleCardPress = (account: Account) => {
-    if (isEditMode) {
-      setSelectedAccount(account);
-      setEditName(account.account_name);
-      setEditBalance(account.balance.toString());
-      setModalVisible(true);
-    }
+    setModalVisible(true);
+    setSelectedAccount(account);
+    setEditName(account.account_name);
+    setEditBalance(account.balance.toString());
   };
   
   const handleAddMoneyPress = (account: Account) => {
