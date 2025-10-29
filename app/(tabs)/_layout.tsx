@@ -36,6 +36,15 @@ export default function TabLayout() {
           ),
         }}
       />
+        <Tabs.Screen
+          name="accounts"
+          options={{
+            title: "Accounts",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="wallet-outline" size={size} color={color} />
+            ),
+          }}
+        />
       <Tabs.Screen
         name="add-transaction"
         options={{
@@ -45,15 +54,15 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="transaction-list"
-        options={{
-          title: "Transactions",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list-outline" size={size} color={color} />
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name="transaction-list"
+          options={{
+            title: "Transactions",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="list-outline" size={size} color={color} />
+            ),
+          }}
+        />
       <Tabs.Screen
         name="profile"
         options={{

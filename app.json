@@ -1,19 +1,20 @@
 {
   "expo": {
     "name": "Perfin",
-    "slug": "Perfin",
+    "slug": "perfin",
     "version": "1.0.0",
+    "scheme": "perfin",
     "orientation": "portrait",
-    "icon": "assets/icons/icon.png",
-    "scheme": "campussyncro",
+    "icon": "./assets/icons/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.borisatanassov.Perfin" 
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "assets/icons/icon.png",
+        "foregroundImage": "",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -26,15 +27,6 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "assets/icons/icon.png",
-          "imageWidth": 595,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
-        }
-      ],
       "expo-font",
       "expo-web-browser"
     ],
@@ -44,7 +36,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "93fbee6f-e42a-41a3-9f6d-28b662aaba3a"
+        "projectId": "a672f513-0535-4662-9516-daa2952b6f2d"
       }
     }
   }

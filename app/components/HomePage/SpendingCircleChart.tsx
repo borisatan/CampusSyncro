@@ -22,30 +22,39 @@ export const SpendingCircleChart: React.FC<SpendingCircleChartProps> = ({ segmen
   const totalValue = sortedSegments.reduce((sum, seg) => sum + seg.value, 0);
   return (
     <View className="items-center justify-center my-6">
-      <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
-      <G rotation="0" origin={`${CIRCLE_SIZE / 2},${CIRCLE_SIZE / 2}`}>
-        {sortedSegments.map((seg, idx) => {
-          const percent = seg.value / totalValue;
-          const strokeDasharray = percent * CIRCUMFERENCE;
-          const circle = (
-            <Circle
-              key={`${seg.key}-${idx}`}
-              cx={CIRCLE_SIZE / 2}
-              cy={CIRCLE_SIZE / 2}
-              r={RADIUS}
-              stroke={seg.color}
-              strokeWidth={STROKE_WIDTH}
-              fill="none"
-              strokeDasharray={`${strokeDasharray},${CIRCUMFERENCE - strokeDasharray}`}
-              strokeDashoffset={-offset}
-              strokeLinecap="butt"
-            />
-          );
-          offset += strokeDasharray;
-          return circle;
-        })}
-      </G>
-      </Svg>
+      <View
+        className="items-center justify-center my-6"
+        onLayout={(e) => {
+          const { width } = e.nativeEvent.layout;
+          // You can update CIRCLE_SIZE dynamically if needed
+        }}
+      >
+        <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
+          <G rotation="0" origin={`${CIRCLE_SIZE / 2},${CIRCLE_SIZE / 2}`}>
+            {sortedSegments.map((seg, idx) => {
+              const percent = seg.value / totalValue;
+              const strokeDasharray = percent * CIRCUMFERENCE;
+              const circle = (
+                <Circle
+                  key={`${seg.key}-${idx}`}
+                  cx={CIRCLE_SIZE / 2}
+                  cy={CIRCLE_SIZE / 2}
+                  r={RADIUS}
+                  stroke={seg.color}
+                  strokeWidth={STROKE_WIDTH}
+                  fill="none"
+                  strokeDasharray={`${strokeDasharray},${CIRCUMFERENCE - strokeDasharray}`}
+                  strokeDashoffset={-offset}
+                  strokeLinecap="butt"
+                />
+              );
+              offset += strokeDasharray;
+              return circle;
+            })}
+          </G>
+        </Svg>
+      </View>
+
       <View className="absolute left-0 right-0 items-center" style={{ top: '38%' }} pointerEvents="none">
         <Text className="text-white text-base opacity-70 font-medium">Spent:</Text>
         <Text className="text-white text-3xl font-bold mt-0.5">{total.toLocaleString(undefined, { minimumFractionDigits: 0 })}€</Text>
