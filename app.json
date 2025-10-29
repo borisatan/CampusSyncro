@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.borisatanassov.Perfin" 
+      "bundleIdentifier": "com.borisatanassov.Perfin"
     },
     "android": {
       "adaptiveIcon": {
@@ -28,7 +28,8 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

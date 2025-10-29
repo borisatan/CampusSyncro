@@ -65,7 +65,7 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View className={isDarkMode ? 'flex-1 bg-surfaceDark px-6 py-10' : 'flex-1 bg-white px-6 py-10'}>
+    <View className={isDarkMode ? 'flex-1 bg-backgroundDark px-6 py-10' : 'flex-1 bg-white px-6 py-10'}>
       <View className="mt-8">
         <Text className={isDarkMode ? 'text-2xl font-bold text-white' : 'text-2xl font-bold text-black'}>
           Create your account

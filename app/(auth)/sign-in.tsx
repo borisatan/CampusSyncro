@@ -1,5 +1,7 @@
+import * as LocalAuthentication from 'expo-local-authentication';
 import { Link, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../utils/supabase';
@@ -10,19 +12,61 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
 
-  const handleSignIn = async () => {
-    if (!email || !password) {
+  // Check if fingerprint or Face ID is available
+  useEffect(() => {
+    (async () => {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const supported = await LocalAuthentication.supportedAuthenticationTypesAsync();
+      const enrolled = await LocalAuthentication.isEnrolledAsync();
+      setBiometricAvailable(hasHardware && enrolled && supported.length > 0);
+    })();
+  }, []);
+
+  // Try automatic biometric sign-in
+  const handleBiometricSignIn = async () => {
+    const storedEmail = await SecureStore.getItemAsync('email');
+    const storedPassword = await SecureStore.getItemAsync('password');
+    if (!storedEmail || !storedPassword) {
+      Alert.alert('No saved credentials', 'Please sign in manually first.');
+      return;
+    }
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate to Sign In',
+      fallbackLabel: 'Enter Password',
+    });
+
+    if (result.success) {
+      setEmail(storedEmail);
+      setPassword(storedPassword);
+      handleSignIn(storedEmail, storedPassword);
+    }
+  };
+
+  // Regular sign-in (and save credentials)
+  const handleSignIn = async (inputEmail?: string, inputPassword?: string) => {
+    const userEmail = inputEmail ?? email;
+    const userPassword = inputPassword ?? password;
+
+    if (!userEmail || !userPassword) {
       Alert.alert('Missing info', 'Please enter email and password.');
       return;
     }
+
     try {
       setIsSubmitting(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        Alert.alert('Sign in failed', error.message);
-        return;
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: userPassword,
+      });
+      if (error) throw error;
+
+      // Save credentials for next biometric login
+      await SecureStore.setItemAsync('email', userEmail);
+      await SecureStore.setItemAsync('password', userPassword);
+
       router.replace('/(tabs)/dashboard');
     } catch (e: any) {
       Alert.alert('Sign in failed', e?.message ?? 'Unknown error');
@@ -32,7 +76,7 @@ export default function SignInScreen() {
   };
 
   return (
-    <View className={isDarkMode ? 'flex-1 bg-surfaceDark px-6 py-10' : 'flex-1 bg-white px-6 py-10'}>
+    <View className={isDarkMode ? 'flex-1 bg-backgroundDark px-6 py-10' : 'flex-1 bg-white px-6 py-10'}>
       <View className="mt-8">
         <Text className={isDarkMode ? 'text-2xl font-bold text-white' : 'text-2xl font-bold text-black'}>
           Welcome back
@@ -70,14 +114,26 @@ export default function SignInScreen() {
         </View>
 
         <Pressable
-          onPress={handleSignIn}
+          onPress={() => handleSignIn()}
           disabled={isSubmitting}
-          className={isDarkMode ? 'bg-accentBlue rounded-xl py-4 items-center mt-2' : 'bg-accentBlue rounded-xl py-4 items-center mt-2'}>
+          className="bg-accentBlue rounded-xl py-4 items-center mt-2"
+        >
           <Text className="text-white font-semibold">{isSubmitting ? 'Signing in…' : 'Sign In'}</Text>
         </Pressable>
 
+        {biometricAvailable && (
+          <Pressable
+            onPress={handleBiometricSignIn}
+            className="bg-accentTeal rounded-xl py-4 items-center mt-3"
+          >
+            <Text className="text-white font-semibold">Biometric Sign In</Text>
+          </Pressable>
+        )}
+
         <View className="flex-row justify-center mt-2">
-          <Text className={isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}>Don’t have an account? </Text>
+          <Text className={isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}>
+            Don’t have an account?{' '}
+          </Text>
           <Link href="/(auth)/sign-up" asChild>
             <Pressable>
               <Text className="text-accentTeal font-semibold">Sign Up</Text>
@@ -88,5 +144,3 @@ export default function SignInScreen() {
     </View>
   );
 }
-
-
