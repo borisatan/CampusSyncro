@@ -41,7 +41,6 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         className="flex-1 justify-end"
       >
         <View

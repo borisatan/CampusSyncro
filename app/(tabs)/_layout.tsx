@@ -10,6 +10,9 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        animation: 'shift',
+        
+        sceneStyle: { backgroundColor: "#20283A" },
         tabBarShowLabel: false,
         tabBarActiveTintColor: "#2A9D8F", // accentBlue
         tabBarInactiveTintColor: "#9CA3AF", // secondaryDark

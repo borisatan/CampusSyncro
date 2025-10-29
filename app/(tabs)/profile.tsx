@@ -36,7 +36,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className={isDarkMode ? 'flex-1 bg-backgroundDark px-6 py-6' : 'flex-1 bg-background px-6 py-6'}>
-      <View className="mt-2 mb-8">
+      <View className="mt-2 mb-8 items-center">
         <Text className={isDarkMode ? 'text-3xl font-bold text-white' : 'text-3xl font-bold text-black'}>
           Profile
         </Text>

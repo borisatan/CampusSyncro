@@ -83,8 +83,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
       </TouchableWithoutFeedback>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "position"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1 justify-end"
       >
         <View

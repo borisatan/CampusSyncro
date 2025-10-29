@@ -51,7 +51,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         className="flex-1 justify-end"
       >
         <View className="bg-background dark:bg-surfaceDark p-5 rounded-t-3xl">
@@ -71,8 +71,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             <TextInput
               ref={amountInputRef}
               keyboardType="numeric"
-              autoFocus
               placeholder="Enter amount"
+              autoFocus
               placeholderTextColor={isDarkMode ? "#AAAAAA" : "#888888"}
               value={amount}
               onChangeText={setAmount}

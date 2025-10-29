@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "scheme": "perfin",
     "orientation": "portrait",
-    "icon": "./assets/icons/icon.png",
+    "icon": "./assets/icons/adaptive-icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -14,8 +14,9 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "monochromeImage": "./assets/icons/adaptive-icon.png",
+        "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.borisatanassov.Perfin"
@@ -27,6 +28,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen", {
+          "image" : "./assets/icons/splash-icon-dark",
+          "imageWidth" : 200,
+          "resizeMode" : "contain",
+          "backgroundColor" : "#000000"
+        }
+      ],
       "expo-font",
       "expo-web-browser",
       "expo-secure-store"
