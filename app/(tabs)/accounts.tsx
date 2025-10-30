@@ -51,10 +51,12 @@ const Accounts: React.FC = () => {
   
   
   const handleCardPress = (account: Account) => {
-    setModalVisible(true);
-    setSelectedAccount(account);
-    setEditName(account.account_name);
-    setEditBalance(account.balance.toString());
+    if (isEditMode) {
+      setModalVisible(true);
+      setSelectedAccount(account);
+      setEditName(account.account_name);
+      setEditBalance(account.balance.toString());
+    }
   };
   
   const handleAddMoneyPress = (account: Account) => {
@@ -65,15 +67,17 @@ const Accounts: React.FC = () => {
   
   const handleSave = () => {
     if (!selectedAccount) return;
+    const newBalance = parseFloat(editBalance) || 0;
+
     setAccounts(prev =>
       prev.map(acc =>
         acc.id === selectedAccount.id
-        ? { ...acc, account_name: editName, balance: parseFloat(editBalance) || 0 }
+        ? { ...acc, account_name: editName, balance: newBalance }
         : acc
       )
     );
     if (selectedAccount.account_name !== editName) updateAccountName(selectedAccount.account_name, editName);
-    updateAccountBalance(selectedAccount.account_name, selectedAccount.balance);
+    updateAccountBalance(selectedAccount.account_name, newBalance);
     setModalVisible(false);
     setSelectedAccount(null);
   };
@@ -90,7 +94,7 @@ const Accounts: React.FC = () => {
     );
     updateAccountBalance(selectedAccount.account_name, selectedAccount.balance + amount);
     setaddMoneyModalVisible(false);
-    setSelectedAccount(null);
+   setSelectedAccount(null);
   };
   
   const handleCancel = () => {
