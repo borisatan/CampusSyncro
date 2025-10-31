@@ -73,6 +73,7 @@ const TransactionAdder = () => {
     loadAccounts();
   }, []);
 
+
   const refreshData = async () => {
     setIsRefreshing(true);
     try {
@@ -198,12 +199,6 @@ const TransactionAdder = () => {
           onToggleEditMode={toggleEditMode} 
           onBack={() => console.log('Back pressed')} 
         />
-
-        {/* <AccountSelector
-          accountOptions={accountOptions}
-          selectedAccount={selectedAccount}
-          onSelectAccount={setSelectedAccount}
-        /> */}
 
         {/* Categories grid with loading state */}
         <ScrollView className="flex-1 px-4 pt-4"

@@ -1,14 +1,13 @@
 import React from 'react';
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  useColorScheme,
+  useColorScheme
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 interface AddMoneyModalProps {
   visible: boolean;
@@ -32,8 +31,7 @@ const AddMoneyModal: React.FC<AddMoneyModalProps> = ({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={'padding'}
         className="flex-1 justify-end"
       >
         <View

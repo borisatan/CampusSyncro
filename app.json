@@ -6,11 +6,18 @@
     "scheme": "perfin",
     "orientation": "portrait",
     "icon": "./assets/icons/adaptive-icon.png",
+    "splash": {
+      "image": "./assets/icons/splash-icon-dark.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"},
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.borisatanassov.Perfin"
+      "bundleIdentifier": "com.borisatanassov.Perfin",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
@@ -20,7 +27,8 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.borisatanassov.Perfin"
+      "package": "com.borisatanassov.Perfin",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -30,11 +38,12 @@
     "plugins": [
       "expo-router",
       [
-        "expo-splash-screen", {
-          "image" : "./assets/icons/splash-icon-dark",
-          "imageWidth" : 200,
-          "resizeMode" : "contain",
-          "backgroundColor" : "#000000"
+        "expo-splash-screen",
+        {
+          "image": "./assets/icons/splash-icon-dark.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
         }
       ],
       "expo-font",
@@ -49,6 +58,9 @@
       "eas": {
         "projectId": "a672f513-0535-4662-9516-daa2952b6f2d"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a672f513-0535-4662-9516-daa2952b6f2d"
     }
   }
 }

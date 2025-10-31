@@ -208,6 +208,7 @@ const Accounts: React.FC = () => {
       )}
 
       {/* Modals */}
+
       <EditAccountModal
         visible={modalVisible}
         name={editName}
@@ -229,7 +230,7 @@ const Accounts: React.FC = () => {
         visible={addAccountModalVisible}
         onCancel={() => setAddAccountModalVisible(false)}
         onSave={handleAddAccount}
-      />
+        />
     </SafeAreaView>
   </SafeAreaProvider>
   );

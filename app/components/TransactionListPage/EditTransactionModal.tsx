@@ -1,9 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -12,6 +10,7 @@ import {
   View,
   useColorScheme
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useAuth } from "../../context/AuthContext";
 import { deleteTransaction, updateTransaction } from "../../services/backendService";
 import { Transaction } from "../../types/types";
@@ -40,6 +39,8 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const [amount, setAmount] = useState("");
   
   const { userId, isLoading } = useAuth();
+  const inputRef = useRef<TextInput>(null);
+
 
   useEffect(() => {
     if (transaction) {
@@ -83,7 +84,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
       </TouchableWithoutFeedback>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={'position'}
         className="flex-1 justify-end"
       >
         <View

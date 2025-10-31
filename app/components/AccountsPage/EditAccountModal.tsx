@@ -1,15 +1,14 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-  useColorScheme,
+  useColorScheme
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 interface EditAccountModalProps {
   visible: boolean;
@@ -31,6 +30,17 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({
   onSave,
 }) => {
   const isDark = useColorScheme() === 'dark';
+  const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (visible) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 800); 
+
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
@@ -40,11 +50,11 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({
       </TouchableWithoutFeedback>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={'position'}
         className="flex-1 justify-end"
       >
         <View
-          className={`${isDark ? 'bg-surfaceDark' : 'bg-background'} p-5 rounded-t-3xl border-t border-borderLight dark:border-borderDark`}
+          className={`${isDark ? 'bg-surfaceDark' : 'bg-background'} p-5 rounded-t-3xl border-t border-borderLight dark:border-borderDark  `}
         >
           <Text className="text-lg font-semibold text-center mb-4 text-textLight dark:text-textDark">
             Edit Account
@@ -56,6 +66,7 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({
           <TextInput
             value={name}
             onChangeText={onChangeName}
+            ref={inputRef}
             placeholder="Enter account name"
             placeholderTextColor={isDark ? '#AAAAAA' : '#888888'}
             className="border dark:border-borderDark border-borderLight rounded-xl px-4 py-4 mb-4 bg-background dark:bg-inputDark text-textLight dark:text-textDark"
@@ -67,6 +78,7 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({
           <TextInput
             value={balance}
             onChangeText={onChangeBalance}
+            ref={inputRef}
             keyboardType="numeric"
             placeholder="Enter balance"
             placeholderTextColor={isDark ? '#AAAAAA' : '#888888'}

@@ -2,15 +2,14 @@
 
 import React, { useState } from 'react';
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View,
+  View
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useTheme } from '../../context/ThemeContext';
 
 interface AddAccountModalProps {
@@ -39,9 +38,10 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ visible, onCancel, on
       </TouchableWithoutFeedback>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={'padding'}
+        keyboardVerticalOffset={0}
         className="flex-1 justify-end"
+        
       >
         <View
           className={`${isDark ? 'bg-surfaceDark' : 'bg-background'} p-5 rounded-t-3xl border-t border-borderLight dark:border-borderDark`}

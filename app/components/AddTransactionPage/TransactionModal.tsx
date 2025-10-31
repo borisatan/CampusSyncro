@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Modal, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useTheme } from '../../context/ThemeContext';
 import { AccountOption, Category } from '../../types/types';
 import AccountSelector from './AccountSelector'; // <-- import here
@@ -32,15 +33,15 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   onSelectAccount
 }) => {
   const { isDarkMode } = useTheme();
-  const amountInputRef = useRef<TextInput>(null);
 
-  useEffect(() => {
-    if (visible) {
-      setTimeout(() => {
-        amountInputRef.current?.focus();
-      }, 100);
-    }
-  }, [visible]);
+  // useEffect(() => {
+  //   if (visible) {
+  //     const timeout = setTimeout(() => {
+  //       amountInputRef.current?.focus();
+  //     }, 500); // Slightly longer to ensure modal animation completes
+  //     return () => clearTimeout(timeout);
+  //   }
+  // }, [visible]);
 
   return (
     <Modal
@@ -49,9 +50,12 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
       animationType="slide"
       onRequestClose={onClose}
     >
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View className="flex-1" />
+      </TouchableWithoutFeedback>
+      
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={'position'}
         className="flex-1 justify-end"
       >
         <View className="bg-background dark:bg-surfaceDark p-5 rounded-t-3xl">
@@ -69,7 +73,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           {/* --- Amount Input --- */}
           <View className="flex-row items-center border dark:border-borderDark border-borderLight rounded-xl px-4 py-5 mb-3 bg-background dark:bg-inputDark mt-3">
             <TextInput
-              ref={amountInputRef}
+              // ref={amountInputRef}
               keyboardType="numeric"
               placeholder="Enter amount"
               autoFocus

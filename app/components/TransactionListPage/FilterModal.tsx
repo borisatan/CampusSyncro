@@ -1,20 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { fetchCategories } from "../../services/backendService";
 import { Category } from "../../types/types";
 import DateRangeSelector from "../Shared/date-selector";
 import AccountSelector from "./AccountSelector";
-
 type FilterModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -63,7 +61,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
         <View className="flex-1" />
       </TouchableWithoutFeedback>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 justify-end">
+      <KeyboardAvoidingView behavior="padding" className="flex-1 justify-end">
         <View className="bg-background dark:bg-surfaceDark p-5 rounded-t-3xl w-full">
           <Text className={`text-lg font-semibold text-center mb-4 ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
             Filter Transactions

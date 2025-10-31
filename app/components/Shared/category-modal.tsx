@@ -259,30 +259,35 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                             <Text className="text-sm font-medium text-textLight dark:text-textDark mb-2">
                                 Select Color
                             </Text>
-                            <ScrollView 
-                                showsVerticalScrollIndicator={true} 
-                                style={{ maxHeight: 180 }}
-                                contentContainerStyle={{ alignItems: "center" }}
-                            >
-                                <View className="flex-col gap-2">
-                                    {Array.from({ length: Math.ceil(categoryColors.length / 5) }).map((_, rowIndex) => (
-                                        <View key={rowIndex} className="flex-row gap-2">
-                                            {categoryColors.slice(rowIndex * 5, rowIndex * 5 + 5).map((colorName) => (
-                                                <TouchableOpacity
-                                                    key={colorName}
-                                                    className={`w-12 h-12 rounded-xl ${
-                                                        selectedColor === colorName
-                                                            ? 'border-2 border-accentTeal'
-                                                            : ''
-                                                    }`}
-                                                    style={{ backgroundColor: colorName }}
-                                                    onPress={() => setSelectedColor(colorName)}
-                                                />
-                                            ))}
-                                        </View>
-                                    ))}
-                                </View>
-                            </ScrollView>
+                            <ScrollView
+    horizontal
+    nestedScrollEnabled
+    showsHorizontalScrollIndicator={true}
+    contentContainerStyle={{
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+      alignItems: "center",
+    }}
+    style={{ maxHeight: 280 }}
+  >
+    {/* Each column represents a color family (5 shades stacked vertically) */}
+    {Array.from({ length: Math.ceil(categoryColors.length / 5) }).map((_, colIndex) => (
+      <View key={colIndex} className="flex-col items-center mx-1.5">
+        {categoryColors
+          .slice(colIndex * 5, colIndex * 5 + 5)
+          .map((colorName) => (
+            <TouchableOpacity
+              key={colorName}
+              className={`w-11 h-11 rounded-lg mb-1.5 ${
+                selectedColor === colorName ? "border-2 border-accentTeal" : ""
+              }`}
+              style={{ backgroundColor: colorName }}
+              onPress={() => setSelectedColor(colorName)}
+            />
+          ))}
+      </View>
+    ))}
+  </ScrollView>
                         </View>
     
                         <View className="flex-row gap-3">
