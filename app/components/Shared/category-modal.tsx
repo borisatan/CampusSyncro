@@ -95,44 +95,51 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
         }
       
         try {
-          const newCategory = {
+          // 1. Get the authenticated user
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (!user) {
+            setError('You must be logged in to save categories');
+            return;
+          }
+      
+          // 2. Build the category object INCLUDING user_id
+          const categoryData = {
             category_name: categoryName.trim(),
             icon: selectedIcon,
             color: selectedColor,
+            user_id: user.id, // <--- THIS WAS MISSING
           };
-          
+      
           if (mode === 'edit' && category) {
-              const { data, error } = await supabase
+            const { data, error } = await supabase
               .from('Categories')
-              .update(newCategory)
+              .update(categoryData)
               .eq('id', category.id)
-              .select()
-              .single();
-              
-              if (error) throw error;
-              
-              onSubmit({ ...category, ...newCategory }); // update locally
-            } else {
-                console.log(newCategory);
-                const { data, error } = await supabase
-              .from('Categories')
-              .insert(newCategory)
               .select()
               .single();
       
             if (error) throw error;
+            onSubmit({ ...category, ...categoryData });
+          } else {
+            const { data, error } = await supabase
+              .from('Categories')
+              .insert(categoryData) // <--- Now contains user_id
+              .select()
+              .single();
       
-            onSubmit(data); // add new one locally with ID from Supabase
+            if (error) throw error;
+            onSubmit(data);
           }
       
-          // Reset form if in add mode
+          // Reset and Close
           if (mode === 'add') {
             setCategoryName('');
             setSelectedIcon(availableIcons[0]);
             setSelectedColor(categoryColors[0]);
           }
-      
           setError('');
+          onClose(); // Optional: close modal on success
         } catch (err) {
           console.error('Error saving category:', err);
           setError('Failed to save category. Please try again.');

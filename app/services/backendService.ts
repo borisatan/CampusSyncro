@@ -166,3 +166,4 @@ export async function deleteCategory(id: number, user_id: string) {
     if (error) throw error;
     return data;
 }
+
