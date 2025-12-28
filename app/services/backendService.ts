@@ -70,7 +70,47 @@ export async function fetchCategoryIcons(): Promise<Record<string, CategoryIconI
     if (error) throw error;
     return data ?? 0;
   };
+  // Fetch only Income category
+export const fetchIncomeTotal = async (startDate: Date, endDate: Date): Promise<number> => {
+  const { data, error } = await supabase
+    .from("Transactions")
+    .select("amount")
+    .eq("category_name", "Income")
+    .gte("created_at", startDate.toISOString())
+    .lte("created_at", endDate.toISOString());
   
+  if (error) throw error;
+  
+  const total = data?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
+  return total;
+};
+
+// Modified: Fetch transactions excluding Income
+export const fetchTransactionsByDateRange = async (startDate: Date, endDate: Date): Promise<Transaction[]> => {
+  const { data, error } = await supabase
+    .from("Transactions")
+    .select("*")
+    .neq("category_name", "Income")  // Exclude Income
+    .gte("created_at", startDate.toISOString())
+    .lte("created_at", endDate.toISOString())
+    .order("created_at", { ascending: true });
+  
+  if (error) throw error;
+  return data ?? [];
+};
+
+// Modified: Fetch category aggregates excluding Income
+export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): Promise<CategoryAggregation[]> => {
+  const { data, error } = await supabase.rpc('fetch_category_aggregates', {
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+  });
+  if (error) throw error;
+  
+  // Filter out Income category
+  return (data ?? []).filter((cat: CategoryAggregation) => cat.category_name !== 'Income');
+};
+
   export const fetchTotalExpenses = async (startDate: Date, endDate: Date): Promise<number> => {
     const { data, error } = await supabase.rpc('fetch_total_expenses', {
     start_date: startDate.toISOString(),
@@ -80,14 +120,6 @@ export async function fetchCategoryIcons(): Promise<Record<string, CategoryIconI
   return data ?? 0;
 };
 
-export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): Promise<CategoryAggregation[]> => {
-  const { data, error } = await supabase.rpc('fetch_category_aggregates', {
-    start_date: startDate.toISOString(),
-    end_date: endDate.toISOString(),
-  });
-  if (error) throw error;
-  return data ?? [];
-};
 
 export const createAccount = async (accountName: string, balance: number, user_id) => {
   const { data, error } = await supabase
