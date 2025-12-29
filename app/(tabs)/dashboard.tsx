@@ -10,6 +10,10 @@ import { SharedValue, useAnimatedReaction, runOnJS } from 'react-native-reanimat
 import ExpenseCategoryCard from '../components/HomePage/ExpenseCategoryCard';
 import { fetchCategories, fetchCategoryAggregates, fetchTotalBalance, fetchTransactionsByDateRange } from '../services/backendService';
 import { Category, CategoryAggregation, Transaction } from '../types/types';
+import { DashboardSummary } from '../components/HomePage/DashboardSummary';
+import { TimeFrameSelector } from '../components/HomePage/TimeFrameSelector';
+import { SpendingTrendChart } from '../components/HomePage/SpendingTrendChart';
+import { CategoryDonut } from '../components/HomePage/CategoryDonut';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -379,174 +383,33 @@ export default function Dashboard() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-950">
+    <SafeAreaView className="flex-1 bg-slate-950 ">
       <ScrollView 
-        className="flex-1 bg-slate-950" contentContainerStyle={{ paddingBottom: 30 }}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={onRefresh} />
-        }
+        className="flex-1" 
+        contentContainerStyle={{ paddingBottom: 30 }}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => preloadAllPeriods(true)} />}
       >
         <View className="p-2">
 
-          {/* Income/Expense Cards */}
-          <View className="flex-row gap-4 mb-6">
-            <View className="flex-1 bg-emerald-500 rounded-2xl p-4">
-              <View className="flex-row items-center gap-2 mb-2">
-                <TrendingUp color="#fff" size={16} />
-                <Text className="text-white text-lg opacity-90">Balance</Text>
-              </View>
-              <Text className="text-white text-3xl font-bold">${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
-            </View>
-            <View className="flex-1 bg-rose-500 rounded-2xl p-4">
-              <View className="flex-row items-center gap-2 mb-2">
-                <TrendingDown color="#fff" size={16} />
-                <Text className="text-white text-lg opacity-90">Balance</Text>
-              </View>
-              <Text className="text-white text-3xl font-bold">${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
-            </View>
-          </View>
+          {/* 1. Metric Overview */}
+          <DashboardSummary totalBalance={totalBalance} />
 
-          {/* Time Frame Selector */}
-          <View className="flex-row gap-2 mb-6">
-            <TouchableOpacity
-              onPress={() => setTimeFrame('week')}
-              className={`flex-1 py-3 rounded-xl ${
-                timeFrame === 'week' ? 'bg-indigo-600' : 'bg-slate-800'
-              }`}
-            >
-              <Text className={`text-center text-md ${
-                timeFrame === 'week' ? 'text-white' : 'text-slate-400'
-              }`}>
-                Past Week
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setTimeFrame('month')}
-              className={`flex-1 py-3 rounded-xl ${
-                timeFrame === 'month' ? 'bg-indigo-600' : 'bg-slate-800'
-              }`}
-            >
-              <Text className={`text-center text-md ${
-                timeFrame === 'month' ? 'text-white' : 'text-slate-400'
-              }`}>
-                Past Month
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setTimeFrame('year')}
-              className={`flex-1 py-3 rounded-xl ${
-                timeFrame === 'year' ? 'bg-indigo-600' : 'bg-slate-800'
-              }`}
-            >
-              <Text className={`text-center text-md ${
-                timeFrame === 'year' ? 'text-white' : 'text-slate-400'
-              }`}>
-                Past Year
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {/* 2. Filter Controls */}
+          <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
-          {/* Spending Chart */}
-          <View className="bg-slate-900 rounded-2xl p-4 border border-slate-800 mb-6">
-            <Text className="text-white text-base text-xl mb-5">Spending Trend</Text>
-            
-            {isActive && (
-              <View
-                className="absolute top-3 left-0 right-0 items-center z-10"
-                pointerEvents="none"
-              >
-                <View className="bg-indigo-600 px-3 py-2 rounded-lg">
-                  <Text className="text-white text-xs font-semibold">
-                    {tooltipData.label}: ${tooltipData.value}
-                  </Text>
-                </View>
-              </View>
-            )}
-            
-            <View className="h-[250px] -ml-2">
-              {chartData.length > 0 ? (
-                <CartesianChart
-                  data={chartData}
-                  xKey="x"
-                  yKeys={["amount"]}
-                  padding={10}
-                  domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
-                  xAxis={{
-                    font: interFont,
-                    tickCount: chartData.length,
-                    labelOffset: -8,
-                    labelColor: "#94a3b8",
-                    formatXLabel: (value) => {
-                      const index = Math.round(value);
-                      if (index % getLabelStep(chartData.length) !== 0) {
-                        return "";
-                      }
-                      return chartData[index]?.label ?? "";
-                    },
-                  }}
-                  yAxis={[{
-                    font: interFont,
-                    tickCount: 5,
-                    labelOffset: -8,
-                    labelColor: "#94a3b8",
-                    formatYLabel: (value) => `$${Math.round(value)}`,
-                  }]}
-                  chartPressState={state}
-                >
-                  {({ points }) => (
-                    <>
-                      <Line
-                        points={points.amount}
-                        color="#6366f1"
-                        strokeWidth={3}
-                        curveType="catmullRom"
-                      />
-                      {isActive && (
-                        <ToolTip
-                          x={state.x.position}
-                          y={state.y.amount.position}
-                        />
-                      )}
-                    </>
-                  )}
-                </CartesianChart>
-              ) : (
-                <View className="flex-1 justify-center items-center">
-                  <Text className="text-slate-500">No transaction data</Text>
-                </View>
-              )}
-            </View>
-          </View>
+          {/* 3. Visualizations */}
+          <SpendingTrendChart 
+            data={chartData} 
+            timeFrame={timeFrame} 
+            font={interFont}
+          />
 
-          {/* Spending by Category - Donut Chart */}
-          <View className="bg-slate-900 rounded-2xl p-5 border border-slate-800 mb-6">
-            <Text className="text-white text-base text-xl mb-4">Spending by Category</Text>
-            <View className="flex-row items-center justify-between">
-              <DonutChart />
-              <View className="flex-1 pl-12 gap-2">
-                {categoriesAggregated
-                  .filter(cat => cat.total_amount < 0)
-                  .slice(0, 5)
-                  .map((agg, index) => {
-                    const category = categories.find(c => c.category_name === agg.category_name);
-                    return (
-                      <View key={index} className="flex-row items-center justify-between mb-2">
-                        <View className="flex-row items-center gap-2">
-                          <View 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: category?.color || '#E0E0E0' }}
-                          />
-                          <Text className="text-slate-400 text-md">{agg.category_name}</Text>
-                        </View>
-                        <Text className="text-white text-md">€{-agg.total_amount.toFixed(0)}</Text>
-                      </View>
-                    );
-                  })}
-              </View>
-            </View>
-          </View>
+          <CategoryDonut
+           aggregates={categoriesAggregated} 
+           categories={categories} 
+           timeFrame={timeFrame} />
 
-          {/* Category Cards */}
+          {/* 4. Detailed Breakdown List */}
           <View className="mt-2">
             {categories
               .filter(cat => {
@@ -573,7 +436,7 @@ export default function Dashboard() {
                 );
               })}
           </View>
-          <View style={{ height: 24 }} />
+
         </View>
       </ScrollView>
     </SafeAreaView>
