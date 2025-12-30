@@ -8,7 +8,7 @@ export const fetchCategories = async () => {
 };
 
 export const fetchAccountOptions = async () => {
-    const { data, error } = await supabase.from("Accounts").select("id, account_name, selected");
+    const { data, error } = await supabase.from("Accounts").select("id, account_name, selected, type");
     if (error) throw error;
     return data ?? [];
 }
