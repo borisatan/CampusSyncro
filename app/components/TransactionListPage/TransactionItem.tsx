@@ -15,7 +15,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, category
   const iconInfo = categoryIcons[transaction.category_name] || { icon: "help-circle", color: "#999" };
   // console.log(iconName)
   return (
-    <View className="bg-backgroundMuted dark:bg-surfaceDark p-5 rounded-2xl mb-2 flex-row justify-between items-start">
+    <View className="bg-backgroundMuted dark:bg-surfaceDark border border-borderLight dark:border-borderDark p-4 rounded-2xl mb-1 flex-row justify-between items-start">
       {/* Left side */}
       <View className="flex-row items-start flex-1 pr-3">
         <View

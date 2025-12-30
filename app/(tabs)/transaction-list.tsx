@@ -57,6 +57,8 @@ const TransactionsScreen: React.FC = () => {
   const [categoryIcons, setCategoryIcons] = useState<Record<string, CategoryIconInfo>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const route = useRoute<RouteProp<{ Transactions: { initialCategory?: string } }, "Transactions">>();
+  
+  const [transactionType, setTransactionType] = useState<'all' |'expense' | 'income'>('expense');
 
   const { initialCategory } = useLocalSearchParams<{ initialCategory?: string }>();
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
@@ -203,15 +205,15 @@ const TransactionsScreen: React.FC = () => {
         </View>
       
         {/* Transactions list */}
-        <TransactionsList
-          sections={sections}
-          categoryIcons={categoryIcons}
-          refreshing={isRefreshing} 
-          onRefresh={loadInitialTransactions} 
-          onEndReached={loadMoreTransactions} 
-          isFetchingMore={isFetchingMore}    
-          onItemLongPress={handleEditTransaction}
-        />
+          <TransactionsList
+            sections={sections}
+            categoryIcons={categoryIcons}
+            refreshing={isRefreshing} 
+            onRefresh={loadInitialTransactions} 
+            onEndReached={loadMoreTransactions} 
+            isFetchingMore={isFetchingMore}    
+            onItemLongPress={handleEditTransaction}
+          />
 
         {/* Filter Modal */}
         <FilterModal
@@ -224,6 +226,8 @@ const TransactionsScreen: React.FC = () => {
           filterCategory={filterCategory}
           setFilterCategory={setFilterCategory}
           isDarkMode={isDarkMode}
+          filterType={transactionType}
+          setFilterType={setTransactionType}
           accountsList={accountsList}
           handleReset={handleResetFilters}
         />

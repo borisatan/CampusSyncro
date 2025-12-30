@@ -26,9 +26,9 @@ const TransactionsHeader: React.FC<TransactionsHeaderProps> = ({
       </View>
 
       {/* Search + Filter */}
-      <View className="flex-row items-center mb-4">
+      <View className="flex-row items-center mb-3">
         {/* Search Bar */}
-        <View className="flex-row items-center bg-backgroundMuted dark:bg-surfaceDark rounded-full px-4 py-2 flex-1 mr-2">
+        <View className="flex-row items-center bg-backgroundMuted border border-borderLight dark:border-borderDark dark:bg-surfaceDark rounded-3xl px-4 py-2 flex-1 mr-2">
           <Ionicons
             name="search"
             size={16}
@@ -45,7 +45,7 @@ const TransactionsHeader: React.FC<TransactionsHeaderProps> = ({
 
         {/* Filter Button */}
         <TouchableOpacity
-          className="p-5 rounded-full bg-backgroundMuted dark:bg-surfaceDark"
+          className="p-5 border border-borderLight dark:border-borderDark rounded-full bg-backgroundMuted dark:bg-surfaceDark"
           onPress={onFilterPress}
         >
           <Ionicons
