@@ -15,6 +15,7 @@ import { CreditCard, PiggyBank, TrendingUp, MoreVertical, Plus, Edit2, Trash2, B
 import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
 import { useAuth } from '../context/AuthContext';
 import EditAccountPage from '../components/AccountsPage/EditAccountPage';
+import AddAccountPage from '../components/AccountsPage/AddAccountPage';
 
 interface Account {
   id: number;
@@ -88,20 +89,21 @@ export default function Accounts() {
     }
   };
 
-  const handleAddAccount = async () => {
-    if (!newAccountName.trim()) {
+  const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string }) => {
+    const { name, balance, type } = newAccountData;
+  
+    if (!name.trim()) {
       Alert.alert('Error', 'Please enter an account name');
       return;
     }
-
+  
     try {
-      const balance = parseFloat(newAccountBalance) || 0;
-      const newAccount = await createAccount(newAccountName, balance, userId);
+      const newAccount = await createAccount(name, balance, type, userId);
+      
       setAccounts(prev => [...prev, newAccount]);
+      
       setShowAddModal(false);
-      setNewAccountName('');
-      setNewAccountBalance('');
-      setNewAccountType('checking');
+      
     } catch (err) {
       console.error('Failed to add account:', err);
       Alert.alert('Error', 'Failed to create account');
@@ -184,7 +186,7 @@ export default function Accounts() {
             <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
           }
         >
-          <View className="p-6 space-y-6" style={{ paddingBottom: insets.bottom + 20 }}>
+          <View className="p-2" style={{ paddingBottom: insets.bottom + 20 }}>
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6">
               <View>
@@ -227,9 +229,8 @@ export default function Accounts() {
                 const IconComponent = iconMap[config.icon] || CreditCard;
                 const colorClass = colorMap[config.color] || 'bg-accentBlue';
                 
-                
                 return (
-                  <View key={account.id} className="mb-4">
+                  <View key={account.id} className="mb-2">
                     <View className={`${isDark ? 'bg-surfaceDark border-borderDark' : 'bg-backgroundMuted border-borderLight'} rounded-2xl p-4 border`}>
                       <View className="flex-row items-center justify-between">
                         <View className="flex-row items-center flex-1">
@@ -289,74 +290,16 @@ export default function Accounts() {
           </View>
         </ScrollView>
 
-        {/* Add Account Modal */}
+                {/* Add Account Page Overlay */}
         <Modal
           visible={showAddModal}
-          transparent={true}
           animationType="slide"
           onRequestClose={() => setShowAddModal(false)}
         >
-          <TouchableOpacity
-            className="flex-1 bg-black/70 justify-end"
-            activeOpacity={1}
-            onPress={() => setShowAddModal(false)}
-          >
-            <TouchableOpacity
-              className={`${isDark ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'} rounded-t-3xl p-6 border-t`}
-              activeOpacity={1}
-              onPress={(e) => e.stopPropagation()}
-            >
-              <View className={`w-12 h-1 ${isDark ? 'bg-borderDark' : 'bg-borderLight'} rounded-full self-center mb-6`} />
-              <Text className={`text-xl font-semibold mb-4 ${isDark ? 'text-textDark' : 'text-textLight'}`}>
-                Add New Account
-              </Text>
-              
-              <View className="mb-4">
-                <Text className={`text-sm mb-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
-                  Account Name
-                </Text>
-                <TextInput
-                  className={`w-full px-4 py-3 ${isDark ? 'bg-inputDark border-borderDark text-textDark' : 'bg-backgroundMuted border-borderLight text-textLight'} border rounded-xl`}
-                  placeholder="e.g., Emergency Fund"
-                  placeholderTextColor={isDark ? "#AAAAAA" : "#888888"}
-                  value={newAccountName}
-                  onChangeText={setNewAccountName}
-                />
-              </View>
-
-              <View className="mb-4">
-                <Text className={`text-sm mb-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
-                  Account Type
-                </Text>
-                <View className={`w-full px-4 py-3 ${isDark ? 'bg-inputDark border-borderDark' : 'bg-backgroundMuted border-borderLight'} border rounded-xl`}>
-                  <Text className={isDark ? 'text-textDark' : 'text-textLight'}>
-                    {newAccountType.charAt(0).toUpperCase() + newAccountType.slice(1)}
-                  </Text>
-                </View>
-              </View>
-
-              <View className="mb-4">
-                <Text className={`text-sm mb-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
-                  Balance
-                </Text>
-                <TextInput
-                  className={`w-full px-4 py-3 ${isDark ? 'bg-inputDark border-borderDark text-textDark' : 'bg-backgroundMuted border-borderLight text-textLight'} border rounded-xl`}
-                  placeholder="0.00"
-                  placeholderTextColor={isDark ? "#AAAAAA" : "#888888"}
-                  keyboardType="decimal-pad"
-                  value={newAccountBalance}
-                  onChangeText={setNewAccountBalance}
-                />
-              </View>
-
-              <TouchableOpacity 
-                className="w-full bg-accentBlue py-4 rounded-xl items-center active:opacity-80"
-                onPress={handleAddAccount}
-              >
-                <Text className="text-textDark text-base font-semibold">Add Account</Text>
-              </TouchableOpacity>
-            </TouchableOpacity>
-          </TouchableOpacity>
+          <AddAccountPage 
+            onBack={() => setShowAddModal(false)}
+            onSave={handleAddAccount}
+          />
         </Modal>
 
         {/* Edit Account Modal */}

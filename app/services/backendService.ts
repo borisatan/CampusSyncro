@@ -121,10 +121,10 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
 };
 
 
-export const createAccount = async (accountName: string, balance: number, user_id) => {
+export const createAccount = async (accountName: string, balance: number, type:string, user_id) => {
   const { data, error } = await supabase
   .from('Accounts')
-  .insert({ account_name: accountName, balance: balance, user_id: user_id })
+  .insert({ account_name: accountName, balance: balance, user_id: user_id, type: type })
   .select()
   .single();
   

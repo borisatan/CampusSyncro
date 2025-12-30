@@ -11,7 +11,13 @@ interface CategoryDonutProps {
 }
 
 export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDonutProps) => {
-  const categoryData = useMemo(() => aggregates.filter(cat => cat.total_amount < 0), [aggregates]);
+  // Sorting logic added here
+  const categoryData = useMemo(() => {
+    return aggregates
+      .filter(cat => cat.total_amount < 0)
+      .sort((a, b) => a.total_amount - b.total_amount);
+  }, [aggregates]);
+
   const total = useMemo(() => categoryData.reduce((sum, item) => sum + item.total_amount, 0), [categoryData]);
   const hasData = categoryData.length > 0;
 
@@ -23,7 +29,6 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDon
   
   let accumulatedAngle = 0;
 
-  // We create a unique "instance key" that changes whenever timeframe OR data changes
   const instanceKey = `${timeFrame}-${total}`;
 
   return (
@@ -37,7 +42,6 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDon
       ) : (
         <View className="flex-row items-center justify-between">
           <MotiView 
-            // instanceKey ensures it restarts from year -> month, month -> year, etc.
             key={`chart-${instanceKey}`} 
             from={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}

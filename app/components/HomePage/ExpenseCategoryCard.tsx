@@ -28,15 +28,15 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
       onPress={() => onPress && onPress(name)}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      className="my-1 mx-0.5"
+      className="mb-2 "
     >
       <Animated.View style={{ transform: [{ scale }] }}>
         <View className="flex-row items-center rounded-2xl p-4 shadow-lg bg-surfaceDark border border-borderDark">
           <View
-            className="w-12 h-12 rounded-full items-center justify-center mr-3"
+            className="w-12 h-12 rounded-xl items-center justify-center mr-3"
             style={{ backgroundColor: color }}
           >
-            <Ionicons name={icon as any} size={28} color="#fff" />
+            <Ionicons name={icon as any} size={24} color="#fff" />
           </View>
 
           <View className="flex-1">

@@ -25,14 +25,14 @@ interface CategoryModalProps {
 
 // Available icons for categories
 const availableIcons = [
-    'restaurant', 'bus', 'film', 'flash', 'cart', 'medkit', 'school',
-    'wallet', 'home', 'shield-checkmark', 'airplane', 'person',
-    'gift', 'cafe', 'car', 'bicycle', 'train', 'subway',
-    'basketball', 'football', 'tennisball', 'fitness', 'barbell',
-    'book', 'library', 'newspaper', 'pencil', 'calculator',
-    'card', 'cash', 'pricetag', 'pricetags', 'receipt',
-    'shirt', 'bag', 'glasses', 'watch', 'diamond',
-    'wine', 'beer', 'pizza', 'ice-cream', 'nutrition'
+    'restaurant-outline', 'bus-outline', 'film-outline', 'flash-outline', 'cart-outline', 'medkit-outline', 'school-outline',
+    'wallet-outline', 'home-outline', 'shield-checkmark-outline', 'airplane-outline', 'person-outline',
+    'gift-outline', 'cafe-outline', 'car-outline', 'bicycle-outline', 'train-outline', 'subway-outline',
+    'basketball-outline', 'football-outline', 'tennisball-outline', 'fitness-outline', 'barbell-outline',
+    'book-outline', 'library-outline', 'newspaper-outline', 'pencil-outline', 'calculator-outline',
+    'card-outline', 'cash-outline', 'pricetag-outline', 'pricetags-outline', 'receipt-outline',
+    'shirt-outline', 'bag-outline', 'glasses-outline', 'watch-outline', 'diamond-outline',
+    'wine-outline', 'beer-outline', 'pizza-outline', 'ice-cream-outline', 'nutrition-outline'
 ];
 
 // Predefined colors for categories

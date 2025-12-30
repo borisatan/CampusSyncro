@@ -68,7 +68,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                       onPress={() => onDeleteCategory(category)}
                       className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center"
                     >
-                      <Ionicons name="remove" size={16} color="white" />
+                      <Ionicons name="remove-outline" size={16} color="white" />
                     </TouchableOpacity>
                   )}
                 </TouchableOpacity>

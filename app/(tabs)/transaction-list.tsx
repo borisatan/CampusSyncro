@@ -196,7 +196,7 @@ const TransactionsScreen: React.FC = () => {
     <SafeAreaProvider>
       <SafeAreaView className={isDarkMode ? "flex-1 bg-backgroundDark" : "flex-1 bg-background"}>
 
-        <View className="px-4">
+        <View className="px-2">
           <TransactionsHeader
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}

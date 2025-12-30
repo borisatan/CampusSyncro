@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import { Animated, Pressable, RefreshControl, SectionList, Text } from "react-native";
 import { CategoryIconInfo, TransactionSection } from "../../types/types";
 import TransactionItem from "./TransactionItem";
@@ -22,6 +22,13 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   isFetchingMore,
   onItemLongPress, 
 }) => {
+  const renderItem = useCallback(({ item }: { item: any }) => (
+    <AnimatedTransactionItem
+      transaction={item}
+      categoryIcons={categoryIcons}
+      onLongPress={onItemLongPress}
+    />
+  ), [categoryIcons, onItemLongPress]);
   
   return (
     <SectionList
@@ -31,17 +38,13 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
         return `${item.id}-${String(item.created_at)}`;
       }}
 
-      renderItem={({ item }) => <AnimatedTransactionItem
-        transaction={item}
-        categoryIcons={categoryIcons}
-        onLongPress={onItemLongPress}
-      />}
+      renderItem={renderItem}
       renderSectionHeader={({ section: { title } }) => (
-        <Text className="text-md text-secondaryLight dark:text-secondaryDark mb-2 mt-4">
+        <Text className="text-md text-secondaryLight dark:text-secondaryDark mb-2 mt-4 px-1">
           {new Date(title).toDateString()}
         </Text>
       )}
-      className="px-4"
+      className="px-2"
       contentContainerStyle={{ paddingBottom: 100 }}
       refreshControl={
         <RefreshControl
@@ -71,7 +74,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
 export default TransactionsList;
 
 
-const AnimatedTransactionItem = ({
+const AnimatedTransactionItem = React.memo(({
   transaction,
   categoryIcons,
   onLongPress,
@@ -112,4 +115,4 @@ const AnimatedTransactionItem = ({
       </Animated.View>
     </Pressable>
   );
-};
+});
