@@ -154,6 +154,17 @@ export const updateAccountName = async (accountName: string, newName: string) =>
     return data;
 }
 
+export const updateAccountType = async (accountName: string, newType: string) => {
+  const { data, error } = await supabase
+    .from('Accounts')
+    .update({ type: newType })
+    .eq('account_name', accountName)
+    .select();
+
+  if (error) throw error;
+  return data;
+}
+
 export const updateAccountBalance = async (accountName: string, newBalance: number) => {
     const { data, error } = await supabase
       .from('Accounts')

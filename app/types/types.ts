@@ -30,11 +30,13 @@ export interface Account {
   id: number;
   account_name: string;
   balance: number;
+  type: string;
 }
 export interface AccountOption {
   id: number;
   account_name: string;
   selected: boolean;
+  type: string;
 }
 
 // Budget Types

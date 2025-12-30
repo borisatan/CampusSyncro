@@ -20,7 +20,7 @@ export const DashboardSummary = ({ totalBalance }: SummaryProps) => {
                 <Text className="text-textDark text-5xl font-bold">€{formattedBalance}</Text>
             </View>
         <View className="flex-row gap-4 mb-3">
-        <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm">
+        <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark">
             <View className="flex-row items-center gap-2 mb-2">
             <TrendingUp color="#fff" size={16} />
             <Text className="text-textDark text-lg font-medium opacity-90">Balance</Text>
@@ -28,7 +28,7 @@ export const DashboardSummary = ({ totalBalance }: SummaryProps) => {
             <Text className="text-textDark text-3xl font-bold">€{formattedBalance}</Text>
         </View>
 
-        <View className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm">
+        <View className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm border border-borderDark">
             <View className="flex-row items-center gap-2 mb-2">
             <TrendingDown color="#fff" size={16} />
             <Text className="text-textDark text-lg font-medium opacity-90">Expenses</Text>

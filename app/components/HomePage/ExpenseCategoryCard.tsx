@@ -28,19 +28,19 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
       onPress={() => onPress && onPress(name)}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      className="my-1 mx-1.5"
+      className="my-1 mx-0.5"
     >
       <Animated.View style={{ transform: [{ scale }] }}>
-        <View className="flex-row items-center rounded-2xl p-3 shadow-lg bg-surfaceDark">
+        <View className="flex-row items-center rounded-2xl p-4 shadow-lg bg-surfaceDark border border-borderDark">
           <View
-            className="w-12 h-12 rounded-full items-center justify-center mr-4"
+            className="w-12 h-12 rounded-full items-center justify-center mr-3"
             style={{ backgroundColor: color }}
           >
             <Ionicons name={icon as any} size={28} color="#fff" />
           </View>
 
           <View className="flex-1">
-            <Text className="text-white text-lg font-semibold">{name}</Text>
+            <Text className="text-white text-lg">{name}</Text>
           </View>
 
           <View className="items-end">

@@ -23,7 +23,7 @@ export const TimeFrameSelector = ({ selected, onChange }: TimeFrameSelectorProps
           <TouchableOpacity
             key={option.value}
             onPress={() => onChange(option.value)}
-            className={`flex-1 py-3 rounded-xl ${
+            className={`flex-1 py-3 rounded-2xl border border-borderDark ${
               isActive ? 'bg-accentBlue' : 'bg-surfaceDark'
             }`}
           >

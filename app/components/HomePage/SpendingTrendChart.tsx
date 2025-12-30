@@ -72,7 +72,7 @@ export const SpendingTrendChart = ({ data, font, timeFrame }: ChartProps) => {
   );
 
   return (
-    <View className="bg-surfaceDark rounded-2xl p-4 border border-slate-800 mb-6">
+    <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
       <Text className="text-white text-xl font-bold mb-5">Spending Trend</Text>
       
       <MotiView

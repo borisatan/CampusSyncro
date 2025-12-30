@@ -1,33 +1,73 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Alert,
+  RefreshControl,
+  useColorScheme,
+} from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName } from '../services/backendService';
-import { Account } from '../types/types';
-
-import { Ionicons } from '@expo/vector-icons';
-import AccountCard from '../components/AccountsPage/AccountCard';
-import AddAccountModal from '../components/AccountsPage/AddAccountModal';
-import AddMoneyModal from '../components/AccountsPage/AddMoneyModal';
-import EditAccountModal from '../components/AccountsPage/EditAccountModal';
+import { CreditCard, PiggyBank, TrendingUp, MoreVertical, Plus, Edit2, Trash2, Building2 } from 'lucide-react-native';
+import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import EditAccountPage from '../components/AccountsPage/EditAccountPage';
 
-const Accounts: React.FC = () => {
+interface Account {
+  id: number;
+  account_name: string;
+  balance: number;
+  type: string;
+}
+
+const typeConfig: { [key: string]: { icon: string; color: string } } = {
+  checking: { icon: 'credit-card', color: 'blue' },
+  savings: { icon: 'piggy-bank', color: 'purple' },
+  investment: { icon: 'trending-up', color: 'teal' },
+  investments: { icon: 'trending-up', color: 'teal' },
+  credit: { icon: 'credit-card', color: 'red' },    
+};
+
+const iconMap: { [key: string]: any } = {
+  'credit-card': CreditCard,
+  'piggy-bank': PiggyBank,
+  'trending-up': TrendingUp,
+  'building': Building2,
+};
+
+const colorMap: { [key: string]: string } = {
+  blue: 'bg-accentBlue',
+  teal: 'bg-accentTeal',
+  red: 'bg-accentRed',
+  purple: 'bg-accentPurple',
+};
+
+export default function Accounts() {
   const isDark = useColorScheme() === 'dark';
+  const insets = useSafeAreaInsets();
+  const { userId } = useAuth();
+
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [addMoneyModalVisible, setaddMoneyModalVisible] = useState(false);
-  const [addAccountModalVisible, setAddAccountModalVisible] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<number | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Add account form
+  const [newAccountName, setNewAccountName] = useState('');
+  const [newAccountBalance, setNewAccountBalance] = useState('');
+  const [newAccountType, setNewAccountType] = useState('checking');
+
+  // Edit account form
   const [editName, setEditName] = useState('');
   const [editBalance, setEditBalance] = useState('');
-  const [addAmount, setAddAmount] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const { isDarkMode } = useTheme();
-  const insets = useSafeAreaInsets();
 
-  const {userId, isLoading} = useAuth();
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+
   const loadAccounts = async () => {
     try {
       const data: Account[] = await fetchAccounts();
@@ -36,88 +76,77 @@ const Accounts: React.FC = () => {
       console.error('Failed to fetch accounts:', err);
     }
   };
-  
-  const handleAddAccount = async (name: string, balance: number) => {
-    try {
-      const newAccount = await createAccount(name, balance, userId);
-      
-      setAccounts(prev => [...prev, newAccount]);
-      
-      setAddAccountModalVisible(false);
-    } catch (err) {
-      console.error('Failed to add account:', err);
-    }
-  };
-  
-  
-  const handleCardPress = (account: Account) => {
-    if (isEditMode) {
-      setModalVisible(true);
-      setSelectedAccount(account);
-      setEditName(account.account_name);
-      setEditBalance(account.balance.toString());
-    }
-  };
-  
-  const handleAddMoneyPress = (account: Account) => {
-    setSelectedAccount(account);
-    setAddAmount('');
-    setaddMoneyModalVisible(true);
-  };
-  
-  const handleSave = () => {
-    if (!selectedAccount) return;
-    const newBalance = parseFloat(editBalance) || 0;
 
-    setAccounts(prev =>
-      prev.map(acc =>
-        acc.id === selectedAccount.id
-        ? { ...acc, account_name: editName, balance: newBalance }
-        : acc
-      )
-    );
-    if (selectedAccount.account_name !== editName) updateAccountName(selectedAccount.account_name, editName);
-    updateAccountBalance(selectedAccount.account_name, newBalance);
-    setModalVisible(false);
-    setSelectedAccount(null);
-  };
-  
-  const handleAddMoney = () => {
-    if (!selectedAccount) return;
-    const amount = parseFloat(addAmount) || 0;
-    setAccounts(prev =>
-      prev.map(acc =>
-        acc.id === selectedAccount.id
-        ? { ...acc, balance: acc.balance + amount }
-        : acc
-      )
-    );
-    updateAccountBalance(selectedAccount.account_name, selectedAccount.balance + amount);
-    setaddMoneyModalVisible(false);
-   setSelectedAccount(null);
-  };
-  
-  const handleCancel = () => {
-    setModalVisible(false);
-    setaddMoneyModalVisible(false);
-    setSelectedAccount(null);
-  };
-  
   const refreshData = async () => {
     setIsRefreshing(true);
     try {
       await loadAccounts();
     } catch (err) {
-      throw err;
-    }
-    finally {
+      console.error('Failed to refresh accounts:', err);
+    } finally {
       setIsRefreshing(false);
     }
-  }
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
   };
+
+  const handleAddAccount = async () => {
+    if (!newAccountName.trim()) {
+      Alert.alert('Error', 'Please enter an account name');
+      return;
+    }
+
+    try {
+      const balance = parseFloat(newAccountBalance) || 0;
+      const newAccount = await createAccount(newAccountName, balance, userId);
+      setAccounts(prev => [...prev, newAccount]);
+      setShowAddModal(false);
+      setNewAccountName('');
+      setNewAccountBalance('');
+      setNewAccountType('checking');
+    } catch (err) {
+      console.error('Failed to add account:', err);
+      Alert.alert('Error', 'Failed to create account');
+    }
+  };
+
+  const handleEditAccount = (account: Account) => {
+    setSelectedAccount(account);
+    setEditName(account.account_name);
+    setEditBalance(account.balance.toString());
+    setShowEditModal(true);
+    setEditingAccount(null);
+  };
+
+  const handleSaveEdit = async (updatedData: { name: string; balance: number; type: string }) => {
+    if (!selectedAccount) return;
   
+    const originalName = selectedAccount.account_name;
+    const { name: newName, balance: newBalance, type: newType } = updatedData;
+  
+    try {
+      if (originalName !== newName) {
+        await updateAccountName(originalName, newName);
+      }
+  
+      await updateAccountBalance(newName, newBalance);
+  
+      await updateAccountType(newName, newType);
+  
+      // 4. Update local state
+      setAccounts(prev =>
+        prev.map(acc =>
+          acc.id === selectedAccount.id
+            ? { ...acc, account_name: newName, balance: newBalance, type: newType }
+            : acc
+        )
+      );
+  
+      setShowEditModal(false);
+      setSelectedAccount(null);
+    } catch (err) {
+      console.error('Failed to update account:', err);
+      Alert.alert('Error', 'Failed to update account details');
+    }
+  };
   const handleDeleteAccount = (accountId: number) => {
     Alert.alert(
       'Delete Account',
@@ -131,111 +160,229 @@ const Accounts: React.FC = () => {
             try {
               await deleteAccount(accountId);
               setAccounts(prev => prev.filter(acc => acc.id !== accountId));
+              setEditingAccount(null);
             } catch (err) {
               console.error('Failed to delete account:', err);
+              Alert.alert('Error', 'Failed to delete account');
             }
           },
         },
       ]
     );
   };
-  
-  const formatBalance = (balance: number): string => {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(balance);
-  };
-  
+
   useEffect(() => {
     loadAccounts();
   }, []);
 
   return (
     <SafeAreaProvider>
-    <SafeAreaView className={`flex-1 ${isDark ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
-      {/* Top Label + Edit Button */}
-      <View className="relative py-3">
-        <Text className="text-3xl font-bold text-textLight dark:text-textDark text-center">
-          Accounts
-        </Text>
-        <TouchableOpacity
-          onPress={toggleEditMode}
-          className="absolute right-4 top-7 -translate-y-1/2 px-6 py-1 rounded-lg bg-accentTeal items-center"
-          >
-          <Text className={`text-base font-medium ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
-            {isEditMode ? 'Done' : 'Edit'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Cards scrollable */}
-      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: 100 }}
-      refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
-      }>
-        {accounts.map(account => (
-          <View key={account.id} className="relative mb-3">
-            <AccountCard
-              account={account}
-              onPress={() => handleCardPress(account)}
-              onAddPress={() => handleAddMoneyPress(account)}
-              formatBalance={formatBalance}
-            />
-            {isEditMode && (
-              <TouchableOpacity
-                onPress={() => handleDeleteAccount(account.id)}
-                className="absolute top-0 right-0 w-6 h-6 rounded-full bg-accentRed justify-center items-center"
-              >
-                <Ionicons name="remove" size={16} color="white" />
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
-      </ScrollView>
-
-      {/* Add Account button fixed at bottom */}
-      { isEditMode && (
-        <View className="p-2 bg-background dark:bg-backgroundDark border-t border-borderLight dark:border-borderDark"
-        style={{ paddingBottom: insets.bottom + 65 }}>
-        <TouchableOpacity
-          className="bg-backgroundMuted dark:bg-white p-5 rounded-xl shadow-sm flex-row justify-center items-center"
-          onPress={() => setAddAccountModalVisible(true)}
+      <SafeAreaView className={`flex-1 ${isDark ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
+        <ScrollView 
+          className="flex-1"
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
+          }
         >
-          <Text className={`text-lg font-semibold text-accentTeal ${isDark ? 'text-textLight' : 'text-textDark'} mb-1`}>
-            Add Account
-          </Text>
-        </TouchableOpacity>
-      </View>
-      
-      )}
+          <View className="p-6 space-y-6" style={{ paddingBottom: insets.bottom + 20 }}>
+            {/* Header */}
+            <View className="flex-row items-center justify-between mb-6">
+              <View>
+                <Text className={`text-2xl font-semibold ${isDark ? 'text-textDark' : 'text-textLight'}`}>
+                  My Accounts
+                </Text>
+                <Text className={`mt-1 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                  Manage your financial accounts
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowAddModal(true)}
+                className="w-10 h-10 bg-accentBlue rounded-full items-center justify-center active:opacity-80"
+              >
+                <Plus color="#FFFFFF" size={20} />
+              </TouchableOpacity>
+            </View>
 
-      {/* Modals */}
+            {/* Total Balance */}
+            <View className="bg-accentBlue rounded-2xl p-6 mb-6">
+              <Text className="text-textDark/70 text-sm mb-2">Total Net Worth</Text>
+              <Text className="text-textDark text-3xl font-semibold mb-4">
+                ${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+              <View className="flex-row gap-4">
+                <View>
+                  <Text className="text-textDark/70 text-xs">Accounts</Text>
+                  <Text className="text-textDark text-xl font-medium mt-1">{accounts.length}</Text>
+                </View>
+              </View>
+            </View>
 
-      <EditAccountModal
-        visible={modalVisible}
-        name={editName}
-        balance={editBalance}
-        onChangeName={setEditName}
-        onChangeBalance={setEditBalance}
-        onCancel={handleCancel}
-        onSave={handleSave}
-      />
-      <AddMoneyModal
-        visible={addMoneyModalVisible}
-        accountName={selectedAccount?.account_name}
-        amount={addAmount}
-        onChangeAmount={setAddAmount}
-        onCancel={handleCancel}
-        onAdd={handleAddMoney}
-      />
-      <AddAccountModal
-        visible={addAccountModalVisible}
-        onCancel={() => setAddAccountModalVisible(false)}
-        onSave={handleAddAccount}
-        />
-    </SafeAreaView>
-  </SafeAreaProvider>
+            {/* Accounts List */}
+            <View>
+              <Text className={`text-base font-medium mb-3 ${isDark ? 'text-textDark' : 'text-textLight'}`}>
+                All Accounts
+              </Text>
+              {accounts.map((account) => {
+                const config = typeConfig[account.type.toLowerCase().trim()] || typeConfig.checking;
+                const IconComponent = iconMap[config.icon] || CreditCard;
+                const colorClass = colorMap[config.color] || 'bg-accentBlue';
+                
+                
+                return (
+                  <View key={account.id} className="mb-4">
+                    <View className={`${isDark ? 'bg-surfaceDark border-borderDark' : 'bg-backgroundMuted border-borderLight'} rounded-2xl p-4 border`}>
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center flex-1">
+                          <View className={`w-12 h-12 ${colorClass} rounded-xl items-center justify-center`}>
+                            <IconComponent color="#FFFFFF" size={24} />
+                          </View>
+                          <View className="flex-1 ml-4">
+                            <Text className={`font-medium ${isDark ? 'text-textDark' : 'text-textLight'}`}>
+                              {account.account_name}
+                            </Text>
+                            <Text className={`text-sm capitalize mt-0.5 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                              {account.type}
+                            </Text>
+                          </View>
+                          <View className="items-end">
+                            <Text className={`text-lg font-medium ${account.balance < 0 ? 'text-accentRed' : (isDark ? 'text-textDark' : 'text-textLight')}`}>
+                              ${Math.abs(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </Text>
+                            {account.balance < 0 && (
+                              <Text className="text-xs text-accentRed mt-0.5">Outstanding</Text>
+                            )}
+                          </View>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => setEditingAccount(editingAccount === account.id ? null : account.id)}
+                          className="w-8 h-8 items-center justify-center ml-2 active:opacity-70"
+                        >
+                          <MoreVertical color={isDark ? "#9CA3AF" : "#4B5563"} size={20} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    
+                    {editingAccount === account.id && (
+                      <View className={`${isDark ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'} rounded-lg mt-3 border overflow-hidden`}>
+                        <TouchableOpacity
+                          className={`flex-row items-center px-4 py-3 ${isDark ? 'active:bg-borderDark' : 'active:bg-backgroundMuted'}`}
+                          onPress={() => handleEditAccount(account)}
+                        >
+                          <Edit2 color={isDark ? "#D1D5DB" : "#4B5563"} size={16} />
+                          <Text className={`text-sm ml-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                            Edit
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          className={`flex-row items-center px-4 py-3 ${isDark ? 'active:bg-borderDark' : 'active:bg-backgroundMuted'}`}
+                          onPress={() => handleDeleteAccount(account.id)}
+                        >
+                          <Trash2 color="#EF4444" size={16} />
+                          <Text className="text-accentRed text-sm ml-2">Delete</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Add Account Modal */}
+        <Modal
+          visible={showAddModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowAddModal(false)}
+        >
+          <TouchableOpacity
+            className="flex-1 bg-black/70 justify-end"
+            activeOpacity={1}
+            onPress={() => setShowAddModal(false)}
+          >
+            <TouchableOpacity
+              className={`${isDark ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'} rounded-t-3xl p-6 border-t`}
+              activeOpacity={1}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View className={`w-12 h-1 ${isDark ? 'bg-borderDark' : 'bg-borderLight'} rounded-full self-center mb-6`} />
+              <Text className={`text-xl font-semibold mb-4 ${isDark ? 'text-textDark' : 'text-textLight'}`}>
+                Add New Account
+              </Text>
+              
+              <View className="mb-4">
+                <Text className={`text-sm mb-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                  Account Name
+                </Text>
+                <TextInput
+                  className={`w-full px-4 py-3 ${isDark ? 'bg-inputDark border-borderDark text-textDark' : 'bg-backgroundMuted border-borderLight text-textLight'} border rounded-xl`}
+                  placeholder="e.g., Emergency Fund"
+                  placeholderTextColor={isDark ? "#AAAAAA" : "#888888"}
+                  value={newAccountName}
+                  onChangeText={setNewAccountName}
+                />
+              </View>
+
+              <View className="mb-4">
+                <Text className={`text-sm mb-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                  Account Type
+                </Text>
+                <View className={`w-full px-4 py-3 ${isDark ? 'bg-inputDark border-borderDark' : 'bg-backgroundMuted border-borderLight'} border rounded-xl`}>
+                  <Text className={isDark ? 'text-textDark' : 'text-textLight'}>
+                    {newAccountType.charAt(0).toUpperCase() + newAccountType.slice(1)}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="mb-4">
+                <Text className={`text-sm mb-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                  Balance
+                </Text>
+                <TextInput
+                  className={`w-full px-4 py-3 ${isDark ? 'bg-inputDark border-borderDark text-textDark' : 'bg-backgroundMuted border-borderLight text-textLight'} border rounded-xl`}
+                  placeholder="0.00"
+                  placeholderTextColor={isDark ? "#AAAAAA" : "#888888"}
+                  keyboardType="decimal-pad"
+                  value={newAccountBalance}
+                  onChangeText={setNewAccountBalance}
+                />
+              </View>
+
+              <TouchableOpacity 
+                className="w-full bg-accentBlue py-4 rounded-xl items-center active:opacity-80"
+                onPress={handleAddAccount}
+              >
+                <Text className="text-textDark text-base font-semibold">Add Account</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* Edit Account Modal */}
+          <Modal
+            visible={showEditModal}
+            animationType="slide"
+            onRequestClose={() => setShowEditModal(false)}
+          >
+            {selectedAccount && (
+              <EditAccountPage
+                // Map your backend 'account_name' to the 'name' prop expected by the new page
+                account={{
+                  id: selectedAccount.id,
+                  name: selectedAccount.account_name,
+                  type: selectedAccount.type,
+                  balance: selectedAccount.balance,
+                }}
+                onBack={() => setShowEditModal(false)}
+                onSave={async (updatedData) => {
+                  // This 'updatedData' comes from your new EditAccountPage
+                  await handleSaveEdit(updatedData);
+                }}
+              />
+            )}
+          </Modal>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
-};
-
-export default Accounts;
-
-
+}

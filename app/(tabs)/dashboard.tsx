@@ -410,7 +410,7 @@ export default function Dashboard() {
            timeFrame={timeFrame} />
 
           {/* 4. Detailed Breakdown List */}
-          <View className="mt-2">
+          <View className="mt-1 mb-10">
             {categories
               .filter(cat => {
                 const agg = categoriesAggregated.find(c => c.category_name === cat.category_name);
@@ -419,7 +419,7 @@ export default function Dashboard() {
               .sort((a, b) => {
                 const aggA = categoriesAggregated.find(c => c.category_name === a.category_name)?.total_amount || 0;
                 const aggB = categoriesAggregated.find(c => c.category_name === b.category_name)?.total_amount || 0;
-                return aggB - aggA;
+                return aggA - aggB;
               })
               .map(cat => {
                 const agg = categoriesAggregated.find(c => c.category_name === cat.category_name);
