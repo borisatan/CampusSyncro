@@ -92,7 +92,7 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDon
                     <Text className="text-secondaryDark text-sm">{agg.category_name}</Text>
                   </View>
                   <Text className="text-textDark text-sm font-medium">
-                    €{Math.abs(agg.total_amount).toFixed(0)}
+                    {total ? `${Math.round(Math.abs(agg.total_amount / total) * 100)}%` : '0%'}
                   </Text>
                 </MotiView>
               );

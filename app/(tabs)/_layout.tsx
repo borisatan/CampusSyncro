@@ -76,6 +76,10 @@ export default function TabLayout() {
         name="index"
         options={{ href: null }} // hides from tab bar
       />
+      <Tabs.Screen
+        name="edit-transaction"
+        options={{ href: null }} // hides from tab bar
+      />
     </Tabs>
   );
 }

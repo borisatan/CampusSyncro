@@ -1,17 +1,21 @@
 import { CategoryAggregation, CategoryIconInfo, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
 
+export const createTransaction = async (payload: any) => {
+  const { data, error } = await supabase
+    .from('Transactions')
+    .insert([payload])
+    .select();
+  if (error) throw error;
+  return data;
+};
+
 export const fetchCategories = async () => {
     const { data, error } = await supabase.from("Categories").select("*");
     if (error) throw error;
     return data ?? [];
 };
 
-export const fetchAccountOptions = async () => {
-    const { data, error } = await supabase.from("Accounts").select("id, account_name, selected, type");
-    if (error) throw error;
-    return data ?? [];
-}
 
 export const fetchAccounts = async () => {
   const { data, error } = await supabase.from("Accounts").select("*");
@@ -70,8 +74,9 @@ export async function fetchCategoryIcons(): Promise<Record<string, CategoryIconI
     if (error) throw error;
     return data ?? 0;
   };
+  
   // Fetch only Income category
-export const fetchIncomeTotal = async (startDate: Date, endDate: Date): Promise<number> => {
+export const fetchIncomeTransactionsTotal = async (startDate: Date, endDate: Date): Promise<number> => {
   const { data, error } = await supabase
     .from("Transactions")
     .select("amount")
@@ -99,6 +104,39 @@ export const fetchTransactionsByDateRange = async (startDate: Date, endDate: Dat
   return data ?? [];
 };
 
+
+// Fetch total for all transactions EXCLUDING Income
+export const fetchTotalExpenses = async (startDate: Date, endDate: Date): Promise<number> => {
+  const { data, error } = await supabase.rpc("get_transaction_total", {
+    p_start_date: startDate.toISOString(),
+    p_end_date: endDate.toISOString(),
+    p_exclude_category: "Income" // Excludes Income to get expenses
+  });
+
+  if (error) {
+    console.error("Error fetching total expense transactions:", error);
+    throw error;
+  }
+  
+  return data ?? 0;
+};
+
+// 2. Fetch Total Income (Matching your second function's structure)
+export const fetchTotalIncome = async (startDate: Date, endDate: Date): Promise<number> => {
+  const { data, error } = await supabase.rpc("get_transaction_total", {
+    p_start_date: startDate.toISOString(),
+    p_end_date: endDate.toISOString(),
+    p_category_name: "Income" // Only sums "Income"
+  });
+
+  if (error) {
+    console.error("Error fetching total income:", error);
+    throw error;
+  }
+
+  return data ?? 0;
+};
+
 // Modified: Fetch category aggregates excluding Income
 export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): Promise<CategoryAggregation[]> => {
   const { data, error } = await supabase.rpc('fetch_category_aggregates', {
@@ -111,14 +149,6 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
   return (data ?? []).filter((cat: CategoryAggregation) => cat.category_name !== 'Income');
 };
 
-  export const fetchTotalExpenses = async (startDate: Date, endDate: Date): Promise<number> => {
-    const { data, error } = await supabase.rpc('fetch_total_expenses', {
-    start_date: startDate.toISOString(),
-    end_date: endDate.toISOString(),
-  });
-  if (error) throw error;
-  return data ?? 0;
-};
 
 
 export const createAccount = async (accountName: string, balance: number, type:string, user_id) => {
@@ -132,14 +162,24 @@ export const createAccount = async (accountName: string, balance: number, type:s
   return data;
 }
 
-export const updateTransaction = async (id: number, newAmount: number, newDescription: string, newAccount: string) => {
+export const updateTransaction = async (id: number, newAmount: number, newDescription: string, 
+  newAccount: string,newCategory: string, newDate: string) => {
   const { data, error } = await supabase
-  .from('Transactions')
-  .update({ amount: newAmount, description: newDescription, account_name: newAccount })
-  .eq('id', id)
-  .select();
+    .from('Transactions')
+    .update({ 
+      amount: newAmount, 
+      description: newDescription, 
+      account_name: newAccount,
+      category_name: newCategory, // Update the category
+      created_at: newDate         // Update the timestamp
+    })
+    .eq('id', id)
+    .select();
   
-  if (error) throw error;
+  if (error) {
+    console.error("Error updating transaction:", error.message);
+    throw error;
+  }
   return data;
 }
 

@@ -8,16 +8,18 @@ import {
   TextInput,
   View,
   TouchableOpacity,
-  Modal
+  Modal,
+  Platform
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { Check, ShoppingCart, Coffee, Car, Home, Zap, Gift, Heart, MoreHorizontal } from 'lucide-react-native';
+import { Check, ChevronDown, Calendar } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { deleteCategory, fetchAccountOptions, fetchCategories, updateAccountBalance } from '../services/backendService';
-import { AccountOption, Category } from "../types/types";
+import { fetchAccounts, fetchCategories, updateAccountBalance, createTransaction } from '../services/backendService';
+import { Account, AccountOption, Category } from "../types/types";
 import { supabase } from "../utils/supabase";
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const TransactionAdder = () => {
   const { isDarkMode } = useTheme();
@@ -29,118 +31,102 @@ const TransactionAdder = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [description, setDescription] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
-  const [accountOptions, setAccountOptions] = useState<AccountOption[]>([]);
+  const [accountOptions, setAccountOptions] = useState<Account[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const amountInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setIsLoadingCategories(true);
-        const data = await fetchCategories();
-        setCategories(data);
-        if (data.length > 0) {
-          setSelectedCategory(data[0]);
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories:', err);
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-    loadCategories();
+    loadInitialData();
   }, []);
 
-  useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        setIsLoadingAccounts(true);
-        const data = await fetchAccountOptions();
-        setAccountOptions(data);
-        if (data.length > 0) {
-          setSelectedAccount(data[0].account_name);
-        }
-      } catch (err) {
-        console.error('Failed to fetch accounts:', err);
-      } finally {
-        setIsLoadingAccounts(false);
-      }
-    };
-    loadAccounts();
-  }, []);
-
-  const refreshData = async () => {
-    setIsRefreshing(true);
+  const loadInitialData = async () => {
     try {
-      const [categoriesData, accountsData] = await Promise.all([
-        fetchCategories(),
-        fetchAccountOptions()
-      ]);
-      setCategories(categoriesData);
-      setAccountOptions(accountsData);
+      setIsLoadingCategories(true);
+      setIsLoadingAccounts(true);
+      const [catData, accData] = await Promise.all([fetchCategories(), fetchAccounts()]);
+      
+      setCategories(catData);
+      setAccountOptions(accData);
+
+      if (catData.length > 0) setSelectedCategory(catData[0]);
+      if (accData.length > 0) setSelectedAccount(accData[0].account_name);
     } catch (err) {
-      console.error('Failed to refresh data:', err);
+      console.error('Failed to load initial data:', err);
     } finally {
-      setIsRefreshing(false);
+      setIsLoadingCategories(false);
+      setIsLoadingAccounts(false);
     }
   };
 
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    await loadInitialData();
+    setIsRefreshing(false);
+  };
+
+  const handleDateChange = (event: any, date?: Date) => {
+    if (Platform.OS === 'android') setShowDatePicker(false);
+    if (date) setSelectedDate(date);
+  };
+
+
   const handleSubmit = async () => {
-    if (!amount) return;
+    if (!amount || !userId) return;
 
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount)) return;
 
     try {
-      const { data: transactionData, error: transactionError } = await supabase
-        .from('Transactions')
-        .insert([{
-          amount: transactionType === 'expense' ? -numericAmount : numericAmount,
-          description: description,
-          account_name: selectedAccount,
-          category_name: selectedCategory?.category_name,
-          user_id: userId
-        }]);
+      // 1. Create the transaction
+      // We use 'created_at' as the column name for the date
+      await createTransaction({
+        amount: transactionType === 'expense' ? -numericAmount : numericAmount,
+        description: description,
+        account_name: selectedAccount,
+        // If income, we use the literal string "Income", otherwise the selected category
+        category_name: transactionType === 'expense' ? selectedCategory?.category_name : 'Income',
+        user_id: userId,
+        created_at: selectedDate.toISOString() // Supabase timestamptz format
+      });
 
-      if (transactionError) throw transactionError;
+      // 2. Update Account Balance
+      const currentAccount = accountOptions.find(acc => acc.account_name === selectedAccount);
+      if (currentAccount) {
+        const newBalance = transactionType === 'expense' 
+          ? currentAccount.balance - numericAmount 
+          : currentAccount.balance + numericAmount;
+        
+        await updateAccountBalance(selectedAccount, newBalance);
+      }
 
-      const { data: accountData, error: accountFetchError } = await supabase
-        .from('Accounts')
-        .select('balance')
-        .eq('account_name', selectedAccount)
-        .single();
-
-      if (accountFetchError) throw accountFetchError;
-      if (!accountData) throw new Error('Account not found');
-
-      const newBalance = transactionType === 'expense' 
-        ? accountData.balance - numericAmount 
-        : accountData.balance + numericAmount;
-
-      await updateAccountBalance(selectedAccount, newBalance);
-
+      // UI Feedback
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         setAmount('');
         setDescription('');
+        setSelectedDate(new Date());
+        refreshData(); 
       }, 2000);
 
     } catch (err) {
-      console.error('Error adding transaction or updating balance:', err);
-      Alert.alert('Error', 'Failed to add transaction. Please try again.');
+      console.error('Submission error:', err);
+      Alert.alert('Error', 'Failed to add transaction. Check your connection.');
     }
   };
-
   return (
     <SafeAreaProvider>
       <SafeAreaView className={isDarkMode ? "flex-1 bg-slate-950" : "flex-1 bg-gray-50"}>
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
         <ScrollView 
+          contentContainerStyle={{ paddingBottom: 80 }}
           className="flex-1 p-6"
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
@@ -162,7 +148,7 @@ const TransactionAdder = () => {
               onPress={() => setTransactionType('expense')}
               className={`flex-1 py-3 rounded-xl ${
                 transactionType === 'expense'
-                  ? isDarkMode ? 'bg-slate-900' : 'bg-white'
+                  ? isDarkMode ? 'bg-accentRed' : 'bg-white'
                   : ''
               }`}
             >
@@ -178,7 +164,7 @@ const TransactionAdder = () => {
               onPress={() => setTransactionType('income')}
               className={`flex-1 py-3 rounded-xl ${
                 transactionType === 'income'
-                  ? isDarkMode ? 'bg-slate-900' : 'bg-white'
+                  ? isDarkMode ? 'bg-accentTeal' : 'bg-white'
                   : ''
               }`}
             >
@@ -199,7 +185,7 @@ const TransactionAdder = () => {
             </Text>
             <View className="relative">
               <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                $
+                €
               </Text>
               <TextInput
                 ref={amountInputRef}
@@ -252,7 +238,7 @@ const TransactionAdder = () => {
                           }`}
                         >
                           <View
-                            className="w-12 h-12 rounded-xl items-center justify-center "
+                            className="w-12 h-12 rounded-xl items-center justify-center"
                             style={{ backgroundColor: category.color }}>
                             <Ionicons name={category.icon as any} size={24} color="#fff"/>
                           </View>
@@ -292,42 +278,163 @@ const TransactionAdder = () => {
             />
           </View>
 
-          {/* Account */}
+          {/* Account Section */}
           <View className="mb-6">
-            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
               Account
             </Text>
-            {isLoadingAccounts ? (
-              <View className={`w-full px-4 py-3 rounded-xl ${
-                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'
-              } border`}>
-                <Text className={isDarkMode ? 'text-slate-400' : 'text-gray-600'}>
-                  Loading accounts...
-                </Text>
-              </View>
-            ) : (
-              <View className={`w-full px-4 py-3 rounded-xl ${
-                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'
-              } border`}>
-                <Text className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                  {selectedAccount}
-                </Text>
+            
+            {/* The Trigger Button */}
+            <TouchableOpacity
+              onPress={() => setShowAccountDropdown(!showAccountDropdown)}
+              activeOpacity={0.7}
+              className={`w-full px-4 py-3 rounded-xl flex-row justify-between items-center border ${
+                isDarkMode 
+                  ? 'bg-surfaceDark border-borderDark' 
+                  : 'bg-background border-borderLight'
+              }`}
+            >
+              <Text className={isDarkMode ? 'text-textDark' : 'text-textLight'}>
+                {isLoadingAccounts ? 'Loading accounts...' : selectedAccount}
+              </Text>
+              <Ionicons 
+                name={showAccountDropdown ? "chevron-up" : "chevron-down"} 
+                size={20} 
+                color={isDarkMode ? "#9CA3AF" : "#4B5563"} 
+              />
+            </TouchableOpacity>
+
+            {/* Expanding Menu (Relative Approach) */}
+            {showAccountDropdown && (
+              <View 
+                className={`mt-2 rounded-xl overflow-hidden border ${
+                  isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
+                }`}
+              >
+                <ScrollView 
+                  className="max-h-60" 
+                  nestedScrollEnabled={true} // Crucial for Android ScrollView inside ScrollView
+                >
+                  {accountOptions.map((account, index) => {
+                    const isSelected = selectedAccount === account.account_name;
+                    return (
+                      <TouchableOpacity
+                        key={account.id}
+                        onPress={() => {
+                          setSelectedAccount(account.account_name);
+                          setShowAccountDropdown(false);
+                        }}
+                        className={`px-4 py-4 flex-row items-center justify-between ${
+                          index !== accountOptions.length - 1 
+                            ? isDarkMode ? 'border-b border-borderDark' : 'border-b border-borderLight' 
+                            : ''
+                        } ${
+                          isSelected
+                            ? isDarkMode ? 'bg-backgroundDark' : 'bg-backgroundMuted'
+                            : ''
+                        }`}
+                      >
+                        <View>
+                          <Text className={`font-medium ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
+                            {account.account_name}
+                          </Text>
+                          <Text className={`text-xs ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                            €{account.balance.toFixed(2)}
+                          </Text>
+                        </View>
+                        
+                        {isSelected && (
+                          <Ionicons 
+                            name="checkmark-circle" 
+                            size={20} 
+                            color={isDarkMode ? "#B2A4FF" : "#2563EB"} 
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
               </View>
             )}
           </View>
 
-          {/* Date */}
+          {/* Date Picker */}
           <View className="mb-6">
             <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
               Date
             </Text>
-            <View className={`w-full px-4 py-3 rounded-xl ${
-              isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'
-            } border`}>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              className={`w-full px-4 py-3 rounded-xl flex-row items-center justify-between ${
+                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'
+              } border`}
+            >
               <Text className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                {new Date().toLocaleDateString()}
+                {selectedDate.toLocaleDateString()}
               </Text>
-            </View>
+              <Calendar 
+                size={20} 
+
+                color={isDarkMode ? '#94a3b8' : '#6b7280'} 
+              />
+            </TouchableOpacity>
+
+            {/* Native Date Picker */}
+            {showDatePicker && (
+              <>
+                {Platform.OS === 'ios' ? (
+                  <Modal
+                    visible={showDatePicker}
+                    transparent
+                    animationType="slide"
+                  >
+                    <TouchableOpacity 
+                      activeOpacity={1}
+                      onPress={() => setShowDatePicker(false)}
+                      className="flex-1 bg-black/50 justify-end"
+                    >
+                      <View 
+                        className={`${
+                          isDarkMode ? 'bg-slate-900' : 'bg-white'
+                        } rounded-t-3xl`}
+                        onStartShouldSetResponder={() => true}
+                      >
+                        <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200">
+                          <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                            <Text className="text-blue-500">Cancel</Text>
+                          </TouchableOpacity>
+                          <Text className={`font-semibold ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            Select Date
+                          </Text>
+                          <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                            <Text className="text-blue-500 font-semibold">Done</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <DateTimePicker
+                          value={selectedDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={handleDateChange}
+                          maximumDate={new Date()}
+                          textColor={isDarkMode ? '#ffffff' : '#000000'}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </Modal>
+                ) : (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    themeVariant='dark'
+                    display="default"
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                  />
+                )}
+              </>
+            )}
           </View>
 
           {/* Submit Button */}
@@ -344,8 +451,6 @@ const TransactionAdder = () => {
             </Text>
           </TouchableOpacity>
         </ScrollView>
-
-        
 
         {/* Success Modal */}
         <Modal

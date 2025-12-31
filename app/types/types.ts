@@ -35,6 +35,7 @@ export interface Account {
 export interface AccountOption {
   id: number;
   account_name: string;
+  
   selected: boolean;
   type: string;
 }

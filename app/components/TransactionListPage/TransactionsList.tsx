@@ -108,7 +108,7 @@ const AnimatedTransactionItem = React.memo(({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onLongPress={() => onLongPress?.(transaction.id)}
-      delayLongPress={225}
+      delayLongPress={50}
     >
       <Animated.View style={{ transform: [{ scale }] }}>
         <TransactionItem transaction={transaction} categoryIcons={categoryIcons} />

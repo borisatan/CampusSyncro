@@ -1,9 +1,8 @@
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import EditTransactionModal from "../components/TransactionListPage/EditTransactionModal";
 import FilterModal from "../components/TransactionListPage/FilterModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
 import TransactionsList from "../components/TransactionListPage/TransactionsList";
@@ -52,6 +51,7 @@ const groupTransactionsByDate = (
 // Main screen
 const TransactionsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
+  const router = useRouter();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categoryIcons, setCategoryIcons] = useState<Record<string, CategoryIconInfo>>({});
@@ -73,9 +73,6 @@ const TransactionsScreen: React.FC = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-  
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   
   useEffect(() => {
     if (initialCategory) {
@@ -167,6 +164,7 @@ const TransactionsScreen: React.FC = () => {
   };
   
   const sections: TransactionSection[] = groupTransactionsByDate(dedupeById(filteredTransactions));
+  
   const handleResetFilters = () => {
     setDateRange(null);
     setFilterAccounts([]);
@@ -174,12 +172,13 @@ const TransactionsScreen: React.FC = () => {
     setIsFilterVisible(false);
   };
 
-
   const handleEditTransaction = (transactionId: string) => {
     const tx = transactions.find(t => t.id === Number(transactionId));
     if (tx) {
-      setSelectedTransaction(tx);
-      setIsEditModalVisible(true);
+      router.push({
+        pathname: "/edit-transaction",
+        params: { transaction: JSON.stringify(tx) }
+      });
     }
   };
 
@@ -192,6 +191,7 @@ const TransactionsScreen: React.FC = () => {
       prev.map(t => (t.id === updatedTx.id ? updatedTx : t))
     );
   };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView className={isDarkMode ? "flex-1 bg-backgroundDark" : "flex-1 bg-background"}>
@@ -230,15 +230,6 @@ const TransactionsScreen: React.FC = () => {
           setFilterType={setTransactionType}
           accountsList={accountsList}
           handleReset={handleResetFilters}
-        />
-
-        <EditTransactionModal
-          visible={isEditModalVisible}
-          onClose={() => setIsEditModalVisible(false)}
-          accountsList={accountsList}
-          transaction={selectedTransaction}
-          onSave={handleSaveTransaction}
-          onDelete={handleDeleteTransaction}
         />
 
       </SafeAreaView>

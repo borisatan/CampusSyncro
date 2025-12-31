@@ -10,9 +10,9 @@ interface TimeFrameSelectorProps {
 
 export const TimeFrameSelector = ({ selected, onChange }: TimeFrameSelectorProps) => {
   const options: { label: string; value: TimeFrame }[] = [
-    { label: 'Past Week', value: 'week' },
-    { label: 'Past Month', value: 'month' },
-    { label: 'Past Year', value: 'year' },
+    { label: 'This Week', value: 'week' },
+    { label: 'This Month', value: 'month' },
+    { label: 'This Year', value: 'year' },
   ];
 
   return (

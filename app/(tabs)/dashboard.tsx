@@ -8,7 +8,7 @@ import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SharedValue, useAnimatedReaction, runOnJS } from 'react-native-reanimated';
 import ExpenseCategoryCard from '../components/HomePage/ExpenseCategoryCard';
-import { fetchCategories, fetchCategoryAggregates, fetchTotalBalance, fetchTransactionsByDateRange } from '../services/backendService';
+import { fetchCategories, fetchCategoryAggregates, fetchTotalBalance, fetchTotalExpenses, fetchTotalIncome, fetchTransactionsByDateRange } from '../services/backendService';
 import { Category, CategoryAggregation, Transaction } from '../types/types';
 import { DashboardSummary } from '../components/HomePage/DashboardSummary';
 import { TimeFrameSelector } from '../components/HomePage/TimeFrameSelector';
@@ -156,6 +156,8 @@ export default function Dashboard() {
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('month');
   const [tooltipData, setTooltipData] = useState({ label: '', value: 0 });
   const [totalBalance, setTotalBalance] = useState<number>(0);
+  const [totalIncome, setTotalIncome] = useState<number>(0);
+  const [totalExpenses, setTotalExpenses] = useState<number>(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesAggregated, setCategoriesAggregated] = useState<CategoryAggregation[]>([]);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
@@ -183,10 +185,16 @@ export default function Dashboard() {
 
     try {
       const { startDate, endDate } = getDateRange(period);
-      const balance = await fetchTotalBalance();
-      const cats = await fetchCategories();
-      const aggregates = await fetchCategoryAggregates(startDate, endDate);
-      const transactions = await fetchTransactionsByDateRange(startDate, endDate);
+      
+      // Parallelize fetching for the single dashboard refresh
+      const [balance, income, expenses, cats, aggregates, transactions] = await Promise.all([
+        fetchTotalBalance(),
+        fetchTotalIncome(startDate, endDate),
+        fetchTotalExpenses(startDate, endDate),
+        fetchCategories(),
+        fetchCategoryAggregates(startDate, endDate),
+        fetchTransactionsByDateRange(startDate, endDate)
+      ]);
 
       let aggregatedChartData: ChartDataPoint[];
       if (period === 'week') {
@@ -206,6 +214,8 @@ export default function Dashboard() {
 
       const newData = {
         balance,
+        income,   // Preserved in cache
+        expenses, // Preserved in cache
         cats,
         aggregates: aggregatesWithPercent,
         chartData: aggregatedChartData,
@@ -220,6 +230,9 @@ export default function Dashboard() {
 
   const applyData = (data: any) => {
     setTotalBalance(data.balance);
+    setTotalIncome(data.income);     // Setting state for UI
+    setTotalExpenses(data.expenses); // Setting state for UI
+
     setCategories(data.cats);
     setCategoriesAggregated(data.aggregates);
     setChartData(data.chartData);
@@ -235,10 +248,17 @@ export default function Dashboard() {
           if (!force && cache[period]) return { period, data: cache[period] };
 
           const { startDate, endDate } = getDateRange(period);
-          const balance = await fetchTotalBalance();
-          const cats = await fetchCategories();
-          const aggregates = await fetchCategoryAggregates(startDate, endDate);
-          const transactions = await fetchTransactionsByDateRange(startDate, endDate);
+          
+          const [balance, income, expenses, cats, aggregates, transactions] = await Promise.all([
+            fetchTotalBalance(),
+            fetchTotalIncome(startDate, endDate),
+            fetchTotalExpenses(startDate, endDate),
+            fetchCategories(),
+            fetchCategoryAggregates(startDate, endDate),
+            fetchTransactionsByDateRange(startDate, endDate)
+          ]);
+
+          console.log(balance, income, expenses);
 
           let aggregatedChartData: ChartDataPoint[];
           if (period === 'week') {
@@ -258,7 +278,14 @@ export default function Dashboard() {
 
           return {
             period,
-            data: { balance, cats, aggregates: aggregatesWithPercent, chartData: aggregatedChartData }
+            data: { 
+              balance, 
+              income, 
+              expenses, 
+              cats, 
+              aggregates: aggregatesWithPercent, 
+              chartData: aggregatedChartData 
+            }
           };
         })
       );
@@ -266,7 +293,10 @@ export default function Dashboard() {
       const newCache = results.reduce((acc, { period, data }) => ({ ...acc, [period]: data }), {});
       setCache(prev => ({ ...prev, ...newCache }));
 
-      applyData(newCache[timeFrame] || results.find(r => r.period === timeFrame)?.data);
+      // Find current period data in results or cache to apply
+      const currentData = newCache[timeFrame] || results.find(r => r.period === timeFrame)?.data;
+      if (currentData) applyData(currentData);
+      
     } catch (err) {
       console.error('Error preloading periods:', err);
     } finally {
@@ -392,7 +422,7 @@ export default function Dashboard() {
         <View className="p-2">
 
           {/* 1. Metric Overview */}
-          <DashboardSummary totalBalance={totalBalance} />
+          <DashboardSummary totalBalance={totalBalance} totalIncome={totalIncome} totalExpenses={totalExpenses} />
 
           {/* 2. Filter Controls */}
           <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
@@ -429,8 +459,8 @@ export default function Dashboard() {
                     name={cat.category_name as string}
                     icon={cat.icon}
                     color={cat.color}
-                    amount={-agg?.total_amount || 0}
-                    percent={agg ? Number(agg.percent.toPrecision(3)) : 0}
+                    amount={-agg?.total_amount.toFixed(0) || 0}
+                    percent={agg ? Number(agg.percent.toPrecision(2)) : 0}
                     onPress={onCategoryPress}
                   />
                 );
