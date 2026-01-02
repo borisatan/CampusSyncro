@@ -233,10 +233,10 @@ const TransactionAdder = () => {
                 <View className="flex-row items-center gap-2">
                   <TouchableOpacity 
                   onPress={() => setIsEditMode(!isEditMode)}
-                  className={`px-4 py-1 rounded-xl border ${
+                  className={`px-4 py-1 rounded-lg border ${
                     isEditMode 
                       ? 'bg-accentBlue border-surfaceDark' 
-                      : isDarkMode ? 'bg-backgroundDark border-slate-800' : 'bg-white border-gray-200'
+                      : isDarkMode ? 'bg-surfaceDark border-slate-800' : 'bg-white border-gray-200'
                   }`}
                 >
                   <Text className={`text-sm  ${

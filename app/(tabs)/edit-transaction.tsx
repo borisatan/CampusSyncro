@@ -252,7 +252,7 @@ useEffect(() => {
             <View className="mb-6">
               <Text className={`text-sm mb-3 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Category</Text>
               <View className="flex-row flex-wrap -mx-1.5">
-                {categories.map((category) => (
+                {categories.filter(cat => cat.category_name !== 'Income').map((category) => (
                   <View key={category.id} className="w-1/3 px-1.5 mb-3">
                     <TouchableOpacity
                       onPress={() => setSelectedCategory(category)}
