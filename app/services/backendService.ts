@@ -52,24 +52,8 @@ export const fetchTransactions = async (
   }
 };
 
-export async function fetchCategoryIcons(): Promise<Record<string, CategoryIconInfo>> {
-  const { data, error } = await supabase
-  .from("Categories")
-  .select("category_name, icon, color");
-  
-  if (error) throw error; 
-  
-  const icons: Record<string, CategoryIconInfo> = {};
-  if (data) {
-    data.forEach((c: any) => {
-        icons[c.category_name] = { icon: c.icon, color: c.color };
-      });
-    }
-    
-    return icons;
-  }
-  
-  export const fetchTotalBalance = async (): Promise<number> => {
+
+export const fetchTotalBalance = async (): Promise<number> => {
     const { data, error } = await supabase.rpc('fetch_total_balance');
     if (error) throw error;
     return data ?? 0;
@@ -83,23 +67,23 @@ export const fetchIncomeTransactionsTotal = async (startDate: Date, endDate: Dat
     .eq("category_name", "Income")
     .gte("created_at", startDate.toISOString())
     .lte("created_at", endDate.toISOString());
+    
+    if (error) throw error;
+    
+    const total = data?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
+    return total;
+  };
   
-  if (error) throw error;
-  
-  const total = data?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
-  return total;
-};
-
-// Modified: Fetch transactions excluding Income
-export const fetchTransactionsByDateRange = async (startDate: Date, endDate: Date): Promise<Transaction[]> => {
-  const { data, error } = await supabase
+  // Modified: Fetch transactions excluding Income
+  export const fetchTransactionsByDateRange = async (startDate: Date, endDate: Date): Promise<Transaction[]> => {
+    const { data, error } = await supabase
     .from("Transactions")
     .select("*")
     .neq("category_name", "Income")  // Exclude Income
     .gte("created_at", startDate.toISOString())
     .lte("created_at", endDate.toISOString())
     .order("created_at", { ascending: true });
-  
+    
   if (error) throw error;
   return data ?? [];
 };
@@ -128,14 +112,16 @@ export const fetchTotalIncome = async (startDate: Date, endDate: Date): Promise<
     p_end_date: endDate.toISOString(),
     p_category_name: "Income" // Only sums "Income"
   });
-
+  
   if (error) {
     console.error("Error fetching total income:", error);
     throw error;
   }
-
+  
   return data ?? 0;
 };
+
+
 
 // Modified: Fetch category aggregates excluding Income
 export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): Promise<CategoryAggregation[]> => {
@@ -148,8 +134,6 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
   // Filter out Income category
   return (data ?? []).filter((cat: CategoryAggregation) => cat.category_name !== 'Income');
 };
-
-
 
 export const createAccount = async (accountName: string, balance: number, type:string, user_id) => {
   const { data, error } = await supabase
@@ -176,22 +160,22 @@ export const updateTransaction = async (id: number, newAmount: number, newDescri
     .eq('id', id)
     .select();
   
-  if (error) {
-    console.error("Error updating transaction:", error.message);
+    if (error) {
+      console.error("Error updating transaction:", error.message);
     throw error;
   }
   return data;
 }
 
 export const updateAccountName = async (accountName: string, newName: string) => {
-    const { data, error } = await supabase
-      .from('Accounts')
-      .update({ account_name: newName })
-      .eq('account_name', accountName)
-      .select();
+  const { data, error } = await supabase
+  .from('Accounts')
+  .update({ account_name: newName })
+  .eq('account_name', accountName)
+  .select();
   
-    if (error) throw error;
-    return data;
+  if (error) throw error;
+  return data;
 }
 
 export const updateAccountType = async (accountName: string, newType: string) => {
@@ -207,16 +191,16 @@ export const updateAccountType = async (accountName: string, newType: string) =>
 
 export const updateAccountBalance = async (accountName: string, newBalance: number) => {
     const { data, error } = await supabase
-      .from('Accounts')
+    .from('Accounts')
       .update({ balance: newBalance })
       .eq('account_name', accountName)
       .select();
-  
-    if (error) throw error;
-    return data;
-}
+      
+      if (error) throw error;
+      return data;
+    }
 
-export const deleteTransaction = async (id: number, user_id: string) => {
+    export const deleteTransaction = async (id: number, user_id: string) => {
   const { data, error } = await supabase
   .from('Transactions')
   .delete()
@@ -231,22 +215,85 @@ export const deleteTransaction = async (id: number, user_id: string) => {
 export const deleteAccount = async (id: number) => {
   const { data, error } = await supabase
   .from('Accounts')
-    .delete()
-    .eq('id', id)
-    .select();
-    
+  .delete()
+  .eq('id', id)
+  .select();
+  
+  if (error) throw error;
+  return data;
+} 
+
+export const upsertCategory = async (payload: { 
+  id?: number, 
+  category_name: string, 
+  icon: string, 
+  color: string, 
+  user_id: string 
+}) => {
+  const { data, error } = await supabase
+    .from('Categories')
+    .upsert([payload], { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const saveCategory = async (
+  userId: string,
+  payload: { category_name: string; icon: string; color: string },
+  id?: number
+) => {
+  if (id) {
+    const { data, error } = await supabase
+      .from('Categories')
+      .update(payload)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select();
     if (error) throw error;
     return data;
-  } 
-export async function deleteCategory(id: number, user_id: string) {
+  } else {
     const { data, error } = await supabase
+      .from('Categories')
+      .insert([{ ...payload, user_id: userId }])
+      .select();
+    if (error) throw error;
+    return data;
+  }
+};
+
+export  const getUserId = async () => {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id;
+};
+export async function deleteCategory(id: number, user_id: string) {
+  const { data, error } = await supabase
       .from('Categories')
       .delete()
       .eq('id', id)
       .eq('user_id', user_id)
       .select();
-  
+      
     if (error) throw error;
     return data;
 }
 
+
+export async function fetchCategoryIcons(): Promise<Record<string, CategoryIconInfo>> {
+  const { data, error } = await supabase
+  .from("Categories")
+  .select("category_name, icon, color");
+  
+  if (error) throw error; 
+  
+  const icons: Record<string, CategoryIconInfo> = {};
+  if (data) {
+    data.forEach((c: any) => {
+        icons[c.category_name] = { icon: c.icon, color: c.color };
+      });
+    }
+    
+    return icons;
+  }

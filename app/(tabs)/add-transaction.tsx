@@ -9,7 +9,8 @@ import {
   View,
   TouchableOpacity,
   Modal,
-  Platform
+  Platform,
+  Switch
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Check, ChevronDown, Calendar } from 'lucide-react-native';
@@ -20,10 +21,12 @@ import { Account, AccountOption, Category } from "../types/types";
 import { supabase } from "../utils/supabase";
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
 
 const TransactionAdder = () => {
   const { isDarkMode } = useTheme();
   const { userId, isLoading } = useAuth();
+  const router = useRouter();
   
   const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense');
   const [selectedAccount, setSelectedAccount] = useState('Main Checking');
@@ -39,6 +42,7 @@ const TransactionAdder = () => {
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const amountInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -83,19 +87,15 @@ const TransactionAdder = () => {
     if (isNaN(numericAmount)) return;
 
     try {
-      // 1. Create the transaction
-      // We use 'created_at' as the column name for the date
       await createTransaction({
         amount: transactionType === 'expense' ? -numericAmount : numericAmount,
         description: description,
         account_name: selectedAccount,
-        // If income, we use the literal string "Income", otherwise the selected category
         category_name: transactionType === 'expense' ? selectedCategory?.category_name : 'Income',
         user_id: userId,
-        created_at: selectedDate.toISOString() // Supabase timestamptz format
+        created_at: selectedDate.toISOString() 
       });
 
-      // 2. Update Account Balance
       const currentAccount = accountOptions.find(acc => acc.account_name === selectedAccount);
       if (currentAccount) {
         const newBalance = transactionType === 'expense' 
@@ -105,7 +105,6 @@ const TransactionAdder = () => {
         await updateAccountBalance(selectedAccount, newBalance);
       }
 
-      // UI Feedback
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -120,8 +119,8 @@ const TransactionAdder = () => {
       Alert.alert('Error', 'Failed to add transaction. Check your connection.');
     }
   };
+
   return (
-    <SafeAreaProvider>
       <SafeAreaView className={isDarkMode ? "flex-1 bg-slate-950" : "flex-1 bg-gray-50"}>
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
@@ -206,9 +205,29 @@ const TransactionAdder = () => {
           {/* Category */}
           {transactionType === 'expense' && (
             <View className="mb-6">
-              <Text className={`text-sm mb-3 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-                Category
-              </Text>
+              <View className="flex-row justify-between items-center mb-3">
+                <Text className={`text-sm mb-1 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+                  Category
+                </Text>
+                <View className="flex-row items-center gap-2">
+                  <TouchableOpacity 
+                  onPress={() => setIsEditMode(!isEditMode)}
+                  className={`px-4 py-1 rounded-xl border ${
+                    isEditMode 
+                      ? 'bg-accentBlue border-surfaceDark' 
+                      : isDarkMode ? 'bg-backgroundDark border-slate-800' : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <Text className={`text-sm  ${
+                    isEditMode 
+                      ? 'text-white' 
+                      : isDarkMode ? 'text-textDark' : 'text-textLight'
+                  }`}>
+                    {isEditMode ? 'Done Editing' : 'Edit Categories'}
+                  </Text>
+                </TouchableOpacity>
+                </View>
+              </View>
               {isLoadingCategories ? (
                 <View className="flex items-center justify-center py-8">
                   <Text className={isDarkMode ? 'text-slate-400' : 'text-gray-600'}>
@@ -223,39 +242,69 @@ const TransactionAdder = () => {
                 </View>
               ) : (
                 <View className="flex-row flex-wrap -mx-1.5">
-                    {categories.map((category) => (
-                      <View key={category.id} className="w-1/3 px-1.5 mb-3">
-                        <TouchableOpacity
-                          onPress={() => setSelectedCategory(category)}
-                          className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
-                            selectedCategory?.id === category.id
-                              ? isDarkMode 
-                                ? 'border-accentPurple bg-surfaceDark'
-                                : 'border-accentBlue bg-backgroundMuted'
-                              : isDarkMode 
-                                ? 'bg-surfaceDark border-borderDark'
-                                : 'bg-background border-borderLight'
-                          }`}
-                        >
-                          <View
-                            className="w-12 h-12 rounded-xl items-center justify-center"
-                            style={{ backgroundColor: category.color }}>
-                            <Ionicons name={category.icon as any} size={24} color="#fff"/>
-                          </View>
-                          <Text 
-                            className={`text-sm text-center ${
-                              isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'
-                            }`} 
-                            numberOfLines={2}
-                            adjustsFontSizeToFit
-                            minimumFontScale={0.8}
-                          >
-                            {category.category_name}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-              ))}
+              {/* Existing Categories */}
+              {categories.map((category) => (
+                <View key={category.id} className="w-1/3 px-1.5 mb-3 bg-backgroundDark">
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (isEditMode) {
+                        router.navigate({
+                          pathname: '/components/AddTransactionPage/edit-category',
+                          params: { 
+                            id: category.id,
+                            name: category.category_name,
+                            icon: category.icon,
+                            color: category.color
+                          }
+                        });
+                      } else {
+                        setSelectedCategory(category);
+                      }
+                    }}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
+                      isEditMode 
+                        ? isDarkMode ? 'bg-slate-700/50 border-slate-500' : 'bg-gray-100 border-gray-400'
+                        : selectedCategory?.id === category.id
+                          ? isDarkMode ? 'border-indigo-400 bg-slate-800' : 'border-blue-500 bg-blue-50'
+                          : isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    <View
+                      className="w-12 h-12 rounded-xl items-center justify-center "
+                      style={{ backgroundColor: category.color }}>
+                      <Ionicons name={category.icon as any} size={24} color="#fff"/>
+                      {isEditMode && (
+                        <View className="absolute -top-1 -right-1 bg-white rounded-full border border-white">
+                          <Ionicons name="pencil" size={10} color="#000" />
+                        </View>
+                      )}
+                    </View>
+                    <Text className={`text-sm text-center ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {category.category_name}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
+              ))}
+
+              {/* NEW: Add Category Button (Edit Mode Only) */}
+              {isEditMode && (
+                <View className="w-1/3 px-1.5 mb-3">
+                  <TouchableOpacity
+                    onPress={() => router.navigate('/components/AddTransactionPage/edit-category')}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
+                      isDarkMode ? 'bg-slate-700/50 border-slate-500' : 'bg-gray-100 border-gray-400'
+                    }`}
+                  >
+                    <View className="w-12 h-12 rounded-xl items-center justify-center bg-white border border-gray-300">
+                      <Ionicons name="add-outline" size={24} color="#6366f1" />
+                    </View>
+                    <Text className={`text-sm text-center ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+                      Add New
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
               )}
             </View>
           )}
@@ -284,7 +333,6 @@ const TransactionAdder = () => {
               Account
             </Text>
             
-            {/* The Trigger Button */}
             <TouchableOpacity
               onPress={() => setShowAccountDropdown(!showAccountDropdown)}
               activeOpacity={0.7}
@@ -304,7 +352,6 @@ const TransactionAdder = () => {
               />
             </TouchableOpacity>
 
-            {/* Expanding Menu (Relative Approach) */}
             {showAccountDropdown && (
               <View 
                 className={`mt-2 rounded-xl overflow-hidden border ${
@@ -313,7 +360,7 @@ const TransactionAdder = () => {
               >
                 <ScrollView 
                   className="max-h-60" 
-                  nestedScrollEnabled={true} // Crucial for Android ScrollView inside ScrollView
+                  nestedScrollEnabled={true} 
                 >
                   {accountOptions.map((account, index) => {
                     const isSelected = selectedAccount === account.account_name;
@@ -374,12 +421,10 @@ const TransactionAdder = () => {
               </Text>
               <Calendar 
                 size={20} 
-
                 color={isDarkMode ? '#94a3b8' : '#6b7280'} 
               />
             </TouchableOpacity>
 
-            {/* Native Date Picker */}
             {showDatePicker && (
               <>
                 {Platform.OS === 'ios' ? (
@@ -462,9 +507,9 @@ const TransactionAdder = () => {
             <View className={`${
               isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
             } border rounded-2xl p-6 flex flex-col items-center gap-3`}>
-              <View className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center">
                 <Check color="#34d399" size={32} />
-              </View>
+              </div>
               <Text className={isDarkMode ? 'text-white' : 'text-gray-900'}>
                 Transaction Added!
               </Text>
@@ -472,7 +517,6 @@ const TransactionAdder = () => {
           </View>
         </Modal>
       </SafeAreaView>
-    </SafeAreaProvider>
   );
 };
 

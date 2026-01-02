@@ -3,26 +3,45 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { NavigationContainer } from '@react-navigation/native';
+import { AppThemeProvider } from './context/ThemeContext';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useColorScheme } from 'react-native';
 
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
+
+  const MyTheme = {
+    ...(colorScheme === 'dark' ? DarkTheme : DefaultTheme),
+    colors: { 
+      ...(colorScheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
+      background: '#000000', 
+    },
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <ThemeProvider>
-            <KeyboardProvider preload={false}>
-            <Stack screenOptions={{ headerShown: false, animation: 'fade_from_bottom', animationDuration: 400, contentStyle: { backgroundColor: '#20283A' } }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)"  />
-              
-            </Stack>
-            </KeyboardProvider>
+          <ThemeProvider value={MyTheme}>
+            <AppThemeProvider>
+              <KeyboardProvider preload={false}>
+                <Stack 
+                  screenOptions={{ 
+                    headerShown: false, 
+                    animation: 'fade_from_bottom', 
+                    animationDuration: 400, 
+                    contentStyle: { backgroundColor: "#20283A", flex: 1 }, 
+                  }}
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(tabs)" />
+                </Stack>
+              </KeyboardProvider>
+            </AppThemeProvider>
           </ThemeProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
-} 
+}

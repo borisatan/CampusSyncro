@@ -175,7 +175,7 @@ const TransactionsScreen: React.FC = () => {
   const handleEditTransaction = (transactionId: string) => {
     const tx = transactions.find(t => t.id === Number(transactionId));
     if (tx) {
-      router.push({
+      router.navigate({
         pathname: "/edit-transaction",
         params: { transaction: JSON.stringify(tx) }
       });

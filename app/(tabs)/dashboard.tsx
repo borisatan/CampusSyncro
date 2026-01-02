@@ -258,7 +258,6 @@ export default function Dashboard() {
             fetchTransactionsByDateRange(startDate, endDate)
           ]);
 
-          console.log(balance, income, expenses);
 
           let aggregatedChartData: ChartDataPoint[];
           if (period === 'week') {

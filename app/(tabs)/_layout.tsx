@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import "../globals.css";
+import { View } from "react-native";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -12,10 +13,15 @@ export default function TabLayout() {
         headerShown: false,
         animation: 'shift',
         
-        sceneStyle: { backgroundColor: "#20283A" },
+        sceneStyle: { backgroundColor: "#20283A", flex: 1 },
         tabBarShowLabel: false,
         tabBarActiveTintColor: "#2563EB", // accentBlue
         tabBarInactiveTintColor: "#9CA3AF", // secondaryDark
+
+        tabBarBackground: () => (
+          <View style={{ flex: 1, backgroundColor: "#20283A" }} />
+        ),
+        
         tabBarStyle: {
           backgroundColor: "#20283A", // background
           borderTopColor: "#0A0F1F",  // borderLight
