@@ -6,7 +6,7 @@ import {
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { fetchCategories } from "../../services/backendService";
@@ -22,10 +22,11 @@ type FilterModalProps = {
   filterAccounts: string[];
   setFilterAccounts: (accounts: string[]) => void;
   accountsList: string[];
-  filterCategory: string | null;
-  setFilterCategory: (category: string | null) => void;
-  filterType: 'all' | 'income' | 'expense';
-  setFilterType: (type: 'all' | 'income' | 'expense') => void;
+  // Changed to array to match the logic from your reference
+  selectedCategories: string[];
+  setSelectedCategories: (categories: string[]) => void;
+  filterType: "all" | "income" | "expense";
+  setFilterType: (type: "all" | "income" | "expense") => void;
   isDarkMode: boolean;
   handleReset: () => void;
 };
@@ -38,225 +39,224 @@ const FilterModal: React.FC<FilterModalProps> = ({
   filterAccounts,
   setFilterAccounts,
   accountsList,
-  filterCategory,
-  setFilterCategory,
+  selectedCategories,
+  setSelectedCategories,
   filterType,
   setFilterType,
   isDarkMode,
-  handleReset
+  handleReset,
 }) => {
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
-  const [showCategories, setShowCategories] = useState(false);
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+
 
   useEffect(() => {
     const loadCategories = async () => {
       const cats = await fetchCategories();
       setCategoriesList(cats);
     };
-
     loadCategories();
-  }, []); 
+  }, []);
 
-  const selectedCategory = filterCategory ? categoriesList.find((cat) => cat.category_name === filterCategory) : null;
+  const toggleCategory = (categoryName: string) => {
+    if (selectedCategories.includes(categoryName)) {
+      setSelectedCategories(selectedCategories.filter((c) => c !== categoryName));
+    } else {
+      setSelectedCategories([...selectedCategories, categoryName]);
+    }
+  };
+  const toggleAccount = (account: string) => {
+    if (filterAccounts.includes(account)) {
+      setFilterAccounts(filterAccounts.filter((a) => a !== account));
+    } else {
+      setFilterAccounts([...filterAccounts, account]);
+    }
+  };
 
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View className="flex-1" />
-      </TouchableWithoutFeedback>
+  const activeFiltersCount = 
+    (filterType !== "all" ? 1 : 0) + 
+    selectedCategories.length + 
+    filterAccounts.length + 
+    (dateRange ? 1 : 0);
 
-      <KeyboardAvoidingView behavior="padding" className="flex-1 justify-end">
-        <View className="bg-background dark:bg-surfaceDark p-5 rounded-t-3xl w-full">
-          <Text className={`text-lg font-semibold text-center mb-4 ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
-            Filter Transactions
-          </Text>
-
-          {/* Transaction Type Section */}
-          <View className="mb-6">
-            <Text className={`text-base font-semibold mb-3 ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
-              Transaction Type
-            </Text>
-            <View className="space-y-2">
-              <TouchableOpacity
-                onPress={() => setFilterType('all')}
-                className={`w-full px-4 py-3 rounded-lg ${
-                  filterType === 'all' 
-                    ? 'bg-accentBlue' 
-                    : isDarkMode ? 'bg-inputDark' : 'bg-backgroundMuted'
-                }`}
+    return (
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        {/* Backdrop */}
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View className="flex-1" />
+        </TouchableWithoutFeedback>
+    
+        <KeyboardAvoidingView behavior="padding" className="justify-end">
+          <View className="bg-surfaceDark p-4 rounded-t-[40px] w-full border-t border-borderDark">
+            
+            {/* Header */}
+            <View className="flex-row justify-between items-center mb-10 mt-3">
+              <View>
+                <Text className="text-2xl font-bold  text-textDark">Filter Transactions</Text>
+                {activeFiltersCount > 0 && (
+                  <Text className="text-accentBlue text-sm font-bold uppercase tracking-[2px] mt-2">
+                    {activeFiltersCount} active filters
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity 
+                onPress={onClose}
+                className="bg-inputDark p-3 rounded-full border border-borderDark"
               >
-                <Text className={`${
-                  filterType === 'all' 
-                    ? 'text-textDark font-semibold' 
-                    : isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'
-                }`}>
-                  All Transactions
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setFilterType('income')}
-                className={`w-full px-4 py-3 rounded-lg ${
-                  filterType === 'income' 
-                    ? 'bg-accentBlue' 
-                    : isDarkMode ? 'bg-inputDark' : 'bg-backgroundMuted'
-                }`}
-              >
-                <Text className={`${
-                  filterType === 'income' 
-                    ? 'text-textDark font-semibold' 
-                    : isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'
-                }`}>
-                  Income Only
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setFilterType('expense')}
-                className={`w-full px-4 py-3 rounded-lg ${
-                  filterType === 'expense' 
-                    ? 'bg-accentBlue' 
-                    : isDarkMode ? 'bg-inputDark' : 'bg-backgroundMuted'
-                }`}
-              >
-                <Text className={`${
-                  filterType === 'expense' 
-                    ? 'text-textDark font-semibold' 
-                    : isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'
-                }`}>
-                  Expenses Only
-                </Text>
+                <Ionicons name="close" size={28} color="#FFFFFF" /> 
               </TouchableOpacity>
             </View>
-          </View>
-
-          {/* Date Range Selector */}
-          <View className="mb-6">
-            <Text className={`text-base font-semibold mb-3 ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
-              Date Range
-            </Text>
-            <TouchableOpacity
-              onPress={() => {}}
-              className={`px-5 py-3 rounded-full border ${
-                isDarkMode ? "border-borderDark" : "border-borderLight"
-              }`}
-            >
-              <DateRangeSelector
-                currentRange={dateRange}
-                onDateRangeSelect={(startDate, endDate) => setDateRange({ start: startDate, end: endDate })}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Account Selector */}
-          <AccountSelector
-            accountsList={accountsList}
-            filterAccounts={filterAccounts}
-            setFilterAccounts={setFilterAccounts}
-            isDarkMode={isDarkMode}
-          />
-
-          {/* Category Selector */}
-          <View className="mb-6">
-            <Text
-              className={`text-base font-semibold mb-3 ${
-                isDarkMode ? "text-textDark" : "text-textLight"
-              }`}
-            >
-              Category
-            </Text>
-
-            <TouchableOpacity
-              onPress={() => setShowCategories(prev => !prev)}
-              className={`px-5 py-3 rounded-full border flex-row items-center ${
-                isDarkMode ? "border-borderDark" : "border-borderLight"
-              }`}
-            >
-              <Ionicons
-                name={(selectedCategory?.icon as keyof typeof Ionicons.glyphMap) || "apps-outline"}
-                size={20}
-                color={selectedCategory?.color || (isDarkMode ? "#fff" : "#000")}
-              />
-              <Text
-                className={`${
-                  isDarkMode ? "ml-2 text-textDark" : "ml-2 text-textLight"
-                }`}
-              >
-                {filterCategory || "Select Category"}
-              </Text>
-            </TouchableOpacity>
-
-            {showCategories && (
-              <View className="mt-3 border rounded-xl border-borderLight dark:border-borderDark max-h-60">
-                <ScrollView>
+    
+            <ScrollView showsVerticalScrollIndicator={false} className="max-h-[60vh]">
+              
+              {/* Transaction Type - ACTUAL DROPDOWN MENU */}
+              <View className="mb-10">
+                <Text className="text-sm font-bold text-secondaryDark mb-4 uppercase tracking-[2px]">
+                  Transaction Type
+                </Text>
+                <View className="bg-inputDark rounded-xl border border-borderDark overflow-hidden">
+                  {/* Header / Trigger */}
                   <TouchableOpacity
-                    onPress={() => {
-                      setFilterCategory(null);
-                      setShowCategories(false);
-                    }}
-                    className={`p-3 flex-row items-center ${
-                      filterCategory === null ? "bg-accentTeal/20" : ""
-                    }`}
+                    onPress={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+                    className="flex-row items-center justify-between px-6 py-5"
                   >
-                    <Ionicons
-                      name={"apps-outline"} 
-                      size={20}
-                      color={isDarkMode ? "#fff" : "#000"}
-                    />
-                    <Text className={`ml-2 ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
-                      All Categories
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  {categoriesList.map((cat) => (
-                    <TouchableOpacity
-                      key={cat.id}
-                      onPress={() => {
-                        setFilterCategory(
-                          cat.category_name === filterCategory ? null : cat.category_name
-                        );
-                        setShowCategories(false);
-                      }}
-                      className={`p-3 flex-row items-center ${
-                        cat.category_name === filterCategory ? "bg-accentTeal/20" : ""
-                      }`}
-                    >
-                      {cat.icon && (
-                        <Ionicons
-                          name={cat.icon as any} 
-                          size={20}
-                          color={cat.color}
-                        />
-                      )}
-                      <Text className={`ml-2 ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
-                        {cat.category_name}
+                    <View className="flex-row items-center gap-x-3">
+                      <Ionicons 
+                        name={filterType === 'all' ? 'layers' : filterType === 'income' ? 'arrow-down-circle' : 'arrow-up-circle'} 
+                        size={22} 
+                        color="#2563EB" 
+                      />
+                      <Text className="text-lg font-bold text-textDark capitalize">
+                        {filterType}
                       </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                    </View>
+                    <Ionicons 
+                      name={isTypeDropdownOpen ? "chevron-up" : "chevron-down"} 
+                      size={20} 
+                      color="#9CA3AF" 
+                    />
+                  </TouchableOpacity>
+    
+                  {/* Collapsible Content */}
+                  {isTypeDropdownOpen && (
+                    <View className="border-t border-borderDark/30 pb-2">
+                      {(['all', 'income', 'expense'] as const).map((type) => {
+                        const isSelected = filterType === type;
+                        return (
+                          <TouchableOpacity
+                            key={type}
+                            onPress={() => {
+                              setFilterType(type);
+                              setIsTypeDropdownOpen(false);
+                            }}
+                            className={`flex-row items-center justify-between px-6 py-4 ${isSelected ? 'bg-accentBlue/10' : ''}`}
+                          >
+                            <Text className={`capitalize text-lg ${isSelected ? "text-accentBlue font-bold" : "text-secondaryDark"}`}>
+                              {type}
+                            </Text>
+                            {isSelected && <Ionicons name="checkmark" size={20} color="#2563EB" />}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
               </View>
-            )}
+    
+              {/* Date Range Selector Integration */}
+              <View className="mb-10">
+                <Text className="text-sm font-bold text-secondaryDark mb-4 uppercase tracking-[2px]">
+                  Date Range
+                </Text>
+                <View className="bg-inputDark rounded-xl border border-borderDark overflow-hidden">
+                  <DateRangeSelector
+                    currentRange={dateRange}
+                    onDateRangeSelect={(startDate, endDate) => setDateRange({ start: startDate, end: endDate })}
+                  />
+                </View>
+              </View>
+    
+              {/* Accounts Selection */}
+              <View className="mb-10">
+                <Text className="text-sm font-bold text-secondaryDark mb-4 uppercase tracking-[2px]">
+                  Accounts {filterAccounts.length > 0 && `(${filterAccounts.length})`}
+                </Text>
+                <View className="gap-y-3">
+                  {accountsList.map((account) => {
+                    const isSelected = filterAccounts.includes(account);
+                    return (
+                      <TouchableOpacity
+                        key={account}
+                        onPress={() => toggleAccount(account)}
+                        className={`flex-row items-center justify-between px-6 py-5 rounded-xl border ${
+                          isSelected ? "border-accentBlue bg-accentBlue/10" : "border-borderDark bg-inputDark"
+                        }`}
+                      >
+                        <Text className={`text-lg ${isSelected ? "text-textDark font-bold" : "text-secondaryDark"}`}>
+                          {account}
+                        </Text>
+                        <View className={`w-6 h-6 rounded-full border ${isSelected ? 'bg-accentBlue border-accentBlue' : 'border-borderDark'} items-center justify-center`}>
+                          {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+    
+              {/* Categories Multi-Selection Grid (Bigger Icons) */}
+              <View className="mb-12">
+                <Text className="text-sm font-bold text-secondaryDark mb-4 uppercase tracking-[2px]">
+                  Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+                </Text>
+                <View className="flex-row flex-wrap justify-between gap-y-4">
+                  {categoriesList.map((cat) => {
+                    const isSelected = selectedCategories.includes(cat.category_name);
+                    return (
+                      <TouchableOpacity
+                        key={cat.id}
+                        onPress={() => toggleCategory(cat.category_name)}
+                        className={`flex-row items-center gap-4 px-4 py-5 rounded-xl border ${
+                          isSelected ? "border-accentBlue bg-accentBlue/10" : "border-borderDark bg-inputDark"
+                        } w-[48%]`}
+                      >
+                        <View 
+                          className="w-12 h-12 rounded-xl items-center justify-center"
+                          style={{ backgroundColor: isSelected ? cat.color : `${cat.color}20` }}
+                        >
+                          <Ionicons name={cat.icon as any} size={24} color={isSelected ? 'white' : cat.color} />
+                        </View>
+                        <Text numberOfLines={1} className={`flex-1 text-sm ${isSelected ? "text-textDark font-bold" : "text-secondaryDark"}`}>
+                          {cat.category_name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </ScrollView>
+    
+            {/* Action Buttons */}
+            <View className="flex-row gap-5 mt-3">
+              <TouchableOpacity
+                className="flex-1 py-5 rounded-xl bg-inputDark border border-borderDark"
+                onPress={handleReset}
+              >
+                <Text className="text-center text-secondaryDark text-md font-bold">Reset</Text>
+              </TouchableOpacity>
+    
+              <TouchableOpacity 
+                className="flex-1 py-5 rounded-xl bg-accentBlue shadow-xl shadow-accentBlue/40" 
+                onPress={onClose}
+              >
+                <Text className="text-center text-textDark font-bold text-md">Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+    
           </View>
-
-          {/* Apply & Reset */}
-          <View className="flex-row justify-between">
-            <TouchableOpacity
-              className="flex-1 py-3 mr-3 rounded-xl border border-borderLight dark:border-borderDark"
-              onPress={handleReset}
-            >
-              <Text className={`text-center ${isDarkMode ? "text-textDark" : "text-textLight"}`}>
-                Reset
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="flex-1 py-3 ml-2 rounded-xl bg-accentTeal" onPress={onClose}>
-              <Text className="text-center text-textDark font-semibold">Apply</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
+        </KeyboardAvoidingView>
+      </Modal>
+    );
 };
 
 export default FilterModal;

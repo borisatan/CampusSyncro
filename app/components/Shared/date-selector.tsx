@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useTheme } from '../../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface DateRangeSelectorProps {
   onDateRangeSelect?: (startDate: string, endDate: string) => void;
@@ -154,7 +155,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
         <TouchableOpacity
           key={view}
           onPress={() => handleViewSelect(view)}
-          className={`flex-1 mx-1 py-2 rounded-full ${
+          className={`flex-1 mx-1 py-2 rounded-xl ${
             currentView === view ? 'bg-[#2A9D8F]' : 'bg-[#E5E7EB] dark:bg-[#374151]'
           }`}
         >
@@ -175,12 +176,30 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
   return (
     <>
       <TouchableOpacity
+        activeOpacity={0.7}
         onPress={() => setIsVisible(true)}
-        className="flex-row items-center justify-center"
+        className="w-full flex-row items-center justify-between px-4 py-4 bg-surfaceDark rounded-2xl"
       >
-        <Text className="text-md font-medium text-[#212121] dark:text-[#FFFFFF]">
-          {getDisplayText()}
-        </Text>
+        <View className="flex-row items-center">
+          <View className="bg-indigo p-2 rounded-xl mr-3">
+            <Ionicons 
+              name="calendar-outline" 
+              size={18} 
+              color={startDate ? "#818cf8" : "#94a3b8"} 
+            />
+          </View>
+          <View>
+            <Text className={`text-sm font-bold ${startDate ? 'text-white' : 'text-slate-400'}`}>
+              {getDisplayText()}
+            </Text>
+            {startDate && (
+              <Text className="text-[10px] text-indigo-400 font-medium uppercase tracking-tighter">
+                Active Range
+              </Text>
+            )}
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color="#475569" />
       </TouchableOpacity>
 
       <Modal
@@ -209,7 +228,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
             />
             <TouchableOpacity
               onPress={handleClose}
-              className="mt-4 bg-[#2A9D8F] py-2 rounded-full"
+              className="mt-4 bg-accentTeal py-2 rounded-full"
             >
               <Text className="text-center text-white font-medium">Done</Text>
             </TouchableOpacity>

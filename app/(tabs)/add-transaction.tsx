@@ -81,21 +81,41 @@ const TransactionAdder = () => {
 
 
   const handleSubmit = async () => {
-    if (!amount || !userId) return;
-
+    // 1. Basic validation
+    if (!amount || !userId) {
+      Alert.alert('Error', 'Please enter an amount');
+      return;
+    }
+  
     const numericAmount = parseFloat(amount);
-    if (isNaN(numericAmount)) return;
-
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+  
+    // 2. Category logic check
+    // If it's an expense, we MUST have a category selected.
+    if (transactionType === 'expense' && !selectedCategory) {
+      Alert.alert('Error', 'Please select a category');
+      return;
+    }
+  
     try {
+      // IMPORTANT: Ensure 'Income' exists in your DB categories table if your backend requires it.
+      const categoryName = transactionType === 'expense' 
+        ? selectedCategory?.category_name 
+        : 'Income';
+  
       await createTransaction({
         amount: transactionType === 'expense' ? -numericAmount : numericAmount,
         description: description,
         account_name: selectedAccount,
-        category_name: transactionType === 'expense' ? selectedCategory?.category_name : 'Income',
+        category_name: categoryName,
         user_id: userId,
         created_at: selectedDate.toISOString() 
       });
-
+  
+      // 3. Update Balance locally
       const currentAccount = accountOptions.find(acc => acc.account_name === selectedAccount);
       if (currentAccount) {
         const newBalance = transactionType === 'expense' 
@@ -104,7 +124,8 @@ const TransactionAdder = () => {
         
         await updateAccountBalance(selectedAccount, newBalance);
       }
-
+  
+      // 4. Success handling
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -113,10 +134,10 @@ const TransactionAdder = () => {
         setSelectedDate(new Date());
         refreshData(); 
       }, 2000);
-
+  
     } catch (err) {
       console.error('Submission error:', err);
-      Alert.alert('Error', 'Failed to add transaction. Check your connection.');
+      Alert.alert('Error', 'Failed to add transaction. Check your database constraints.');
     }
   };
 
@@ -243,7 +264,7 @@ const TransactionAdder = () => {
               ) : (
                 <View className="flex-row flex-wrap -mx-1.5">
               {/* Existing Categories */}
-              {categories.map((category) => (
+              {categories.filter(cat => cat.category_name !== 'Income').map((category) => (
                 <View key={category.id} className="w-1/3 px-1.5 mb-3 bg-backgroundDark">
                   <TouchableOpacity
                     onPress={() => {
@@ -263,10 +284,16 @@ const TransactionAdder = () => {
                     }}
                     className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
                       isEditMode 
-                        ? isDarkMode ? 'bg-slate-700/50 border-slate-500' : 'bg-gray-100 border-gray-400'
+                        ? isDarkMode 
+                          ? 'bg-backgroundDark border-borderDark' 
+                          : 'bg-backgroundMuted border-borderLight'
                         : selectedCategory?.id === category.id
-                          ? isDarkMode ? 'border-indigo-400 bg-slate-800' : 'border-blue-500 bg-blue-50'
-                          : isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
+                          ? isDarkMode 
+                            ? 'bg-surfaceDark border-accentBlue' 
+                            : 'bg-blue-50 border-accentBlue'
+                          : isDarkMode 
+                            ? 'bg-surfaceDark border-borderDark' 
+                            : 'bg-background border-borderLight'
                     }`}
                   >
                     <View
@@ -292,7 +319,7 @@ const TransactionAdder = () => {
                   <TouchableOpacity
                     onPress={() => router.navigate('/components/AddTransactionPage/edit-category')}
                     className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
-                      isDarkMode ? 'bg-slate-700/50 border-slate-500' : 'bg-gray-100 border-gray-400'
+                      isDarkMode ? 'bg-backgroundDark border-slate-500' : 'bg-gray-100 border-gray-400'
                     }`}
                   >
                     <View className="w-12 h-12 rounded-xl items-center justify-center bg-white border border-gray-300">
@@ -498,18 +525,14 @@ const TransactionAdder = () => {
         </ScrollView>
 
         {/* Success Modal */}
-        <Modal
-          visible={showSuccess}
-          transparent
-          animationType="fade"
-        >
+        <Modal visible={showSuccess} transparent animationType="fade">
           <View className="flex-1 items-center justify-center bg-black/50">
-            <View className={`${
-              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
-            } border rounded-2xl p-6 flex flex-col items-center gap-3`}>
-              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center">
+            <View className={`${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'} border rounded-2xl p-6 flex flex-col items-center gap-3`}>
+              
+              <View className="w-16 h-16 bg-accentTeal rounded-full flex items-center justify-center">
                 <Check color="#34d399" size={32} />
-              </div>
+              </View>
+              
               <Text className={isDarkMode ? 'text-white' : 'text-gray-900'}>
                 Transaction Added!
               </Text>

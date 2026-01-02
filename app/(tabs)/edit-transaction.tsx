@@ -120,45 +120,42 @@ useEffect(() => {
 
   const handleSave = async () => {
     if (!transaction || !amount || !userId) return;
-
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount)) return;
-
+  
     try {
       setIsSaving(true);
       const finalAmount = transactionType === 'expense' ? -numericAmount : numericAmount;
-    
-      // 1. Update backend transaction record
-      await updateTransaction(
-        transaction.id,
-        finalAmount,
-        description,
-        selectedAccount,
-        transactionType === 'expense' ? selectedCategory?.category_name : 'Income',
-        selectedDate.toISOString()
-      );
-    
-      // 2. Logic for balance adjustment
-      const amountDifference = finalAmount - transaction.amount;
-    
-      // Find the current account object to get its current total balance
-      const currentAccountObj = accountOptions.find(acc => acc.account_name === selectedAccount);
-      
-      if (currentAccountObj) {
-        const newTotalBalance = currentAccountObj.balance + amountDifference;
-        await updateAccountBalance(selectedAccount, newTotalBalance);
+      const categoryName = transactionType === 'expense' ? selectedCategory?.category_name : 'Income';
+  
+      // 1. Update the Transaction
+      await updateTransaction(transaction.id, finalAmount, description, selectedAccount, categoryName, selectedDate.toISOString());
+  
+      // 2. Handle Balance Logic
+      if (selectedAccount === transaction.account_name) {
+        // CASE A: Same account, just find the difference
+        const diff = finalAmount - transaction.amount;
+        const acc = accountOptions.find(a => a.account_name === selectedAccount);
+        if (acc) await updateAccountBalance(selectedAccount, acc.balance + diff);
+      } else {
+        // CASE B: Account Switched! 
+        // Refund the OLD account
+        const oldAcc = accountOptions.find(a => a.account_name === transaction.account_name);
+        if (oldAcc) await updateAccountBalance(transaction.account_name, oldAcc.balance - transaction.amount);
+  
+        // Charge the NEW account
+        const newAcc = accountOptions.find(a => a.account_name === selectedAccount);
+        if (newAcc) await updateAccountBalance(selectedAccount, newAcc.balance + finalAmount);
       }
-    
+  
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
-        
         router.back();
       }, 1500);
-    
     } catch (err) {
-      console.error("Update error:", err);
-      Alert.alert("Error", "Failed to update transaction");
+      console.error(err);
+      Alert.alert("Error", "Failed to update");
     } finally {
       setIsSaving(false);
     }
@@ -166,17 +163,25 @@ useEffect(() => {
 
   const handleDelete = async () => {
     if (!transaction) return;
-    Alert.alert("Delete", "Are you sure you want to delete this record?", [
+    Alert.alert("Delete", "Are you sure?", [
       { text: "Cancel", style: "cancel" },
       { 
         text: "Delete", 
         style: "destructive", 
         onPress: async () => {
           try {
+            // 1. Delete the record
             await deleteTransaction(transaction.id, userId);
+            
+            // 2. REVERSE the balance impact
+            const acc = accountOptions.find(a => a.account_name === transaction.account_name);
+            if (acc) {
+              // Subtracting the amount reverses it (e.g., Balance - (-50) = +50)
+              await updateAccountBalance(transaction.account_name, acc.balance - transaction.amount);
+            }
             router.back();
           } catch (err) {
-            Alert.alert("Error", "Could not delete transaction");
+            Alert.alert("Error", "Could not delete");
           }
         } 
       }

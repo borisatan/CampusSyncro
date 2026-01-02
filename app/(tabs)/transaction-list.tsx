@@ -61,6 +61,7 @@ const TransactionsScreen: React.FC = () => {
   const [transactionType, setTransactionType] = useState<'all' |'expense' | 'income'>('expense');
 
   const { initialCategory } = useLocalSearchParams<{ initialCategory?: string }>();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
@@ -223,8 +224,8 @@ const TransactionsScreen: React.FC = () => {
           setDateRange={setDateRange}
           filterAccounts={filterAccounts}
           setFilterAccounts={setFilterAccounts}
-          filterCategory={filterCategory}
-          setFilterCategory={setFilterCategory}
+          selectedCategories={selectedCategories}
+          setSelectedCategories={setSelectedCategories}
           isDarkMode={isDarkMode}
           filterType={transactionType}
           setFilterType={setTransactionType}

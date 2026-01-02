@@ -19,14 +19,14 @@ const TransactionsHeader: React.FC<TransactionsHeaderProps> = ({
   return (
     <>
       {/* Title */}
-      <View className="mb-4 mt-4 justify-center items-center">
-        <Text className="text-3xl font-bold text-textLight dark:text-textDark">
-          Transactions
+      <View className="mb-4 mt-3 px-2">
+        <Text className="text-2xl  text-textLight dark:text-textDark">
+          All Transactions
         </Text>
       </View>
 
       {/* Search + Filter */}
-      <View className="flex-row items-center mb-3">
+      <View className="flex-row items-center mb-3 mt-1">
         {/* Search Bar */}
         <View className="flex-row items-center bg-backgroundMuted border border-borderLight dark:border-borderDark dark:bg-surfaceDark rounded-3xl px-4 py-2 flex-1 mr-2">
           <Ionicons
