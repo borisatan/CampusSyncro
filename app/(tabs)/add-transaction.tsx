@@ -1,32 +1,33 @@
+import { useRouter } from 'expo-router';
+import { Check } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StatusBar,
   Text,
   TextInput,
-  View,
-  TouchableOpacity,
-  Modal,
-  Platform,
-  Switch
+  View
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { Check, ChevronDown, Calendar } from 'lucide-react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
+import { AccountSelector } from '../components/AddTransactionPage/AccountSelector';
+import { CategoryGrid } from '../components/AddTransactionPage/CategoryGrid';
+import { TransactionFormFields } from '../components/AddTransactionPage/TransactionFormFields';
+import { TransactionHero } from '../components/AddTransactionPage/TransactionHero';
 import { useAuth } from '../context/AuthContext';
+import { useDataRefresh } from '../context/DataRefreshContext';
 import { useTheme } from '../context/ThemeContext';
-import { fetchAccounts, fetchCategories, updateAccountBalance, createTransaction } from '../services/backendService';
-import { Account, AccountOption, Category } from "../types/types";
-import { supabase } from "../utils/supabase";
-import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useRouter } from 'expo-router';
+import { createTransaction, fetchAccounts, fetchCategories, updateAccountBalance } from '../services/backendService';
+import { Account, Category } from "../types/types";
 
 const TransactionAdder = () => {
   const { isDarkMode } = useTheme();
   const { userId, isLoading } = useAuth();
   const router = useRouter();
+  const { refreshAll } = useDataRefresh();
   
   const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense');
   const [selectedAccount, setSelectedAccount] = useState('Main Checking');
@@ -125,7 +126,10 @@ const TransactionAdder = () => {
         await updateAccountBalance(selectedAccount, newBalance);
       }
   
-      // 4. Success handling
+      // 4. Refresh all related screens (dashboard, accounts, transaction-list)
+      await refreshAll();
+
+      // 5. Success handling
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -152,382 +156,53 @@ const TransactionAdder = () => {
             <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
           }
         >
-          {/* Header */}
-          <View className="mb-6">
-            <Text className={isDarkMode ? "text-2xl text-white" : "text-2xl text-gray-900"}>
-              Add Transaction
-            </Text>
-            <Text className={isDarkMode ? "text-slate-400" : "text-gray-600"}>
-              Record your income or expense
-            </Text>
-          </View>
+          <TransactionHero
+            transactionType={transactionType}
+            setTransactionType={setTransactionType}
+            amount={amount}
+            setAmount={setAmount}
+            isDarkMode={isDarkMode}
+            amountInputRef={amountInputRef}
+          />
 
-          {/* Transaction Type Toggle */}
-          <View className={`${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'} rounded-2xl p-1 flex-row mb-6`}>
-            <TouchableOpacity
-              onPress={() => setTransactionType('expense')}
-              className={`flex-1 py-3 rounded-xl ${
-                transactionType === 'expense'
-                  ? isDarkMode ? 'bg-accentRed' : 'bg-white'
-                  : ''
-              }`}
-            >
-              <Text className={`text-center ${
-                transactionType === 'expense' 
-                  ? isDarkMode ? 'text-white' : 'text-gray-900'
-                  : isDarkMode ? 'text-slate-400' : 'text-gray-600'
-              }`}>
-                Expense
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setTransactionType('income')}
-              className={`flex-1 py-3 rounded-xl ${
-                transactionType === 'income'
-                  ? isDarkMode ? 'bg-accentTeal' : 'bg-white'
-                  : ''
-              }`}
-            >
-              <Text className={`text-center ${
-                transactionType === 'income' 
-                  ? isDarkMode ? 'text-white' : 'text-gray-900'
-                  : isDarkMode ? 'text-slate-400' : 'text-gray-600'
-              }`}>
-                Income
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Amount */}
-          <View className="mb-6">
-            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-              Amount
-            </Text>
-            <View className="relative">
-              <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                €
-              </Text>
-              <TextInput
-                ref={amountInputRef}
-                keyboardType="decimal-pad"
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="0.00"
-                placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
-                className={`w-full pl-10 pr-4 py-4 rounded-xl text-2xl ${
-                  isDarkMode 
-                    ? 'bg-slate-800 border-slate-700 text-white' 
-                    : 'bg-white border-gray-300 text-gray-900'
-                } border`}
-              />
-            </View>
-          </View>
-
-          {/* Category */}
           {transactionType === 'expense' && (
-            <View className="mb-6">
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className={`text-sm mb-1 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-                  Category
-                </Text>
-                <View className="flex-row items-center gap-2">
-                  <TouchableOpacity 
-                  onPress={() => setIsEditMode(!isEditMode)}
-                  className={`px-4 py-1 rounded-lg border ${
-                    isEditMode 
-                      ? 'bg-accentBlue border-surfaceDark' 
-                      : isDarkMode ? 'bg-surfaceDark border-slate-800' : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <Text className={`text-sm  ${
-                    isEditMode 
-                      ? 'text-white' 
-                      : isDarkMode ? 'text-textDark' : 'text-textLight'
-                  }`}>
-                    {isEditMode ? 'Done Editing' : 'Edit Categories'}
-                  </Text>
-                </TouchableOpacity>
-                </View>
-              </View>
-              {isLoadingCategories ? (
-                <View className="flex items-center justify-center py-8">
-                  <Text className={isDarkMode ? 'text-slate-400' : 'text-gray-600'}>
-                    Loading categories...
-                  </Text>
-                </View>
-              ) : categories.length === 0 ? (
-                <View className="flex items-center justify-center py-8">
-                  <Text className={isDarkMode ? 'text-slate-400' : 'text-gray-600'}>
-                    No categories found
-                  </Text>
-                </View>
-              ) : (
-                <View className="flex-row flex-wrap -mx-1.5">
-              {/* Existing Categories */}
-              {categories.filter(cat => cat.category_name !== 'Income').map((category) => (
-                <View key={category.id} className="w-1/3 px-1.5 mb-3 bg-backgroundDark">
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (isEditMode) {
-                        router.navigate({
-                          pathname: '/components/AddTransactionPage/edit-category',
-                          params: { 
-                            id: category.id,
-                            name: category.category_name,
-                            icon: category.icon,
-                            color: category.color
-                          }
-                        });
-                      } else {
-                        setSelectedCategory(category);
-                      }
-                    }}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
-                      isEditMode 
-                        ? isDarkMode 
-                          ? 'bg-backgroundDark border-borderDark' 
-                          : 'bg-backgroundMuted border-borderLight'
-                        : selectedCategory?.id === category.id
-                          ? isDarkMode 
-                            ? 'bg-surfaceDark border-accentBlue' 
-                            : 'bg-blue-50 border-accentBlue'
-                          : isDarkMode 
-                            ? 'bg-surfaceDark border-borderDark' 
-                            : 'bg-background border-borderLight'
-                    }`}
-                  >
-                    <View
-                      className="w-12 h-12 rounded-xl items-center justify-center "
-                      style={{ backgroundColor: category.color }}>
-                      <Ionicons name={category.icon as any} size={24} color="#fff"/>
-                      {isEditMode && (
-                        <View className="absolute -top-1 -right-1 bg-white rounded-full border border-white">
-                          <Ionicons name="pencil" size={10} color="#000" />
-                        </View>
-                      )}
-                    </View>
-                    <Text className={`text-sm text-center ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {category.category_name}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
+          <CategoryGrid 
+            categories={categories}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            isDarkMode={isDarkMode}
+            isLoadingCategories={isLoadingCategories}
+            isEditMode={isEditMode}
+            setIsEditMode={setIsEditMode}
+          />
+        )}
 
-              {/* NEW: Add Category Button (Edit Mode Only) */}
-              {isEditMode && (
-                <View className="w-1/3 px-1.5 mb-3">
-                  <TouchableOpacity
-                    onPress={() => router.navigate('/components/AddTransactionPage/edit-category')}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
-                      isDarkMode ? 'bg-backgroundDark border-slate-500' : 'bg-gray-100 border-gray-400'
-                    }`}
-                  >
-                    <View className="w-12 h-12 rounded-xl items-center justify-center bg-white border border-gray-300">
-                      <Ionicons name="add-outline" size={24} color="#6366f1" />
-                    </View>
-                    <Text className={`text-sm text-center ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
-                      Add New
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-              )}
-            </View>
-          )}
+      <AccountSelector 
+        isDarkMode={isDarkMode}
+        showAccountDropdown={showAccountDropdown}
+        setShowAccountDropdown={setShowAccountDropdown}
+        isLoadingAccounts={isLoadingAccounts}
+        selectedAccount={selectedAccount}
+        setSelectedAccount={setSelectedAccount}
+        accountOptions={accountOptions}
+      />
 
-          {/* Description */}
-          <View className="mb-6">
-            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-              Description
-            </Text>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="e.g., Grocery shopping"
-              placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
-              className={`w-full px-4 py-3 rounded-xl ${
-                isDarkMode 
-                  ? 'bg-slate-800 border-slate-700 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              } border`}
-            />
-          </View>
-
-          {/* Account Section */}
-          <View className="mb-6">
-            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
-              Account
-            </Text>
-            
-            <TouchableOpacity
-              onPress={() => setShowAccountDropdown(!showAccountDropdown)}
-              activeOpacity={0.7}
-              className={`w-full px-4 py-3 rounded-xl flex-row justify-between items-center border ${
-                isDarkMode 
-                  ? 'bg-surfaceDark border-borderDark' 
-                  : 'bg-background border-borderLight'
-              }`}
-            >
-              <Text className={isDarkMode ? 'text-textDark' : 'text-textLight'}>
-                {isLoadingAccounts ? 'Loading accounts...' : selectedAccount}
-              </Text>
-              <Ionicons 
-                name={showAccountDropdown ? "chevron-up" : "chevron-down"} 
-                size={20} 
-                color={isDarkMode ? "#9CA3AF" : "#4B5563"} 
-              />
-            </TouchableOpacity>
-
-            {showAccountDropdown && (
-              <View 
-                className={`mt-2 rounded-xl overflow-hidden border ${
-                  isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
-                }`}
-              >
-                <ScrollView 
-                  className="max-h-60" 
-                  nestedScrollEnabled={true} 
-                >
-                  {accountOptions.map((account, index) => {
-                    const isSelected = selectedAccount === account.account_name;
-                    return (
-                      <TouchableOpacity
-                        key={account.id}
-                        onPress={() => {
-                          setSelectedAccount(account.account_name);
-                          setShowAccountDropdown(false);
-                        }}
-                        className={`px-4 py-4 flex-row items-center justify-between ${
-                          index !== accountOptions.length - 1 
-                            ? isDarkMode ? 'border-b border-borderDark' : 'border-b border-borderLight' 
-                            : ''
-                        } ${
-                          isSelected
-                            ? isDarkMode ? 'bg-backgroundDark' : 'bg-backgroundMuted'
-                            : ''
-                        }`}
-                      >
-                        <View>
-                          <Text className={`font-medium ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
-                            {account.account_name}
-                          </Text>
-                          <Text className={`text-xs ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
-                            €{account.balance.toFixed(2)}
-                          </Text>
-                        </View>
-                        
-                        {isSelected && (
-                          <Ionicons 
-                            name="checkmark-circle" 
-                            size={20} 
-                            color={isDarkMode ? "#B2A4FF" : "#2563EB"} 
-                          />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            )}
-          </View>
-
-          {/* Date Picker */}
-          <View className="mb-6">
-            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-              Date
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowDatePicker(true)}
-              className={`w-full px-4 py-3 rounded-xl flex-row items-center justify-between ${
-                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'
-              } border`}
-            >
-              <Text className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                {selectedDate.toLocaleDateString()}
-              </Text>
-              <Calendar 
-                size={20} 
-                color={isDarkMode ? '#94a3b8' : '#6b7280'} 
-              />
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <>
-                {Platform.OS === 'ios' ? (
-                  <Modal
-                    visible={showDatePicker}
-                    transparent
-                    animationType="slide"
-                  >
-                    <TouchableOpacity 
-                      activeOpacity={1}
-                      onPress={() => setShowDatePicker(false)}
-                      className="flex-1 bg-black/50 justify-end"
-                    >
-                      <View 
-                        className={`${
-                          isDarkMode ? 'bg-slate-900' : 'bg-white'
-                        } rounded-t-3xl`}
-                        onStartShouldSetResponder={() => true}
-                      >
-                        <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200">
-                          <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                            <Text className="text-blue-500">Cancel</Text>
-                          </TouchableOpacity>
-                          <Text className={`font-semibold ${
-                            isDarkMode ? 'text-white' : 'text-gray-900'
-                          }`}>
-                            Select Date
-                          </Text>
-                          <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                            <Text className="text-blue-500 font-semibold">Done</Text>
-                          </TouchableOpacity>
-                        </View>
-                        <DateTimePicker
-                          value={selectedDate}
-                          mode="date"
-                          display="spinner"
-                          onChange={handleDateChange}
-                          maximumDate={new Date()}
-                          textColor={isDarkMode ? '#ffffff' : '#000000'}
-                        />
-                      </View>
-                    </TouchableOpacity>
-                  </Modal>
-                ) : (
-                  <DateTimePicker
-                    value={selectedDate}
-                    mode="date"
-                    themeVariant='dark'
-                    display="default"
-                    onChange={handleDateChange}
-                    maximumDate={new Date()}
-                  />
-                )}
-              </>
-            )}
-          </View>
-
-          {/* Submit Button */}
-          <TouchableOpacity
-            onPress={handleSubmit}
-            className={`w-full py-4 rounded-xl items-center mb-6 ${
-              transactionType === 'expense'
-                ? 'bg-rose-500'
-                : 'bg-emerald-500'
-            }`}
-          >
-            <Text className="text-white font-semibold">
-              Add {transactionType === 'expense' ? 'Expense' : 'Income'}
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
+      <TransactionFormFields 
+        isDarkMode={isDarkMode}
+        description={description}
+        setDescription={setDescription}
+        selectedDate={selectedDate}
+        showDatePicker={showDatePicker}
+        setShowDatePicker={setShowDatePicker}
+        handleDateChange={handleDateChange}
+        handleSubmit={handleSubmit}
+        transactionType={transactionType}
+      />
 
         {/* Success Modal */}
         <Modal visible={showSuccess} transparent animationType="fade">
           <View className="flex-1 items-center justify-center bg-black/50">
-            <View className={`${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'} border rounded-2xl p-6 flex flex-col items-center gap-3`}>
+            <View className={`${isDarkMode ? 'bg-backgroundDark' : 'bg-white border-gray-200'} border rounded-2xl p-6 flex flex-col items-center gap-3`}>
               
               <View className="w-16 h-16 bg-accentTeal rounded-full flex items-center justify-center">
                 <Check color="#34d399" size={32} />
@@ -539,6 +214,7 @@ const TransactionAdder = () => {
             </View>
           </View>
         </Modal>
+        </ScrollView>
       </SafeAreaView>
   );
 };

@@ -4,6 +4,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './context/AuthContext';
 import { AppThemeProvider } from './context/ThemeContext';
+import { DataRefreshProvider } from './context/DataRefreshContext';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useColorScheme } from 'react-native';
 
@@ -22,9 +23,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <ThemeProvider value={MyTheme}>
-            <AppThemeProvider>
-              <KeyboardProvider preload={false}>
+          <DataRefreshProvider>
+            <ThemeProvider value={MyTheme}>
+              <AppThemeProvider>
+                <KeyboardProvider preload={false}>
                 <Stack 
                   screenOptions={{ 
                     headerShown: false, 
@@ -40,6 +42,7 @@ export default function RootLayout() {
               </KeyboardProvider>
             </AppThemeProvider>
           </ThemeProvider>
+          </DataRefreshProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

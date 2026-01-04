@@ -6,6 +6,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import FilterModal from "../components/TransactionListPage/FilterModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
 import TransactionsList from "../components/TransactionListPage/TransactionsList";
+import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
 import { fetchAccountNames, fetchCategoryIcons, fetchTransactions } from "../services/backendService";
 import { CategoryIconInfo, Transaction } from "../types/types";
@@ -52,13 +53,14 @@ const groupTransactionsByDate = (
 const TransactionsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const router = useRouter();
+  const { registerTransactionListRefresh } = useDataRefresh();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categoryIcons, setCategoryIcons] = useState<Record<string, CategoryIconInfo>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const route = useRoute<RouteProp<{ Transactions: { initialCategory?: string } }, "Transactions">>();
   
-  const [transactionType, setTransactionType] = useState<'all' |'expense' | 'income'>('expense');
+  const [transactionType, setTransactionType] = useState<'all' |'expense' | 'income'>('all');
 
   const { initialCategory } = useLocalSearchParams<{ initialCategory?: string }>();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -78,8 +80,10 @@ const TransactionsScreen: React.FC = () => {
   useEffect(() => {
     if (initialCategory) {
       setFilterCategory(initialCategory);
+      setSelectedCategories([initialCategory]);
     } else {
       setFilterCategory(null);
+      setSelectedCategories([]);
     }
   }, [initialCategory]);
 
@@ -126,6 +130,11 @@ const TransactionsScreen: React.FC = () => {
     loadInitialTransactions();
   }, []);
 
+  // Register refresh function so it can be called from other screens
+  useEffect(() => {
+    registerTransactionListRefresh(loadInitialTransactions);
+  }, [registerTransactionListRefresh]);
+
   useEffect(() => {
     const loadAccounts = async () => {
       try {
@@ -141,7 +150,7 @@ const TransactionsScreen: React.FC = () => {
 
   // Apply all filters
   const filteredTransactions = transactions.filter((tx) => {
-    const matchesCategory = filterCategory ? tx.category_name === filterCategory : true;
+    const matchesCategory = selectedCategories.length > 0 ? selectedCategories.includes(tx.category_name) : true;
     const matchesAccount = filterAccounts.length > 0 ? filterAccounts.includes(tx.account_name) : true;
     const matchesSearch =
       tx.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -170,6 +179,7 @@ const TransactionsScreen: React.FC = () => {
     setDateRange(null);
     setFilterAccounts([]);
     setFilterCategory(null);
+    setSelectedCategories([]);
     setIsFilterVisible(false);
   };
 

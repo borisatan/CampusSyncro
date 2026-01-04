@@ -1,8 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useTheme } from '../../context/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
 
 interface DateRangeSelectorProps {
   onDateRangeSelect?: (startDate: string, endDate: string) => void;
@@ -155,8 +155,8 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
         <TouchableOpacity
           key={view}
           onPress={() => handleViewSelect(view)}
-          className={`flex-1 mx-1 py-2 rounded-xl ${
-            currentView === view ? 'bg-[#2A9D8F]' : 'bg-[#E5E7EB] dark:bg-[#374151]'
+          className={`flex-1 mx-1 py-2 rounded-xl border-1 border-borderLight dark:border-borderDark ${
+            currentView === view ? 'bg-[surfaceDark]' : 'bg-[#E5E7EB] dark:bg-[#374151]'
           }`}
         >
           <Text
@@ -178,7 +178,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setIsVisible(true)}
-        className="w-full flex-row items-center justify-between px-4 py-4 bg-surfaceDark rounded-2xl"
+        className="w-full flex-row items-center justify-between px-4 py-4 rounded-2xl"
       >
         <View className="flex-row items-center">
           <View className="bg-indigo p-2 rounded-xl mr-3">
@@ -189,7 +189,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
             />
           </View>
           <View>
-            <Text className={`text-sm font-bold ${startDate ? 'text-white' : 'text-slate-400'}`}>
+            <Text className={`text-sm font-bold ${startDate ? 'text-white' : 'text-white'}`}>
               {getDisplayText()}
             </Text>
             {startDate && (
@@ -208,27 +208,27 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
         animationType="slide"
         onRequestClose={handleClose}
       >
-        <View className="flex-1 justify-center items-center">
-          <View className={`w-[90%] p-4 rounded-2xl ${isDarkMode ? 'bg-[#1E1E1E]' : 'bg-white'}`}>
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className={`w-[90%] p-4 rounded-2xl border border-slate-700 ${isDarkMode ? 'bg-backgroundDark' : 'bg-white'}`}>
             <ViewSelector />
             <Calendar
               onDayPress={handleDayPress}
               markedDates={getMarkedDates()}
               markingType="period"
               theme={{
-                backgroundColor: isDarkMode ? '#1E1E1E' : '#FFFFFF',
-                calendarBackground: isDarkMode ? '#1E1E1E' : '#FFFFFF',
+                backgroundColor: isDarkMode ? 'bg-bacgkroundDark' : '#FFFFFF',
+                calendarBackground: isDarkMode ? 'bg-surfaceDark' : '#FFFFFF',
                 textSectionTitleColor: isDarkMode ? '#FFFFFF' : '#212121',
-                selectedDayBackgroundColor: '#2A9D8F',
-                selectedDayTextColor: '#FFFFFF',
-                todayTextColor: '#2A9D8F',
+                selectedDayBackgroundColor: 'accentPurple',
+                selectedDayTextColor: 'accentPurple',
+                todayTextColor: 'accentPurple',
                 dayTextColor: isDarkMode ? '#FFFFFF' : '#212121',
                 textDisabledColor: isDarkMode ? '#666666' : '#D1D1D1',
               }}
             />
             <TouchableOpacity
               onPress={handleClose}
-              className="mt-4 bg-accentTeal py-2 rounded-full"
+              className="mt-4 bg-accentBlue py-2 rounded-full"
             >
               <Text className="text-center text-white font-medium">Done</Text>
             </TouchableOpacity>

@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
-import { View, Text } from 'react-native';
-import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { MotiView } from 'moti';
+import React, { useMemo } from 'react';
+import { Text, View } from 'react-native';
+import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { Category, CategoryAggregation } from '../../types/types';
 
 interface CategoryDonutProps {

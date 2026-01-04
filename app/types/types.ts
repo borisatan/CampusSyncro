@@ -1,5 +1,12 @@
 // Category Types
 export type CategoryName = string;
+export type TimeFrame = 'week' | 'month' | 'year';
+
+export type ChartDataPoint = {
+  label: string;
+  amount: number;
+  x: number;
+};
 
 export interface Category {
   id: number;

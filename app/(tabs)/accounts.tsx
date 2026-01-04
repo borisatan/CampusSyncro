@@ -1,21 +1,21 @@
+import { Building2, CreditCard, Edit2, MoreVertical, PiggyBank, Plus, Trash2, TrendingUp } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Modal,
   Alert,
+  Modal,
   RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
   useColorScheme,
+  View
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CreditCard, PiggyBank, TrendingUp, MoreVertical, Plus, Edit2, Trash2, Building2 } from 'lucide-react-native';
-import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
-import { useAuth } from '../context/AuthContext';
-import EditAccountPage from '../components/AccountsPage/EditAccountPage';
 import AddAccountPage from '../components/AccountsPage/AddAccountPage';
+import EditAccountPage from '../components/AccountsPage/EditAccountPage';
+import { useAuth } from '../context/AuthContext';
+import { useDataRefresh } from '../context/DataRefreshContext';
+import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
 
 interface Account {
   id: number;
@@ -50,6 +50,7 @@ export default function Accounts() {
   const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
   const { userId } = useAuth();
+  const { registerAccountsRefresh, refreshDashboard, refreshTransactionList } = useDataRefresh();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -102,6 +103,12 @@ export default function Accounts() {
       
       setAccounts(prev => [...prev, newAccount]);
       
+      // Refresh dashboard and transaction-list pages
+      await Promise.all([
+        refreshDashboard(),
+        refreshTransactionList(),
+      ]);
+      
       setShowAddModal(false);
       
     } catch (err) {
@@ -142,6 +149,12 @@ export default function Accounts() {
         )
       );
   
+      // Refresh dashboard and transaction-list pages
+      await Promise.all([
+        refreshDashboard(),
+        refreshTransactionList(),
+      ]);
+  
       setShowEditModal(false);
       setSelectedAccount(null);
     } catch (err) {
@@ -162,6 +175,13 @@ export default function Accounts() {
             try {
               await deleteAccount(accountId);
               setAccounts(prev => prev.filter(acc => acc.id !== accountId));
+              
+              // Refresh dashboard and transaction-list pages
+              await Promise.all([
+                refreshDashboard(),
+                refreshTransactionList(),
+              ]);
+              
               setEditingAccount(null);
             } catch (err) {
               console.error('Failed to delete account:', err);
@@ -176,6 +196,11 @@ export default function Accounts() {
   useEffect(() => {
     loadAccounts();
   }, []);
+
+  // Register refresh function so it can be called from other screens
+  useEffect(() => {
+    registerAccountsRefresh(loadAccounts);
+  }, [registerAccountsRefresh]);
 
   return (
     <SafeAreaProvider>

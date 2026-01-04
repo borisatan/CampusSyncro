@@ -1,7 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Calendar, Check, ChevronLeft, Trash2 } from 'lucide-react-native';
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -9,23 +14,19 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Platform,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { Check, Trash2, ChevronLeft, Calendar } from 'lucide-react-native';
 import { useAuth } from "../context/AuthContext";
+import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
-import { 
-  deleteTransaction, 
-  updateTransaction, 
-  fetchAccounts, 
+import {
+  deleteTransaction,
+  fetchAccounts,
   fetchCategories,
-  updateAccountBalance 
+  updateAccountBalance,
+  updateTransaction
 } from "../services/backendService";
-import { Transaction, Account, Category } from "../types/types";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Account, Category, Transaction } from "../types/types";
 
 const EditTransactionScreen = () => {
   const router = useRouter();
@@ -38,6 +39,7 @@ const EditTransactionScreen = () => {
 
   const { isDarkMode } = useTheme();
   const { userId } = useAuth();
+  const { refreshAll } = useDataRefresh();
 
   
   // State initialized with transaction data
@@ -142,12 +144,15 @@ useEffect(() => {
         // Refund the OLD account
         const oldAcc = accountOptions.find(a => a.account_name === transaction.account_name);
         if (oldAcc) await updateAccountBalance(transaction.account_name, oldAcc.balance - transaction.amount);
-  
+        
         // Charge the NEW account
         const newAcc = accountOptions.find(a => a.account_name === selectedAccount);
         if (newAcc) await updateAccountBalance(selectedAccount, newAcc.balance + finalAmount);
       }
-  
+
+      // 3. Refresh all related screens (dashboard, accounts, transaction-list)
+      await refreshAll();
+
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -179,6 +184,10 @@ useEffect(() => {
               // Subtracting the amount reverses it (e.g., Balance - (-50) = +50)
               await updateAccountBalance(transaction.account_name, acc.balance - transaction.amount);
             }
+            
+            // 3. Refresh all related screens (dashboard, accounts, transaction-list)
+            await refreshAll();
+            
             router.back();
           } catch (err) {
             Alert.alert("Error", "Could not delete");
