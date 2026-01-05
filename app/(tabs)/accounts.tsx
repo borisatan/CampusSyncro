@@ -15,7 +15,8 @@ import AddAccountPage from '../components/AccountsPage/AddAccountPage';
 import EditAccountPage from '../components/AccountsPage/EditAccountPage';
 import { useAuth } from '../context/AuthContext';
 import { useDataRefresh } from '../context/DataRefreshContext';
-import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
+import { createAccount, deleteAccount, fetchAccounts, getUserCurrency, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
+import { getCurrencySymbol, isValidCurrency, SupportedCurrency } from '../types/types';
 
 interface Account {
   id: number;
@@ -51,25 +52,27 @@ export default function Accounts() {
   const insets = useSafeAreaInsets();
   const { userId } = useAuth();
   const { registerAccountsRefresh, refreshDashboard, refreshTransactionList } = useDataRefresh();
-
+  
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<number | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
+  
   // Add account form
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountBalance, setNewAccountBalance] = useState('');
   const [newAccountType, setNewAccountType] = useState('checking');
-
+  const [currency, setCurrency] = useState<string>('$');
+  const [isCurrencyLoading, setIsCurrencyLoading] = useState(true);
+  
   // Edit account form
   const [editName, setEditName] = useState('');
   const [editBalance, setEditBalance] = useState('');
-
+  
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-
+  
   const loadAccounts = async () => {
     try {
       const data: Account[] = await fetchAccounts();
@@ -78,26 +81,30 @@ export default function Accounts() {
       console.error('Failed to fetch accounts:', err);
     }
   };
-
+  
   const refreshData = async () => {
     setIsRefreshing(true);
+    setIsCurrencyLoading(true);
     try {
       await loadAccounts();
+      const userCurrency = await getUserCurrency();
+      validateAndSetCurrency(userCurrency);
     } catch (err) {
       console.error('Failed to refresh accounts:', err);
     } finally {
+      setIsCurrencyLoading(false);
       setIsRefreshing(false);
     }
   };
-
+  
   const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string }) => {
     const { name, balance, type } = newAccountData;
-  
+    
     if (!name.trim()) {
       Alert.alert('Error', 'Please enter an account name');
       return;
     }
-  
+    
     try {
       const newAccount = await createAccount(name, balance, type, userId);
       
@@ -116,7 +123,7 @@ export default function Accounts() {
       Alert.alert('Error', 'Failed to create account');
     }
   };
-
+  
   const handleEditAccount = (account: Account) => {
     setSelectedAccount(account);
     setEditName(account.account_name);
@@ -124,37 +131,37 @@ export default function Accounts() {
     setShowEditModal(true);
     setEditingAccount(null);
   };
-
+  
   const handleSaveEdit = async (updatedData: { name: string; balance: number; type: string }) => {
     if (!selectedAccount) return;
-  
+    
     const originalName = selectedAccount.account_name;
     const { name: newName, balance: newBalance, type: newType } = updatedData;
-  
+    
     try {
       if (originalName !== newName) {
         await updateAccountName(originalName, newName);
       }
-  
+      
       await updateAccountBalance(newName, newBalance);
-  
+      
       await updateAccountType(newName, newType);
-  
+      
       // 4. Update local state
       setAccounts(prev =>
         prev.map(acc =>
           acc.id === selectedAccount.id
-            ? { ...acc, account_name: newName, balance: newBalance, type: newType }
-            : acc
+          ? { ...acc, account_name: newName, balance: newBalance, type: newType }
+          : acc
         )
       );
-  
+      
       // Refresh dashboard and transaction-list pages
       await Promise.all([
         refreshDashboard(),
         refreshTransactionList(),
       ]);
-  
+      
       setShowEditModal(false);
       setSelectedAccount(null);
     } catch (err) {
@@ -194,14 +201,34 @@ export default function Accounts() {
   };
 
   useEffect(() => {
+    const loadCurrency = async () => {
+      const userCurrency = await getUserCurrency();
+      validateAndSetCurrency(userCurrency);
+      setIsCurrencyLoading(false);
+    };
+    loadCurrency();
+  }, []);
+  
+  useEffect(() => {
     loadAccounts();
   }, []);
-
+  
   // Register refresh function so it can be called from other screens
   useEffect(() => {
     registerAccountsRefresh(loadAccounts);
   }, [registerAccountsRefresh]);
+  
 
+  const validateAndSetCurrency = (fetchedCurrency: any) => {
+    
+    if (isValidCurrency(fetchedCurrency)) {
+      setCurrency(getCurrencySymbol(fetchedCurrency as SupportedCurrency));
+    } else {
+      setCurrency("");
+    }
+  };
+  const currencySymbol = getCurrencySymbol(currency);
+  
   return (
     <SafeAreaProvider>
       <SafeAreaView className={`flex-1 ${isDark ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>

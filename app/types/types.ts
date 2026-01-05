@@ -8,11 +8,34 @@ export type ChartDataPoint = {
   x: number;
 };
 
+export type SupportedCurrency = 'USD' | 'EUR' | 'JPY' | 'GBP';
+
+export const isValidCurrency = (currency: string): currency is SupportedCurrency => {
+  return ['USD', 'EUR', 'JPY', 'GBP'].includes(currency);
+};
+
+export const getCurrencySymbol = (currency: SupportedCurrency | '?' | string): string => {
+  const symbols: Record<string, string> = {
+    USD: '$',
+    EUR: '€',
+    JPY: '¥',
+    GBP: '£',
+  };
+
+  return symbols[currency] ?? ' ';
+};
+
 export interface Category {
   id: number;
   category_name: CategoryName;
   icon: string;
   color: string;
+}
+
+export interface Profile {
+  id: string;
+  currency: string;
+  updated_at: string;
 }
 
 export interface CategoryAggregation {

@@ -1,6 +1,6 @@
 import { useFont } from '@shopify/react-native-skia';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
 import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,20 +13,24 @@ import { DashboardSummary } from '../components/HomePage/DashboardSummary';
 import { SpendingTrendChart } from '../components/HomePage/SpendingTrendChart';
 import { TimeFrameSelector } from '../components/HomePage/TimeFrameSelector';
 
-// Custom Hook
-import { useEffect } from 'react';
+// Hooks & Utilities
 import { useDataRefresh } from '../context/DataRefreshContext';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { getUserCurrency } from '../services/backendService';
+import { getCurrencySymbol, isValidCurrency, SupportedCurrency } from '../types/types';
 
 export default function Dashboard() {
   const router = useRouter();
   
-  // 1. All data, state, and fetching logic now comes from the hook
+  // Update state type to allow the fallback string '?'
+  const [currency, setCurrency] = useState<string>('$');
+  const [isCurrencyLoading, setIsCurrencyLoading] = useState(true);
+
   const { 
     timeFrame, 
     setTimeFrame, 
-    loading, 
-    refresh,
+    loading: dataLoading, 
+    refresh: refreshData,
     totalBalance, 
     totalIncome, 
     totalExpenses, 
@@ -37,15 +41,39 @@ export default function Dashboard() {
 
   const { registerDashboardRefresh } = useDataRefresh();
 
-  // Register refresh function so it can be called from other screens
+  const validateAndSetCurrency = (fetchedCurrency: any) => {
+    
+    if (isValidCurrency(fetchedCurrency)) {
+      setCurrency(getCurrencySymbol(fetchedCurrency as SupportedCurrency));
+    } else {
+      setCurrency("");
+    }
+  };
+
   useEffect(() => {
-    registerDashboardRefresh(refresh);
-  }, [refresh, registerDashboardRefresh]);
+    const loadCurrency = async () => {
+      const userCurrency = await getUserCurrency();
+      validateAndSetCurrency(userCurrency);
+      setIsCurrencyLoading(false);
+    };
+    loadCurrency();
+  }, []);
+
+  const refreshAll = async () => {
+    setIsCurrencyLoading(true);
+    const userCurrency = await getUserCurrency();
+    validateAndSetCurrency(userCurrency);
+    setIsCurrencyLoading(false);
+    refreshData();
+  };
+
+  useEffect(() => {
+    registerDashboardRefresh(refreshAll);
+  }, [refreshData, registerDashboardRefresh]);
 
   const [tooltipData, setTooltipData] = useState({ label: '', value: 0 });
   const interFont = useFont(require("../../assets/fonts/InterVariable.ttf"), 12);
 
-  // 2. Victory Native Chart Interaction logic
   const { state } = useChartPressState({ x: 0, y: { amount: 0 } });
 
   useAnimatedReaction(
@@ -68,7 +96,9 @@ export default function Dashboard() {
     });
   };
 
-  if (loading) {
+  const isLoading = dataLoading || isCurrencyLoading;
+
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-backgroundDark">
         <View className="flex-1 justify-center items-center">
@@ -84,25 +114,24 @@ export default function Dashboard() {
         className="flex-1" 
         contentContainerStyle={{ paddingBottom: 30 }}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refresh} />
+          <RefreshControl refreshing={isLoading} onRefresh={refreshAll} />
         }
       >
         <View className="p-2">
-          {/* 1. Metric Overview */}
           <DashboardSummary 
             totalBalance={totalBalance} 
             totalIncome={totalIncome} 
             totalExpenses={totalExpenses} 
+            currencySymbol={currency} 
           />
 
-          {/* 2. Filter Controls */}
           <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
-          {/* 3. Visualizations */}
           <SpendingTrendChart 
             data={chartData} 
             timeFrame={timeFrame} 
             font={interFont}
+            currencySymbol={currency} 
           />
 
           <CategoryDonut
@@ -111,7 +140,6 @@ export default function Dashboard() {
             timeFrame={timeFrame} 
           />
 
-          {/* 4. Detailed Breakdown List (Now its own component) */}
           <CategoryBreakdownList 
             categories={categories}
             categoriesAggregated={categoriesAggregated}

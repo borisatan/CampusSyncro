@@ -10,6 +10,49 @@ export const createTransaction = async (payload: any) => {
   return data;
 };
 
+
+
+export async function getUserCurrency() {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('Profiles')
+    .select('currency')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching currency:', error.message);
+    return null;
+  }
+
+  return data.currency; // Returns e.g., "USD"
+}
+
+
+export async function updateUserCurrency(newCurrency: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { data, error } = await supabase
+    .from('Profiles')
+    .update({ 
+      currency: newCurrency,
+      updated_at: new Date().toISOString() // Manual update if you didn't add the Postgres Trigger
+    })
+    .eq('id', user.id)
+    .select(); // Returns the updated row
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
 export const fetchCategories = async () => {
     const { data, error } = await supabase.from("Categories").select("*");
     if (error) throw error;

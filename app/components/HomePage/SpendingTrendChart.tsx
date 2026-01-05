@@ -17,6 +17,7 @@ interface ChartProps {
   data: any[]; // Expecting e.g. [{ label: 'W1', amount: 50 }, ...]
   font: any;
   timeFrame: 'week' | 'month' | 'year';
+  currencySymbol: string;
 }
 
 
@@ -30,7 +31,7 @@ function ToolTip({ x, y }: { x: SharedValue<number>; y: SharedValue<number> }) {
 }
 
 
-export const SpendingTrendChart = ({ data, font, timeFrame }: ChartProps) => {
+export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame }: ChartProps) => {
   const [tooltipData, setTooltipData] = useState({ label: '', value: 0 });
   const { state, isActive } = useChartPressState({ x: 0, y: { amount: 0 } });
 
@@ -120,7 +121,7 @@ export const SpendingTrendChart = ({ data, font, timeFrame }: ChartProps) => {
 
       // If it's a future point, show "Upcoming" or "€0" specifically
 
-      const valueStr = dataPoint?.isFuture ? 'Upcoming' : `€${Math.round(current.y).toLocaleString()}`;
+      const valueStr = dataPoint?.isFuture ? 'Upcoming' : `${currencySymbol}${Math.round(current.y).toLocaleString()}`;
      
 
       runOnJS(setTooltipData)({ label, value: valueStr as any });
@@ -194,7 +195,7 @@ export const SpendingTrendChart = ({ data, font, timeFrame }: ChartProps) => {
                 tickCount: 5,
                 labelOffset: -8,
                 labelColor: "#94a3b8",
-                formatYLabel: (v) => `€${Math.round(v)}`,
+                formatYLabel: (v) => `${currencySymbol}${Math.round(v)}`,
               }]}
 
               chartPressState={state}

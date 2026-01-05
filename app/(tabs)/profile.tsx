@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Custom Hooks & Utils
 import { useTheme } from '../context/ThemeContext';
+import { updateUserCurrency } from '../services/backendService';
 import { supabase } from '../utils/supabase';
 
 const currencies = [
@@ -27,17 +28,31 @@ export default function ProfileScreen() {
   const router = useRouter();
   
   // State
-  const [email, setEmail] = useState(null);
+  const [email, setEmail] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
-  // Fetch User Email on Mount
+  // Fetch User Data and Currency preference on Mount
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      setEmail(data.user?.email ?? null);
-    })();
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setEmail(user.email ?? null);
+        
+        // Fetch saved currency from your database 'Profiles' table
+        const { data: profile, error } = await supabase
+          .from('Profiles')
+          .select('currency')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.currency) {
+          setSelectedCurrency(profile.currency);
+        }
+      }
+    };
+    fetchUserData();
   }, []);
 
   const handleSignOut = async () => {
@@ -49,20 +64,32 @@ export default function ProfileScreen() {
         return;
       }
       router.replace('/(auth)/sign-in');
-    } catch (e) {
+    } catch (e: any) {
       Alert.alert('Sign out failed', e?.message ?? 'Unknown error');
     } finally {
       setIsSigningOut(false);
     }
   };
 
+  const handleCurrencyChange = async (code: string) => {
+    try {
+      // 1. Update local UI state
+      setSelectedCurrency(code);
+      setShowCurrencyPicker(false);
+      
+      // 2. Persist to Backend/Supabase
+      await updateUserCurrency(code);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save currency preference');
+      console.error(error);
+    }
+  };
+
   const handleExportCSV = () => {
-    // Empty as requested
     console.log("CSV Export triggered");
   };
 
-  const currentCurrency = currencies.find((c) => c.code === selectedCurrency);
-
+  // Styling Variables
   const textPrimary = isDarkMode ? 'text-white' : 'text-black';
   const textSecondary = isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight';
   const cardBg = isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-white border-borderLight';
@@ -108,7 +135,7 @@ export default function ProfileScreen() {
                 <View>
                   <Text className={`font-medium ${textPrimary}`}>Currency</Text>
                   <Text className={`text-sm ${textSecondary}`}>
-                    {currentCurrency?.name} ({currentCurrency?.symbol})
+                    {selectedCurrency}
                   </Text>
                 </View>
               </View>
@@ -122,10 +149,7 @@ export default function ProfileScreen() {
                 {currencies.map((currency) => (
                   <Pressable
                     key={currency.code}
-                    onPress={() => {
-                      setSelectedCurrency(currency.code);
-                      setShowCurrencyPicker(false);
-                    }}
+                    onPress={() => handleCurrencyChange(currency.code)}
                     className="flex-row items-center justify-between px-4 py-3 active:bg-slate-800/10"
                   >
                     <View className="flex-row items-center">
