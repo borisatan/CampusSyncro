@@ -8,14 +8,15 @@ interface ExpenseCategoryCardProps {
   color: string;
   amount: number;
   percent: number;
+  currency: string;
   onPress?: (category_name: string) => void; 
 }
 
-const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, color, amount, percent, onPress }) => {
+const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, color, amount, percent, currency, onPress }) => {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
-    Animated.spring(scale, { toValue: 0.93, friction: 3, useNativeDriver: true }).start();
+    Animated.spring(scale, { toValue: 0.95, friction: 3, useNativeDriver: true }).start();
   };
 
   const handlePressOut = () => {
@@ -45,7 +46,7 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
 
           <View className="items-end">
             <Text className="text-white text-lg font-bold">
-              €{amount.toLocaleString(undefined, { minimumFractionDigits: 0 })} 
+              {currency}{amount.toLocaleString(undefined, { minimumFractionDigits: 0 })} 
             </Text>
             <Text className="text-accentTeal text-lg mt-1 font-medium">{percent}%</Text>
           </View>

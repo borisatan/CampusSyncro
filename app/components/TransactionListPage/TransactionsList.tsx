@@ -87,7 +87,7 @@ const AnimatedTransactionItem = React.memo(({
 
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 0.94, // Slightly smaller
+      toValue: 0.95, // Slightly smaller
       useNativeDriver: true,
       friction: 6,
       tension: 80,
@@ -107,7 +107,7 @@ const AnimatedTransactionItem = React.memo(({
     <Pressable
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      onLongPress={() => onLongPress?.(transaction.id)}
+      onPress={() => onLongPress?.(transaction.id)}
       delayLongPress={200}
     >
       <Animated.View style={{ transform: [{ scale }] }}>

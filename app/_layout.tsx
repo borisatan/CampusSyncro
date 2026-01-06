@@ -7,6 +7,7 @@ import { AppThemeProvider } from './context/ThemeContext';
 import { DataRefreshProvider } from './context/DataRefreshContext';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useColorScheme } from 'react-native';
+import CurrencyInitializer from './components/Shared/CurrencyInitializer';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -23,6 +24,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
+          <CurrencyInitializer />
           <DataRefreshProvider>
             <ThemeProvider value={MyTheme}>
               <AppThemeProvider>

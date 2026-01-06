@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
+import { useCurrencyStore } from "../../store/useCurrencyStore";
 import { CategoryIconInfo, Transaction } from "../../types/types";
 
 
@@ -12,6 +13,7 @@ type TransactionItemProps = {
 
 const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, categoryIcons }) => {
   const { isDarkMode } = useTheme();
+  const { currencySymbol } = useCurrencyStore();
   const iconInfo = categoryIcons[transaction.category_name] || { icon: "help-circle", color: "#999" };
   // console.log(iconName)
   return (
@@ -38,13 +40,14 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, category
 
       {/* Right side */}
       <View className="items-end flex-shrink-0">
-        <Text
-          className={`text-md font-medium mb-1 ${
-            isDarkMode ? "text-textDark" : "text-textLight"
-          }`}
-        >
-          {transaction.amount} €
-        </Text>
+      <Text
+        className={`text-md font-medium mb-1 ${
+          transaction.amount < 0 ? "text-textDark" : "text-accentTeal"
+        }`}
+      >
+        {transaction.amount < 0 ? `-${currencySymbol}` : currencySymbol}
+        {Math.abs(transaction.amount)}
+      </Text>
         <Text
           className={`text-md ${
             isDarkMode ? "text-textDark" : "text-textLight"

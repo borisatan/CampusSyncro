@@ -19,6 +19,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
+import { useCurrencyStore } from "../store/useCurrencyStore";
 import {
   deleteTransaction,
   fetchAccounts,
@@ -40,6 +41,7 @@ const EditTransactionScreen = () => {
   const { isDarkMode } = useTheme();
   const { userId } = useAuth();
   const { refreshAll } = useDataRefresh();
+  const { currencySymbol } = useCurrencyStore();
 
   
   // State initialized with transaction data
@@ -246,7 +248,7 @@ useEffect(() => {
           <View className="mb-6">
             <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Amount</Text>
             <View className="relative">
-              <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>€</Text>
+              <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>{currencySymbol}</Text>
               <TextInput
                 keyboardType="decimal-pad"
                 value={amount}

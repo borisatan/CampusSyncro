@@ -15,8 +15,8 @@ import AddAccountPage from '../components/AccountsPage/AddAccountPage';
 import EditAccountPage from '../components/AccountsPage/EditAccountPage';
 import { useAuth } from '../context/AuthContext';
 import { useDataRefresh } from '../context/DataRefreshContext';
-import { createAccount, deleteAccount, fetchAccounts, getUserCurrency, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
-import { getCurrencySymbol, isValidCurrency, SupportedCurrency } from '../types/types';
+import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
+import { useCurrencyStore } from '../store/useCurrencyStore';
 
 interface Account {
   id: number;
@@ -64,8 +64,7 @@ export default function Accounts() {
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountBalance, setNewAccountBalance] = useState('');
   const [newAccountType, setNewAccountType] = useState('checking');
-  const [currency, setCurrency] = useState<string>('$');
-  const [isCurrencyLoading, setIsCurrencyLoading] = useState(true);
+  const { currencySymbol, isLoading: isCurrencyLoading, loadCurrency } = useCurrencyStore();
   
   // Edit account form
   const [editName, setEditName] = useState('');
@@ -84,15 +83,12 @@ export default function Accounts() {
   
   const refreshData = async () => {
     setIsRefreshing(true);
-    setIsCurrencyLoading(true);
     try {
       await loadAccounts();
-      const userCurrency = await getUserCurrency();
-      validateAndSetCurrency(userCurrency);
+      await loadCurrency();
     } catch (err) {
       console.error('Failed to refresh accounts:', err);
     } finally {
-      setIsCurrencyLoading(false);
       setIsRefreshing(false);
     }
   };
@@ -201,15 +197,6 @@ export default function Accounts() {
   };
 
   useEffect(() => {
-    const loadCurrency = async () => {
-      const userCurrency = await getUserCurrency();
-      validateAndSetCurrency(userCurrency);
-      setIsCurrencyLoading(false);
-    };
-    loadCurrency();
-  }, []);
-  
-  useEffect(() => {
     loadAccounts();
   }, []);
   
@@ -217,17 +204,6 @@ export default function Accounts() {
   useEffect(() => {
     registerAccountsRefresh(loadAccounts);
   }, [registerAccountsRefresh]);
-  
-
-  const validateAndSetCurrency = (fetchedCurrency: any) => {
-    
-    if (isValidCurrency(fetchedCurrency)) {
-      setCurrency(getCurrencySymbol(fetchedCurrency as SupportedCurrency));
-    } else {
-      setCurrency("");
-    }
-  };
-  const currencySymbol = getCurrencySymbol(currency);
   
   return (
     <SafeAreaProvider>
@@ -261,7 +237,7 @@ export default function Accounts() {
             <View className="bg-accentBlue rounded-2xl p-6 mb-6">
               <Text className="text-textDark/70 text-sm mb-2">Total Net Worth</Text>
               <Text className="text-textDark text-3xl font-semibold mb-4">
-                €{totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                {currencySymbol}{totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </Text>
               <View className="flex-row gap-4">
                 <View>
@@ -299,7 +275,7 @@ export default function Accounts() {
                           </View>
                           <View className="items-end">
                             <Text className={`text-lg font-medium ${account.balance < 0 ? 'text-accentRed' : (isDark ? 'text-textDark' : 'text-textLight')}`}>
-                              €{Math.abs(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              {currencySymbol}{Math.abs(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </Text>
                             {account.balance < 0 && (
                               <Text className="text-xs text-accentRed mt-0.5">Outstanding</Text>

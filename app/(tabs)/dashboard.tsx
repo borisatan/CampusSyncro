@@ -16,15 +16,12 @@ import { TimeFrameSelector } from '../components/HomePage/TimeFrameSelector';
 // Hooks & Utilities
 import { useDataRefresh } from '../context/DataRefreshContext';
 import { useDashboardData } from '../hooks/useDashboardData';
-import { getUserCurrency } from '../services/backendService';
-import { getCurrencySymbol, isValidCurrency, SupportedCurrency } from '../types/types';
+import { useCurrencyStore } from '../store/useCurrencyStore';
 
 export default function Dashboard() {
   const router = useRouter();
   
-  // Update state type to allow the fallback string '?'
-  const [currency, setCurrency] = useState<string>('$');
-  const [isCurrencyLoading, setIsCurrencyLoading] = useState(true);
+  const { currencySymbol, isLoading: isCurrencyLoading, loadCurrency } = useCurrencyStore();
 
   const { 
     timeFrame, 
@@ -41,29 +38,8 @@ export default function Dashboard() {
 
   const { registerDashboardRefresh } = useDataRefresh();
 
-  const validateAndSetCurrency = (fetchedCurrency: any) => {
-    
-    if (isValidCurrency(fetchedCurrency)) {
-      setCurrency(getCurrencySymbol(fetchedCurrency as SupportedCurrency));
-    } else {
-      setCurrency("");
-    }
-  };
-
-  useEffect(() => {
-    const loadCurrency = async () => {
-      const userCurrency = await getUserCurrency();
-      validateAndSetCurrency(userCurrency);
-      setIsCurrencyLoading(false);
-    };
-    loadCurrency();
-  }, []);
-
   const refreshAll = async () => {
-    setIsCurrencyLoading(true);
-    const userCurrency = await getUserCurrency();
-    validateAndSetCurrency(userCurrency);
-    setIsCurrencyLoading(false);
+    await loadCurrency();
     refreshData();
   };
 
@@ -122,7 +98,7 @@ export default function Dashboard() {
             totalBalance={totalBalance} 
             totalIncome={totalIncome} 
             totalExpenses={totalExpenses} 
-            currencySymbol={currency} 
+            currencySymbol={currencySymbol} 
           />
 
           <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
@@ -131,7 +107,7 @@ export default function Dashboard() {
             data={chartData} 
             timeFrame={timeFrame} 
             font={interFont}
-            currencySymbol={currency} 
+            currencySymbol={currencySymbol} 
           />
 
           <CategoryDonut
@@ -140,7 +116,8 @@ export default function Dashboard() {
             timeFrame={timeFrame} 
           />
 
-          <CategoryBreakdownList 
+          <CategoryBreakdownList
+            currency={currencySymbol} 
             categories={categories}
             categoriesAggregated={categoriesAggregated}
             onCategoryPress={onCategoryPress}

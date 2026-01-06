@@ -4,12 +4,14 @@ import { Category, CategoryAggregation } from '../../types/types';
 import ExpenseCategoryCard from './ExpenseCategoryCard';
 
 interface CategoryBreakdownListProps {
+  currency: string;
   categories: Category[];
   categoriesAggregated: CategoryAggregation[];
   onCategoryPress: (category_name: string) => void;
 }
 
 export const CategoryBreakdownList = ({
+  currency,
   categories,
   categoriesAggregated,
   onCategoryPress,
@@ -33,6 +35,7 @@ export const CategoryBreakdownList = ({
         return (
           <ExpenseCategoryCard
             key={cat.id}
+            currency={currency}
             name={cat.category_name}
             icon={cat.icon}
             color={cat.color}

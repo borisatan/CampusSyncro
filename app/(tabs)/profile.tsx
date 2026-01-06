@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Custom Hooks & Utils
 import { useTheme } from '../context/ThemeContext';
-import { updateUserCurrency } from '../services/backendService';
+import { useCurrencyStore } from '../store/useCurrencyStore';
 import { supabase } from '../utils/supabase';
 
 const currencies = [
@@ -33,27 +33,25 @@ export default function ProfileScreen() {
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
+  const { updateCurrency, currencyCode } = useCurrencyStore();
+
   // Fetch User Data and Currency preference on Mount
   useEffect(() => {
     const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setEmail(user.email ?? null);
-        
-        // Fetch saved currency from your database 'Profiles' table
-        const { data: profile, error } = await supabase
-          .from('Profiles')
-          .select('currency')
-          .eq('id', user.id)
-          .single();
-
-        if (profile?.currency) {
-          setSelectedCurrency(profile.currency);
-        }
       }
     };
     fetchUserData();
   }, []);
+
+  // Sync selectedCurrency with store when currencyCode changes
+  useEffect(() => {
+    if (currencyCode) {
+      setSelectedCurrency(currencyCode);
+    }
+  }, [currencyCode]);
 
   const handleSignOut = async () => {
     try {
@@ -77,11 +75,13 @@ export default function ProfileScreen() {
       setSelectedCurrency(code);
       setShowCurrencyPicker(false);
       
-      // 2. Persist to Backend/Supabase
-      await updateUserCurrency(code);
+      // 2. Update Zustand store (which also persists to backend)
+      await updateCurrency(code);
     } catch (error) {
       Alert.alert('Error', 'Failed to save currency preference');
       console.error(error);
+      // Revert UI state on error
+      setSelectedCurrency(currencyCode || 'USD');
     }
   };
 

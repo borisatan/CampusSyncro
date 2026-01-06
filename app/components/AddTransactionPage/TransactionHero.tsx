@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useCurrencyStore } from '../../store/useCurrencyStore';
 
 interface TransactionHeroProps {
   transactionType: 'expense' | 'income';
@@ -18,6 +19,7 @@ export const TransactionHero = ({
   isDarkMode,
   amountInputRef,
 }: TransactionHeroProps) => {
+  const { currencySymbol } = useCurrencyStore();
   return (
     <>
       {/* Header */}
@@ -73,7 +75,7 @@ export const TransactionHero = ({
         </Text>
         <View className="relative">
           <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-            €
+            {currencySymbol}
           </Text>
           <TextInput
             ref={amountInputRef}
