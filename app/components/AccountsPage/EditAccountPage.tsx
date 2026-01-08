@@ -1,14 +1,15 @@
+import { ArrowLeft, CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { ArrowLeft, CreditCard, PiggyBank, TrendingUp, Check } from 'lucide-react-native';
+import { SuccessModal } from '../common/SuccessModal';
 
 interface Account {
   id: number;
@@ -36,9 +37,10 @@ interface EditAccountProps {
   account: Account;
   onBack: () => void;
   onSave: (updatedAccount: any) => void;
+  currencySymbol: string;
 }
 
-export default function EditAccountPage({ account, onBack, onSave }: EditAccountProps) {
+export default function EditAccountPage({ account, currencySymbol, onBack, onSave }: EditAccountProps) {
   const [name, setName] = useState(account?.name || '');
   const [type, setType] = useState(account?.type?.toLowerCase() || 'checking');
   const [balance, setBalance] = useState(account?.balance.toString() || '0');
@@ -54,7 +56,7 @@ export default function EditAccountPage({ account, onBack, onSave }: EditAccount
         balance: parseFloat(balance),
       });
       setShowSuccess(false);
-    }, 1500);
+    }, 1900);
   };
 
   const Icon = accountTypeIcons[type] || CreditCard;
@@ -93,7 +95,7 @@ export default function EditAccountPage({ account, onBack, onSave }: EditAccount
           </View>
           <View className="flex-row items-baseline">
             <Text className="text-white text-3xl font-bold mr-2">
-              ${Math.abs(parseFloat(balance) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {currencySymbol} {Math.abs(parseFloat(balance) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </Text>
             {parseFloat(balance) < 0 && (
               <Text className="text-white/80 text-sm">Outstanding</Text>
@@ -145,7 +147,7 @@ export default function EditAccountPage({ account, onBack, onSave }: EditAccount
           <View className="mb-6">
             <Text className="text-sm text-secondaryDark mb-2 font-medium">Current Balance</Text>
             <View className="relative flex-row items-center bg-surfaceDark border border-borderDark rounded-2xl px-4">
-              <Text className="text-xl text-secondaryDark mr-2">$</Text>
+              <Text className="text-xl text-secondaryDark mr-2">{currencySymbol}</Text>
               <TextInput
                 keyboardType="numeric"
                 value={balance}
@@ -179,16 +181,7 @@ export default function EditAccountPage({ account, onBack, onSave }: EditAccount
       </ScrollView>
 
       {/* Success Modal Overlay */}
-      {showSuccess && (
-        <View className="absolute inset-0 bg-black/60 items-center justify-center p-6">
-          <View className="bg-surfaceDark border border-borderDark rounded-3xl p-8 items-center w-full max-w-xs">
-            <View className="w-20 h-20 bg-emerald-500/20 rounded-full items-center justify-center mb-4">
-              <Check color="#10B981" size={40} />
-            </View>
-            <Text className="text-textDark text-xl font-bold text-center">Account Updated!</Text>
-          </View>
-        </View>
-      )}
+      <SuccessModal visible={showSuccess} text="Account Updated!" />
     </KeyboardAvoidingView>
   );
 }

@@ -1,11 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Calendar, Check, ChevronLeft, Trash2 } from 'lucide-react-native';
+import { Calendar, ChevronLeft, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useState } from "react";
 import {
   Alert,
-  Modal,
   Platform,
   RefreshControl,
   ScrollView,
@@ -16,18 +15,19 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SuccessModal } from "../components/common/SuccessModal";
 import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
-import { useCurrencyStore } from "../store/useCurrencyStore";
 import {
   deleteTransaction,
-  fetchAccounts,
-  fetchCategories,
   updateAccountBalance,
   updateTransaction
 } from "../services/backendService";
-import { Account, Category, Transaction } from "../types/types";
+import { useAccountsStore } from "../store/useAccountsStore";
+import { useCategoriesStore } from "../store/useCategoriesStore";
+import { useCurrencyStore } from "../store/useCurrencyStore";
+import { Category, Transaction } from "../types/types";
 
 const EditTransactionScreen = () => {
   const router = useRouter();
@@ -44,6 +44,11 @@ const EditTransactionScreen = () => {
   const { currencySymbol } = useCurrencyStore();
 
   
+  // Use global stores
+  const categories = useCategoriesStore((state) => state.categories);
+  const accountOptions = useAccountsStore((state) => state.accounts);
+  const updateAccountBalanceStore = useAccountsStore((state) => state.updateAccountBalance);
+  
   // State initialized with transaction data
   const [transactionType, setTransactionType] = useState<'expense' | 'income'>(
     transaction?.amount && transaction.amount < 0 ? 'expense' : 'income'
@@ -54,67 +59,36 @@ const EditTransactionScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedDate, setSelectedDate] = useState(transaction ? new Date(transaction.created_at) : new Date());
   
-  // Lists and Loading states
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [accountOptions, setAccountOptions] = useState<Account[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Sync transaction data when it changes or categories load
   useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  const loadInitialData = async () => {
-    try {
-      setIsLoadingCategories(true);
-      setIsLoadingAccounts(true);
-      const [catData, accData] = await Promise.all([fetchCategories(), fetchAccounts()]);
+    if (transaction) {
+      setAmount(Math.abs(transaction.amount).toString());
+      setDescription(transaction.description || "");
+      setSelectedAccount(transaction.account_name || "");
+      setSelectedDate(new Date(transaction.created_at));
+      setTransactionType(transaction.amount < 0 ? 'expense' : 'income');
       
-      setCategories(catData);
-      setAccountOptions(accData);
-
-      // Find the category that matches the transaction's category_name
-      if (transaction && catData.length > 0) {
-        const match = catData.find(c => c.category_name === transaction.category_name);
+      // Find the matching category
+      if (categories.length > 0) {
+        const match = categories.find(c => c.category_name === transaction.category_name);
         if (match) setSelectedCategory(match);
       }
-    } catch (err) {
-      console.error('Failed to load initial data:', err);
-    } finally {
-      setIsLoadingCategories(false);
-      setIsLoadingAccounts(false);
     }
-  };
-
-  // Inside EditTransactionScreen component...
-
-useEffect(() => {
-  if (transaction) {
-    // This forced sync ensures that if the screen was already open
-    // with an old transaction, it updates to the new one.
-    setAmount(Math.abs(transaction.amount).toString());
-    setDescription(transaction.description || "");
-    setSelectedAccount(transaction.account_name || "");
-    setSelectedDate(new Date(transaction.created_at));
-    setTransactionType(transaction.amount < 0 ? 'expense' : 'income');
-    
-    // If categories are already loaded, find the matching icon
-    if (categories.length > 0) {
-      const match = categories.find(c => c.category_name === transaction.category_name);
-      if (match) setSelectedCategory(match);
-    }
-  }
-}, [params.transaction, categories]); // Trigger when params or categories list change
+  }, [params.transaction, categories]);
 
   const refreshData = async () => {
     setIsRefreshing(true);
-    await loadInitialData();
-    setIsRefreshing(false);
+    try {
+      await refreshAll();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleDateChange = (event: any, date?: Date) => {
@@ -132,37 +106,50 @@ useEffect(() => {
       const finalAmount = transactionType === 'expense' ? -numericAmount : numericAmount;
       const categoryName = transactionType === 'expense' ? selectedCategory?.category_name : 'Income';
   
-      // 1. Update the Transaction
-      await updateTransaction(transaction.id, finalAmount, description, selectedAccount, categoryName, selectedDate.toISOString());
-  
-      // 2. Handle Balance Logic
+      // Optimistic UI: Update balance immediately
       if (selectedAccount === transaction.account_name) {
-        // CASE A: Same account, just find the difference
         const diff = finalAmount - transaction.amount;
         const acc = accountOptions.find(a => a.account_name === selectedAccount);
-        if (acc) await updateAccountBalance(selectedAccount, acc.balance + diff);
+        if (acc) {
+          updateAccountBalanceStore(selectedAccount, acc.balance + diff);
+        }
       } else {
-        // CASE B: Account Switched! 
-        // Refund the OLD account
         const oldAcc = accountOptions.find(a => a.account_name === transaction.account_name);
-        if (oldAcc) await updateAccountBalance(transaction.account_name, oldAcc.balance - transaction.amount);
-        
-        // Charge the NEW account
+        if (oldAcc) {
+          updateAccountBalanceStore(transaction.account_name, oldAcc.balance - transaction.amount);
+        }
         const newAcc = accountOptions.find(a => a.account_name === selectedAccount);
-        if (newAcc) await updateAccountBalance(selectedAccount, newAcc.balance + finalAmount);
+        if (newAcc) {
+          updateAccountBalanceStore(selectedAccount, newAcc.balance + finalAmount);
+        }
       }
-
-      // 3. Refresh all related screens (dashboard, accounts, transaction-list)
-      await refreshAll();
-
+      
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         router.back();
-      }, 1500);
+      }, 1900);
+  
+      // Make API calls in background
+      await updateTransaction(transaction.id, finalAmount, description, selectedAccount, categoryName, selectedDate.toISOString());
+  
+      if (selectedAccount === transaction.account_name) {
+        const diff = finalAmount - transaction.amount;
+        const acc = accountOptions.find(a => a.account_name === selectedAccount);
+        if (acc) await updateAccountBalance(selectedAccount, acc.balance + diff);
+      } else {
+        const oldAcc = accountOptions.find(a => a.account_name === transaction.account_name);
+        if (oldAcc) await updateAccountBalance(transaction.account_name, oldAcc.balance - transaction.amount);
+        
+        const newAcc = accountOptions.find(a => a.account_name === selectedAccount);
+        if (newAcc) await updateAccountBalance(selectedAccount, newAcc.balance + finalAmount);
+      }
+
+      await refreshAll();
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "Failed to update");
+      await refreshAll(); // Reload to revert optimistic update
     } finally {
       setIsSaving(false);
     }
@@ -177,22 +164,25 @@ useEffect(() => {
         style: "destructive", 
         onPress: async () => {
           try {
-            // 1. Delete the record
-            await deleteTransaction(transaction.id, userId);
-            
-            // 2. REVERSE the balance impact
+            // Optimistic UI: Update balance immediately
             const acc = accountOptions.find(a => a.account_name === transaction.account_name);
             if (acc) {
-              // Subtracting the amount reverses it (e.g., Balance - (-50) = +50)
+              updateAccountBalanceStore(transaction.account_name, acc.balance - transaction.amount);
+            }
+            
+            router.back();
+            
+            // Make API calls in background
+            await deleteTransaction(transaction.id, userId);
+            
+            if (acc) {
               await updateAccountBalance(transaction.account_name, acc.balance - transaction.amount);
             }
             
-            // 3. Refresh all related screens (dashboard, accounts, transaction-list)
             await refreshAll();
-            
-            router.back();
           } catch (err) {
             Alert.alert("Error", "Could not delete");
+            await refreshAll(); // Reload to revert optimistic update
           }
         } 
       }
@@ -353,7 +343,7 @@ useEffect(() => {
           <TouchableOpacity
             onPress={handleSave}
             disabled={isSaving}
-            className={`w-full py-4 rounded-xl items-center bg-emerald-500`}
+            className={`w-full py-4 rounded-xl items-center bg-accentTeal border border-borderDark`}
           >
             <Text className="text-white font-bold text-lg">
               {isSaving ? "Saving..." : "Save Changes"}
@@ -361,17 +351,7 @@ useEffect(() => {
           </TouchableOpacity>
         </ScrollView>
 
-        {/* Success Modal - Copied Design */}
-        <Modal visible={showSuccess} transparent animationType="fade">
-          <View className="flex-1 items-center justify-center bg-black/50">
-            <View className={`${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'} border rounded-2xl p-6 flex flex-col items-center gap-3`}>
-              <View className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                <Check color="#10b981" size={32} />
-              </View>
-              <Text className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Transaction Updated!</Text>
-            </View>
-          </View>
-        </Modal>
+        <SuccessModal visible={showSuccess} text="Transaction Updated!" />
 
       </SafeAreaView>
     </SafeAreaProvider>

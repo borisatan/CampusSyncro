@@ -1,7 +1,9 @@
 import { Building2, CreditCard, Edit2, MoreVertical, PiggyBank, Plus, Trash2, TrendingUp } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import { MotiView } from 'moti';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
   Modal,
   RefreshControl,
   ScrollView,
@@ -10,12 +12,15 @@ import {
   useColorScheme,
   View
 } from 'react-native';
+import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
+import { Easing } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AddAccountPage from '../components/AccountsPage/AddAccountPage';
 import EditAccountPage from '../components/AccountsPage/EditAccountPage';
 import { useAuth } from '../context/AuthContext';
 import { useDataRefresh } from '../context/DataRefreshContext';
-import { createAccount, deleteAccount, fetchAccounts, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
+import { createAccount, deleteAccount, updateAccountBalance, updateAccountName, updateAccountType } from '../services/backendService';
+import { useAccountsStore } from '../store/useAccountsStore';
 import { useCurrencyStore } from '../store/useCurrencyStore';
 
 interface Account {
@@ -47,13 +52,37 @@ const colorMap: { [key: string]: string } = {
   purple: 'bg-accentPurple',
 };
 
+const FadeInView = ({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      delay: delay, // Staggered effect
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim, delay]);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim }}>
+      {children}
+    </Animated.View>
+  );
+};
+
 export default function Accounts() {
   const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
   const { userId } = useAuth();
   const { registerAccountsRefresh, refreshDashboard, refreshTransactionList } = useDataRefresh();
   
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  // Use global store instead of local state
+  const accounts = useAccountsStore((state) => state.accounts);
+  const loadAccounts = useAccountsStore((state) => state.loadAccounts);
+  const addAccountOptimistic = useAccountsStore((state) => state.addAccountOptimistic);
+  const updateAccountOptimistic = useAccountsStore((state) => state.updateAccountOptimistic);
+  const deleteAccountOptimistic = useAccountsStore((state) => state.deleteAccountOptimistic);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<number | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
@@ -69,23 +98,14 @@ export default function Accounts() {
   // Edit account form
   const [editName, setEditName] = useState('');
   const [editBalance, setEditBalance] = useState('');
+
   
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-  
-  const loadAccounts = async () => {
-    try {
-      const data: Account[] = await fetchAccounts();
-      setAccounts(data);
-    } catch (err) {
-      console.error('Failed to fetch accounts:', err);
-    }
-  };
   
   const refreshData = async () => {
     setIsRefreshing(true);
     try {
-      await loadAccounts();
-      await loadCurrency();
+      await Promise.all([loadAccounts(), loadCurrency()]);
     } catch (err) {
       console.error('Failed to refresh accounts:', err);
     } finally {
@@ -102,9 +122,24 @@ export default function Accounts() {
     }
     
     try {
+      // Optimistic update: Add temporary account immediately
+      const tempId = Date.now();
+      const optimisticAccount = {
+        id: tempId,
+        account_name: name,
+        balance,
+        type,
+      };
+      addAccountOptimistic(optimisticAccount);
+      
+      setShowAddModal(false);
+      
+      // Make actual API call in background
       const newAccount = await createAccount(name, balance, type, userId);
       
-      setAccounts(prev => [...prev, newAccount]);
+      // Replace temp with real account
+      deleteAccountOptimistic(tempId);
+      addAccountOptimistic(newAccount);
       
       // Refresh dashboard and transaction-list pages
       await Promise.all([
@@ -112,11 +147,11 @@ export default function Accounts() {
         refreshTransactionList(),
       ]);
       
-      setShowAddModal(false);
-      
     } catch (err) {
       console.error('Failed to add account:', err);
       Alert.alert('Error', 'Failed to create account');
+      // Reload accounts to revert optimistic update
+      await loadAccounts();
     }
   };
   
@@ -134,23 +169,23 @@ export default function Accounts() {
     const originalName = selectedAccount.account_name;
     const { name: newName, balance: newBalance, type: newType } = updatedData;
     
+    // Optimistic update
+    updateAccountOptimistic(selectedAccount.id, {
+      account_name: newName,
+      balance: newBalance,
+      type: newType,
+    });
+    
+    setShowEditModal(false);
+    setSelectedAccount(null);
+    
     try {
       if (originalName !== newName) {
         await updateAccountName(originalName, newName);
       }
       
       await updateAccountBalance(newName, newBalance);
-      
       await updateAccountType(newName, newType);
-      
-      // 4. Update local state
-      setAccounts(prev =>
-        prev.map(acc =>
-          acc.id === selectedAccount.id
-          ? { ...acc, account_name: newName, balance: newBalance, type: newType }
-          : acc
-        )
-      );
       
       // Refresh dashboard and transaction-list pages
       await Promise.all([
@@ -158,11 +193,11 @@ export default function Accounts() {
         refreshTransactionList(),
       ]);
       
-      setShowEditModal(false);
-      setSelectedAccount(null);
     } catch (err) {
       console.error('Failed to update account:', err);
       Alert.alert('Error', 'Failed to update account details');
+      // Reload accounts to revert optimistic update
+      await loadAccounts();
     }
   };
   const handleDeleteAccount = (accountId: number) => {
@@ -175,9 +210,12 @@ export default function Accounts() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            // Optimistic update: Remove immediately
+            deleteAccountOptimistic(accountId);
+            setEditingAccount(null);
+            
             try {
               await deleteAccount(accountId);
-              setAccounts(prev => prev.filter(acc => acc.id !== accountId));
               
               // Refresh dashboard and transaction-list pages
               await Promise.all([
@@ -185,10 +223,11 @@ export default function Accounts() {
                 refreshTransactionList(),
               ]);
               
-              setEditingAccount(null);
             } catch (err) {
               console.error('Failed to delete account:', err);
               Alert.alert('Error', 'Failed to delete account');
+              // Reload accounts to revert optimistic update
+              await loadAccounts();
             }
           },
         },
@@ -196,10 +235,6 @@ export default function Accounts() {
     );
   };
 
-  useEffect(() => {
-    loadAccounts();
-  }, []);
-  
   // Register refresh function so it can be called from other screens
   useEffect(() => {
     registerAccountsRefresh(loadAccounts);
@@ -236,82 +271,136 @@ export default function Accounts() {
             {/* Total Balance */}
             <View className="bg-accentBlue rounded-2xl p-6 mb-6">
               <Text className="text-textDark/70 text-sm mb-2">Total Net Worth</Text>
-              <Text className="text-textDark text-3xl font-semibold mb-4">
-                {currencySymbol}{totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </Text>
+
+              <View className="flex-row items-center mb-4">
+                <Text
+                  style={{
+                    fontSize: 30,
+                    fontWeight: '600',
+                    color: '#FFFFFF', // textDark actual color, not class name
+                  }}
+                >
+                  {currencySymbol}
+                </Text>
+
+                <AnimatedRollingNumber
+                  value={totalBalance}
+                  spinningAnimationConfig={{ duration: 800, easing: Easing.bounce }}
+                  textStyle={{
+                    fontSize: 30,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                  }}
+                  toFixed={2}
+                />
+              </View>
+
               <View className="flex-row gap-4">
                 <View>
                   <Text className="text-textDark/70 text-xs">Accounts</Text>
-                  <Text className="text-textDark text-xl font-medium mt-1">{accounts.length}</Text>
+                  <Text className="text-textDark text-xl font-medium mt-1">
+                    {accounts.length}
+                  </Text>
                 </View>
               </View>
             </View>
+
 
             {/* Accounts List */}
             <View>
               <Text className={`text-base font-medium mb-3 ${isDark ? 'text-textDark' : 'text-textLight'}`}>
                 All Accounts
               </Text>
-              {accounts.map((account) => {
+              {accounts.map((account, index) => {
                 const config = typeConfig[account.type.toLowerCase().trim()] || typeConfig.checking;
                 const IconComponent = iconMap[config.icon] || CreditCard;
                 const colorClass = colorMap[config.color] || 'bg-accentBlue';
                 
                 return (
-                  <View key={account.id} className="mb-2">
-                    <View className={`${isDark ? 'bg-surfaceDark border-borderDark' : 'bg-backgroundMuted border-borderLight'} rounded-2xl p-4 border`}>
-                      <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center flex-1">
-                          <View className={`w-12 h-12 ${colorClass} rounded-xl items-center justify-center`}>
-                            <IconComponent color="#FFFFFF" size={24} />
+                    <MotiView
+                      key={account.id}
+                      from={{ opacity: 0, translateY: 20 }}
+                      animate={{ opacity: 1, translateY: 0 }}
+                      transition={{
+                        type: 'timing',
+                        duration: 500,
+                        delay: index * 100, // Staggered entrance
+                      }}
+                      className=""
+                    >
+                    <View key={account.id} className="mb-2">
+                      <View className={`${isDark ? 'bg-surfaceDark border-borderDark' : 'bg-backgroundMuted border-borderLight'} rounded-2xl p-4 border`}>
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-row items-center flex-1">
+                            <View className={`w-12 h-12 ${colorClass} rounded-xl items-center justify-center`}>
+                              <IconComponent color="#FFFFFF" size={24} />
+                            </View>
+                            <View className="flex-1 ml-4">
+                              <Text className={`font-medium ${isDark ? 'text-textDark' : 'text-textLight'}`}>
+                                {account.account_name}
+                              </Text>
+                              <Text className={`text-sm capitalize mt-0.5 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                                {account.type}
+                              </Text>
+                            </View>
+                            <View className="items-end">
+                              <View className="flex-row items-center">
+                                <Text
+                                  style={{
+                                    fontSize: 18,
+                                    fontWeight: '500',
+                                    color: account.balance < 0 ? '#EF4444' : (isDark ? '#FFFFFF' : '#1F2937'),
+                                  }}
+                                >
+                                  {currencySymbol}
+                                </Text>
+                                <AnimatedRollingNumber
+                                  value={Math.abs(account.balance)}
+                                  spinningAnimationConfig={{ duration: 800, easing: Easing.bounce }}
+                                  textStyle={{
+                                    fontSize: 18,
+                                    fontWeight: '500',
+                                    color: account.balance < 0 ? '#EF4444' : (isDark ? '#FFFFFF' : '#1F2937'),
+                                  }}
+                                  toFixed={2}
+                                />
+                              </View>
+                              {account.balance < 0 && (
+                                <Text className="text-xs text-accentRed mt-0.5">Outstanding</Text>
+                              )}
+                            </View>
                           </View>
-                          <View className="flex-1 ml-4">
-                            <Text className={`font-medium ${isDark ? 'text-textDark' : 'text-textLight'}`}>
-                              {account.account_name}
-                            </Text>
-                            <Text className={`text-sm capitalize mt-0.5 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
-                              {account.type}
-                            </Text>
-                          </View>
-                          <View className="items-end">
-                            <Text className={`text-lg font-medium ${account.balance < 0 ? 'text-accentRed' : (isDark ? 'text-textDark' : 'text-textLight')}`}>
-                              {currencySymbol}{Math.abs(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </Text>
-                            {account.balance < 0 && (
-                              <Text className="text-xs text-accentRed mt-0.5">Outstanding</Text>
-                            )}
-                          </View>
+                          <TouchableOpacity
+                            onPress={() => setEditingAccount(editingAccount === account.id ? null : account.id)}
+                            className="w-8 h-8 items-center justify-center ml-2 active:opacity-70"
+                          >
+                            <MoreVertical color={isDark ? "#9CA3AF" : "#4B5563"} size={20} />
+                          </TouchableOpacity>
                         </View>
-                        <TouchableOpacity
-                          onPress={() => setEditingAccount(editingAccount === account.id ? null : account.id)}
-                          className="w-8 h-8 items-center justify-center ml-2 active:opacity-70"
-                        >
-                          <MoreVertical color={isDark ? "#9CA3AF" : "#4B5563"} size={20} />
-                        </TouchableOpacity>
                       </View>
+                      
+                      {editingAccount === account.id && (
+                        <View className={`${isDark ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'} rounded-lg mt-3 border overflow-hidden`}>
+                          <TouchableOpacity
+                            className={`flex-row items-center px-4 py-3 ${isDark ? 'active:bg-borderDark' : 'active:bg-backgroundMuted'}`}
+                            onPress={() => handleEditAccount(account)}
+                          >
+                            <Edit2 color={isDark ? "#D1D5DB" : "#4B5563"} size={16} />
+                            <Text className={`text-sm ml-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+                              Edit
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            className={`flex-row items-center px-4 py-3 ${isDark ? 'active:bg-borderDark' : 'active:bg-backgroundMuted'}`}
+                            onPress={() => handleDeleteAccount(account.id)}
+                          >
+                            <Trash2 color="#EF4444" size={16} />
+                            <Text className="text-accentRed text-sm ml-2">Delete</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
-                    
-                    {editingAccount === account.id && (
-                      <View className={`${isDark ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'} rounded-lg mt-3 border overflow-hidden`}>
-                        <TouchableOpacity
-                          className={`flex-row items-center px-4 py-3 ${isDark ? 'active:bg-borderDark' : 'active:bg-backgroundMuted'}`}
-                          onPress={() => handleEditAccount(account)}
-                        >
-                          <Edit2 color={isDark ? "#D1D5DB" : "#4B5563"} size={16} />
-                          <Text className={`text-sm ml-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
-                            Edit
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          className={`flex-row items-center px-4 py-3 ${isDark ? 'active:bg-borderDark' : 'active:bg-backgroundMuted'}`}
-                          onPress={() => handleDeleteAccount(account.id)}
-                        >
-                          <Trash2 color="#EF4444" size={16} />
-                          <Text className="text-accentRed text-sm ml-2">Delete</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </View>
+                  </MotiView>
                 );
               })}
             </View>
@@ -325,6 +414,7 @@ export default function Accounts() {
           onRequestClose={() => setShowAddModal(false)}
         >
           <AddAccountPage 
+            currencySymbol={currencySymbol}
             onBack={() => setShowAddModal(false)}
             onSave={handleAddAccount}
           />
@@ -347,9 +437,9 @@ export default function Accounts() {
                 }}
                 onBack={() => setShowEditModal(false)}
                 onSave={async (updatedData) => {
-                  // This 'updatedData' comes from your new EditAccountPage
                   await handleSaveEdit(updatedData);
                 }}
+                currencySymbol={currencySymbol}
               />
             )}
           </Modal>

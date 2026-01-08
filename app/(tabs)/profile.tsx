@@ -106,7 +106,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Profile Card */}
-        <View className="bg-indigo-600 rounded-2xl p-6 flex-row items-center mb-8">
+        <View className="bg-indigo-700 rounded-2xl p-6 flex-row items-center mb-8">
           <View className="w-16 h-16 bg-white/20 rounded-full items-center justify-center mr-4">
             <User color="white" size={32} />
           </View>

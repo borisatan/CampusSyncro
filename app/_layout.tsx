@@ -1,13 +1,14 @@
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from './context/AuthContext';
-import { AppThemeProvider } from './context/ThemeContext';
-import { DataRefreshProvider } from './context/DataRefreshContext';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useColorScheme } from 'react-native';
 import CurrencyInitializer from './components/Shared/CurrencyInitializer';
+import DataPreloader from './components/Shared/DataPreloader';
+import { AuthProvider } from './context/AuthContext';
+import { DataRefreshProvider } from './context/DataRefreshContext';
+import { AppThemeProvider } from './context/ThemeContext';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -25,6 +26,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <CurrencyInitializer />
+          <DataPreloader />
           <DataRefreshProvider>
             <ThemeProvider value={MyTheme}>
               <AppThemeProvider>

@@ -2,19 +2,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    ScrollView,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Animated,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from '../../context/ThemeContext';
 import { deleteCategory, getUserId, saveCategory } from '../../services/backendService';
+import { SuccessModal } from '../common/SuccessModal';
 
 const availableIcons = [
   'restaurant-outline', 'bus-outline', 'film-outline', 'flash-outline', 'cart-outline', 'medkit-outline', 'school-outline',
@@ -82,6 +83,7 @@ export default function CategoryEditor() {
   const [selectedColor, setSelectedColor] = useState((params.color as string) || categoryColors[0]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [focusedInput, setFocusedInput] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   const iconRefs = useRef<any[]>([]);
   const colorRefs = useRef<any[]>([]);
@@ -173,7 +175,11 @@ export default function CategoryEditor() {
         categoryId ? Number(categoryId) : undefined
       );
 
-      router.back();
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.back();
+      }, 1900);
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to save category");
     } finally {
@@ -388,6 +394,12 @@ export default function CategoryEditor() {
           )}
         </View>
       </ScrollView>
+
+      {/* Success Modal */}
+      <SuccessModal 
+        visible={showSuccess} 
+        text={categoryId ? 'Category Updated!' : 'Category Created!'} 
+      />
     </SafeAreaView>
   );
 }

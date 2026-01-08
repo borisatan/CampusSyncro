@@ -30,6 +30,7 @@ export interface Category {
   category_name: CategoryName;
   icon: string;
   color: string;
+  user_id: string;
 }
 
 export interface Profile {

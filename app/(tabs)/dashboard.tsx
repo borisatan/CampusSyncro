@@ -1,7 +1,7 @@
 import { useFont } from '@shopify/react-native-skia';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useChartPressState } from 'victory-native';
@@ -73,16 +73,6 @@ export default function Dashboard() {
   };
 
   const isLoading = dataLoading || isCurrencyLoading;
-
-  if (isLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-backgroundDark">
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#6366f1" />
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark ">

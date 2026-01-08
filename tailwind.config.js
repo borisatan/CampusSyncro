@@ -13,7 +13,7 @@ module.exports = {
 
         accentTeal: '#2A9D8F',       // edit/done button
         accentBlue: '#2563EB',       // confirm/enter button
-        accentPurple: "#8953A9",
+        accentPurple: "#8A00C2",
         accentRed: '#EF4444',        // delete button
         darkRed: '#8B0000',
 

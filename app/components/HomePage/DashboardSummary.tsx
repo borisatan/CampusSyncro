@@ -1,6 +1,8 @@
 import { TrendingDown, TrendingUp } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
+import { Easing } from 'react-native-reanimated';
 
 interface SummaryProps {
   totalBalance: number;
@@ -10,42 +12,88 @@ interface SummaryProps {
 }
 
 export const DashboardSummary = ({ totalBalance, totalIncome, totalExpenses, currencySymbol }: SummaryProps) => {
-  const formattedBalance = totalBalance.toLocaleString('en-US', { 
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2 
-  });
-  const formattedIncome = totalIncome.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
-  const formattedExpenses = totalExpenses.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
-
   return (
         <View className=" flex-col  mb-2">
             <View className="flex-1  rounded-2xl p-2 shadow-sm mb-3">
                 <Text className="text-textDark text-xl font-medium opacity-90 mb-2">Total Balance</Text>
-                <Text className="text-textDark text-5xl font-bold">{currencySymbol}{formattedBalance}</Text>
+                <View className="flex-row items-center">
+                  <Text
+                    style={{
+                      fontSize: 48,
+                      fontWeight: '700',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {currencySymbol}
+                  </Text>
+                  <AnimatedRollingNumber
+                    value={totalBalance}
+                    spinningAnimationConfig={{ duration: 1000, easing: Easing.bounce }}
+                    textStyle={{
+                      fontSize: 48,
+                      fontWeight: '700',
+                      color: '#FFFFFF',
+                    }}
+                    toFixed={2}
+                  />
+                </View>
             </View>
         <View className="flex-row gap-4 mb-3">
-        <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark">
+          <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark">
             <View className="flex-row items-center gap-2 mb-2">
-            <TrendingUp color="#fff" size={16} />
-            <Text className="text-textDark text-lg font-medium opacity-90">Income</Text>
+              <TrendingUp color="#fff" size={16} />
+              <Text className="text-textDark text-lg font-medium opacity-90">Income</Text>
             </View>
-            <Text className="text-textDark text-3xl font-bold">{currencySymbol}{formattedIncome}</Text>
-        </View>
+            <View className="flex-row items-center">
+              <Text
+                style={{
+                  fontSize: 30,
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                }}
+              >
+                {currencySymbol}
+              </Text>
+              <AnimatedRollingNumber
+                value={totalIncome}
+                spinningAnimationConfig={{ duration: 1000, easing: Easing.bounce }}
+                textStyle={{
+                  fontSize: 30,
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                }}
+                toFixed={2}
+              />
+            </View>
+          </View>
 
-        <View className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm border border-borderDark">
+          <View className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm border border-borderDark">
             <View className="flex-row items-center gap-2 mb-2">
-            <TrendingDown color="#fff" size={16} />
-            <Text className="text-textDark text-lg font-medium opacity-90">Expenses</Text>
+              <TrendingDown color="#fff" size={16} />
+              <Text className="text-textDark text-lg font-medium opacity-90">Expenses</Text>
             </View>
-            <Text className="text-textDark text-3xl font-bold">{currencySymbol}{-formattedExpenses}</Text>
-        </View>
+            <View className="flex-row items-center">
+              <Text
+                style={{
+                  fontSize: 30,
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                }}
+              >
+                {currencySymbol}
+              </Text>
+              <AnimatedRollingNumber
+                value={Math.abs(totalExpenses)}
+                spinningAnimationConfig={{ duration: 1000, easing: Easing.bounce }}
+                textStyle={{
+                  fontSize: 30,
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                }}
+                toFixed={2}
+              />
+            </View>
+          </View>
         </View>
     </View>
   );
