@@ -48,7 +48,7 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
             <Text className="text-white text-lg font-bold">
               {currency}{amount.toLocaleString(undefined, { minimumFractionDigits: 0 })} 
             </Text>
-            <Text className="text-accentTeal text-lg mt-1 font-medium">{percent}%</Text>
+            <Text className="text-white text-lg mt-1 font-medium">{percent}%</Text>
           </View>
         </View>
       </Animated.View>

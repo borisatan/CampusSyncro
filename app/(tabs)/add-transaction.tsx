@@ -150,7 +150,7 @@ const TransactionAdder = () => {
 
         <ScrollView 
           contentContainerStyle={{ paddingBottom: 80 }}
-          className="flex-1 p-6"
+          className="flex-1 p-2"
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
           }
