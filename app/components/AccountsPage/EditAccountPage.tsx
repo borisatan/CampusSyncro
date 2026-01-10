@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SuccessModal } from '../common/SuccessModal';
+import { SuccessModal } from '../Shared/SuccessModal';
 
 interface Account {
   id: number;
@@ -47,18 +47,30 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSave = () => {
+    if (!name.trim()) {
+      alert("Account name cannot be empty");
+      return;
+    }
+
+    // 2. Default to 0 if input is empty or invalid
+    const sanitizedBalance = balance.trim() === '' || isNaN(parseFloat(balance)) 
+      ? 0 
+      : parseFloat(balance);
+
     setShowSuccess(true);
+    
     setTimeout(() => {
       onSave({
         ...account,
-        name,
+        name: name.trim(),
         type,
-        balance: parseFloat(balance),
+        balance: sanitizedBalance,
       });
       setShowSuccess(false);
     }, 1900);
   };
 
+  
   const Icon = accountTypeIcons[type] || CreditCard;
   const colorClass = accountTypeColors[type] || 'bg-accentBlue';
 
@@ -122,22 +134,36 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
               {['checking', 'savings', 'credit', 'investment'].map((item) => {
                 const TypeIcon = accountTypeIcons[item];
                 const isActive = type === item;
+                const isInvestment = item === 'investment'; // Check for investment
+
                 return (
                   <TouchableOpacity
                     key={item}
-                    onPress={() => setType(item)}
+                    onPress={() => !isInvestment && setType(item)} // Prevent selection if investment
+                    disabled={isInvestment} // Disable the button
                     style={{ width: '47%' }}
                     className={`p-4 rounded-2xl border-2 items-center justify-center mb-1 ${
-                      isActive ? 'border-accentBlue bg-accentBlue/10' : 'border-borderDark bg-surfaceDark'
+                      isInvestment 
+                        ? 'border-dashed border-slate-800 bg-slate-900/50 opacity-60' // Grayed out style
+                        : isActive 
+                          ? 'border-accentBlue bg-accentBlue/10' 
+                          : 'border-borderDark bg-surfaceDark'
                     }`}
                   >
                     <TypeIcon 
-                      color={isActive ? '#3B82F6' : '#94A3B8'} 
+                      color={isInvestment ? '#475569' : isActive ? '#3B82F6' : '#94A3B8'} 
                       size={24} 
                     />
-                    <Text className={`capitalize font-medium mt-2 ${isActive ? 'text-textDark' : 'text-secondaryDark'}`}>
+                    <Text className={`capitalize font-medium mt-1 ${
+                      isInvestment ? 'text-slate-500' : isActive ? 'text-textDark' : 'text-secondaryDark'
+                    }`}>
                       {item}
                     </Text>
+                    {isInvestment && (
+                      <Text className="text-[10px] text-accentTeal font-bold uppercase tracking-tighter">
+                        Coming Soon
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 );
               })}

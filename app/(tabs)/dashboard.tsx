@@ -1,7 +1,7 @@
 import { useFont } from '@shopify/react-native-skia';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useChartPressState } from 'victory-native';
@@ -79,9 +79,9 @@ export default function Dashboard() {
       <ScrollView 
         className="flex-1" 
         contentContainerStyle={{ paddingBottom: 30 }}
-        refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refreshAll} />
-        }
+        // refreshControl={
+        //   <RefreshControl refreshing={isLoading} onRefresh={refreshAll} />
+        // }
       >
         <View className="p-2">
           <DashboardSummary 

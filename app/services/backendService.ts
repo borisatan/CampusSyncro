@@ -178,6 +178,9 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
   return (data ?? []).filter((cat: CategoryAggregation) => cat.category_name !== 'Income');
 };
 
+
+
+
 export const createAccount = async (accountName: string, balance: number, type:string, user_id) => {
   const { data, error } = await supabase
   .from('Accounts')
@@ -220,6 +223,7 @@ export const updateAccountName = async (accountName: string, newName: string) =>
   if (error) throw error;
   return data;
 }
+
 
 export const updateAccountType = async (accountName: string, newType: string) => {
   const { data, error } = await supabase

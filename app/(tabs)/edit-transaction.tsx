@@ -4,25 +4,25 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Calendar, ChevronLeft, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { SuccessModal } from "../components/common/SuccessModal";
+import { SuccessModal } from "../components/Shared/SuccessModal";
 import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
 import {
-  deleteTransaction,
-  updateAccountBalance,
-  updateTransaction
+    deleteTransaction,
+    updateAccountBalance,
+    updateTransaction
 } from "../services/backendService";
 import { useAccountsStore } from "../store/useAccountsStore";
 import { useCategoriesStore } from "../store/useCategoriesStore";

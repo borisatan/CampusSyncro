@@ -13,7 +13,7 @@ import { AccountSelector } from '../components/AddTransactionPage/AccountSelecto
 import { CategoryGrid } from '../components/AddTransactionPage/CategoryGrid';
 import { TransactionFormFields } from '../components/AddTransactionPage/TransactionFormFields';
 import { TransactionHero } from '../components/AddTransactionPage/TransactionHero';
-import { SuccessModal } from '../components/common/SuccessModal';
+import { SuccessModal } from '../components/Shared/SuccessModal';
 import { useAuth } from '../context/AuthContext';
 import { useDataRefresh } from '../context/DataRefreshContext';
 import { useTheme } from '../context/ThemeContext';
@@ -31,6 +31,7 @@ const TransactionAdder = () => {
   // Use global stores
   const categories = useCategoriesStore((state) => state.categories);
   const accountOptions = useAccountsStore((state) => state.accounts);
+  const expenseAccountOptions = accountOptions.filter(acc => acc.type !== 'investment');
   const updateAccountBalanceStore = useAccountsStore((state) => state.updateAccountBalance);
   
   const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense');
@@ -183,6 +184,8 @@ const TransactionAdder = () => {
         selectedAccount={selectedAccount}
         setSelectedAccount={setSelectedAccount}
         accountOptions={accountOptions}
+        expenseAccountOptions={expenseAccountOptions}
+        transactionType={transactionType}
       />
 
       <TransactionFormFields 

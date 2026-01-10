@@ -28,7 +28,7 @@ export const DashboardSummary = ({ totalBalance, totalIncome, totalExpenses, cur
                   </Text>
                   <AnimatedRollingNumber
                     value={totalBalance}
-                    spinningAnimationConfig={{ duration: 1000, easing: Easing.bounce }}
+                    spinningAnimationConfig={{ duration: 1200, easing: Easing.bounce }}
                     textStyle={{
                       fontSize: 48,
                       fontWeight: '700',
@@ -56,7 +56,7 @@ export const DashboardSummary = ({ totalBalance, totalIncome, totalExpenses, cur
               </Text>
               <AnimatedRollingNumber
                 value={totalIncome}
-                spinningAnimationConfig={{ duration: 1000, easing: Easing.bounce }}
+                spinningAnimationConfig={{ duration: 1200, easing: Easing.bounce }}
                 textStyle={{
                   fontSize: 30,
                   fontWeight: '700',
@@ -84,7 +84,7 @@ export const DashboardSummary = ({ totalBalance, totalIncome, totalExpenses, cur
               </Text>
               <AnimatedRollingNumber
                 value={Math.abs(totalExpenses)}
-                spinningAnimationConfig={{ duration: 1000, easing: Easing.bounce }}
+                spinningAnimationConfig={{ duration: 1200, easing: Easing.bounce}}
                 textStyle={{
                   fontSize: 30,
                   fontWeight: '700',

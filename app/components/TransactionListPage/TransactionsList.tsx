@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Animated, Pressable, RefreshControl, SectionList, Text } from "react-native";
 import { CategoryIconInfo, TransactionSection } from "../../types/types";
 import TransactionItem from "./TransactionItem";
@@ -22,6 +22,8 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   isFetchingMore,
   onItemLongPress, 
 }) => {
+  // We pass the global index if needed, but for simplicity here 
+  // each item will just trigger its own fade on mount.
   const renderItem = useCallback(({ item }: { item: any }) => (
     <AnimatedTransactionItem
       transaction={item}
@@ -33,11 +35,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   return (
     <SectionList
       sections={sections}
-      keyExtractor={(item) => {
-        // console.log(`${item.id}-${String(item.created_at)}`)
-        return `${item.id}-${String(item.created_at)}`;
-      }}
-
+      keyExtractor={(item) => `${item.id}-${String(item.created_at)}`}
       renderItem={renderItem}
       renderSectionHeader={({ section: { title } }) => (
         <Text className="text-md text-secondaryLight dark:text-secondaryDark mb-2 mt-4 px-1">
@@ -73,7 +71,6 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
 
 export default TransactionsList;
 
-
 const AnimatedTransactionItem = React.memo(({
   transaction,
   categoryIcons,
@@ -83,14 +80,34 @@ const AnimatedTransactionItem = React.memo(({
   categoryIcons: Record<string, CategoryIconInfo>;
   onLongPress?: (id: string) => void;
 }) => {
+  // 1. Initialize Animation Values
   const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0)).current; // Start invisible
+  const translateY = useRef(new Animated.Value(10)).current; // Optional: slight slide up
 
+  // 2. Entrance Animation on Mount
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  // Press Interactions (Scale)
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 0.95, // Slightly smaller
+      toValue: 0.96,
       useNativeDriver: true,
-      friction: 6,
-      tension: 80,
+      friction: 8,
+      tension: 100,
     }).start();
   };
 
@@ -98,8 +115,8 @@ const AnimatedTransactionItem = React.memo(({
     Animated.spring(scale, {
       toValue: 1,
       useNativeDriver: true,
-      friction: 6,
-      tension: 80,
+      friction: 8,
+      tension: 100,
     }).start();
   };
 
@@ -110,7 +127,15 @@ const AnimatedTransactionItem = React.memo(({
       onPress={() => onLongPress?.(transaction.id)}
       delayLongPress={200}
     >
-      <Animated.View style={{ transform: [{ scale }] }}>
+      <Animated.View 
+        style={{ 
+          opacity, // Apply the fade
+          transform: [
+            { scale }, 
+            { translateY } // Apply the slide
+          ] 
+        }}
+      >
         <TransactionItem transaction={transaction} categoryIcons={categoryIcons} />
       </Animated.View>
     </Pressable>

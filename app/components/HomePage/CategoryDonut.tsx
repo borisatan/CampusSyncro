@@ -49,6 +49,7 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDon
             className="w-[140px] h-[140px] items-center justify-center"
           >
             <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: [{ rotate: '-90deg' }] }}>
+              <SvgCircle cx={center} cy={center} r={radius - strokeWidth/2} fill="#20283A" />
               {categoryData.map((item, index) => {
                 const category = categories.find(c => c.category_name === item.category_name);
                 const color = category?.color || '#E4E4E4';
@@ -61,14 +62,13 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDon
                     cx={center} cy={center} r={radius}
                     stroke={color} strokeWidth={strokeWidth}
                     fill="transparent"
-                    strokeDasharray={`${arcLength - 3} ${circumference - arcLength + 3}`}
-                    strokeDashoffset={-accumulatedAngle}
+                    strokeDasharray={`${Math.max(0, arcLength - 3).toFixed(2)} ${(circumference - arcLength + 3).toFixed(2)}`}
+                    strokeDashoffset={(-accumulatedAngle).toFixed(2)}
                   />
                 );
                 accumulatedAngle += arcLength;
                 return segment;
               })}
-              <SvgCircle cx={center} cy={center} r={radius - strokeWidth/2} fill="#20283A" />
             </Svg>
           </MotiView>
 

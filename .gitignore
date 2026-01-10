@@ -32,7 +32,7 @@ yarn-error.*
 
 # local env files
 .env*.local
-
+*.utils/
 # typescript
 *.tsbuildinfo
 
@@ -79,3 +79,5 @@ yarn-error.*
 *.tsbuildinfo
 
 # @end expo-cli
+
+supabase.ts

@@ -15,7 +15,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from '../../context/ThemeContext';
 import { deleteCategory, getUserId, saveCategory } from '../../services/backendService';
-import { SuccessModal } from '../common/SuccessModal';
+import { SuccessModal } from '../Shared/SuccessModal';
+
+import { useDataRefresh } from '../../context/DataRefreshContext';
+import { useAccountsStore } from '../../store/useAccountsStore';
+import { useCategoriesStore } from '../../store/useCategoriesStore';
 
 const availableIcons = [
   'restaurant-outline', 'bus-outline', 'film-outline', 'flash-outline', 'cart-outline', 'medkit-outline', 'school-outline',
@@ -89,6 +93,10 @@ export default function CategoryEditor() {
   const colorRefs = useRef<any[]>([]);
   const iconScrollX = useRef(new Animated.Value(0)).current;
   const colorScrollX = useRef(new Animated.Value(0)).current;
+
+  const { refreshAll } = useDataRefresh();
+  const loadCategories = useCategoriesStore((state) => state.loadCategories);
+  const loadAccounts = useAccountsStore((state) => state.loadAccounts);
   
   // Animation values
   const scaleAnim = useState(new Animated.Value(1))[0];
@@ -164,7 +172,6 @@ export default function CategoryEditor() {
       const userId = await getUserId();
       if (!userId) throw new Error("User not authenticated");
 
-      // This logic now matches your saveCategory definition: (userId, payload, id?)
       await saveCategory(
         userId,
         {
@@ -174,6 +181,12 @@ export default function CategoryEditor() {
         },
         categoryId ? Number(categoryId) : undefined
       );
+
+      // 3. TRIGGER REFRESHES HERE
+      // Load fresh categories into Zustand store
+      await loadCategories(); 
+      // Refresh Dashboard, Transaction List, etc. via Context
+      await refreshAll(); 
 
       setShowSuccess(true);
       setTimeout(() => {
@@ -202,6 +215,11 @@ export default function CategoryEditor() {
               const userId = await getUserId();
               if (userId && categoryId) {
                 await deleteCategory(Number(categoryId), userId);
+                
+                await loadCategories(); // Update the grid
+                await loadAccounts();   // Balance might change if transactions were deleted
+                await refreshAll();     // Update dashboard and list
+                
                 router.back();
               }
             } catch (err: any) {
