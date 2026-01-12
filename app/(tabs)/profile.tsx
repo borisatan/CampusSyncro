@@ -124,52 +124,47 @@ export default function ProfileScreen() {
           </Text> */}
 
           {/* Currency Selector */}
-          <View className="mb-6">
-            <Text className={`text-sm mb-2 ${textSecondary}`}>
-              Currency
-            </Text>
+          <TouchableOpacity
+            onPress={() => setShowCurrencyPicker(!showCurrencyPicker)}
+            activeOpacity={0.7}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-indigo-500/20 rounded-lg items-center justify-center mr-3">
+              <Globe color="#818cf8" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>Currency</Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                {currencies.find(c => c.code === selectedCurrency)?.name || selectedCurrency}
+              </Text>
+            </View>
+            <Ionicons
+              name={showCurrencyPicker ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+            />
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => setShowCurrencyPicker(!showCurrencyPicker)}
-              activeOpacity={0.7}
-              className={`w-full px-4 py-3 rounded-xl flex-row justify-between items-center border ${cardBg}`}
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-11 bg-indigo-500/20 rounded-xl items-center justify-center mr-3">
-                  <Globe color="#818cf8" size={20} />
-                </View>
-                <Text className={textPrimary}>
-                  {currencies.find(c => c.code === selectedCurrency)?.name || selectedCurrency}
-                </Text>
-              </View>
-              <Ionicons
-                name={showCurrencyPicker ? "chevron-up" : "chevron-down"}
-                size={20}
-                color={isDarkMode ? "#9CA3AF" : "#4B5563"}
-              />
-            </TouchableOpacity>
-
-            {showCurrencyPicker && (
-              <View className={`mt-2 rounded-xl overflow-hidden border ${cardBg}`}>
-                {currencies.map((currency, index) => (
-                  <AnimatedCurrencyRow
-                    key={currency.code}
-                    currency={currency}
-                    index={index}
-                    isDarkMode={isDarkMode}
-                    isSelected={selectedCurrency === currency.code}
-                    onSelect={() => handleCurrencyChange(currency.code)}
-                    isLast={index === currencies.length - 1}
-                  />
-                ))}
-              </View>
-            )}
-          </View>
+          {showCurrencyPicker && (
+            <View className={`mb-3 rounded-xl overflow-hidden border ${cardBg}`}>
+              {currencies.map((currency, index) => (
+                <AnimatedCurrencyRow
+                  key={currency.code}
+                  currency={currency}
+                  index={index}
+                  isDarkMode={isDarkMode}
+                  isSelected={selectedCurrency === currency.code}
+                  onSelect={() => handleCurrencyChange(currency.code)}
+                  isLast={index === currencies.length - 1}
+                />
+              ))}
+            </View>
+          )}
 
           {/* Budgets Button */}
           <Pressable
             onPress={() => router.push('/budgets' as any)}
-            className={`flex-row items-center border rounded-2xl p-4 mb-4 active:bg-slate-800/10 ${cardBg}`}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 active:bg-slate-800/10 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-violet-500/20 rounded-lg items-center justify-center mr-3">
               <PieChart color="#8B5CF6" size={20} />
