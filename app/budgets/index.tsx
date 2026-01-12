@@ -1,0 +1,146 @@
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Plus } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { BudgetCard } from '../components/BudgetsPage/BudgetCard';
+import { IncomeCard } from '../components/BudgetsPage/IncomeCard';
+import { IncomeEditorModal } from '../components/BudgetsPage/IncomeEditorModal';
+import { useTheme } from '../context/ThemeContext';
+import { useBudgetsData } from '../hooks/useBudgetsData';
+import { useCurrencyStore } from '../store/useCurrencyStore';
+import { useIncomeStore } from '../store/useIncomeStore';
+
+export default function BudgetsScreen() {
+  const router = useRouter();
+  const { isDarkMode } = useTheme();
+  const { budgetsWithSpent, monthlyIncome, dynamicIncome, allocatedPercentage, isLoading, refresh } = useBudgetsData();
+  const { currencySymbol } = useCurrencyStore();
+  const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showIncomeEditor, setShowIncomeEditor] = useState(false);
+
+  const textPrimary = isDarkMode ? 'text-white' : 'text-black';
+  const textSecondary = isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight';
+  const screenBg = isDarkMode ? 'bg-backgroundDark' : 'bg-background';
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  }, [refresh]);
+
+  const handleAddBudget = () => {
+    router.push('/budgets/edit');
+  };
+
+  const handleEditBudget = (budgetId: number) => {
+    router.push(`/budgets/edit?id=${budgetId}`);
+  };
+
+  const handleEditIncome = () => {
+    setShowIncomeEditor(true);
+  };
+
+  const handleSaveIncome = async (useDynamic: boolean, income: number) => {
+    await saveIncomeSettings(useDynamic, income);
+    await refresh();
+  };
+
+  return (
+    <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 py-3">
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mr-3 p-1"
+          >
+            <ChevronLeft
+              size={28}
+              color={isDarkMode ? '#FFFFFF' : '#000000'}
+            />
+          </TouchableOpacity>
+          <Text className={`text-2xl font-semibold ${textPrimary}`}>
+            Budgets
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={handleAddBudget}
+          className="bg-accentBlue rounded-full p-2"
+        >
+          <Plus size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+
+      {isLoading && !isRefreshing ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#2563EB" />
+        </View>
+      ) : (
+        <ScrollView
+          className="flex-1 px-4"
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#2563EB"
+            />
+          }
+        >
+          {/* Income Card */}
+          <IncomeCard
+            income={monthlyIncome}
+            allocatedPercentage={allocatedPercentage}
+            currencySymbol={currencySymbol}
+            onEditPress={handleEditIncome}
+          />
+
+          {/* Budgets List */}
+          {budgetsWithSpent.length === 0 ? (
+            <View className="items-center justify-center py-12">
+              <Text className={`text-lg ${textSecondary}`}>
+                No budgets yet
+              </Text>
+              <Text className={`text-sm ${textSecondary} mt-2 text-center`}>
+                Tap the + button to create your first budget
+              </Text>
+            </View>
+          ) : (
+            <View className="gap-4">
+              {budgetsWithSpent.map((budget) => (
+                <BudgetCard
+                  key={budget.id}
+                  budget={budget}
+                  currencySymbol={currencySymbol}
+                  onPress={() => handleEditBudget(budget.id)}
+                />
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      )}
+
+      {/* Income Editor Modal */}
+      <IncomeEditorModal
+        visible={showIncomeEditor}
+        onClose={() => setShowIncomeEditor(false)}
+        onSave={handleSaveIncome}
+        currentUseDynamic={useDynamicIncome}
+        currentManualIncome={manualIncome}
+        currentDynamicIncome={dynamicIncome}
+        currencySymbol={currencySymbol}
+        isDarkMode={isDarkMode}
+      />
+    </SafeAreaView>
+  );
+}

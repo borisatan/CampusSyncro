@@ -14,8 +14,8 @@ CREATE TABLE Budgets (
   user_id UUID REFERENCES auth.users(id) NOT NULL,
   name VARCHAR(50) NOT NULL,
   color VARCHAR(7) NOT NULL,  -- Hex color e.g., "#FF5722"
-  amount_type VARCHAR(10) NOT NULL CHECK (amount_type IN ('dollar', 'percentage')),
-  amount DECIMAL(12, 2) NOT NULL,  -- Dollar amount or percentage value
+  amount_type VARCHAR(10) NOT NULL CHECK (amount_type IN ('money_amount', 'percentage')),
+  amount DECIMAL(12, 2) NOT NULL,  -- Amount in dollars (Or any other currency) or percentage value
   period_type VARCHAR(10) NOT NULL CHECK (period_type IN ('weekly', 'monthly', 'custom')),
   custom_start_date DATE,  -- Required if period_type = 'custom'
   custom_end_date DATE,    -- Required if period_type = 'custom'
@@ -68,7 +68,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 ```typescript
 // New types to add
-export type BudgetAmountType = 'dollar' | 'percentage';
+export type BudgetAmountType = 'money_amount' | 'percentage';
 export type BudgetPeriodType = 'weekly' | 'monthly' | 'custom';
 
 export interface Budget {
@@ -215,8 +215,8 @@ interface BudgetsState {
 | State | Condition | Color |
 |-------|-----------|-------|
 | Good | < 80% spent | Green |
-| Warning | 80-99% spent | Yellow/Amber |
-| Over Budget | >= 100% spent | Red |
+| Warning | 80-95% spent | Yellow/Amber |
+| Over Budget | > 95% spent | Red |
 
 ### Progress Bar
 - Fills left to right based on percentage spent
@@ -302,10 +302,10 @@ interface BudgetsState {
 - Date range: 1st -> last day of current month
 
 ### Custom
-- User defines start and end date
-- Duration = end_date - start_date (e.g., 8 days)
+- User defines start and end date (end date is exclusive)
+- Duration = end_date - start_date (e.g., Jan 1 to Jan 8 = 7 days)
 - Resets every N days from the original start date
-- Example: Start Jan 1, End Jan 8 -> resets Jan 9, Jan 17, Jan 25...
+- Example: Start Jan 1, End Jan 8 (7-day period) -> resets Jan 8, Jan 15, Jan 22...
 
 ```typescript
 function getCurrentCustomPeriod(startDate: Date, endDate: Date): { start: Date, end: Date } {
@@ -367,7 +367,36 @@ function getCurrentCustomPeriod(startDate: Date, endDate: Date): { start: Date, 
 | Rollover | None - resets based on period |
 | Navigation | Profile page -> full screen Budgets page |
 | Unassigned categories | Not tracked in any budget (user's choice) |
-| Visual alerts | Green (<80%) -> Yellow (80-99%) -> Red (>=100%) |
+| Visual alerts | Green (<80%) -> Yellow (80-95%) -> Red (>=95%) |
 | Budget colors | User-selected when creating/editing |
 | Forms | Full-screen forms |
 | Transfer feature | Not included (future enhancement) |
+| Income category | System default category, cannot be changed |
+| Transaction dates | `created_at` is backdated when transactions are edited |
+| Currency | Frontend-only for symbol display, no conversion logic |
+
+---
+
+## Custom Hook for Budget Calculations
+
+**File:** `app/hooks/useBudgetsData.ts`
+
+The `useBudgetsData` hook calculates `BudgetWithSpent` data by:
+1. Getting raw budgets from the Zustand store
+2. Calculating current period dates based on each budget's `period_type`
+3. Fetching income for percentage budgets (manual or dynamic)
+4. Fetching spending for each budget's assigned categories
+5. Resolving the limit (amount for fixed, percentage * income for percentage budgets)
+6. Calculating `percentage_used`
+
+```typescript
+function useBudgetsData() {
+  const { budgets } = useBudgetsStore();
+  const { categories } = useCategoriesStore();
+
+  // Calculate BudgetWithSpent for each budget
+  // Returns { budgetsWithSpent: BudgetWithSpent[], isLoading: boolean }
+}
+```
+
+This keeps the store simple (raw `Budget[]`) while calculations are reactive and isolated in the hook.

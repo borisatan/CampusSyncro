@@ -1,4 +1,4 @@
-import { CategoryAggregation, CategoryIconInfo, Transaction } from "../types/types";
+import { Budget, CategoryAggregation, CategoryIconInfo, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
 
 export const createTransaction = async (payload: any) => {
@@ -428,4 +428,106 @@ export const updateCategoriesOrder = async (categories: { id: number; sort_order
   const results = await Promise.all(updates);
   const error = results.find(r => r.error)?.error;
   if (error) throw error;
+};
+
+// Budget Functions
+
+export const fetchBudgets = async (): Promise<Budget[]> => {
+  const { data, error } = await supabase
+    .from('Budgets')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+};
+
+export const saveBudget = async (
+  payload: Omit<Budget, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
+  id?: number
+): Promise<Budget> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  if (id) {
+    // Update existing budget
+    const { data, error } = await supabase
+      .from('Budgets')
+      .update({
+        ...payload,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } else {
+    // Create new budget
+    const { data, error } = await supabase
+      .from('Budgets')
+      .insert([{ ...payload, user_id: user.id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+};
+
+export const deleteBudget = async (id: number): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('Budgets')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
+};
+
+export const fetchIncomeForPeriod = async (startDate: Date, endDate: Date): Promise<number> => {
+  const { data, error } = await supabase.rpc('fetch_income_for_period', {
+    p_start_date: startDate.toISOString().split('T')[0],
+    p_end_date: endDate.toISOString().split('T')[0]
+  });
+
+  if (error) throw error;
+  return data ?? 0;
+};
+
+export const updateCategoryBudgetId = async (
+  categoryId: number,
+  budgetId: number | null
+): Promise<void> => {
+  const { error } = await supabase
+    .from('Categories')
+    .update({ budget_id: budgetId })
+    .eq('id', categoryId);
+
+  if (error) throw error;
+};
+
+export const fetchBudgetSpending = async (
+  categoryNames: string[],
+  startDate: Date,
+  endDate: Date
+): Promise<number> => {
+  if (categoryNames.length === 0) return 0;
+
+  const { data, error } = await supabase
+    .from('Transactions')
+    .select('amount')
+    .in('category_name', categoryNames)
+    .neq('category_name', 'Income')
+    .gte('created_at', startDate.toISOString())
+    .lt('created_at', endDate.toISOString());
+
+  if (error) throw error;
+
+  return data?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
 };

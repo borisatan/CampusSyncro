@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import {
+  ChevronRight,
   Download,
   Globe,
   LogOut,
+  PieChart,
   User
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from 'react';
@@ -133,7 +135,7 @@ export default function ProfileScreen() {
               className={`w-full px-4 py-3 rounded-xl flex-row justify-between items-center border ${cardBg}`}
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-indigo-500/20 rounded-xl items-center justify-center mr-3">
+                <View className="w-10 h-11 bg-indigo-500/20 rounded-xl items-center justify-center mr-3">
                   <Globe color="#818cf8" size={20} />
                 </View>
                 <Text className={textPrimary}>
@@ -164,16 +166,31 @@ export default function ProfileScreen() {
             )}
           </View>
 
+          {/* Budgets Button */}
+          <Pressable
+            onPress={() => router.push('/budgets' as any)}
+            className={`flex-row items-center border rounded-2xl p-4 mb-4 active:bg-slate-800/10 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-violet-500/20 rounded-lg items-center justify-center mr-3">
+              <PieChart color="#8B5CF6" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>Budgets</Text>
+              <Text className={`text-sm ${textSecondary}`}>Manage spending limits</Text>
+            </View>
+            <ChevronRight color={isDarkMode ? "#9CA3AF" : "#4B5563"} size={20} />
+          </Pressable>
+
           {/* Export CSV Button */}
           <Pressable
             onPress={handleExportCSV}
-            className={` flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
+            className={`flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-emerald-500/20 rounded-lg items-center justify-center mr-3">
               <Download color="#34d399" size={20} />
             </View>
             <View className="flex-1">
-              <Text className={`font-medium ${textPrimary}`}>Export Transactions</Text>
+              <Text className={`font-medium ${textPrimary}`}>Export Transactions </Text>
               <Text className={`text-sm ${textSecondary}`}>Download as CSV file</Text>
             </View>
           </Pressable>
