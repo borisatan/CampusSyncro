@@ -1,3 +1,6 @@
+// import { useState } from 'react';
+// import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+// import { TrendingUp, TrendingDown, DollarSign, AlertCircle } from 'lucide-react';
 
 // const weekData = [
 //   { day: 'Mon', amount: 145 },
@@ -281,3 +284,35 @@
 //           </div>
 //         </div>
 //       </div>
+
+//       {/* Recent Transactions */}
+//       <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800">
+//         <h3 className="text-white mb-4">Recent Transactions</h3>
+//         <div className="space-y-3">
+//           {recentTransactions.map((transaction) => (
+//             <div key={transaction.id} className="flex items-center justify-between">
+//               <div className="flex items-center gap-3">
+//                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+//                   transaction.amount > 0 ? 'bg-emerald-500/20' : 'bg-slate-800'
+//                 }`}>
+//                   <DollarSign className={`w-5 h-5 ${
+//                     transaction.amount > 0 ? 'text-emerald-400' : 'text-slate-400'
+//                   }`} />
+//                 </div>
+//                 <div>
+//                   <p className="text-white">{transaction.name}</p>
+//                   <p className="text-xs text-slate-500">{transaction.date}</p>
+//                 </div>
+//               </div>
+//               <p className={`${
+//                 transaction.amount > 0 ? 'text-emerald-400' : 'text-white'
+//               }`}>
+//                 {transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
+//               </p>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }

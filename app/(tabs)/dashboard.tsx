@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useChartPressState } from 'victory-native';
 
 // Custom Components
+import { BudgetHealthCard } from '../components/HomePage/BudgetHealthCard';
 import { CategoryBreakdownList } from '../components/HomePage/CategoryBreakdown';
 import { CategoryDonut } from '../components/HomePage/CategoryDonut';
 import { DashboardSummary } from '../components/HomePage/DashboardSummary';
@@ -16,6 +17,7 @@ import { TimeFrameSelector } from '../components/HomePage/TimeFrameSelector';
 // Hooks & Utilities
 import { useDataRefresh } from '../context/DataRefreshContext';
 import { useTheme } from '../context/ThemeContext';
+import { useBudgetsData } from '../hooks/useBudgetsData';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useCurrencyStore } from '../store/useCurrencyStore';
 
@@ -25,24 +27,27 @@ export default function Dashboard() {
 
   const { currencySymbol, isLoading: isCurrencyLoading, loadCurrency } = useCurrencyStore();
 
-  const { 
-    timeFrame, 
-    setTimeFrame, 
-    loading: dataLoading, 
+  const {
+    timeFrame,
+    setTimeFrame,
+    loading: dataLoading,
     refresh: refreshData,
-    totalBalance, 
-    totalIncome, 
-    totalExpenses, 
-    categories, 
-    categoriesAggregated, 
-    chartData 
+    totalBalance,
+    totalIncome,
+    totalExpenses,
+    categories,
+    categoriesAggregated,
+    chartData
   } = useDashboardData('month');
+
+  const { budgetsWithSpent, refresh: refreshBudgets } = useBudgetsData();
 
   const { registerDashboardRefresh } = useDataRefresh();
 
   const refreshAll = async () => {
     await loadCurrency();
     refreshData();
+    refreshBudgets();
   };
 
   useEffect(() => {
@@ -95,11 +100,16 @@ export default function Dashboard() {
 
           <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
-          <SpendingTrendChart 
-            data={chartData} 
-            timeFrame={timeFrame} 
+          <SpendingTrendChart
+            data={chartData}
+            timeFrame={timeFrame}
             font={interFont}
-            currencySymbol={currencySymbol} 
+            currencySymbol={currencySymbol}
+          />
+
+          <BudgetHealthCard
+            budgets={budgetsWithSpent}
+            currencySymbol={currencySymbol}
           />
 
           <CategoryDonut

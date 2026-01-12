@@ -86,6 +86,14 @@ export default function TabLayout() {
         name="edit-transaction"
         options={{ href: null }} // hides from tab bar
       />
+      <Tabs.Screen
+        name="budgets"
+        options={{ href: null }} // hides from tab bar
+      />
+      <Tabs.Screen
+        name="budget-edit"
+        options={{ href: null }} // hides from tab bar
+      />
     </Tabs>
   );
 }

@@ -13,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BudgetCard } from '../components/BudgetsPage/BudgetCard';
 import { IncomeCard } from '../components/BudgetsPage/IncomeCard';
-import { IncomeEditorModal } from '../components/BudgetsPage/IncomeEditorModal';
 import { useTheme } from '../context/ThemeContext';
 import { useBudgetsData } from '../hooks/useBudgetsData';
 import { useCurrencyStore } from '../store/useCurrencyStore';
@@ -26,7 +25,6 @@ export default function BudgetsScreen() {
   const { currencySymbol } = useCurrencyStore();
   const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showIncomeEditor, setShowIncomeEditor] = useState(false);
 
   const textPrimary = isDarkMode ? 'text-white' : 'text-black';
   const textSecondary = isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight';
@@ -39,15 +37,11 @@ export default function BudgetsScreen() {
   }, [refresh]);
 
   const handleAddBudget = () => {
-    router.push('/budgets/edit');
+    router.push('/budget-edit');
   };
 
   const handleEditBudget = (budgetId: number) => {
-    router.push(`/budgets/edit?id=${budgetId}`);
-  };
-
-  const handleEditIncome = () => {
-    setShowIncomeEditor(true);
+    router.push(`/budget-edit?id=${budgetId}`);
   };
 
   const handleSaveIncome = async (useDynamic: boolean, income: number) => {
@@ -102,7 +96,11 @@ export default function BudgetsScreen() {
             income={monthlyIncome}
             allocatedPercentage={allocatedPercentage}
             currencySymbol={currencySymbol}
-            onEditPress={handleEditIncome}
+            useDynamicIncome={useDynamicIncome}
+            manualIncome={manualIncome}
+            dynamicIncome={dynamicIncome}
+            isDarkMode={isDarkMode}
+            onSave={handleSaveIncome}
           />
 
           {/* Budgets List */}
@@ -129,18 +127,6 @@ export default function BudgetsScreen() {
           )}
         </ScrollView>
       )}
-
-      {/* Income Editor Modal */}
-      <IncomeEditorModal
-        visible={showIncomeEditor}
-        onClose={() => setShowIncomeEditor(false)}
-        onSave={handleSaveIncome}
-        currentUseDynamic={useDynamicIncome}
-        currentManualIncome={manualIncome}
-        currentDynamicIncome={dynamicIncome}
-        currencySymbol={currencySymbol}
-        isDarkMode={isDarkMode}
-      />
     </SafeAreaView>
   );
 }

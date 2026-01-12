@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategorySelector } from '../components/BudgetsPage/CategorySelector';
-import { ColorPicker, BUDGET_COLORS } from '../components/BudgetsPage/ColorPicker';
+import { BUDGET_COLORS, ColorPicker } from '../components/BudgetsPage/ColorPicker';
 import { PeriodSelector } from '../components/BudgetsPage/PeriodSelector';
 import { useTheme } from '../context/ThemeContext';
 import {
@@ -215,30 +215,23 @@ export default function EditBudgetScreen() {
         className="flex-1"
       >
         {/* Header */}
-        <View className={`flex-row items-center justify-between px-4 py-3 border-b ${isDarkMode ? 'border-borderDark' : 'border-borderLight'}`}>
-          <View className="flex-row items-center">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="mr-3 p-1"
-            >
-              <ChevronLeft
-                size={28}
-                color={isDarkMode ? '#FFFFFF' : '#000000'}
-              />
-            </TouchableOpacity>
-            <Text className={`text-xl font-semibold ${textPrimary}`}>
-              {budgetId ? 'Edit Budget' : 'Create Budget'}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={isSaving}
-            className="bg-accentBlue rounded-lg px-4 py-2"
-          >
-            <Text className="text-white font-semibold">
-              {isSaving ? 'Saving...' : 'Save'}
-            </Text>
+        <View className="flex-row items-center justify-between px-2 py-3">
+          <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
+            <ChevronLeft
+              size={28}
+              color={isDarkMode ? '#FFFFFF' : '#000000'}
+            />
           </TouchableOpacity>
+          <Text className={`text-xl font-semibold ${textPrimary}`}>
+            {budgetId ? 'Edit Budget' : 'Create Budget'}
+          </Text>
+          {budgetId ? (
+            <TouchableOpacity onPress={handleDelete} className="p-2 -mr-2">
+              <Trash2 color="#ef4444" size={24} />
+            </TouchableOpacity>
+          ) : (
+            <View className="w-10" />
+          )}
         </View>
 
         <ScrollView
@@ -321,11 +314,6 @@ export default function EditBudgetScreen() {
                 className={`flex-1 text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
               />
             </View>
-            {amountType === 'percentage' && (
-              <Text className={`text-xs mt-2 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                Uses the global income setting from the Income Card
-              </Text>
-            )}
           </View>
 
           {/* Period Selector */}
@@ -347,19 +335,16 @@ export default function EditBudgetScreen() {
             isDarkMode={isDarkMode}
           />
 
-          {/* Delete Button */}
-          {budgetId && (
-            <TouchableOpacity
-              onPress={handleDelete}
-              disabled={isSaving}
-              className="flex-row items-center justify-center bg-red-500/20 rounded-xl py-4 mt-4"
-            >
-              <Trash2 size={20} color="#EF4444" />
-              <Text className="text-red-500 font-semibold ml-2">
-                Delete Budget
-              </Text>
-            </TouchableOpacity>
-          )}
+          {/* Save Button */}
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={isSaving}
+            className="bg-accentBlue rounded-xl py-4 mt-6 items-center"
+          >
+            <Text className="text-white font-semibold text-lg">
+              {isSaving ? 'Saving...' : budgetId ? 'Update Budget' : 'Create Budget'}
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
