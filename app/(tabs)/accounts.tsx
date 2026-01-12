@@ -51,22 +51,28 @@ export default function Accounts() {
     }
   };
 
-  const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string }) => {
-    const { name, balance, type } = newAccountData;
+  const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string; sort_order?: number }) => {
+    const { name, balance, type, sort_order } = newAccountData;
     if (!name.trim()) {
       Alert.alert('Error', 'Please enter an account name');
       return;
     }
     try {
       const tempId = Date.now();
-      addAccountOptimistic({ id: tempId, account_name: name, balance, type });
+      const insertPosition = sort_order ?? accounts.length;
+      addAccountOptimistic({ id: tempId, account_name: name, balance, type, sort_order: insertPosition });
       setShowAddModal(false);
 
-      const newAccount = await AccountService.createAccount(name, balance, type, userId);
+      // Shift existing accounts if inserting at a position that's not at the end
+      if (insertPosition < accounts.length) {
+        await AccountService.shiftAccountsForInsert(insertPosition, accounts);
+      }
+
+      const newAccount = await AccountService.createAccount(name, balance, type, userId, insertPosition);
       deleteAccountOptimistic(tempId);
       addAccountOptimistic(newAccount);
-      
-      await Promise.all([refreshDashboard(), refreshTransactionList()]);
+
+      await Promise.all([loadAccounts(), refreshDashboard(), refreshTransactionList()]);
     } catch (err) {
       Alert.alert('Error', 'Failed to create account');
       await loadAccounts();
@@ -79,12 +85,13 @@ export default function Accounts() {
     setEditingAccountId(null);
   };
 
-  const handleSaveEdit = async (updatedData: { name: string; balance: number; type: string }) => {
+  const handleSaveEdit = async (updatedData: { name: string; balance: number; type: string; sort_order?: number }) => {
     if (!selectedAccount) return;
     const originalName = selectedAccount.account_name;
-    const { name: newName, balance: newBalance, type: newType } = updatedData;
+    const oldSortOrder = selectedAccount.sort_order ?? 0;
+    const { name: newName, balance: newBalance, type: newType, sort_order: newSortOrder } = updatedData;
 
-    updateAccountOptimistic(selectedAccount.id, { account_name: newName, balance: newBalance, type: newType });
+    updateAccountOptimistic(selectedAccount.id, { account_name: newName, balance: newBalance, type: newType, sort_order: newSortOrder });
     setShowEditModal(false);
     setSelectedAccount(null);
 
@@ -92,7 +99,13 @@ export default function Accounts() {
       if (originalName !== newName) await AccountService.updateAccountName(originalName, newName);
       await AccountService.updateAccountBalance(newName, newBalance);
       await AccountService.updateAccountType(newName, newType);
-      await Promise.all([refreshDashboard(), refreshTransactionList()]);
+
+      // Reorder accounts if sort_order changed
+      if (newSortOrder !== undefined && newSortOrder !== oldSortOrder) {
+        await AccountService.reorderAccountPosition(selectedAccount.id, oldSortOrder, newSortOrder, accounts);
+      }
+
+      await Promise.all([loadAccounts(), refreshDashboard(), refreshTransactionList()]);
     } catch (err) {
       Alert.alert('Error', 'Failed to update account');
       await loadAccounts();
@@ -175,15 +188,16 @@ export default function Accounts() {
           </View>
         </ScrollView>
 
-        <Modal visible={showAddModal} animationType="slide"><AddAccountPage currencySymbol={currencySymbol} onBack={() => setShowAddModal(false)} onSave={handleAddAccount} /></Modal>
+        <Modal visible={showAddModal} animationType="slide"><AddAccountPage currencySymbol={currencySymbol} onBack={() => setShowAddModal(false)} onSave={handleAddAccount} accountCount={accounts.length} /></Modal>
         
         <Modal visible={showEditModal} animationType="slide">
           {selectedAccount && (
             <EditAccountPage
-              account={{ id: selectedAccount.id, name: selectedAccount.account_name, type: selectedAccount.type, balance: selectedAccount.balance }}
+              account={{ id: selectedAccount.id, name: selectedAccount.account_name, type: selectedAccount.type, balance: selectedAccount.balance, sort_order: selectedAccount.sort_order }}
               onBack={() => setShowEditModal(false)}
               onSave={handleSaveEdit}
               currencySymbol={currencySymbol}
+              accountCount={accounts.length}
             />
           )}
         </Modal>

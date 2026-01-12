@@ -181,13 +181,13 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
 
 
 
-export const createAccount = async (accountName: string, balance: number, type:string, user_id) => {
+export const createAccount = async (accountName: string, balance: number, type: string, user_id: string, sort_order?: number) => {
   const { data, error } = await supabase
   .from('Accounts')
-  .insert({ account_name: accountName, balance: balance, user_id: user_id, type: type })
+  .insert({ account_name: accountName, balance: balance, user_id: user_id, type: type, sort_order: sort_order ?? 1 })
   .select()
   .single();
-  
+
   if (error) throw error;
   return data;
 }
@@ -242,10 +242,77 @@ export const updateAccountBalance = async (accountName: string, newBalance: numb
       .update({ balance: newBalance })
       .eq('account_name', accountName)
       .select();
-      
+
       if (error) throw error;
       return data;
     }
+
+export const updateAccountSortOrder = async (accountId: number, newSortOrder: number) => {
+  const { data, error } = await supabase
+    .from('Accounts')
+    .update({ sort_order: newSortOrder })
+    .eq('id', accountId)
+    .select();
+
+  if (error) throw error;
+  return data;
+}
+
+export const reorderAccountPosition = async (
+  accountId: number,
+  oldPosition: number,
+  newPosition: number,
+  allAccounts: { id: number; sort_order?: number }[]
+) => {
+  if (oldPosition === newPosition) return;
+
+  const updates: { id: number; sort_order: number }[] = [];
+
+  if (newPosition < oldPosition) {
+    // Moving up: shift accounts between newPosition and oldPosition-1 down by 1
+    for (const acc of allAccounts) {
+      const pos = acc.sort_order ?? 0;
+      if (acc.id === accountId) {
+        updates.push({ id: acc.id, sort_order: newPosition });
+      } else if (pos >= newPosition && pos < oldPosition) {
+        updates.push({ id: acc.id, sort_order: pos + 1 });
+      }
+    }
+  } else {
+    // Moving down: shift accounts between oldPosition+1 and newPosition up by 1
+    for (const acc of allAccounts) {
+      const pos = acc.sort_order ?? 0;
+      if (acc.id === accountId) {
+        updates.push({ id: acc.id, sort_order: newPosition });
+      } else if (pos > oldPosition && pos <= newPosition) {
+        updates.push({ id: acc.id, sort_order: pos - 1 });
+      }
+    }
+  }
+
+  if (updates.length > 0) {
+    await updateAccountsOrder(updates);
+  }
+}
+
+export const shiftAccountsForInsert = async (
+  insertPosition: number,
+  allAccounts: { id: number; sort_order?: number }[]
+) => {
+  // Shift all accounts at insertPosition or higher by +1 to make room
+  const updates: { id: number; sort_order: number }[] = [];
+
+  for (const acc of allAccounts) {
+    const pos = acc.sort_order ?? 0;
+    if (pos >= insertPosition) {
+      updates.push({ id: acc.id, sort_order: pos + 1 });
+    }
+  }
+
+  if (updates.length > 0) {
+    await updateAccountsOrder(updates);
+  }
+}
 
     export const deleteTransaction = async (id: number, user_id: string) => {
   const { data, error } = await supabase
@@ -332,15 +399,33 @@ export async function fetchCategoryIcons(): Promise<Record<string, CategoryIconI
   const { data, error } = await supabase
   .from("Categories")
   .select("category_name, icon, color");
-  
-  if (error) throw error; 
-  
+
+  if (error) throw error;
+
   const icons: Record<string, CategoryIconInfo> = {};
   if (data) {
     data.forEach((c: any) => {
         icons[c.category_name] = { icon: c.icon, color: c.color };
       });
     }
-    
+
     return icons;
   }
+
+export const updateAccountsOrder = async (accounts: { id: number; sort_order: number }[]) => {
+  const updates = accounts.map(({ id, sort_order }) =>
+    supabase.from('Accounts').update({ sort_order }).eq('id', id)
+  );
+  const results = await Promise.all(updates);
+  const error = results.find(r => r.error)?.error;
+  if (error) throw error;
+};
+
+export const updateCategoriesOrder = async (categories: { id: number; sort_order: number }[]) => {
+  const updates = categories.map(({ id, sort_order }) =>
+    supabase.from('Categories').update({ sort_order }).eq('id', id)
+  );
+  const results = await Promise.all(updates);
+  const error = results.find(r => r.error)?.error;
+  if (error) throw error;
+};

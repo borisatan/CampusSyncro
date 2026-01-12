@@ -13,6 +13,8 @@ interface FormFieldsProps {
   handleDateChange: (event: any, date?: Date) => void;
   handleSubmit: () => void;
   transactionType: 'expense' | 'income';
+  buttonText?: string;
+  isSubmitting?: boolean;
 }
 
 export const TransactionFormFields = ({
@@ -25,7 +27,11 @@ export const TransactionFormFields = ({
   handleDateChange,
   handleSubmit,
   transactionType,
+  buttonText,
+  isSubmitting = false,
 }: FormFieldsProps) => {
+  const defaultButtonText = `Add ${transactionType === 'expense' ? 'Expense' : 'Income'}`;
+  const displayButtonText = buttonText || defaultButtonText;
   return (
     <>
       {/* Description */}
@@ -78,9 +84,10 @@ export const TransactionFormFields = ({
       {/* Submit Button */}
       <TouchableOpacity
         onPress={handleSubmit}
+        disabled={isSubmitting}
         className={`w-full py-4 rounded-xl items-center mb-6 ${transactionType === 'expense' ? 'bg-accentRed' : 'bg-accentTeal'}`}
       >
-        <Text className="text-white font-semibold">Add {transactionType === 'expense' ? 'Expense' : 'Income'}</Text>
+        <Text className="text-white font-semibold">{displayButtonText}</Text>
       </TouchableOpacity>
     </>
   );

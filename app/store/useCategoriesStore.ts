@@ -10,6 +10,7 @@ interface CategoriesState {
   addCategoryOptimistic: (category: Category) => void;
   updateCategoryOptimistic: (id: number, updates: Partial<Category>) => void;
   deleteCategoryOptimistic: (id: number) => void;
+  reorderCategories: (reorderedCategories: Category[]) => void;
 }
 
 export const useCategoriesStore = create<CategoriesState>((set, get) => ({
@@ -20,7 +21,11 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     try {
       set({ isLoading: true });
       const data = await fetchCategories();
-      set({ categories: data, isLoading: false });
+      // Sort by sort_order if available, otherwise by id
+      const sorted = [...data].sort((a, b) =>
+        (a.sort_order ?? a.id) - (b.sort_order ?? b.id)
+      );
+      set({ categories: sorted, isLoading: false });
     } catch (error) {
       console.error('Error loading categories:', error);
       set({ isLoading: false });
@@ -43,5 +48,8 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     set((state) => ({
       categories: state.categories.filter((cat) => cat.id !== id),
     })),
+
+  reorderCategories: (reorderedCategories) =>
+    set({ categories: reorderedCategories }),
 }));
 

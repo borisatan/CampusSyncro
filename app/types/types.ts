@@ -31,6 +31,7 @@ export interface Category {
   icon: string;
   color: string;
   user_id: string;
+  sort_order?: number;
 }
 
 export interface Profile {
@@ -62,6 +63,7 @@ export interface Account {
   account_name: string;
   balance: number;
   type: string;
+  sort_order?: number;
 }
 export interface AccountOption {
   id: number;

@@ -1,6 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { ArrowLeft, CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,6 +18,7 @@ interface Account {
   name: string;
   type: string;
   balance: number;
+  sort_order?: number;
 }
 
 const accountTypeIcons: { [key: string]: any } = {
@@ -38,12 +41,18 @@ interface EditAccountProps {
   onBack: () => void;
   onSave: (updatedAccount: any) => void;
   currencySymbol: string;
+  accountCount: number;
 }
 
-export default function EditAccountPage({ account, currencySymbol, onBack, onSave }: EditAccountProps) {
+export default function EditAccountPage({ account, currencySymbol, onBack, onSave, accountCount }: EditAccountProps) {
+  // Generate sort order options from 0 to accountCount-1 (0-indexed internally, displayed as 1-indexed)
+  const sortOrderOptions = Array.from({ length: Math.max(accountCount, 1) }, (_, i) => i);
+
   const [name, setName] = useState(account?.name || '');
   const [type, setType] = useState(account?.type?.toLowerCase() || 'checking');
   const [balance, setBalance] = useState(account?.balance.toString() || '0');
+  const [sortOrder, setSortOrder] = useState(account?.sort_order ?? 0);
+  const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSave = () => {
@@ -65,6 +74,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
         name: name.trim(),
         type,
         balance: sanitizedBalance,
+        sort_order: sortOrder,
       });
       setShowSuccess(false);
     }, 1900);
@@ -188,6 +198,46 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
             </Text>
           </View>
 
+          <View className="mb-6">
+            <Text className="text-sm text-secondaryDark mb-2 font-medium">Display Order</Text>
+            <TouchableOpacity
+              onPress={() => setShowSortOrderPicker(!showSortOrderPicker)}
+              activeOpacity={0.7}
+              className="flex-row items-center justify-between bg-surfaceDark border border-borderDark rounded-2xl px-4 py-4"
+            >
+              <Text className="text-textDark text-base">Position {sortOrder + 1}</Text>
+              <Ionicons
+                name={showSortOrderPicker ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#94A3B8"
+              />
+            </TouchableOpacity>
+
+            {showSortOrderPicker && (
+              <View className="mt-2 rounded-xl overflow-hidden border bg-surfaceDark border-borderDark">
+                <ScrollView className="max-h-60" nestedScrollEnabled={true}>
+                  {sortOrderOptions.map((option, index) => (
+                    <AnimatedSortOrderRow
+                      key={option}
+                      option={option}
+                      index={index}
+                      isSelected={sortOrder === option}
+                      onSelect={(val) => {
+                        setSortOrder(val);
+                        setShowSortOrderPicker(false);
+                      }}
+                      isLast={index === sortOrderOptions.length - 1}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            <Text className="text-xs text-secondaryDark mt-2 italic">
+              Lower numbers appear first in the account list
+            </Text>
+          </View>
+
           {/* Action Buttons */}
           <View className="flex-row space-x-3 pt-6 pb-20">
             <TouchableOpacity
@@ -211,3 +261,55 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
     </KeyboardAvoidingView>
   );
 }
+
+const AnimatedSortOrderRow = ({
+  option,
+  index,
+  isSelected,
+  onSelect,
+  isLast,
+}: {
+  option: number;
+  index: number;
+  isSelected: boolean;
+  onSelect: (val: number) => void;
+  isLast: boolean;
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      <TouchableOpacity
+        onPress={() => onSelect(option)}
+        className={`px-4 py-4 flex-row items-center justify-between ${
+          !isLast ? 'border-b border-borderDark' : ''
+        } ${isSelected ? 'bg-backgroundDark' : ''}`}
+      >
+        <Text className={`font-medium ${isSelected ? 'text-textDark' : 'text-secondaryDark'}`}>
+          Position {option + 1}
+        </Text>
+        {isSelected && (
+          <Ionicons name="checkmark-circle" size={20} color="#B2A4FF" />
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};

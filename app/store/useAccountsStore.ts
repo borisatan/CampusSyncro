@@ -11,6 +11,7 @@ interface AccountsState {
   updateAccountOptimistic: (id: number, updates: Partial<Account>) => void;
   deleteAccountOptimistic: (id: number) => void;
   updateAccountBalance: (accountName: string, newBalance: number) => void;
+  reorderAccounts: (reorderedAccounts: Account[]) => void;
 }
 
 export const useAccountsStore = create<AccountsState>((set, get) => ({
@@ -21,7 +22,11 @@ export const useAccountsStore = create<AccountsState>((set, get) => ({
     try {
       set({ isLoading: true });
       const data = await fetchAccounts();
-      set({ accounts: data, isLoading: false });
+      // Sort by sort_order if available, otherwise by id
+      const sorted = [...data].sort((a, b) =>
+        (a.sort_order ?? a.id) - (b.sort_order ?? b.id)
+      );
+      set({ accounts: sorted, isLoading: false });
     } catch (error) {
       console.error('Error loading accounts:', error);
       set({ isLoading: false });
@@ -51,5 +56,11 @@ export const useAccountsStore = create<AccountsState>((set, get) => ({
         acc.account_name === accountName ? { ...acc, balance: newBalance } : acc
       ),
     })),
-}));
+    
+    
+
+  reorderAccounts: (reorderedAccounts) =>
+    set({ accounts: reorderedAccounts }),
+}
+));
 

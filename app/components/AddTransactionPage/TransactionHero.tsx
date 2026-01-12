@@ -9,6 +9,9 @@ interface TransactionHeroProps {
   setAmount: (val: string) => void;
   isDarkMode: boolean;
   amountInputRef: React.RefObject<TextInput>;
+  title?: string;
+  subtitle?: string;
+  showHeader?: boolean;
 }
 
 export const TransactionHero = ({
@@ -18,19 +21,24 @@ export const TransactionHero = ({
   setAmount,
   isDarkMode,
   amountInputRef,
+  title = 'Add Transaction',
+  subtitle = 'Record your income or expense',
+  showHeader = true,
 }: TransactionHeroProps) => {
   const { currencySymbol } = useCurrencyStore();
   return (
     <>
       {/* Header */}
-      <View className="mb-6">
-        <Text className={isDarkMode ? "text-2xl text-white" : "text-2xl text-gray-900"}>
-          Add Transaction
-        </Text>
-        <Text className={isDarkMode ? "text-slate-400" : "text-gray-600"}>
-          Record your income or expense
-        </Text>
-      </View>
+      {showHeader && (
+        <View className="mb-6">
+          <Text className={isDarkMode ? "text-2xl text-white" : "text-2xl text-gray-900"}>
+            {title}
+          </Text>
+          <Text className={isDarkMode ? "text-slate-400" : "text-gray-600"}>
+            {subtitle}
+          </Text>
+        </View>
+      )}
 
       {/* Transaction Type Toggle */}
       <View className={`${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'} rounded-2xl p-1 flex-row mb-6`}>
