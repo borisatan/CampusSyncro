@@ -1,8 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import {
-  Check,
-  ChevronRight,
   Download,
   Globe,
   LogOut,
@@ -97,13 +95,13 @@ export default function ProfileScreen() {
   const screenBg = isDarkMode ? 'bg-backgroundDark' : 'bg-background';
 
   return (
-    <SafeAreaView className={`flex-1 ${screenBg} p-2`}>
-      <ScrollView>
-        
+    <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 8 }}>
+
         {/* Header */}
-        <View className="mb-8">
-          <Text className={`text-3xl font-bold ${textPrimary}`}>Profile</Text>
-          <Text className={`mt-1 ${textSecondary}`}>Manage your account settings</Text>
+        <View className="mb-6">
+          <Text className={`text-2xl font-semibold ${textPrimary}`}>Profile</Text>
+          <Text className={`text-md mt-1 ${textSecondary}`}>Manage your account settings</Text>
         </View>
 
         {/* Profile Card */}
@@ -119,9 +117,9 @@ export default function ProfileScreen() {
 
         {/* Settings Section */}
         <View className="mb-8">
-          <Text className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}>
+          {/* <Text className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}>
             Settings
-          </Text>
+          </Text> */}
 
           {/* Currency Selector */}
           <View className="mb-6">
@@ -169,7 +167,7 @@ export default function ProfileScreen() {
           {/* Export CSV Button */}
           <Pressable
             onPress={handleExportCSV}
-            className={`mt-3 flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
+            className={` flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-emerald-500/20 rounded-lg items-center justify-center mr-3">
               <Download color="#34d399" size={20} />
@@ -189,7 +187,7 @@ export default function ProfileScreen() {
           <Pressable
             onPress={handleSignOut}
             disabled={isSigningOut}
-            className="bg-accentRed rounded-xl py-4 items-center flex-row justify-center"
+            className="bg-accentRed rounded-xl py-4 items-center  flex-row justify-center"
           >
             <LogOut color="white" size={20} style={{ marginRight: 8 }} />
             <Text className="text-white font-semibold">

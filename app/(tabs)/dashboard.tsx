@@ -15,12 +15,14 @@ import { TimeFrameSelector } from '../components/HomePage/TimeFrameSelector';
 
 // Hooks & Utilities
 import { useDataRefresh } from '../context/DataRefreshContext';
+import { useTheme } from '../context/ThemeContext';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useCurrencyStore } from '../store/useCurrencyStore';
 
 export default function Dashboard() {
   const router = useRouter();
-  
+  const { isDarkMode } = useTheme();
+
   const { currencySymbol, isLoading: isCurrencyLoading, loadCurrency } = useCurrencyStore();
 
   const { 
@@ -75,15 +77,15 @@ export default function Dashboard() {
   const isLoading = dataLoading || isCurrencyLoading;
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundDark ">
-      <ScrollView 
-        className="flex-1" 
+    <SafeAreaView className={`flex-1 mb-8 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
+      <ScrollView
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: 30 }}
         // refreshControl={
         //   <RefreshControl refreshing={isLoading} onRefresh={refreshAll} />
         // }
       >
-        <View className="p-2">
+        <View className="px-2">
           <DashboardSummary 
             totalBalance={totalBalance} 
             totalIncome={totalIncome} 

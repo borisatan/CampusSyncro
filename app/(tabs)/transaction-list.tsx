@@ -205,7 +205,7 @@ const TransactionsScreen: React.FC = () => {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView className={isDarkMode ? "flex-1 bg-backgroundDark" : "flex-1 bg-background"}>
+      <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
 
         <View className="px-2">
           <TransactionsHeader

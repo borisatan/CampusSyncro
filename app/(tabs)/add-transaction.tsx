@@ -146,7 +146,7 @@ const TransactionAdder = () => {
   };
 
   return (
-      <SafeAreaView className={isDarkMode ? "flex-1 bg-slate-950" : "flex-1 bg-gray-50"}>
+      <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
         <KeyboardAvoidingView
@@ -154,8 +154,8 @@ const TransactionAdder = () => {
           className="flex-1"
         >
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 80 }}
-            className="flex-1 p-2"
+            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
+            className="flex-1"
             keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />

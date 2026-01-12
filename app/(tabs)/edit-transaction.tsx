@@ -196,15 +196,15 @@ const EditTransactionScreen = () => {
   if (!transaction) return null;
 
   return (
-      <SafeAreaView className={isDarkMode ? "flex-1 bg-slate-950" : "flex-1 bg-gray-50"}>
+      <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
         {/* Header with Back and Delete */}
-        <View className="flex-row items-center justify-between px-4 py-2">
+        <View className="flex-row items-center justify-between px-2 mb-2">
           <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
             <ChevronLeft color={isDarkMode ? "#fff" : "#000"} size={28} />
           </TouchableOpacity>
-          <Text className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+          <Text className={`text-2xl font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
             Edit Transaction
           </Text>
           <TouchableOpacity onPress={handleDelete} className="p-2 -mr-2">
@@ -217,8 +217,8 @@ const EditTransactionScreen = () => {
           className="flex-1"
         >
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 80 }}
-            className="flex-1 p-2"
+            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
+            className="flex-1"
             keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />

@@ -14,8 +14,8 @@ interface SummaryProps {
 export const DashboardSummary = ({ totalBalance, totalIncome, totalExpenses, currencySymbol }: SummaryProps) => {
   return (
         <View className=" flex-col  mb-2">
-            <View className="flex-1  rounded-2xl p-2 shadow-sm mb-3">
-                <Text className="text-textDark text-xl font-medium opacity-90 mb-2">Total Balance</Text>
+            <View className="flex-1  rounded-2xl p-2 shadow-sm mb-1">
+                <Text className="text-textDark text-2xl  font-semibold opacity-90">Total Balance</Text>
                 <View className="flex-row items-center">
                   <Text
                     style={{
