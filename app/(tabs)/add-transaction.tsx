@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Platform,
   RefreshControl,
   ScrollView,
@@ -148,13 +149,18 @@ const TransactionAdder = () => {
       <SafeAreaView className={isDarkMode ? "flex-1 bg-slate-950" : "flex-1 bg-gray-50"}>
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
-        <ScrollView 
-          contentContainerStyle={{ paddingBottom: 80 }}
-          className="flex-1 p-2"
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
-          }
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          className="flex-1"
         >
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 80 }}
+            className="flex-1 p-2"
+            keyboardShouldPersistTaps="handled"
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
+            }
+          >
           <TransactionHero
             transactionType={transactionType}
             setTransactionType={setTransactionType}
@@ -200,9 +206,10 @@ const TransactionAdder = () => {
         transactionType={transactionType}
       />
 
-        {/* Success animation */}
-        <SuccessModal visible={showSuccess} text="Transaction Added!" />
-        </ScrollView>
+          {/* Success animation */}
+          <SuccessModal visible={showSuccess} text="Transaction Added!" />
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
   );
 };

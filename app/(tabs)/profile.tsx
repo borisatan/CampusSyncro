@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import {
   Check,
@@ -7,8 +8,8 @@ import {
   LogOut,
   User
 } from "lucide-react-native";
-import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Custom Hooks & Utils
@@ -123,46 +124,43 @@ export default function ProfileScreen() {
           </Text>
 
           {/* Currency Selector */}
-          <View className={`rounded-2xl border overflow-hidden ${cardBg}`}>
-            <Pressable
+          <View className="mb-6">
+            <Text className={`text-sm mb-2 ${textSecondary}`}>
+              Currency
+            </Text>
+
+            <TouchableOpacity
               onPress={() => setShowCurrencyPicker(!showCurrencyPicker)}
-              className="flex-row items-center justify-between p-4 active:bg-slate-800/10"
+              activeOpacity={0.7}
+              className={`w-full px-4 py-3 rounded-xl flex-row justify-between items-center border ${cardBg}`}
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-indigo-500/20 rounded-lg items-center justify-center mr-3">
+                <View className="w-10 h-10 bg-indigo-500/20 rounded-xl items-center justify-center mr-3">
                   <Globe color="#818cf8" size={20} />
                 </View>
-                <View>
-                  <Text className={`font-medium ${textPrimary}`}>Currency</Text>
-                  <Text className={`text-sm ${textSecondary}`}>
-                    {selectedCurrency}
-                  </Text>
-                </View>
+                <Text className={textPrimary}>
+                  {currencies.find(c => c.code === selectedCurrency)?.name || selectedCurrency}
+                </Text>
               </View>
-              <View style={{ transform: [{ rotate: showCurrencyPicker ? '90deg' : '0deg' }] }}>
-                <ChevronRight color={isDarkMode ? "#94a3b8" : "#64748b"} size={20} />
-              </View>
-            </Pressable>
+              <Ionicons
+                name={showCurrencyPicker ? "chevron-up" : "chevron-down"}
+                size={20}
+                color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+              />
+            </TouchableOpacity>
 
             {showCurrencyPicker && (
-              <View className={`border-t ${isDarkMode ? 'border-borderDark' : 'border-borderLight'}`}>
-                {currencies.map((currency) => (
-                  <Pressable
+              <View className={`mt-2 rounded-xl overflow-hidden border ${cardBg}`}>
+                {currencies.map((currency, index) => (
+                  <AnimatedCurrencyRow
                     key={currency.code}
-                    onPress={() => handleCurrencyChange(currency.code)}
-                    className="flex-row items-center justify-between px-4 py-3 active:bg-slate-800/10"
-                  >
-                    <View className="flex-row items-center">
-                      <Text className={`text-xl mr-3 ${textPrimary}`}>{currency.symbol}</Text>
-                      <View>
-                        <Text className={`text-sm font-medium ${textPrimary}`}>{currency.name}</Text>
-                        <Text className={`text-xs ${textSecondary}`}>{currency.code}</Text>
-                      </View>
-                    </View>
-                    {selectedCurrency === currency.code && (
-                      <Check color="#818cf8" size={20} />
-                    )}
-                  </Pressable>
+                    currency={currency}
+                    index={index}
+                    isDarkMode={isDarkMode}
+                    isSelected={selectedCurrency === currency.code}
+                    onSelect={() => handleCurrencyChange(currency.code)}
+                    isLast={index === currencies.length - 1}
+                  />
                 ))}
               </View>
             )}
@@ -210,3 +208,69 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
+
+const AnimatedCurrencyRow = ({
+  currency,
+  index,
+  isDarkMode,
+  isSelected,
+  onSelect,
+  isLast,
+}: {
+  currency: { code: string; symbol: string; name: string };
+  index: number;
+  isDarkMode: boolean;
+  isSelected: boolean;
+  onSelect: () => void;
+  isLast: boolean;
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      <TouchableOpacity
+        onPress={onSelect}
+        className={`px-4 py-4 flex-row items-center justify-between ${
+          !isLast
+            ? isDarkMode ? 'border-b border-borderDark' : 'border-b border-borderLight'
+            : ''
+        } ${isSelected ? (isDarkMode ? 'bg-backgroundDark' : 'bg-backgroundMuted') : ''}`}
+      >
+        <View className="flex-row items-center">
+          <Text className={`text-xl mr-3 ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
+            {currency.symbol}
+          </Text>
+          <View>
+            <Text className={`font-medium ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
+              {currency.name}
+            </Text>
+            <Text className={`text-xs ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+              {currency.code}
+            </Text>
+          </View>
+        </View>
+        {isSelected && (
+          <Ionicons name="checkmark-circle" size={20} color={isDarkMode ? "#B2A4FF" : "#2563EB"} />
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};

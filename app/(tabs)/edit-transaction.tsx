@@ -3,6 +3,7 @@ import { ChevronLeft, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from "react";
 import {
     Alert,
+    KeyboardAvoidingView,
     Platform,
     RefreshControl,
     ScrollView,
@@ -211,14 +212,19 @@ const EditTransactionScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 80 }}
-          className="flex-1 p-2"
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
-          }
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          className="flex-1"
         >
-          <TransactionHero
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 80 }}
+            className="flex-1 p-2"
+            keyboardShouldPersistTaps="handled"
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
+            }
+          >
+            <TransactionHero
             transactionType={transactionType}
             setTransactionType={setTransactionType}
             amount={amount}
@@ -266,8 +272,9 @@ const EditTransactionScreen = () => {
             isSubmitting={isSaving}
           />
 
-          <SuccessModal visible={showSuccess} text="Transaction Updated!" />
-        </ScrollView>
+            <SuccessModal visible={showSuccess} text="Transaction Updated!" />
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
   );
 };

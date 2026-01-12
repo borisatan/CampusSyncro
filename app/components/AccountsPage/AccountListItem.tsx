@@ -1,7 +1,7 @@
 import { CreditCard, Edit2, MoreVertical, Trash2 } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Text, TouchableOpacity, View } from 'react-native';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 import { Easing } from 'react-native-reanimated';
 import { COLOR_MAP, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
@@ -63,23 +63,82 @@ export const AccountListItem = ({
       </View>
 
       {isMenuOpen && (
-        <View className={`${isDark ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'} rounded-lg mt-3 border overflow-hidden`}>
-          <TouchableOpacity 
-            className={`flex-row items-center px-4 py-3 ${isDark ? 'active:bg-borderDark' : 'active:bg-backgroundMuted'}`}
+        <View className={`${isDark ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'} rounded-xl mt-2 border overflow-hidden`}>
+          <AnimatedMenuRow
+            index={0}
+            isDark={isDark}
             onPress={() => onEdit(account)}
-          >
-            <Edit2 color={isDark ? "#D1D5DB" : "#4B5563"} size={16} />
-            <Text className={`text-sm ml-2 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            className={`flex-row items-center px-4 py-3 ${isDark ? 'active:bg-borderDark' : 'active:bg-backgroundMuted'}`}
+            icon={<Edit2 color={isDark ? "#D1D5DB" : "#4B5563"} size={16} />}
+            label="Edit"
+            isLast={false}
+          />
+          <AnimatedMenuRow
+            index={1}
+            isDark={isDark}
             onPress={() => onDelete(account.id)}
-          >
-            <Trash2 color="#EF4444" size={16} />
-            <Text className="text-accentRed text-sm ml-2">Delete</Text>
-          </TouchableOpacity>
+            icon={<Trash2 color="#EF4444" size={16} />}
+            label="Delete"
+            labelColor="text-accentRed"
+            isLast={true}
+          />
         </View>
       )}
     </MotiView>
+  );
+};
+
+const AnimatedMenuRow = ({
+  index,
+  isDark,
+  onPress,
+  icon,
+  label,
+  labelColor,
+  isLast,
+}: {
+  index: number;
+  isDark: boolean;
+  onPress: () => void;
+  icon: React.ReactNode;
+  label: string;
+  labelColor?: string;
+  isLast: boolean;
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      <TouchableOpacity
+        onPress={onPress}
+        className={`px-4 py-4 flex-row items-center ${
+          !isLast
+            ? isDark ? 'border-b border-borderDark' : 'border-b border-borderLight'
+            : ''
+        }`}
+      >
+        {icon}
+        <Text className={`text-sm ml-3 font-medium ${labelColor || (isDark ? 'text-textDark' : 'text-textLight')}`}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
