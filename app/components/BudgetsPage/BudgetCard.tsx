@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { BudgetWithSpent } from '../../types/types';
@@ -8,6 +9,7 @@ interface BudgetCardProps {
   budget: BudgetWithSpent;
   currencySymbol: string;
   onPress: () => void;
+  index?: number;
 }
 
 const formatAmount = (amount: number, symbol: string): string => {
@@ -42,11 +44,12 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({
   budget,
   currencySymbol,
   onPress,
+  index = 0,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { name, color, spent, limit, percentage_used, categories, amount_type, amount, period_type } = budget;
 
-  
+
   const spentColor = getStatusColor(-percentage_used);
   const statusInfo = getStatusLabel(-percentage_used);
 
@@ -55,7 +58,12 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({
   };
 
   return (
-    <View className="bg-surfaceDark border border-borderDark rounded-2xl overflow-hidden">
+    <MotiView
+      from={{ opacity: 0, translateY: 15 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 400, delay: 150 + index * 100 }}
+    >
+      <View className="bg-surfaceDark border border-borderDark rounded-2xl overflow-hidden">
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.7}
@@ -141,6 +149,7 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({
           )}
         </View>
       )}
-    </View>
+      </View>
+    </MotiView>
   );
 };

@@ -57,26 +57,26 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   };
 
   return (
-    <View className="mb-6">
-      <Text className={`text-sm mb-3 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Period</Text>
+    <View className="mb-4">
+      <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Period</Text>
 
-      {/* Period toggle buttons */}
-      <View className="flex-row gap-2 mb-4">
+      {/* Period toggle */}
+      <View className={`${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'} rounded-2xl p-1 flex-row mb-3`}>
         {PERIODS.map((period) => (
           <TouchableOpacity
             key={period.value}
             onPress={() => onPeriodSelect(period.value)}
-            className={`flex-1 py-3 rounded-xl items-center border ${
+            className={`flex-1 py-3 rounded-xl ${
               selectedPeriod === period.value
-                ? 'bg-accentBlue border-accentBlue'
-                : isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'
+                ? isDarkMode ? 'bg-accentBlue' : 'bg-white'
+                : ''
             }`}
           >
             <Text
-              className={`font-medium ${
+              className={`text-center ${
                 selectedPeriod === period.value
-                  ? 'text-white'
-                  : isDarkMode ? 'text-slate-300' : 'text-gray-700'
+                  ? isDarkMode ? 'text-white' : 'text-gray-900'
+                  : isDarkMode ? 'text-slate-400' : 'text-gray-600'
               }`}
             >
               {period.label}

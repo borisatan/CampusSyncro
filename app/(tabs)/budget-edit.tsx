@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronDown, ChevronLeft, ChevronUp, Trash2 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -72,11 +73,11 @@ export default function EditBudgetScreen() {
   );
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
 
-  // Compute available sort order positions
+  // Compute available sort order positions (0-indexed internally, displayed as 1-indexed)
   const sortOrderOptions = Array.from(
-  { length: budgetId ? budgets.length : budgets.length + 1 },
-  (_, i) => i + 1 
-);
+    { length: budgetId ? budgets.length : budgets.length + 1 },
+    (_, i) => i
+  );
 
   // Load data on mount
   useEffect(() => {
@@ -202,7 +203,7 @@ export default function EditBudgetScreen() {
       }
 
       await loadBudgets();
-      router.back();
+      router.replace('/budgets');
     } catch (error) {
       console.error('Error saving budget:', error);
       Alert.alert('Error', 'Failed to save budget');
@@ -236,7 +237,7 @@ export default function EditBudgetScreen() {
               await deleteBudget(budgetId);
               deleteBudgetOptimistic(budgetId);
               await loadBudgets();
-              router.back();
+              router.replace('/budgets');
             } catch (error) {
               console.error('Error deleting budget:', error);
               Alert.alert('Error', 'Failed to delete budget');
@@ -257,13 +258,7 @@ export default function EditBudgetScreen() {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-2 py-3">
-          <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
-            <ChevronLeft
-              size={28}
-              color={isDarkMode ? '#FFFFFF' : '#000000'}
-            />
-          </TouchableOpacity>
-          <Text className={`text-xl font-semibold ${textPrimary}`}>
+          <Text className={`text-2xl font-semibold ${textPrimary}`}>
             {budgetId ? 'Edit Budget' : 'Create Budget'}
           </Text>
           {budgetId ? (
@@ -277,28 +272,11 @@ export default function EditBudgetScreen() {
 
         <ScrollView
           className="flex-1 px-2"
-          contentContainerStyle={{ paddingBottom: 100, paddingTop: 16 }}
+          contentContainerStyle={{ paddingBottom: 80, paddingTop: 8 }}
         >
-          {/* Budget Name */}
-          <View className="mb-6">
-            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Budget Name</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="e.g., Food & Dining"
-              placeholderTextColor={isDarkMode ? '#475569' : '#9ca3af'}
-              className={`w-full px-4 py-3 rounded-xl border ${
-                isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            />
-          </View>
-
-          {/* Color Picker */}
-          <ColorPicker selectedColor={color} onColorSelect={setColor} isDarkMode={isDarkMode} />
-
           {/* Amount Type Toggle */}
-          <View className="mb-6">
-            <Text className={`text-sm mb-3 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Budget Type</Text>
+          <View className="mb-4">
+            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Budget Type</Text>
             <View className={`${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'} rounded-2xl p-1 flex-row`}>
               <TouchableOpacity
                 onPress={() => setAmountType('money_amount')}
@@ -339,8 +317,22 @@ export default function EditBudgetScreen() {
             </View>
           </View>
 
+          {/* Budget Name */}
+          <View className="mb-4">
+            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Budget Name</Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="e.g., Food & Dining"
+              placeholderTextColor={isDarkMode ? '#475569' : '#9ca3af'}
+              className={`w-full px-4 py-3 rounded-xl border ${
+                isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </View>
+
           {/* Amount Input */}
-          <View className="mb-6">
+          <View className="mb-4">
             <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
               {amountType === 'money_amount' ? 'Amount' : 'Percentage of Income'}
             </Text>
@@ -361,6 +353,8 @@ export default function EditBudgetScreen() {
             </View>
           </View>
 
+            {/* Color Picker */}
+            <ColorPicker selectedColor={color} onColorSelect={setColor} isDarkMode={isDarkMode} />
           {/* Period Selector */}
           <PeriodSelector
             selectedPeriod={periodType}
@@ -372,7 +366,7 @@ export default function EditBudgetScreen() {
           />
 
           {/* Display Order Picker */}
-          <View className="mb-6">
+          <View className="mb-4">
             <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
               Display Order
             </Text>
@@ -399,26 +393,18 @@ export default function EditBudgetScreen() {
               }`}>
                 <ScrollView className="max-h-60" nestedScrollEnabled={true}>
                   {sortOrderOptions.map((option, index) => (
-                    <TouchableOpacity
+                    <AnimatedPositionRow
                       key={option}
-                      onPress={() => {
-                        setSortOrder(option);
+                      position={option}
+                      index={index}
+                      isDarkMode={isDarkMode}
+                      isSelected={sortOrder === option}
+                      onSelect={(pos) => {
+                        setSortOrder(pos);
                         setShowSortOrderPicker(false);
                       }}
-                      className={`px-4 py-3 ${
-                        index !== sortOrderOptions.length - 1
-                          ? isDarkMode ? 'border-b border-slate-700' : 'border-b border-gray-200'
-                          : ''
-                      } ${sortOrder === option ? (isDarkMode ? 'bg-slate-700' : 'bg-gray-100') : ''}`}
-                    >
-                      <Text className={`${
-                        sortOrder === option
-                          ? 'text-accentBlue font-medium'
-                          : isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        Position {option + 1}
-                      </Text>
-                    </TouchableOpacity>
+                      isLast={index === sortOrderOptions.length - 1}
+                    />
                   ))}
                 </ScrollView>
               </View>
@@ -428,6 +414,7 @@ export default function EditBudgetScreen() {
               Lower numbers appear first in the budget list
             </Text>
           </View>
+
 
           {/* Category Selector */}
           <CategorySelector
@@ -442,7 +429,7 @@ export default function EditBudgetScreen() {
           <TouchableOpacity
             onPress={handleSave}
             disabled={isSaving}
-            className="bg-accentBlue rounded-xl py-4 mt-6 items-center"
+            className="bg-accentTeal rounded-xl py-4 mt-4 items-center"
           >
             <Text className="text-white font-semibold text-lg">
               {isSaving ? 'Saving...' : budgetId ? 'Update Budget' : 'Create Budget'}
@@ -453,3 +440,60 @@ export default function EditBudgetScreen() {
     </SafeAreaView>
   );
 }
+
+const AnimatedPositionRow = ({
+  position,
+  index,
+  isDarkMode,
+  isSelected,
+  onSelect,
+  isLast,
+}: {
+  position: number;
+  index: number;
+  isDarkMode: boolean;
+  isSelected: boolean;
+  onSelect: (pos: number) => void;
+  isLast: boolean;
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      <TouchableOpacity
+        onPress={() => onSelect(position)}
+        className={`px-4 py-3 ${
+          !isLast
+            ? isDarkMode ? 'border-b border-slate-700' : 'border-b border-gray-200'
+            : ''
+        } ${isSelected ? (isDarkMode ? 'bg-slate-700' : 'bg-gray-100') : ''}`}
+      >
+        <Text className={`${
+          isSelected
+            ? 'text-accentBlue font-medium'
+            : isDarkMode ? 'text-white' : 'text-gray-900'
+        }`}>
+          Position {position + 1}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};

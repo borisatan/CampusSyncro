@@ -93,7 +93,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               <View>
                 <Text className="text-2xl font-bold  text-textDark">Filter Transactions</Text>
                 {activeFiltersCount > 0 && (
-                  <Text className="text-accentBlue text-sm font-bold uppercase tracking-[2px] mt-2">
+                  <Text className="text-accentTeal text-sm font-bold uppercase tracking-[2px] mt-2">
                     {activeFiltersCount} active filters
                   </Text>
                 )}
@@ -120,11 +120,16 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     className="flex-row items-center justify-between px-6 py-5"
                   >
                     <View className="flex-row items-center gap-x-3">
-                      <Ionicons 
-                        name={filterType === 'all' ? 'layers' : filterType === 'income' ? 'arrow-down-circle' : 'arrow-up-circle'} 
-                        size={22} 
-                        color="#2563EB" 
-                      />
+                      <View className={`w-9 h-9 rounded-lg items-center justify-center ${
+                        filterType === 'income' ? 'bg-accentTeal' :
+                        filterType === 'expense' ? 'bg-accentRed' : 'bg-accentBlue'
+                      }`}>
+                        <Ionicons
+                          name={filterType === 'all' ? 'layers' : filterType === 'income' ? 'arrow-down-circle' : 'arrow-up-circle'}
+                          size={20}
+                          color="#FFFFFF"
+                        />
+                      </View>
                       <Text className="text-lg font-bold text-textDark capitalize">
                         {filterType}
                       </Text>

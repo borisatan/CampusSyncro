@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { AlertCircle, ChevronRight } from 'lucide-react-native';
+import { MotiView } from 'moti';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -8,6 +9,7 @@ import { BudgetWithSpent } from '../../types/types';
 interface BudgetHealthCardProps {
   budgets: BudgetWithSpent[];
   currencySymbol: string;
+  isLoading?: boolean;
 }
 
 const formatAmount = (amount: number, symbol: string): string => {
@@ -20,27 +22,39 @@ const formatAmount = (amount: number, symbol: string): string => {
 export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
   budgets,
   currencySymbol,
+  isLoading = false,
 }) => {
   const router = useRouter();
 
   // Only show monthly budgets for the dashboard view
   const monthlyBudgets = budgets.filter((b) => b.period_type === 'monthly');
 
+  // Show nothing while loading to prevent flash of "No budget" message
+  if (isLoading) {
+    return null;
+  }
+
   if (monthlyBudgets.length === 0) {
     return (
-      <TouchableOpacity
-        onPress={() => router.push('/budgets')}
-        className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6"
-        activeOpacity={0.7}
+      <MotiView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 400 }}
       >
-        <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-white text-xl font-bold">Budget Health</Text>
-          <ChevronRight size={20} color="#94a3b8" />
-        </View>
-        <Text className="text-slate-400 text-sm">
-          No budget set up yet. Tap to create one.
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push('/budgets')}
+          className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6"
+          activeOpacity={0.7}
+        >
+          <View className="flex-row items-center justify-between mb-2">
+            <Text className="text-white text-xl font-bold">Budget Health</Text>
+            <ChevronRight size={20} color="#94a3b8" />
+          </View>
+          <Text className="text-slate-400 text-sm">
+            No budget set up yet. Tap to create one.
+          </Text>
+        </TouchableOpacity>
+      </MotiView>
     );
   }
 
@@ -48,12 +62,17 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
   const totalLimit = monthlyBudgets.reduce((sum, b) => sum + b.limit, 0);
 
   return (
-    <TouchableOpacity
-      onPress={() => router.push('/budgets')}
-      className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6"
-      activeOpacity={0.7}
+    <MotiView
+      from={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ type: 'timing', duration: 400 }}
     >
-      {/* Header */}
+      <TouchableOpacity
+        onPress={() => router.push('/budgets')}
+        className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6"
+        activeOpacity={0.7}
+      >
+        {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-white text-xl font-bold">Budget Health</Text>
         <View className="flex-row items-center">
@@ -83,7 +102,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                     className="w-4 h-4 rounded-full border border-slate-600"
                     style={{ backgroundColor: budget.color }}
                   />
-                  <Text className="text-base text-slate-300">{budget.name}</Text>
+                  <Text className="text-base text-textDark">{budget.name}</Text>
                 </View>
                 <View className="flex-row items-center gap-2">
                   <Text
@@ -92,7 +111,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                         ? 'text-rose-400'
                         : isWarning
                         ? 'text-yellow-400'
-                        : 'text-slate-400'
+                        : 'text-textDark'
                     }`}
                   >
                     {formatAmount(spentAbs, currencySymbol)} /{' '}
@@ -124,7 +143,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
 
               {/* Footer Stats */}
               <View className="flex-row justify-between mt-1">
-                <Text className="text-sm text-slate-500">
+                <Text className="text-sm text-textDark">
                   {formatAmount(remaining, currencySymbol)} left
                 </Text>
                 <Text
@@ -162,7 +181,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                       ? 'text-rose-400'
                       : totalIsWarning
                       ? 'text-yellow-400'
-                      : 'text-slate-400'
+                      : 'text-textDark'
                   }`}
                 >
                   {formatAmount(totalSpent, currencySymbol)} /{' '}
@@ -200,23 +219,23 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
             {/* Footer Stats */}
             <View className="flex-row justify-between mt-1">
               <Text
-                className={`text-xs ${
+                className={`text-sm ${
                   totalIsOver
                     ? 'text-rose-400'
                     : totalIsWarning
                     ? 'text-yellow-400'
-                    : 'text-emerald-400'
+                    : 'text-accentTeal'
                 }`}
               >
                 {formatAmount(totalRemaining, currencySymbol)} left
               </Text>
               <Text
-                className={`text-xs ${
+                className={`text-sm ${
                   totalIsOver
                     ? 'text-rose-400'
                     : totalIsWarning
                     ? 'text-yellow-400'
-                    : 'text-slate-500'
+                    : 'text-accentTeal'
                 }`}
               >
                 {Math.round(totalPercentage)}%
@@ -225,6 +244,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
           </View>
         );
       })()}
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </MotiView>
   );
 };

@@ -40,7 +40,7 @@ export default function Dashboard() {
     chartData
   } = useDashboardData('month');
 
-  const { budgetsWithSpent, refresh: refreshBudgets } = useBudgetsData();
+  const { budgetsWithSpent, isLoading: budgetsLoading, refresh: refreshBudgets } = useBudgetsData();
 
   const { registerDashboardRefresh } = useDataRefresh();
 
@@ -97,7 +97,7 @@ export default function Dashboard() {
             totalExpenses={totalExpenses} 
             currencySymbol={currencySymbol} 
           />
-
+            
           <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
           <SpendingTrendChart
@@ -107,16 +107,18 @@ export default function Dashboard() {
             currencySymbol={currencySymbol}
           />
 
-          <BudgetHealthCard
-            budgets={budgetsWithSpent}
-            currencySymbol={currencySymbol}
-          />
 
           <CategoryDonut
             aggregates={categoriesAggregated} 
             categories={categories} 
             timeFrame={timeFrame} 
           />
+
+            <BudgetHealthCard
+              budgets={budgetsWithSpent}
+              currencySymbol={currencySymbol}
+              isLoading={budgetsLoading}
+            />
 
           <CategoryBreakdownList
             currency={currencySymbol} 

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Plus } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
+import { MotiView } from 'moti';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -52,19 +53,13 @@ export default function BudgetsScreen() {
   return (
     <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-2 py-3">
-        <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mr-3 p-1"
-          >
-            <ChevronLeft
-              size={28}
-              color={isDarkMode ? '#FFFFFF' : '#000000'}
-            />
-          </TouchableOpacity>
+      <View className="flex-row items-center justify-between px-2 py-2">
+        <View className="flex-col">
           <Text className={`text-2xl font-semibold ${textPrimary}`}>
             Budgets
+          </Text>
+          <Text className={`text-md mt-1 mb-3 ${textSecondary}`}>
+            Set spending limits
           </Text>
         </View>
         <TouchableOpacity
@@ -92,35 +87,47 @@ export default function BudgetsScreen() {
           }
         >
           {/* Income Card */}
-          <IncomeCard
-            income={monthlyIncome}
-            allocatedPercentage={allocatedPercentage}
-            currencySymbol={currencySymbol}
-            useDynamicIncome={useDynamicIncome}
-            manualIncome={manualIncome}
-            dynamicIncome={dynamicIncome}
-            isDarkMode={isDarkMode}
-            onSave={handleSaveIncome}
-          />
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400 }}
+          >
+            <IncomeCard
+              income={monthlyIncome}
+              allocatedPercentage={allocatedPercentage}
+              currencySymbol={currencySymbol}
+              useDynamicIncome={useDynamicIncome}
+              manualIncome={manualIncome}
+              dynamicIncome={dynamicIncome}
+              isDarkMode={isDarkMode}
+              onSave={handleSaveIncome}
+            />
+          </MotiView>
 
           {/* Budgets List */}
           {budgetsWithSpent.length === 0 ? (
-            <View className="items-center justify-center py-12">
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ type: 'timing', duration: 400, delay: 200 }}
+              className="items-center justify-center py-12"
+            >
               <Text className={`text-lg ${textSecondary}`}>
                 No budgets yet
               </Text>
               <Text className={`text-sm ${textSecondary} mt-2 text-center`}>
                 Tap the + button to create your first budget
               </Text>
-            </View>
+            </MotiView>
           ) : (
             <View className="gap-4">
-              {budgetsWithSpent.map((budget) => (
+              {budgetsWithSpent.map((budget, index) => (
                 <BudgetCard
                   key={budget.id}
                   budget={budget}
                   currencySymbol={currencySymbol}
                   onPress={() => handleEditBudget(budget.id)}
+                  index={index}
                 />
               ))}
             </View>

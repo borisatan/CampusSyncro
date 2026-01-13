@@ -131,7 +131,7 @@ const EditTransactionScreen = () => {
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
-        router.back();
+        router.replace('/transaction-list');
       }, 1900);
 
       // Make API calls in background
@@ -174,7 +174,7 @@ const EditTransactionScreen = () => {
               updateAccountBalanceStore(transaction.account_name, acc.balance - transaction.amount);
             }
 
-            router.back();
+            router.replace('/transaction-list');
 
             // Make API calls in background
             await deleteTransaction(transaction.id, userId);
@@ -201,7 +201,7 @@ const EditTransactionScreen = () => {
 
         {/* Header with Back and Delete */}
         <View className="flex-row items-center justify-between px-2 mb-2">
-          <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
+          <TouchableOpacity onPress={() => router.replace('/transaction-list')} className="p-2 -ml-2">
             <ChevronLeft color={isDarkMode ? "#fff" : "#000"} size={28} />
           </TouchableOpacity>
           <Text className={`text-2xl font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>

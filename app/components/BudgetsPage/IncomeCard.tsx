@@ -1,20 +1,47 @@
-import { ChevronDown, ChevronUp, Edit2 } from 'lucide-react-native';
-import React, { useState, useEffect } from 'react';
+import { ChevronUp, Edit2 } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
+  LayoutAnimation,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Switch,
-  LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
 
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+// Animated wrapper for staggered fade-in effect
+const AnimatedRow: React.FC<{ index: number; children: React.ReactNode }> = ({
+  index,
+  children,
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      {children}
+    </Animated.View>
+  );
+};
+
 
 interface IncomeCardProps {
   income: number;
@@ -78,7 +105,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   };
 
   return (
-    <View className="bg-accentPurple rounded-2xl p-5 mb-4">
+    <View className="bg-accentBlue rounded-2xl p-5 mb-4">
       {/* Header with edit button */}
       <View className="flex-row items-center justify-between mb-1">
         <Text className="text-white/90 text-sm">Total Monthly Income</Text>
@@ -115,71 +142,79 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
 
       {/* Expanded Editor Section */}
       {isExpanded && (
-        <View className="mt-5 pt-5 border-t border-white/20">
+        <View className="mt-5 pt-5 border border-borderDark bg-surfaceDark -mx-5 px-5 -mb-5 pb-5 rounded-b-2xl">
           {/* Income Source Toggle */}
-          <View className="mb-4">
-            <Text className="text-white/70 text-sm mb-2">Income Source</Text>
-            <View className="flex-row items-center justify-between p-4 rounded-xl bg-white/10">
-              <View className="flex-1 mr-3">
-                <Text className="text-white font-medium">Use Dynamic Income</Text>
-                <Text className="text-white/60 text-xs mt-1">
-                  Calculate from Income transactions
-                </Text>
+          <AnimatedRow index={0}>
+            <View className="mb-4">
+              <Text className="text-white text-sm mb-2">Income Source</Text>
+              <View className="flex-row items-center justify-between p-4 rounded-xl border border-borderDark bg-surfaceDark">
+                <View className="flex-1 mr-3">
+                  <Text className="text-white font-medium">Use Dynamic Income</Text>
+                  <Text className="text-white/60 text-xs mt-1">
+                    Calculate from Income transactions
+                  </Text>
+                </View>
+                <Switch
+                  value={localUseDynamic}
+                  onValueChange={setLocalUseDynamic}
+                  trackColor={{ false: 'rgba(255,255,255,0.2)', true: '#2563EB' }}
+                  thumbColor="#FFFFFF"
+                />
               </View>
-              <Switch
-                value={localUseDynamic}
-                onValueChange={setLocalUseDynamic}
-                trackColor={{ false: 'rgba(255,255,255,0.2)', true: '#2563EB' }}
-                thumbColor="#FFFFFF"
-              />
             </View>
-          </View>
+          </AnimatedRow>
 
           {/* Dynamic Income Display */}
           {localUseDynamic && (
-            <View className="mb-4 p-4 rounded-xl bg-white/10">
-              <Text className="text-white/70 text-sm">Current Month Income</Text>
-              <Text className="text-white text-2xl font-bold mt-1">
-                {formatAmount(dynamicIncome, currencySymbol)}
-              </Text>
-              <Text className="text-white/50 text-xs mt-2 italic">
-                Based on transactions in the Income category this month
-              </Text>
-            </View>
+            <AnimatedRow index={1}>
+              <View className="mb-4 p-4 rounded-xl border border-borderDark bg-surfaceDark">
+                <Text className="text-white/70 text-sm">Current Month Income</Text>
+                <Text className="text-white text-2xl font-bold mt-1">
+                  {formatAmount(dynamicIncome, currencySymbol)}
+                </Text>
+                <Text className="text-white/50 text-xs mt-2 italic">
+                  Based on transactions in the Income category this month
+                </Text>
+              </View>
+            </AnimatedRow>
           )}
 
           {/* Manual Income Input */}
           {!localUseDynamic && (
-            <View className="mb-4">
-              <Text className="text-white/70 text-sm mb-2">
-                Manual Income Amount
-              </Text>
-              <View className="flex-row items-center px-4 py-3 rounded-xl bg-white/10">
-                <Text className="text-white/70 text-lg mr-2">
-                  {currencySymbol}
+            <AnimatedRow index={1}>
+              <View className="mb-4">
+                <Text className="text-white text-sm mb-2">
+                  Income Amount
                 </Text>
-                <TextInput
-                  value={localManualIncome}
-                  onChangeText={setLocalManualIncome}
-                  placeholder="0"
-                  placeholderTextColor="rgba(255,255,255,0.4)"
-                  keyboardType="decimal-pad"
-                  className="flex-1 text-lg text-white"
-                />
+                <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark">
+                  <Text className="text-white/70 text-lg mr-2">
+                    {currencySymbol}
+                  </Text>
+                  <TextInput
+                    value={localManualIncome}
+                    onChangeText={setLocalManualIncome}
+                    placeholder="0"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    keyboardType="decimal-pad"
+                    className="flex-1 text-lg text-white"
+                  />
+                </View>
               </View>
-            </View>
+            </AnimatedRow>
           )}
 
           {/* Save Button */}
-          <TouchableOpacity
-            onPress={handleSave}
-            className="w-full py-3 rounded-xl items-center bg-white/20"
-            activeOpacity={0.7}
-          >
-            <Text className="text-white font-semibold text-base">
-              Save Changes
-            </Text>
-          </TouchableOpacity>
+          <AnimatedRow index={2}>
+            <TouchableOpacity
+              onPress={handleSave}
+              className="w-full py-3 rounded-xl items-center bg-accentTeal mt-2"
+              activeOpacity={0.7}
+            >
+              <Text className="text-textDark font-semibold text-base">
+                Save Changes
+              </Text>
+            </TouchableOpacity>
+          </AnimatedRow>
         </View>
       )}
     </View>
