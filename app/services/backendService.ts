@@ -436,7 +436,7 @@ export const fetchBudgets = async (): Promise<Budget[]> => {
   const { data, error } = await supabase
     .from('Budgets')
     .select('*')
-    .order('created_at', { ascending: true });
+    .order('sort_order', { ascending: true, nullsFirst: false });
 
   if (error) throw error;
   return data ?? [];
@@ -530,4 +530,80 @@ export const fetchBudgetSpending = async (
   if (error) throw error;
 
   return data?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
+};
+
+export const updateBudgetSortOrder = async (budgetId: number, newSortOrder: number) => {
+  const { data, error } = await supabase
+    .from('Budgets')
+    .update({ sort_order: newSortOrder })
+    .eq('id', budgetId)
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
+export const reorderBudgetPosition = async (
+  budgetId: number,
+  oldPosition: number,
+  newPosition: number,
+  allBudgets: { id: number; sort_order?: number }[]
+) => {
+  if (oldPosition === newPosition) return;
+
+  const updates: { id: number; sort_order: number }[] = [];
+
+  if (newPosition < oldPosition) {
+    // Moving up: shift budgets between newPosition and oldPosition-1 down by 1
+    for (const budget of allBudgets) {
+      const pos = budget.sort_order ?? 0;
+      if (budget.id === budgetId) {
+        updates.push({ id: budget.id, sort_order: newPosition });
+      } else if (pos >= newPosition && pos < oldPosition) {
+        updates.push({ id: budget.id, sort_order: pos + 1 });
+      }
+    }
+  } else {
+    // Moving down: shift budgets between oldPosition+1 and newPosition up by 1
+    for (const budget of allBudgets) {
+      const pos = budget.sort_order ?? 0;
+      if (budget.id === budgetId) {
+        updates.push({ id: budget.id, sort_order: newPosition });
+      } else if (pos > oldPosition && pos <= newPosition) {
+        updates.push({ id: budget.id, sort_order: pos - 1 });
+      }
+    }
+  }
+
+  if (updates.length > 0) {
+    await updateBudgetsOrder(updates);
+  }
+};
+
+export const shiftBudgetsForInsert = async (
+  insertPosition: number,
+  allBudgets: { id: number; sort_order?: number }[]
+) => {
+  // Shift all budgets at insertPosition or higher by +1 to make room
+  const updates: { id: number; sort_order: number }[] = [];
+
+  for (const budget of allBudgets) {
+    const pos = budget.sort_order ?? 0;
+    if (pos >= insertPosition) {
+      updates.push({ id: budget.id, sort_order: pos + 1 });
+    }
+  }
+
+  if (updates.length > 0) {
+    await updateBudgetsOrder(updates);
+  }
+};
+
+export const updateBudgetsOrder = async (budgets: { id: number; sort_order: number }[]) => {
+  const updates = budgets.map(({ id, sort_order }) =>
+    supabase.from('Budgets').update({ sort_order }).eq('id', id)
+  );
+  const results = await Promise.all(updates);
+  const error = results.find(r => r.error)?.error;
+  if (error) throw error;
 };

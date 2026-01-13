@@ -80,10 +80,10 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
               <View className="flex-row items-center justify-between mb-2">
                 <View className="flex-row items-center gap-2">
                   <View
-                    className="w-3 h-3 rounded-full border border-slate-600"
+                    className="w-4 h-4 rounded-full border border-slate-600"
                     style={{ backgroundColor: budget.color }}
                   />
-                  <Text className="text-sm text-slate-300">{budget.name}</Text>
+                  <Text className="text-base text-slate-300">{budget.name}</Text>
                 </View>
                 <View className="flex-row items-center gap-2">
                   <Text
@@ -106,13 +106,14 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
               </View>
 
               {/* Progress Bar */}
-              <View className="h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+              <View className="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
                 <View
                   style={{
                     height: '100%',
                     width: `${Math.min(Math.max(percentage, 0), 100)}%`,
                     borderRadius: 9999,
-                    backgroundColor: isOver
+                    backgroundColor: 
+                    isOver
                       ? '#f43f5e'
                       : isWarning
                       ? '#eab308'
@@ -123,16 +124,16 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
 
               {/* Footer Stats */}
               <View className="flex-row justify-between mt-1">
-                <Text className="text-xs text-slate-500">
+                <Text className="text-sm text-slate-500">
                   {formatAmount(remaining, currencySymbol)} left
                 </Text>
                 <Text
-                  className={`text-xs ${
+                  className={`text-sm ${
                     isOver
                       ? 'text-rose-400'
                       : isWarning
                       ? 'text-yellow-400'
-                      : 'text-slate-500'
+                      : 'text-accentTeal'
                   }`}
                 >
                   {Math.round(percentage)}%
@@ -175,13 +176,12 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
             </View>
 
             {/* Stacked Progress Bar */}
-            <View className="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+            <View className="h-5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
               <View className="flex-row h-full">
                 {monthlyBudgets.map((budget) => {
                   const budgetSpentAbs = Math.abs(budget.spent);
                   const widthPercent =
                     totalLimit > 0 ? (budgetSpentAbs / totalLimit) * 100 : 0;
-                  const isOver = budgetSpentAbs > budget.limit;
 
                   return (
                     <View
@@ -189,7 +189,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                       style={{
                         height: '100%',
                         width: `${Math.min(Math.max(widthPercent, 0), 100)}%`,
-                        backgroundColor: isOver ? '#f43f5e' : budget.color,
+                        backgroundColor: budget.color,
                       }}
                     />
                   );

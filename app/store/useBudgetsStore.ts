@@ -10,6 +10,7 @@ interface BudgetsState {
   addBudgetOptimistic: (budget: Budget) => void;
   updateBudgetOptimistic: (id: number, updates: Partial<Budget>) => void;
   deleteBudgetOptimistic: (id: number) => void;
+  reorderBudgets: (reorderedBudgets: Budget[]) => void;
 }
 
 export const useBudgetsStore = create<BudgetsState>((set) => ({
@@ -20,7 +21,11 @@ export const useBudgetsStore = create<BudgetsState>((set) => ({
     try {
       set({ isLoading: true });
       const data = await fetchBudgets();
-      set({ budgets: data, isLoading: false });
+      // Sort by sort_order if available, otherwise by id
+      const sorted = [...data].sort((a, b) =>
+        (a.sort_order ?? a.id) - (b.sort_order ?? b.id)
+      );
+      set({ budgets: sorted, isLoading: false });
     } catch (error) {
       console.error('Error loading budgets:', error);
       set({ isLoading: false });
@@ -43,4 +48,7 @@ export const useBudgetsStore = create<BudgetsState>((set) => ({
     set((state) => ({
       budgets: state.budgets.filter((budget) => budget.id !== id),
     })),
+
+  reorderBudgets: (reorderedBudgets) =>
+    set({ budgets: reorderedBudgets }),
 }));

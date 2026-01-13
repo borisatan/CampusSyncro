@@ -92,6 +92,7 @@ export interface Budget {
   use_dynamic_income: boolean;
   created_at: string;
   updated_at: string;
+  sort_order?: number;
 }
 
 export interface BudgetWithSpent extends Budget {

@@ -52,7 +52,7 @@ export default function BudgetsScreen() {
   return (
     <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3">
+      <View className="flex-row items-center justify-between px-2 py-3">
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -81,7 +81,7 @@ export default function BudgetsScreen() {
         </View>
       ) : (
         <ScrollView
-          className="flex-1 px-4"
+          className="flex-1 px-2"
           contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
             <RefreshControl
