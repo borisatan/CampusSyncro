@@ -3,16 +3,18 @@ import { useRouter } from 'expo-router';
 import {
   ChevronRight,
   Download,
+  Fingerprint,
   Globe,
   LogOut,
   User,
   Wallet
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Pressable, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Custom Hooks & Utils
+import { useLock } from '../context/LockContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrencyStore } from '../store/useCurrencyStore';
 import { supabase } from '../utils/supabase';
@@ -27,7 +29,8 @@ const currencies = [
 export default function ProfileScreen() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
-  
+  const { isAppLockEnabled, biometricAvailable, setAppLockEnabled } = useLock();
+
   // State
   const [email, setEmail] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -98,7 +101,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 8 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16 }}>
 
         {/* Header */}
         <View className="mb-6">
@@ -177,9 +180,9 @@ export default function ProfileScreen() {
           </Pressable>
 
           {/* Export CSV Button */}
-          <Pressable
+          {/* <Pressable
             onPress={handleExportCSV}
-            className={`flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 active:bg-slate-800/10 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-emerald-500/20 rounded-lg items-center justify-center mr-3">
               <Download color="#34d399" size={20} />
@@ -188,7 +191,26 @@ export default function ProfileScreen() {
               <Text className={`font-medium ${textPrimary}`}>Export Transactions </Text>
               <Text className={`text-sm ${textSecondary}`}>Download as CSV file</Text>
             </View>
-          </Pressable>
+          </Pressable> */}
+
+          {/* App Lock Toggle */}
+          {biometricAvailable && (
+            <View className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}>
+              <View className="w-10 h-10 bg-rose-500/20 rounded-lg items-center justify-center mr-3">
+                <Fingerprint color="#f43f5e" size={20} />
+              </View>
+              <View className="flex-1">
+                <Text className={`font-medium ${textPrimary}`}>App Lock</Text>
+                <Text className={`text-sm ${textSecondary}`}>Require biometrics to open app</Text>
+              </View>
+              <Switch
+                value={isAppLockEnabled}
+                onValueChange={setAppLockEnabled}
+                trackColor={{ false: '#3f3f46', true: '#4f46e5' }}
+                thumbColor={isAppLockEnabled ? '#818cf8' : '#a1a1aa'}
+              />
+            </View>
+          )}
         </View>
 
         {/* Account Section */}

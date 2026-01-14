@@ -140,7 +140,7 @@ export default function Accounts() {
           className="flex-1" 
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />}
         >
-          <View className="px-2" style={{ paddingBottom: insets.bottom + 20 }}>
+          <View className="px-4" style={{ paddingBottom: insets.bottom + 20 }}>
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6">
               <View>

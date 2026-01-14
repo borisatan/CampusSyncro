@@ -71,7 +71,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
 
 export default TransactionsList;
 
-const AnimatedTransactionItem = React.memo(({
+const AnimatedTransactionItem = React.memo(function AnimatedTransactionItem({
   transaction,
   categoryIcons,
   onLongPress,
@@ -79,7 +79,7 @@ const AnimatedTransactionItem = React.memo(({
   transaction: any;
   categoryIcons: Record<string, CategoryIconInfo>;
   onLongPress?: (id: string) => void;
-}) => {
+}) {
   // 1. Initialize Animation Values
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(0)).current; // Start invisible

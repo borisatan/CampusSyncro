@@ -55,7 +55,7 @@ export default function BudgetsScreen() {
   return (
     <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-2 py-2">
+      <View className="flex-row items-center justify-between px-4 py-2">
         <View className="flex-col">
           <Text className={`text-2xl font-semibold ${textPrimary}`}>
             Budgets
@@ -78,7 +78,7 @@ export default function BudgetsScreen() {
         </View>
       ) : (
         <ScrollView
-          className="flex-1 px-2"
+          className="flex-1 px-4"
           contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
             <RefreshControl

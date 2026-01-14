@@ -224,11 +224,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
                           isSelected ? "border-accentBlue bg-accentBlue/10" : "border-borderDark bg-inputDark"
                         } w-[48%]`}
                       >
-                        <View 
-                          className="w-12 h-12 rounded-xl items-center justify-center"
-                          style={{ backgroundColor: isSelected ? cat.color : `${cat.color}20` }}
+                        <View
+                          className={`w-12 h-12 rounded-xl items-center justify-center ${!isSelected ? 'border-2 border-white/30' : ''}`}
+                          style={{ backgroundColor: cat.color }}
                         >
-                          <Ionicons name={cat.icon as any} size={24} color={isSelected ? 'white' : cat.color} />
+                          <Ionicons name={cat.icon as any} size={24} color="white" />
                         </View>
                         <Text numberOfLines={1} className={`flex-1 text-sm ${isSelected ? "text-textDark font-bold" : "text-textDark"}`}>
                           {cat.category_name}

@@ -264,7 +264,7 @@ export default function EditBudgetScreen() {
         className="flex-1"
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-2 py-3">
+        <View className="flex-row items-center justify-between px-4 py-3">
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={() => router.replace('/budgets')}

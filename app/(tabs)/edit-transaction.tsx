@@ -200,7 +200,7 @@ const EditTransactionScreen = () => {
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
         {/* Header with Back and Delete */}
-        <View className="flex-row items-center justify-between px-2 mb-4">
+        <View className="flex-row items-center justify-between px-4 mb-4">
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={() => router.replace('/transaction-list')}
@@ -225,7 +225,7 @@ const EditTransactionScreen = () => {
           className="flex-1"
         >
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
+            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
             className="flex-1"
             keyboardShouldPersistTaps="handled"
             refreshControl={

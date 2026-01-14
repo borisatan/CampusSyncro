@@ -154,7 +154,7 @@ const TransactionAdder = () => {
           className="flex-1"
         >
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
+            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
             className="flex-1"
             keyboardShouldPersistTaps="handled"
             refreshControl={
