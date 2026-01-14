@@ -48,7 +48,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
   const [name, setName] = useState('');
   const [type, setType] = useState('checking');
   const [balance, setBalance] = useState('0');
-  const [sortOrder, setSortOrder] = useState(0);
+  const [sortOrder, setSortOrder] = useState(accountCount);
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -84,7 +84,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-backgroundDark"
     >
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 px-2">
         {/* Header */}
         <View className="flex-row items-center mb-8">
           <TouchableOpacity

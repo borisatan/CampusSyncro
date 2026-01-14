@@ -43,11 +43,11 @@ export default function TabLayout() {
         }}
       />
         <Tabs.Screen
-          name="accounts"
+          name="budgets"
           options={{
-            title: "Accounts",
+            title: "Budgets",
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="wallet-outline" size={30} color={color} />
+              <Ionicons name="pie-chart-outline" size={30} color={color} />
             ),
           }}
         />
@@ -87,7 +87,7 @@ export default function TabLayout() {
         options={{ href: null }} // hides from tab bar
       />
       <Tabs.Screen
-        name="budgets"
+        name="accounts"
         options={{ href: null }} // hides from tab bar
       />
       <Tabs.Screen

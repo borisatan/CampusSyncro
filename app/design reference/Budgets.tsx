@@ -1,5 +1,6 @@
-// import { ArrowRightLeft, ChevronDown, ChevronUp, Edit2, Plus, Settings, Trash2 } from 'lucide-react';
 // import { useState } from 'react';
+// import { Plus, TrendingUp, Trash2, Edit2, ChevronDown, ChevronUp, Settings, ArrowRightLeft, DollarSign } from 'lucide-react';
+// import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 // interface Category {
 //   name: string;
@@ -223,6 +224,36 @@
 //   const fromBudget = budgets.find(b => b.id === transferFrom);
 //   const maxTransfer = fromBudget && fromBudget.amountType === 'dollar' ? fromBudget.amount : 0;
 
+//   // Helper to convert tailwind color class to hex
+//   const getColorHex = (colorClass: string) => {
+//     const colorMap: { [key: string]: string } = {
+//       'bg-blue-500': '#3b82f6',
+//       'bg-emerald-500': '#10b981',
+//       'bg-purple-500': '#a855f7',
+//       'bg-orange-500': '#f97316',
+//       'bg-pink-500': '#ec4899',
+//       'bg-yellow-500': '#eab308',
+//       'bg-rose-500': '#f43f5e',
+//       'bg-indigo-500': '#6366f1',
+//     };
+//     return colorMap[colorClass] || '#6366f1';
+//   };
+
+//   // Prepare chart data
+//   const chartData = budgets.map(budget => {
+//     const limit = getBudgetLimit(budget);
+//     const percentage = getBudgetPercentage(budget);
+//     const status = getBudgetStatus(percentage);
+    
+//     return {
+//       name: budget.name.length > 12 ? budget.name.substring(0, 12) + '...' : budget.name,
+//       spent: budget.spent,
+//       limit: limit,
+//       remaining: Math.max(0, limit - budget.spent),
+//       color: status === 'over' ? '#f43f5e' : status === 'warning' ? '#eab308' : getColorHex(budget.color),
+//     };
+//   });
+
 //   return (
 //     <div className="p-6 space-y-6">
 //       {/* Header */}
@@ -276,6 +307,56 @@
 //             <p className="text-sm text-slate-400">Move funds between fixed amount budgets</p>
 //           </div>
 //         </button>
+//       )}
+
+//       {/* Budget Overview Chart */}
+//       {budgets.length > 0 && (
+//         <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800">
+//           <h3 className="text-white mb-4">Budget Overview</h3>
+//           <ResponsiveContainer width="100%" height={200}>
+//             <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+//               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+//               <XAxis 
+//                 dataKey="name" 
+//                 stroke="#94a3b8" 
+//                 style={{ fontSize: '10px' }}
+//                 angle={-15}
+//                 textAnchor="end"
+//                 height={60}
+//               />
+//               <YAxis 
+//                 stroke="#94a3b8" 
+//                 style={{ fontSize: '11px' }}
+//               />
+//               <Tooltip 
+//                 contentStyle={{ 
+//                   backgroundColor: '#1e293b', 
+//                   border: '1px solid #334155',
+//                   borderRadius: '8px',
+//                   fontSize: '12px',
+//                   color: '#fff'
+//                 }}
+//                 formatter={(value: any) => `$${value.toLocaleString()}`}
+//               />
+//               <Bar dataKey="spent" stackId="a" fill="#6366f1" radius={[0, 0, 0, 0]}>
+//                 {chartData.map((entry, index) => (
+//                   <Cell key={`cell-${index}`} fill={entry.color} />
+//                 ))}
+//               </Bar>
+//               <Bar dataKey="remaining" stackId="a" fill="#334155" radius={[4, 4, 0, 0]} />
+//             </BarChart>
+//           </ResponsiveContainer>
+//           <div className="flex items-center justify-center gap-4 mt-3 text-xs">
+//             <div className="flex items-center gap-1.5">
+//               <div className="w-3 h-3 rounded-sm bg-indigo-500"></div>
+//               <span className="text-slate-400">Spent</span>
+//             </div>
+//             <div className="flex items-center gap-1.5">
+//               <div className="w-3 h-3 rounded-sm bg-slate-700"></div>
+//               <span className="text-slate-400">Remaining</span>
+//             </div>
+//           </div>
+//         </div>
 //       )}
 
 //       {/* Budgets List */}

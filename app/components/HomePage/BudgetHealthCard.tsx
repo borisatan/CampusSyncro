@@ -1,8 +1,7 @@
-import { useRouter } from 'expo-router';
-import { AlertCircle, ChevronRight } from 'lucide-react-native';
+import { AlertCircle } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { BudgetWithSpent } from '../../types/types';
 
@@ -24,7 +23,6 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
   currencySymbol,
   isLoading = false,
 }) => {
-  const router = useRouter();
 
   // Only show monthly budgets for the dashboard view
   const monthlyBudgets = budgets.filter((b) => b.period_type === 'monthly');
@@ -41,19 +39,14 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
         animate={{ opacity: 1 }}
         transition={{ type: 'timing', duration: 400 }}
       >
-        <TouchableOpacity
-          onPress={() => router.push('/budgets')}
-          className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6"
-          activeOpacity={0.7}
-        >
+        <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
           <View className="flex-row items-center justify-between mb-2">
             <Text className="text-white text-xl font-bold">Budget Health</Text>
-            <ChevronRight size={20} color="#94a3b8" />
           </View>
           <Text className="text-slate-400 text-sm">
-            No budget set up yet. Tap to create one.
+            No budget set up yet.
           </Text>
-        </TouchableOpacity>
+        </View>
       </MotiView>
     );
   }
@@ -67,23 +60,16 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
       animate={{ opacity: 1 }}
       transition={{ type: 'timing', duration: 400 }}
     >
-      <TouchableOpacity
-        onPress={() => router.push('/budgets')}
-        className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6"
-        activeOpacity={0.7}
-      >
+      <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
         {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-white text-xl font-bold">Budget Health</Text>
-        <View className="flex-row items-center">
-          <Text className="text-xs text-slate-400 mr-1">This Month</Text>
-          <ChevronRight size={16} color="#94a3b8" />
-        </View>
+        <Text className="text-xs text-slate-400">This Month</Text>
       </View>
 
       {/* Individual Budget Progress Bars */}
       <View className="gap-4">
-        {monthlyBudgets.map((budget) => {
+        {monthlyBudgets.map((budget, index) => {
           // Use absolute value since expenses are stored as negative
           const spentAbs = Math.abs(budget.spent);
           const percentage = budget.limit > 0
@@ -94,7 +80,16 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
           const remaining = Math.max(budget.limit - spentAbs, 0);
 
           return (
-            <View key={budget.id}>
+            <MotiView
+              key={budget.id}
+              from={{ opacity: 0, translateY: 10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{
+                type: 'timing',
+                duration: 400,
+                delay: 150 + index * 100,
+              }}
+            >
               {/* Budget Header */}
               <View className="flex-row items-center justify-between mb-2">
                 <View className="flex-row items-center gap-2">
@@ -131,7 +126,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                     height: '100%',
                     width: `${Math.min(Math.max(percentage, 0), 100)}%`,
                     borderRadius: 9999,
-                    backgroundColor: 
+                    backgroundColor:
                     isOver
                       ? '#f43f5e'
                       : isWarning
@@ -158,7 +153,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                   {Math.round(percentage)}%
                 </Text>
               </View>
-            </View>
+            </MotiView>
           );
         })}
       </View>
@@ -171,7 +166,16 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
         const totalRemaining = Math.max(totalLimit - totalSpent, 0);
 
         return (
-          <View className="mt-4 pt-4 border-t border-slate-800">
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{
+              type: 'timing',
+              duration: 400,
+              delay: 150 + monthlyBudgets.length * 100 + 50,
+            }}
+            className="mt-4 pt-4 border-t border-slate-800"
+          >
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-sm text-white">Total Budget</Text>
               <View className="flex-row items-center gap-2">
@@ -241,10 +245,10 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                 {Math.round(totalPercentage)}%
               </Text>
             </View>
-          </View>
+          </MotiView>
         );
       })()}
-      </TouchableOpacity>
+      </View>
     </MotiView>
   );
 };

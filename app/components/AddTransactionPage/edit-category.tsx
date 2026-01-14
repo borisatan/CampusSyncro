@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from '../../context/ThemeContext';
 import { deleteCategory, getUserId, saveCategory } from '../../services/backendService';
 import { SuccessModal } from '../Shared/SuccessModal';
+import { ColorPicker } from '../BudgetsPage/ColorPicker';
 
 import { useDataRefresh } from '../../context/DataRefreshContext';
 import { useAccountsStore } from '../../store/useAccountsStore';
@@ -32,49 +33,8 @@ const availableIcons = [
   'wine-outline', 'beer-outline', 'pizza-outline', 'ice-cream-outline', 'reorder-three-outline',
 ];
 
-const categoryColors = [
-  // --- VIBRANT REDS ---
-  "#FF0000", "#FF3B30", "#FF5252", "#D32F2F", "#B71C1C", "#FF8A80", "#FF1744",
-  
-  // --- ELECTRIC PURPLES ---
-  "#AF52DE", "#BF5AF2", "#9C27B0", "#E040FB", "#7B1FA2", "#6A1B9A", "#AA00FF",
-  
-  // --- VIVID BLUES ---
-  "#007AFF", "#58A6FF", "#2196F3", "#00B0FF", "#0091EA", "#1565C0", "#0D47A1",
-  
-  // --- NEON CYANS ---
-  "#32ADE6", "#00E5FF", "#00B8D4", "#0097A7", "#00838F", "#006064", "#76FF03",
-  
-  // --- BOLD GREENS ---
-  "#34C759", "#00C853", "#64DD17", "#4CAF50", "#2E7D32", "#1B5E20", "#00E676",
-  
-  // --- BRIGHT YELLOWS ---
-  "#FFD60A", "#FFEA00", "#FFFF00", "#FBC02D", "#F9A825", "#F57F17", "#FFD700",
-  
-  // --- DEEP ORANGES ---
-  "#FF9500", "#FF6D00", "#FF9100", "#FFAB40", "#F57C00", "#E65100", "#FF3D00",
-  
-  // --- HOT PINKS ---
-  "#FF2D55", "#F50057", "#FF4081", "#E91E63", "#C2185B", "#880E4F", "#FF80AB",
-  
-  // --- GRAPH SLATES ---
-  "#475569", "#64748B", "#94A3B8", "#4B5563", "#374151", "#1F2937", "#111827",
-  
-  // --- DATA ACCENTS ---
-  "#FF5722", "#795548", "#607D8B", "#3F51B5", "#004D40", "#3E2723", "#C51162"
-];
-
-// Split icons into two rows for horizontal scrolling
-const iconRowsData = [
-  availableIcons.filter((_, index) => index % 2 === 0), // Even indices (row 1)
-  availableIcons.filter((_, index) => index % 2 === 1), // Odd indices (row 2)
-];
-
-// Split colors into two rows for horizontal scrolling
-const colorRowsData = [
-  categoryColors.filter((_, index) => index % 2 === 0), // Even indices (row 1)
-  categoryColors.filter((_, index) => index % 2 === 1), // Odd indices (row 2)
-];
+// Default color for new categories
+const DEFAULT_CATEGORY_COLOR = '#3B82F6';
 
 export default function CategoryEditor() {
   const { isDarkMode } = useTheme();
@@ -84,15 +44,13 @@ export default function CategoryEditor() {
 
   const [categoryName, setCategoryName] = useState((params.name as string) || '');
   const [selectedIcon, setSelectedIcon] = useState((params.icon as string) || availableIcons[0]);
-  const [selectedColor, setSelectedColor] = useState((params.color as string) || categoryColors[0]);
+  const [selectedColor, setSelectedColor] = useState((params.color as string) || DEFAULT_CATEGORY_COLOR);
   const [isProcessing, setIsProcessing] = useState(false);
   const [focusedInput, setFocusedInput] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
   const iconRefs = useRef<any[]>([]);
-  const colorRefs = useRef<any[]>([]);
   const iconScrollX = useRef(new Animated.Value(0)).current;
-  const colorScrollX = useRef(new Animated.Value(0)).current;
 
   const { refreshAll } = useDataRefresh();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
@@ -105,21 +63,12 @@ export default function CategoryEditor() {
   useEffect(() => {
     const iconListener = iconScrollX.addListener(({ value }) => {
       iconRefs.current.forEach((ref) => {
-        // We use the internal setScrollLeft for zero-lag sync if available,
-        // or scrollToOffset for standard compatibility
-        ref?.scrollToOffset({ offset: value, animated: false });
-      });
-    });
-
-    const colorListener = colorScrollX.addListener(({ value }) => {
-      colorRefs.current.forEach((ref) => {
         ref?.scrollToOffset({ offset: value, animated: false });
       });
     });
 
     return () => {
       iconScrollX.removeListener(iconListener);
-      colorScrollX.removeListener(colorListener);
     };
   }, []);
 
@@ -345,26 +294,13 @@ export default function CategoryEditor() {
           </ScrollView>
         </View>
 
-        {/* --- FIXED COLOR PICKER: No more lag --- */}
-        <View className="mt-8">
-          <Text className={`px-6 mb-4 text-sm font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>Choose Color</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
-            {Array.from({ length: Math.ceil(categoryColors.length / 2) }).map((_, colIndex) => (
-              <View key={`color-col-${colIndex}`} className="flex-col mr-3">
-                {categoryColors.slice(colIndex * 2, colIndex * 2 + 2).map((color) => (
-                  <TouchableOpacity
-                    key={color}
-                    onPress={() => handleColorSelect(color)}
-                    activeOpacity={0.7}
-                    className="w-12 h-12 rounded-xl mb-3 items-center justify-center"
-                    style={{ backgroundColor: color }}
-                  >
-                    {selectedColor === color && <Ionicons name="checkmark" size={24} color="#FFFFFF" />}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </ScrollView>
+        {/* Color Picker */}
+        <View className="mt-8 px-6">
+          <ColorPicker
+            selectedColor={selectedColor}
+            onColorSelect={handleColorSelect}
+            isDarkMode={isDarkMode}
+          />
         </View>
 
         {/* Action Buttons */}

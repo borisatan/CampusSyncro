@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ChevronLeft, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from "react";
 import {
     Alert,
@@ -200,14 +200,22 @@ const EditTransactionScreen = () => {
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
         {/* Header with Back and Delete */}
-        <View className="flex-row items-center justify-between px-2 mb-2">
-          <TouchableOpacity onPress={() => router.replace('/transaction-list')} className="p-2 -ml-2">
-            <ChevronLeft color={isDarkMode ? "#fff" : "#000"} size={28} />
-          </TouchableOpacity>
-          <Text className={`text-2xl font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
-            Edit Transaction
-          </Text>
-          <TouchableOpacity onPress={handleDelete} className="p-2 -mr-2">
+        <View className="flex-row items-center justify-between px-2 mb-4">
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={() => router.replace('/transaction-list')}
+              className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"
+            >
+              <ArrowLeft color="#94A3B8" size={20} />
+            </TouchableOpacity>
+            <View>
+              <Text className={`text-2xl font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
+                Edit Transaction
+              </Text>
+              <Text className="text-secondaryDark">Update transaction details</Text>
+            </View>
+          </View>
+          <TouchableOpacity onPress={handleDelete} className="p-2">
             <Trash2 color="#ef4444" size={24} />
           </TouchableOpacity>
         </View>

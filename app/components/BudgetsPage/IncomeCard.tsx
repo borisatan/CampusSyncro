@@ -207,7 +207,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           <AnimatedRow index={2}>
             <TouchableOpacity
               onPress={handleSave}
-              className="w-full py-3 rounded-xl items-center bg-accentTeal mt-2"
+              className="w-full py-3 rounded-xl items-center bg-accentBlue mt-2"
               activeOpacity={0.7}
             >
               <Text className="text-textDark font-semibold text-base">

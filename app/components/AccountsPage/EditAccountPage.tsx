@@ -89,7 +89,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-backgroundDark"
     >
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 px-2">
         {/* Header */}
         <View className="flex-row items-center mb-8">
           <TouchableOpacity

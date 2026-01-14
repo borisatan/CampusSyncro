@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BudgetAllocationBar } from '../components/BudgetsPage/BudgetAllocationBar';
 import { BudgetCard } from '../components/BudgetsPage/BudgetCard';
+import { BudgetSpendingSummary } from '../components/BudgetsPage/BudgetSpendingSummary';
 import { IncomeCard } from '../components/BudgetsPage/IncomeCard';
 import { useTheme } from '../context/ThemeContext';
 import { useBudgetsData } from '../hooks/useBudgetsData';
@@ -103,6 +105,37 @@ export default function BudgetsScreen() {
               onSave={handleSaveIncome}
             />
           </MotiView>
+
+          {/* Budget Spending Summary */}
+          {budgetsWithSpent.length > 0 && (
+            <MotiView
+              from={{ opacity: 0, translateY: 10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'timing', duration: 400, delay: 100 }}
+            >
+              <BudgetSpendingSummary
+                budgets={budgetsWithSpent}
+                currencySymbol={currencySymbol}
+                isDarkMode={isDarkMode}
+              />
+            </MotiView>
+          )}
+
+          {/* Budget Allocation Bar Chart */}
+          {budgetsWithSpent.length > 0 && (
+            <MotiView
+              from={{ opacity: 0, translateY: 10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'timing', duration: 400, delay: 200 }}
+            >
+              <BudgetAllocationBar
+                budgets={budgetsWithSpent}
+                totalIncome={monthlyIncome}
+                currencySymbol={currencySymbol}
+                isDarkMode={isDarkMode}
+              />
+            </MotiView>
+          )}
 
           {/* Budgets List */}
           {budgetsWithSpent.length === 0 ? (

@@ -85,7 +85,9 @@ export const TransactionFormFields = ({
       <TouchableOpacity
         onPress={handleSubmit}
         disabled={isSubmitting}
-        className={`w-full py-4 rounded-xl items-center mb-6 ${transactionType === 'expense' ? 'bg-accentRed' : 'bg-accentTeal'}`}
+        className={`w-full py-4 rounded-xl items-center mb-6 ${
+          buttonText ? 'bg-accentBlue' : transactionType === 'expense' ? 'bg-accentRed' : 'bg-accentTeal'
+        }`}
       >
         <Text className="text-white font-semibold">{displayButtonText}</Text>
       </TouchableOpacity>

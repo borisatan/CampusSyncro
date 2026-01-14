@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, ChevronDown, ChevronUp, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategorySelector } from '../components/BudgetsPage/CategorySelector';
 import { BUDGET_COLORS, ColorPicker } from '../components/BudgetsPage/ColorPicker';
 import { PeriodSelector } from '../components/BudgetsPage/PeriodSelector';
+import { SuccessModal } from '../components/Shared/SuccessModal';
 import { useTheme } from '../context/ThemeContext';
 import {
   deleteBudget,
@@ -68,6 +69,7 @@ export default function EditBudgetScreen() {
       .map((cat) => cat.id)
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [sortOrder, setSortOrder] = useState(
     existingBudget?.sort_order ?? budgets.length
   );
@@ -203,11 +205,16 @@ export default function EditBudgetScreen() {
       }
 
       await loadBudgets();
-      router.replace('/budgets');
+
+      // Show success animation before navigating
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.replace('/budgets');
+      }, 1900);
     } catch (error) {
       console.error('Error saving budget:', error);
       Alert.alert('Error', 'Failed to save budget');
-    } finally {
       setIsSaving(false);
     }
   };
@@ -258,11 +265,24 @@ export default function EditBudgetScreen() {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-2 py-3">
-          <Text className={`text-2xl font-semibold ${textPrimary}`}>
-            {budgetId ? 'Edit Budget' : 'Create Budget'}
-          </Text>
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={() => router.replace('/budgets')}
+              className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"
+            >
+              <ArrowLeft color="#94A3B8" size={20} />
+            </TouchableOpacity>
+            <View>
+              <Text className={`text-2xl font-semibold ${textPrimary}`}>
+                {budgetId ? 'Edit Budget' : 'Create Budget'}
+              </Text>
+              <Text className="text-secondaryDark">
+                {budgetId ? 'Update budget details' : 'Set up a new budget'}
+              </Text>
+            </View>
+          </View>
           {budgetId ? (
-            <TouchableOpacity onPress={handleDelete} className="p-2 -mr-2">
+            <TouchableOpacity onPress={handleDelete} className="p-2">
               <Trash2 color="#ef4444" size={24} />
             </TouchableOpacity>
           ) : (
@@ -429,13 +449,19 @@ export default function EditBudgetScreen() {
           <TouchableOpacity
             onPress={handleSave}
             disabled={isSaving}
-            className="bg-accentTeal rounded-xl py-4 mt-4 items-center"
+            className="bg-accentBlue rounded-xl py-4 mt-4 items-center"
           >
             <Text className="text-white font-semibold text-lg">
               {isSaving ? 'Saving...' : budgetId ? 'Update Budget' : 'Create Budget'}
             </Text>
           </TouchableOpacity>
         </ScrollView>
+
+        {/* Success animation */}
+        <SuccessModal
+          visible={showSuccess}
+          text={budgetId ? 'Budget Updated!' : 'Budget Created!'}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

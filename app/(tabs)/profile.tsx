@@ -5,8 +5,8 @@ import {
   Download,
   Globe,
   LogOut,
-  PieChart,
-  User
+  User,
+  Wallet
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -161,17 +161,17 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          {/* Budgets Button */}
+          {/* Accounts Button */}
           <Pressable
-            onPress={() => router.push('/budgets' as any)}
+            onPress={() => router.push('/accounts' as any)}
             className={`flex-row items-center border rounded-2xl p-4 mb-3 active:bg-slate-800/10 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-violet-500/20 rounded-lg items-center justify-center mr-3">
-              <PieChart color="#8B5CF6" size={20} />
+              <Wallet color="#8B5CF6" size={20} />
             </View>
             <View className="flex-1">
-              <Text className={`font-medium ${textPrimary}`}>Budgets</Text>
-              <Text className={`text-sm ${textSecondary}`}>Manage spending limits</Text>
+              <Text className={`font-medium ${textPrimary}`}>Accounts</Text>
+              <Text className={`text-sm ${textSecondary}`}>Manage your accounts</Text>
             </View>
             <ChevronRight color={isDarkMode ? "#9CA3AF" : "#4B5563"} size={20} />
           </Pressable>
