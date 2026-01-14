@@ -78,7 +78,7 @@ export default function BudgetsScreen() {
         </View>
       ) : (
         <ScrollView
-          className="flex-1 px-4"
+          className="flex-1 px-2"
           contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
             <RefreshControl

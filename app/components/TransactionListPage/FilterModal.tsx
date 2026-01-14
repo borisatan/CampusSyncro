@@ -225,7 +225,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         } w-[48%]`}
                       >
                         <View
-                          className={`w-12 h-12 rounded-xl items-center justify-center ${!isSelected ? 'border-2 border-white/30' : ''}`}
+                          className={`w-12 h-12 rounded-xl items-center justify-center `}
                           style={{ backgroundColor: cat.color }}
                         >
                           <Ionicons name={cat.icon as any} size={24} color="white" />

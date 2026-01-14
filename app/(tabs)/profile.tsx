@@ -101,10 +101,10 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 8 }}>
 
         {/* Header */}
-        <View className="mb-6">
+        <View className="mb-6 px-2">
           <Text className={`text-2xl font-semibold ${textPrimary}`}>Profile</Text>
           <Text className={`text-md mt-1 ${textSecondary}`}>Manage your account settings</Text>
         </View>
