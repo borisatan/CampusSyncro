@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategorySelector } from '../components/BudgetsPage/CategorySelector';
-import { BUDGET_COLORS, ColorPicker } from '../components/BudgetsPage/ColorPicker';
+import { ColorPicker, PRESET_COLORS } from '../components/Shared/ColorPicker';
 import { PeriodSelector } from '../components/BudgetsPage/PeriodSelector';
 import { SuccessModal } from '../components/Shared/SuccessModal';
 import { useTheme } from '../context/ThemeContext';
@@ -29,6 +29,8 @@ import {
 import { useBudgetsStore } from '../store/useBudgetsStore';
 import { useCategoriesStore } from '../store/useCategoriesStore';
 import { useCurrencyStore } from '../store/useCurrencyStore';
+import { useIncomeStore } from '../store/useIncomeStore';
+import { useBudgetsData } from '../hooks/useBudgetsData';
 import { BudgetAmountType, BudgetPeriodType } from '../types/types';
 
 export default function EditBudgetScreen() {
@@ -40,14 +42,41 @@ export default function EditBudgetScreen() {
   const { currencySymbol } = useCurrencyStore();
   const { budgets, loadBudgets, addBudgetOptimistic, updateBudgetOptimistic, deleteBudgetOptimistic } = useBudgetsStore();
   const { categories, loadCategories, updateCategoryOptimistic } = useCategoriesStore();
+  const { monthlyIncome } = useBudgetsData();
+  const { useDynamicIncome, manualIncome } = useIncomeStore();
+
+  // Calculate effective income (same logic as useBudgetsData)
+  const effectiveIncome = useDynamicIncome ? monthlyIncome : manualIncome;
 
   const existingBudget = budgetId
     ? budgets.find((b) => b.id === budgetId)
     : undefined;
 
+  // Calculate already allocated by OTHER budgets (excluding current one)
+  const otherBudgets = budgets.filter((b) => b.id !== budgetId);
+
+  // Sum of all percentages from OTHER percentage-type budgets
+  const allocatedPercentageByOthers = otherBudgets
+    .filter((b) => b.amount_type === 'percentage')
+    .reduce((sum, b) => sum + b.amount, 0);
+
+  // Sum of all amounts from OTHER budgets (converting percentage to amount)
+  const allocatedAmountByOthers = otherBudgets.reduce((sum, b) => {
+    if (b.amount_type === 'money_amount') {
+      return sum + b.amount;
+    } else {
+      // Convert percentage to amount
+      return sum + (b.amount / 100) * effectiveIncome;
+    }
+  }, 0);
+
+  // Calculate remaining available
+  const remainingPercentage = Math.max(0, 100 - allocatedPercentageByOthers);
+  const remainingAmount = Math.max(0, effectiveIncome - allocatedAmountByOthers);
+
   // Form state
   const [name, setName] = useState(existingBudget?.name || '');
-  const [color, setColor] = useState(existingBudget?.color || BUDGET_COLORS[0]);
+  const [color, setColor] = useState(existingBudget?.color || PRESET_COLORS[0]);
   const [amountType, setAmountType] = useState<BudgetAmountType>(
     existingBudget?.amount_type || 'money_amount'
   );
@@ -87,21 +116,38 @@ export default function EditBudgetScreen() {
     loadBudgets();
   }, []);
 
-  // Update form fields when budget data loads
+  // Reset form state when budgetId changes (handles both create and edit modes)
   useEffect(() => {
+    // Reset UI states
+    setIsSaving(false);
+    setShowSuccess(false);
+    setShowSortOrderPicker(false);
+
     if (budgetId && existingBudget) {
+      // Edit mode: populate with existing budget data
       setName(existingBudget.name || '');
-      setColor(existingBudget.color || BUDGET_COLORS[0]);
+      setColor(existingBudget.color || PRESET_COLORS[0]);
       setAmountType(existingBudget.amount_type || 'money_amount');
       setAmount(existingBudget.amount?.toString() || '');
       setPeriodType(existingBudget.period_type || 'monthly');
       setCustomStartDate(existingBudget.custom_start_date || '');
       setCustomEndDate(existingBudget.custom_end_date || '');
       setSortOrder(existingBudget.sort_order ?? budgets.length);
+    } else if (!budgetId) {
+      // Create mode: reset to defaults
+      setName('');
+      setColor(PRESET_COLORS[0]);
+      setAmountType('money_amount');
+      setAmount('');
+      setPeriodType('monthly');
+      setCustomStartDate('');
+      setCustomEndDate('');
+      setSortOrder(budgets.length);
+      setSelectedCategoryIds([]);
     }
-  }, [budgetId, existingBudget]);
+  }, [budgetId, existingBudget, budgets.length]);
 
-  // Update selected categories when categories load
+  // Update selected categories when categories load (only for edit mode)
   useEffect(() => {
     if (budgetId) {
       setSelectedCategoryIds(
@@ -110,6 +156,7 @@ export default function EditBudgetScreen() {
           .map((cat) => cat.id)
       );
     }
+    // Note: Create mode category reset is handled in the budgetId change effect above
   }, [categories, budgetId]);
 
   const textPrimary = isDarkMode ? 'text-white' : 'text-black';
@@ -137,6 +184,33 @@ export default function EditBudgetScreen() {
       Alert.alert('Error', 'Please enter a valid amount');
       return false;
     }
+
+    const enteredAmount = parseFloat(amount);
+
+    // Validate percentage doesn't exceed 100% total
+    if (amountType === 'percentage') {
+      const totalPercentage = allocatedPercentageByOthers + enteredAmount;
+      if (totalPercentage > 100) {
+        Alert.alert(
+          'Budget Limit Exceeded',
+          `You can only allocate up to ${remainingPercentage.toFixed(1)}% more. Other budgets already use ${allocatedPercentageByOthers.toFixed(1)}% of your income.`
+        );
+        return false;
+      }
+    }
+
+    // Validate amount doesn't exceed income
+    if (amountType === 'money_amount') {
+      const totalAmount = allocatedAmountByOthers + enteredAmount;
+      if (effectiveIncome > 0 && totalAmount > effectiveIncome) {
+        Alert.alert(
+          'Budget Limit Exceeded',
+          `You can only allocate up to ${currencySymbol}${remainingAmount.toFixed(2)} more. Other budgets already use ${currencySymbol}${allocatedAmountByOthers.toFixed(2)} of your ${currencySymbol}${effectiveIncome.toFixed(2)} income.`
+        );
+        return false;
+      }
+    }
+
     if (periodType === 'custom' && (!customStartDate || !customEndDate)) {
       Alert.alert('Error', 'Please select both start and end dates for custom period');
       return false;
@@ -208,6 +282,7 @@ export default function EditBudgetScreen() {
 
       // Show success animation before navigating
       setShowSuccess(true);
+      setIsSaving(false);
       setTimeout(() => {
         setShowSuccess(false);
         router.replace('/budgets');
@@ -215,6 +290,7 @@ export default function EditBudgetScreen() {
     } catch (error) {
       console.error('Error saving budget:', error);
       Alert.alert('Error', 'Failed to save budget');
+    } finally {
       setIsSaving(false);
     }
   };
@@ -371,6 +447,28 @@ export default function EditBudgetScreen() {
                 className={`flex-1 text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
               />
             </View>
+            {/* Show remaining available budget */}
+            {amountType === 'percentage' ? (
+              <Text className={`text-xs mt-2 ${
+                remainingPercentage <= 0 ? 'text-red-500' : isDarkMode ? 'text-slate-500' : 'text-gray-500'
+              }`}>
+                {remainingPercentage <= 0
+                  ? 'No remaining percentage available. Other budgets already use 100% of your income.'
+                  : `Available: ${remainingPercentage.toFixed(1)}% remaining (${allocatedPercentageByOthers.toFixed(1)}% already allocated)`
+                }
+              </Text>
+            ) : (
+              effectiveIncome > 0 && (
+                <Text className={`text-xs mt-2 ${
+                  remainingAmount <= 0 ? 'text-red-500' : isDarkMode ? 'text-slate-500' : 'text-gray-500'
+                }`}>
+                  {remainingAmount <= 0
+                    ? `No remaining budget available. Other budgets already use your full income of ${currencySymbol}${effectiveIncome.toFixed(2)}.`
+                    : `Available: ${currencySymbol}${remainingAmount.toFixed(2)} remaining of ${currencySymbol}${effectiveIncome.toFixed(2)} income`
+                  }
+                </Text>
+              )
+            )}
           </View>
 
             {/* Color Picker */}

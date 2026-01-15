@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from '../../context/ThemeContext';
 import { deleteCategory, getUserId, saveCategory } from '../../services/backendService';
 import { SuccessModal } from '../Shared/SuccessModal';
-import { ColorPicker } from '../BudgetsPage/ColorPicker';
+import { ColorPicker } from '../Shared/ColorPicker';
 
 import { useDataRefresh } from '../../context/DataRefreshContext';
 import { useAccountsStore } from '../../store/useAccountsStore';

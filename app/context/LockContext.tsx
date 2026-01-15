@@ -2,31 +2,44 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
+import { supabase } from '../utils/supabase';
 import { useAuth } from './AuthContext';
 
 type LockContextValue = {
   isLocked: boolean;
   isAppLockEnabled: boolean;
   biometricAvailable: boolean;
+  hasPinSet: boolean;
   unlock: () => Promise<boolean>;
+  unlockWithPin: (pin: string) => Promise<boolean>;
+  unlockWithCredentials: (email: string, password: string) => Promise<boolean>;
   setAppLockEnabled: (enabled: boolean) => Promise<void>;
+  setPin: (pin: string) => Promise<void>;
+  removePin: () => Promise<void>;
 };
 
 const LockContext = createContext<LockContextValue>({
   isLocked: false,
   isAppLockEnabled: false,
   biometricAvailable: false,
+  hasPinSet: false,
   unlock: async () => false,
+  unlockWithPin: async () => false,
+  unlockWithCredentials: async () => false,
   setAppLockEnabled: async () => {},
+  setPin: async () => {},
+  removePin: async () => {},
 });
 
 const APP_LOCK_KEY = 'app_lock_enabled';
+const PIN_KEY = 'app_pin';
 
 export const LockProvider = ({ children }: { children: React.ReactNode }) => {
   const { userId, isLoading: authLoading } = useAuth();
   const [isLocked, setIsLocked] = useState(true);
   const [isAppLockEnabled, setIsAppLockEnabledState] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [hasPinSet, setHasPinSet] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const appState = useRef(AppState.currentState);
 
@@ -39,6 +52,10 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
       const enrolled = await LocalAuthentication.isEnrolledAsync();
       const available = hasHardware && enrolled && supported.length > 0;
       setBiometricAvailable(available);
+
+      // Check if PIN is set
+      const storedPin = await SecureStore.getItemAsync(PIN_KEY);
+      setHasPinSet(!!storedPin);
 
       // Load app lock preference (default to ON if not set)
       const storedPref = await SecureStore.getItemAsync(APP_LOCK_KEY);
@@ -84,9 +101,8 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
   // Unlock using biometrics
   const unlock = useCallback(async (): Promise<boolean> => {
     if (!biometricAvailable) {
-      // If no biometrics, just unlock (fallback)
-      setIsLocked(false);
-      return true;
+      // If no biometrics available, don't auto-unlock - user must use PIN or credentials
+      return false;
     }
 
     const result = await LocalAuthentication.authenticateAsync({
@@ -101,6 +117,42 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     }
     return false;
   }, [biometricAvailable]);
+
+  // Unlock using PIN
+  const unlockWithPin = useCallback(async (pin: string): Promise<boolean> => {
+    const storedPin = await SecureStore.getItemAsync(PIN_KEY);
+    if (storedPin && storedPin === pin) {
+      setIsLocked(false);
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Unlock using email/password (re-authenticate with Supabase)
+  const unlockWithCredentials = useCallback(async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error) {
+        setIsLocked(false);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Set a new PIN
+  const setPin = useCallback(async (pin: string): Promise<void> => {
+    await SecureStore.setItemAsync(PIN_KEY, pin);
+    setHasPinSet(true);
+  }, []);
+
+  // Remove PIN
+  const removePin = useCallback(async (): Promise<void> => {
+    await SecureStore.deleteItemAsync(PIN_KEY);
+    setHasPinSet(false);
+  }, []);
 
   // Enable/disable app lock
   const setAppLockEnabled = useCallback(async (enabled: boolean) => {
@@ -117,9 +169,14 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     isLocked: isInitialized && isAppLockEnabled && isLocked && !!userId,
     isAppLockEnabled,
     biometricAvailable,
+    hasPinSet,
     unlock,
+    unlockWithPin,
+    unlockWithCredentials,
     setAppLockEnabled,
-  }), [isLocked, isAppLockEnabled, biometricAvailable, unlock, setAppLockEnabled, isInitialized, userId]);
+    setPin,
+    removePin,
+  }), [isLocked, isAppLockEnabled, biometricAvailable, hasPinSet, unlock, unlockWithPin, unlockWithCredentials, setAppLockEnabled, setPin, removePin, isInitialized, userId]);
 
   return <LockContext.Provider value={value}>{children}</LockContext.Provider>;
 };

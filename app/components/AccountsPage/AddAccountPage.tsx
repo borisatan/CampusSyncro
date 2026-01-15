@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { SuccessModal } from '../Shared/SuccessModal';
 
 interface Account {
@@ -43,12 +44,12 @@ interface AddAccountProps {
 }
 
 export default function AddAccountPage({ onBack, onSave, currencySymbol, accountCount }: AddAccountProps) {
-  // Generate sort order options from 0 to accountCount (0-indexed internally, displayed as 1-indexed)
-  const sortOrderOptions = Array.from({ length: accountCount + 1 }, (_, i) => i);
+  // Generate sort order options from 1 to accountCount+1 (1-indexed, new account can go anywhere)
+  const sortOrderOptions = Array.from({ length: accountCount + 1 }, (_, i) => i + 1);
   const [name, setName] = useState('');
   const [type, setType] = useState('checking');
   const [balance, setBalance] = useState('0');
-  const [sortOrder, setSortOrder] = useState(accountCount);
+  const [sortOrder, setSortOrder] = useState(accountCount + 1);
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -80,11 +81,12 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
   const colorClass = accountTypeColors[type] || 'bg-accentBlue';
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-backgroundDark"
-    >
-      <ScrollView className="flex-1 px-2">
+    <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+        <ScrollView className="flex-1 px-2">
         {/* Header */}
         <View className="flex-row items-center mb-8">
           <TouchableOpacity
@@ -199,7 +201,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
               activeOpacity={0.7}
               className="flex-row items-center justify-between bg-surfaceDark border border-borderDark rounded-2xl px-4 py-4"
             >
-              <Text className="text-textDark text-base">Position {sortOrder + 1}</Text>
+              <Text className="text-textDark text-base">Position {sortOrder}</Text>
               <Ionicons
                 name={showSortOrderPicker ? "chevron-up" : "chevron-down"}
                 size={20}
@@ -250,9 +252,10 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
         </View>
       </ScrollView>
 
-      {/* Success Modal Overlay */}
-      <SuccessModal visible={showSuccess} text="Account Added!" />
-    </KeyboardAvoidingView>
+        {/* Success Modal Overlay */}
+        <SuccessModal visible={showSuccess} text="Account Added!" />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -298,7 +301,7 @@ const AnimatedSortOrderRow = ({
         } ${isSelected ? 'bg-backgroundDark' : ''}`}
       >
         <Text className={`font-medium ${isSelected ? 'text-textDark' : 'text-secondaryDark'}`}>
-          Position {option + 1}
+          Position {option}
         </Text>
         {isSelected && (
           <Ionicons name="checkmark-circle" size={20} color="#B2A4FF" />

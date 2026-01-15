@@ -105,6 +105,7 @@ export default function Dashboard() {
             timeFrame={timeFrame}
             font={interFont}
             currencySymbol={currencySymbol}
+            budgets={budgetsWithSpent}
           />
 
 

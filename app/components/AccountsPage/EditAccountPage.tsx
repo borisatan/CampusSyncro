@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { SuccessModal } from '../Shared/SuccessModal';
 
 interface Account {
@@ -45,8 +46,8 @@ interface EditAccountProps {
 }
 
 export default function EditAccountPage({ account, currencySymbol, onBack, onSave, accountCount }: EditAccountProps) {
-  // Generate sort order options from 0 to accountCount-1 (0-indexed internally, displayed as 1-indexed)
-  const sortOrderOptions = Array.from({ length: Math.max(accountCount, 1) }, (_, i) => i);
+  // Generate sort order options from 1 to accountCount (1-indexed)
+  const sortOrderOptions = Array.from({ length: Math.max(accountCount, 1) }, (_, i) => i + 1);
 
   const [name, setName] = useState(account?.name || '');
   const [type, setType] = useState(account?.type?.toLowerCase() || 'checking');
@@ -85,11 +86,12 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
   const colorClass = accountTypeColors[type] || 'bg-accentBlue';
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-backgroundDark"
-    >
-      <ScrollView className="flex-1 px-2">
+    <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+        <ScrollView className="flex-1 px-2">
         {/* Header */}
         <View className="flex-row items-center mb-8">
           <TouchableOpacity
@@ -205,7 +207,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
               activeOpacity={0.7}
               className="flex-row items-center justify-between bg-surfaceDark border border-borderDark rounded-2xl px-4 py-4"
             >
-              <Text className="text-textDark text-base">Position {sortOrder + 1}</Text>
+              <Text className="text-textDark text-base">Position {sortOrder}</Text>
               <Ionicons
                 name={showSortOrderPicker ? "chevron-up" : "chevron-down"}
                 size={20}
@@ -256,9 +258,10 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
         </View>
       </ScrollView>
 
-      {/* Success Modal Overlay */}
-      <SuccessModal visible={showSuccess} text="Account Updated!" />
-    </KeyboardAvoidingView>
+        {/* Success Modal Overlay */}
+        <SuccessModal visible={showSuccess} text="Account Updated!" />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -304,7 +307,7 @@ const AnimatedSortOrderRow = ({
         } ${isSelected ? 'bg-backgroundDark' : ''}`}
       >
         <Text className={`font-medium ${isSelected ? 'text-textDark' : 'text-secondaryDark'}`}>
-          Position {option + 1}
+          Position {option}
         </Text>
         {isSelected && (
           <Ionicons name="checkmark-circle" size={20} color="#B2A4FF" />
