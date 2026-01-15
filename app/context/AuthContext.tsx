@@ -14,21 +14,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let isMounted = true;
+    let initialLoadComplete = false;
 
     const loadUser = async () => {
       try {
+        // getUser() validates with the server, unlike cached session data
         const { data } = await supabase.auth.getUser();
         if (!isMounted) return;
         setUserId(data.user?.id ?? null);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          initialLoadComplete = true;
+          setIsLoading(false);
+        }
       }
     };
 
     loadUser();
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? null);
+      // Only trust auth state changes AFTER initial server validation completes
+      // This prevents flash from stale/cached sessions
+      if (initialLoadComplete) {
+        setUserId(session?.user?.id ?? null);
+      }
     });
 
     return () => {

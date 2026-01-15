@@ -4,7 +4,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  RefreshControl,
   ScrollView,
   StatusBar,
   TextInput
@@ -41,7 +40,6 @@ const TransactionAdder = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [description, setDescription] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -57,15 +55,6 @@ const TransactionAdder = () => {
       setSelectedAccount(accountOptions[0].account_name);
     }
   }, [categories, accountOptions]);
-
-  const refreshData = async () => {
-    setIsRefreshing(true);
-    try {
-      await refreshAll();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   const handleDateChange = (event: any, date?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);
@@ -157,9 +146,6 @@ const TransactionAdder = () => {
             contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
             className="flex-1"
             keyboardShouldPersistTaps="handled"
-            refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
-            }
           >
           <TransactionHero
             transactionType={transactionType}

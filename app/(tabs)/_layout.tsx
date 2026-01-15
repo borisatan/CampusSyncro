@@ -1,11 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import "../globals.css";
 import { View } from "react-native";
+import { useAuth } from "../context/AuthContext";
+import LoadingSpinner from "../components/Shared/LoadingSpinner";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { userId, isLoading } = useAuth();
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  // Redirect to sign-in if not authenticated
+  if (!userId) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
 
   return (
     <Tabs

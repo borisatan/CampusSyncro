@@ -1,7 +1,7 @@
 
 import { Plus } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Alert, Modal, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 import { Easing } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,24 +32,12 @@ export default function Accounts() {
   const [editingAccountId, setEditingAccountId] = useState<number | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<any | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
   useEffect(() => {
     registerAccountsRefresh(loadAccounts);
   }, [registerAccountsRefresh]);
-
-  const refreshData = async () => {
-    setIsRefreshing(true);
-    try {
-      await Promise.all([loadAccounts(), loadCurrency()]);
-    } catch (err) {
-      console.error('Failed to refresh:', err);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string; sort_order?: number }) => {
     const { name, balance, type, sort_order } = newAccountData;
@@ -136,10 +124,7 @@ export default function Accounts() {
   return (
     <SafeAreaProvider>
       <SafeAreaView className={`flex-1 ${isDark ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
-        <ScrollView 
-          className="flex-1" 
-          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />}
-        >
+        <ScrollView className="flex-1">
           <View className="px-2" style={{ paddingBottom: insets.bottom + 20 }}>
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6 px-2">

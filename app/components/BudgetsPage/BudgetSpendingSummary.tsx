@@ -23,10 +23,10 @@ const getStatus = (percentage: number): 'good' | 'warning' | 'over' => {
   return 'good';
 };
 
-const getStatusColor = (status: 'good' | 'warning' | 'over', budgetColor: string): string => {
+const getStatusColor = (status: 'good' | 'warning' | 'over'): string => {
   if (status === 'over') return '#f43f5e';
   if (status === 'warning') return '#eab308';
-  return budgetColor;
+  return '#22c55e';
 };
 
 const getStatusTextColor = (status: 'good' | 'warning' | 'over'): string => {
@@ -75,7 +75,7 @@ export const BudgetSpendingSummary: React.FC<BudgetSpendingSummaryProps> = ({
           const spentAbs = Math.abs(budget.spent);
           const percentage = budget.limit > 0 ? (spentAbs / budget.limit) * 100 : 0;
           const status = getStatus(percentage);
-          const barColor = getStatusColor(status, budget.color);
+          const barColor = getStatusColor(status);
           const fillHeight = Math.min(percentage, 100);
           const remaining = Math.max(budget.limit - spentAbs, 0);
           const isActive = activeBarId === budget.id;

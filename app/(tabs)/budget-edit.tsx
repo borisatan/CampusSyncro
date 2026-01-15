@@ -15,10 +15,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategorySelector } from '../components/BudgetsPage/CategorySelector';
-import { ColorPicker, PRESET_COLORS } from '../components/Shared/ColorPicker';
 import { PeriodSelector } from '../components/BudgetsPage/PeriodSelector';
+import { ColorPicker, PRESET_COLORS } from '../components/Shared/ColorPicker';
 import { SuccessModal } from '../components/Shared/SuccessModal';
 import { useTheme } from '../context/ThemeContext';
+import { useBudgetsData } from '../hooks/useBudgetsData';
 import {
   deleteBudget,
   reorderBudgetPosition,
@@ -30,7 +31,6 @@ import { useBudgetsStore } from '../store/useBudgetsStore';
 import { useCategoriesStore } from '../store/useCategoriesStore';
 import { useCurrencyStore } from '../store/useCurrencyStore';
 import { useIncomeStore } from '../store/useIncomeStore';
-import { useBudgetsData } from '../hooks/useBudgetsData';
 import { BudgetAmountType, BudgetPeriodType } from '../types/types';
 
 export default function EditBudgetScreen() {
@@ -222,6 +222,18 @@ export default function EditBudgetScreen() {
     if (!validateForm()) return;
 
     setIsSaving(true);
+
+    // Show success animation immediately for snappy feel
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      // Wait for modal fade-out animation before navigating
+      setTimeout(() => {
+        router.replace('/budgets');
+      }, 1900);
+    }, 1900);
+
+    // Do API work in background
     try {
       const oldSortOrder = existingBudget?.sort_order ?? 0;
       const insertPosition = sortOrder;
@@ -279,14 +291,6 @@ export default function EditBudgetScreen() {
       }
 
       await loadBudgets();
-
-      // Show success animation before navigating
-      setShowSuccess(true);
-      setIsSaving(false);
-      setTimeout(() => {
-        setShowSuccess(false);
-        router.replace('/budgets');
-      }, 1900);
     } catch (error) {
       console.error('Error saving budget:', error);
       Alert.alert('Error', 'Failed to save budget');
@@ -550,7 +554,7 @@ export default function EditBudgetScreen() {
             className="bg-accentBlue rounded-xl py-4 mt-4 items-center"
           >
             <Text className="text-white font-semibold text-lg">
-              {isSaving ? 'Saving...' : budgetId ? 'Update Budget' : 'Create Budget'}
+              {budgetId ? 'Update Budget' : 'Create Budget'}
             </Text>
           </TouchableOpacity>
         </ScrollView>

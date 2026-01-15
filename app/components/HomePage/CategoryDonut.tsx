@@ -7,10 +7,11 @@ import { Category, CategoryAggregation } from '../../types/types';
 interface CategoryDonutProps {
   aggregates: CategoryAggregation[];
   categories: Category[];
-  timeFrame: string; 
+  timeFrame: string;
+  isUnlocked?: boolean;
 }
 
-export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDonutProps) => {
+export const CategoryDonut = ({ aggregates, categories, timeFrame, isUnlocked = true }: CategoryDonutProps) => {
   // Sorting logic added here
   const categoryData = useMemo(() => {
     return aggregates
@@ -29,7 +30,7 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDon
   
   let accumulatedAngle = 0;
 
-  const instanceKey = `${timeFrame}-${total}`;
+  const instanceKey = `${timeFrame}-${total}-${isUnlocked}`;
 
   return (
     <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
@@ -41,9 +42,9 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDon
         </View>
       ) : (
         <View className="flex-row items-center justify-between">
-          <MotiView 
-            key={`chart-${instanceKey}`} 
-            from={{ opacity: 0, scale: 0.9 }}
+          <MotiView
+            key={`chart-${instanceKey}`}
+            from={isUnlocked ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: 'timing', duration: 600 }}
             className="w-[140px] h-[140px] items-center justify-center"
@@ -76,14 +77,14 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame }: CategoryDon
             {categoryData.slice(0, 5).map((agg, index) => {
               const category = categories.find(c => c.category_name === agg.category_name);
               return (
-                <MotiView 
+                <MotiView
                   key={`label-${instanceKey}-${index}`}
-                  from={{ opacity: 0, translateX: 15 }}
+                  from={isUnlocked ? { opacity: 0, translateX: 15 } : { opacity: 1, translateX: 0 }}
                   animate={{ opacity: 1, translateX: 0 }}
-                  transition={{ 
-                    type: 'timing', 
-                    duration: 400, 
-                    delay: 200 + (index * 80) 
+                  transition={{
+                    type: 'timing',
+                    duration: 400,
+                    delay: isUnlocked ? 200 + (index * 80) : 0
                   }}
                   className="flex-row items-center justify-between"
                 >

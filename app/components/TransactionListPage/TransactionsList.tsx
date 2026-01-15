@@ -1,26 +1,22 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import { Animated, Pressable, RefreshControl, SectionList, Text } from "react-native";
+import { Animated, Pressable, SectionList, Text } from "react-native";
 import { CategoryIconInfo, TransactionSection } from "../../types/types";
 import TransactionItem from "./TransactionItem";
 
 type TransactionsListProps = {
   sections: TransactionSection[];
   categoryIcons: Record<string, CategoryIconInfo>;
-  refreshing: boolean;
-  onRefresh?: () => Promise<void>;
   onEndReached?: () => void;
   isFetchingMore?: boolean;
-  onItemLongPress?: (transactionId: string) => void; 
+  onItemLongPress?: (transactionId: string) => void;
 };
 
 const TransactionsList: React.FC<TransactionsListProps> = ({
   sections,
   categoryIcons,
-  refreshing,
-  onRefresh,
   onEndReached,
   isFetchingMore,
-  onItemLongPress, 
+  onItemLongPress,
 }) => {
   // We pass the global index if needed, but for simplicity here 
   // each item will just trigger its own fade on mount.
@@ -44,14 +40,6 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
       )}
       className="px-2"
       contentContainerStyle={{ paddingBottom: 100 }}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={["#000000"]}
-          tintColor={"#000000"}
-        />
-      }
       onEndReached={onEndReached}
       onEndReachedThreshold={0.3}
       keyboardShouldPersistTaps="handled"

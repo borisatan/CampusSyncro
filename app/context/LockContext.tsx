@@ -7,6 +7,7 @@ import { useAuth } from './AuthContext';
 
 type LockContextValue = {
   isLocked: boolean;
+  isUnlocked: boolean; // True once user has authenticated (or app lock disabled)
   isAppLockEnabled: boolean;
   biometricAvailable: boolean;
   hasPinSet: boolean;
@@ -20,6 +21,7 @@ type LockContextValue = {
 
 const LockContext = createContext<LockContextValue>({
   isLocked: false,
+  isUnlocked: false,
   isAppLockEnabled: false,
   biometricAvailable: false,
   hasPinSet: false,
@@ -37,6 +39,7 @@ const PIN_KEY = 'app_pin';
 export const LockProvider = ({ children }: { children: React.ReactNode }) => {
   const { userId, isLoading: authLoading } = useAuth();
   const [isLocked, setIsLocked] = useState(true);
+  const [isUnlocked, setIsUnlocked] = useState(false); // Tracks if user has authenticated this session
   const [isAppLockEnabled, setIsAppLockEnabledState] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [hasPinSet, setHasPinSet] = useState(false);
@@ -69,7 +72,12 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
 
       // If app lock is enabled and user is authenticated, start locked
       // If app lock is disabled, start unlocked
-      setIsLocked(enabled && !!userId);
+      const shouldBeLocked = enabled && !!userId;
+      setIsLocked(shouldBeLocked);
+      // If not locked (app lock disabled), mark as unlocked immediately
+      if (!shouldBeLocked) {
+        setIsUnlocked(true);
+      }
       setIsInitialized(true);
     };
 
@@ -113,6 +121,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (result.success) {
       setIsLocked(false);
+      setIsUnlocked(true);
       return true;
     }
     return false;
@@ -123,6 +132,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     const storedPin = await SecureStore.getItemAsync(PIN_KEY);
     if (storedPin && storedPin === pin) {
       setIsLocked(false);
+      setIsUnlocked(true);
       return true;
     }
     return false;
@@ -134,6 +144,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (!error) {
         setIsLocked(false);
+        setIsUnlocked(true);
         return true;
       }
       return false;
@@ -160,6 +171,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAppLockEnabledState(enabled);
     if (!enabled) {
       setIsLocked(false);
+      setIsUnlocked(true);
     }
     // Then persist to storage
     await SecureStore.setItemAsync(APP_LOCK_KEY, enabled ? 'true' : 'false');
@@ -167,6 +179,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value = useMemo(() => ({
     isLocked: isInitialized && isAppLockEnabled && isLocked && !!userId,
+    isUnlocked,
     isAppLockEnabled,
     biometricAvailable,
     hasPinSet,
@@ -176,7 +189,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     setAppLockEnabled,
     setPin,
     removePin,
-  }), [isLocked, isAppLockEnabled, biometricAvailable, hasPinSet, unlock, unlockWithPin, unlockWithCredentials, setAppLockEnabled, setPin, removePin, isInitialized, userId]);
+  }), [isLocked, isUnlocked, isAppLockEnabled, biometricAvailable, hasPinSet, unlock, unlockWithPin, unlockWithCredentials, setAppLockEnabled, setPin, removePin, isInitialized, userId]);
 
   return <LockContext.Provider value={value}>{children}</LockContext.Provider>;
 };

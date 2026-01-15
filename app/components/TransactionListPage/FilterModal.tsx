@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Calendar } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Modal,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -11,7 +14,6 @@ import {
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { fetchCategories } from "../../services/backendService";
 import { Category } from "../../types/types";
-import DateRangeSelector from "../Shared/date-selector";
 
 type FilterModalProps = {
   visible: boolean;
@@ -47,6 +49,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
 }) => {
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
 
   useEffect(() => {
@@ -56,6 +60,34 @@ const FilterModal: React.FC<FilterModalProps> = ({
     };
     loadCategories();
   }, []);
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "Select date";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const startDate = dateRange?.start ? new Date(dateRange.start) : new Date();
+  const endDate = dateRange?.end ? new Date(dateRange.end) : new Date();
+
+  const handleStartDateChange = (event: any, date?: Date) => {
+    setShowStartPicker(Platform.OS === "ios");
+    if (date) {
+      const newStart = date.toISOString().split("T")[0];
+      setDateRange({ start: newStart, end: dateRange?.end || "" });
+    }
+  };
+
+  const handleEndDateChange = (event: any, date?: Date) => {
+    setShowEndPicker(Platform.OS === "ios");
+    if (date) {
+      const newEnd = date.toISOString().split("T")[0];
+      setDateRange({ start: dateRange?.start || "", end: newEnd });
+    }
+  };
 
   const toggleCategory = (categoryName: string) => {
     if (selectedCategories.includes(categoryName)) {
@@ -167,16 +199,56 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 </View>
               </View>
     
-              {/* Date Range Selector Integration */}
+              {/* Date Range Selector */}
               <View className="mb-10">
                 <Text className="text-sm font-bold text-textDark mb-4 uppercase tracking-[2px]">
                   Date Range
                 </Text>
-                <View className="bg-inputDark rounded-xl border border-borderDark overflow-hidden">
-                  <DateRangeSelector
-                    currentRange={dateRange}
-                    onDateRangeSelect={(startDate, endDate) => setDateRange({ start: startDate, end: endDate })}
-                  />
+                <View className="gap-y-3">
+                  {/* Start Date */}
+                  <TouchableOpacity
+                    onPress={() => setShowStartPicker(true)}
+                    className="flex-row items-center rounded-xl px-6 py-5 border border-borderDark bg-inputDark"
+                  >
+                    <Calendar size={20} color="#94a3b8" />
+                    <View className="ml-4 flex-1">
+                      <Text className="text-xs text-secondaryDark uppercase tracking-[1px]">Start Date</Text>
+                      <Text className="text-textDark text-lg font-medium">{formatDate(dateRange?.start)}</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* End Date */}
+                  <TouchableOpacity
+                    onPress={() => setShowEndPicker(true)}
+                    className="flex-row items-center rounded-xl px-6 py-5 border border-borderDark bg-inputDark"
+                  >
+                    <Calendar size={20} color="#94a3b8" />
+                    <View className="ml-4 flex-1">
+                      <Text className="text-xs text-secondaryDark uppercase tracking-[1px]">End Date</Text>
+                      <Text className="text-textDark text-lg font-medium">{formatDate(dateRange?.end)}</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  {showStartPicker && (
+                    <DateTimePicker
+                      value={startDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleStartDateChange}
+                      themeVariant="dark"
+                    />
+                  )}
+
+                  {showEndPicker && (
+                    <DateTimePicker
+                      value={endDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleEndDateChange}
+                      minimumDate={startDate}
+                      themeVariant="dark"
+                    />
+                  )}
                 </View>
               </View>
     

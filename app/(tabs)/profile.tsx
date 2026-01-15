@@ -162,7 +162,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 8 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 100 }}>
 
         {/* Header */}
         <View className="mb-6 px-2">

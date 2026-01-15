@@ -1,10 +1,8 @@
 import { useRouter } from 'expo-router';
 import { Plus } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import {
-  ActivityIndicator,
-  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -27,17 +25,10 @@ export default function BudgetsScreen() {
   const { budgetsWithSpent, monthlyIncome, dynamicIncome, allocatedPercentage, isLoading, refresh } = useBudgetsData();
   const { currencySymbol } = useCurrencyStore();
   const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const textPrimary = isDarkMode ? 'text-white' : 'text-black';
   const textSecondary = isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight';
   const screenBg = isDarkMode ? 'bg-backgroundDark' : 'bg-background';
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await refresh();
-    setIsRefreshing(false);
-  }, [refresh]);
 
   const handleAddBudget = () => {
     router.push('/budget-edit');
@@ -72,101 +63,88 @@ export default function BudgetsScreen() {
         </TouchableOpacity>
       </View>
 
-      {isLoading && !isRefreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563EB" />
-        </View>
-      ) : (
-        <ScrollView
-          className="flex-1 px-2"
-          contentContainerStyle={{ paddingBottom: 100 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              tintColor="#2563EB"
-            />
-          }
+      <ScrollView
+        className="flex-1 px-2"
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* Income Card */}
+        <MotiView
+          from={{ opacity: 0, translateY: 10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400 }}
         >
-          {/* Income Card */}
+          <IncomeCard
+            income={monthlyIncome}
+            allocatedPercentage={allocatedPercentage}
+            currencySymbol={currencySymbol}
+            useDynamicIncome={useDynamicIncome}
+            manualIncome={manualIncome}
+            dynamicIncome={dynamicIncome}
+            isDarkMode={isDarkMode}
+            onSave={handleSaveIncome}
+          />
+        </MotiView>
+
+        {/* Budget Spending Summary */}
+        {budgetsWithSpent.length > 0 && (
           <MotiView
             from={{ opacity: 0, translateY: 10 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 400 }}
+            transition={{ type: 'timing', duration: 400, delay: 100 }}
           >
-            <IncomeCard
-              income={monthlyIncome}
-              allocatedPercentage={allocatedPercentage}
+            <BudgetSpendingSummary
+              budgets={budgetsWithSpent}
               currencySymbol={currencySymbol}
-              useDynamicIncome={useDynamicIncome}
-              manualIncome={manualIncome}
-              dynamicIncome={dynamicIncome}
               isDarkMode={isDarkMode}
-              onSave={handleSaveIncome}
             />
           </MotiView>
+        )}
 
-          {/* Budget Spending Summary */}
-          {budgetsWithSpent.length > 0 && (
-            <MotiView
-              from={{ opacity: 0, translateY: 10 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 400, delay: 100 }}
-            >
-              <BudgetSpendingSummary
-                budgets={budgetsWithSpent}
+        {/* Budget Allocation Bar Chart */}
+        {budgetsWithSpent.length > 0 && (
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400, delay: 200 }}
+          >
+            <BudgetAllocationBar
+              budgets={budgetsWithSpent}
+              totalIncome={monthlyIncome}
+              currencySymbol={currencySymbol}
+              isDarkMode={isDarkMode}
+            />
+          </MotiView>
+        )}
+
+        {/* Budgets List */}
+        {!isLoading && budgetsWithSpent.length === 0 ? (
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 400, delay: 200 }}
+            className="items-center justify-center py-12"
+          >
+            <Text className={`text-lg ${textSecondary}`}>
+              No budgets yet
+            </Text>
+            <Text className={`text-sm ${textSecondary} mt-2 text-center`}>
+              Tap the + button to create your first budget
+            </Text>
+          </MotiView>
+        ) : budgetsWithSpent.length > 0 ? (
+          <View className="gap-4">
+            {budgetsWithSpent.map((budget, index) => (
+              <BudgetCard
+                key={budget.id}
+                budget={budget}
                 currencySymbol={currencySymbol}
-                isDarkMode={isDarkMode}
+                onPress={() => handleEditBudget(budget.id)}
+                index={index}
               />
-            </MotiView>
-          )}
-
-          {/* Budget Allocation Bar Chart */}
-          {budgetsWithSpent.length > 0 && (
-            <MotiView
-              from={{ opacity: 0, translateY: 10 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 400, delay: 200 }}
-            >
-              <BudgetAllocationBar
-                budgets={budgetsWithSpent}
-                totalIncome={monthlyIncome}
-                currencySymbol={currencySymbol}
-                isDarkMode={isDarkMode}
-              />
-            </MotiView>
-          )}
-
-          {/* Budgets List */}
-          {budgetsWithSpent.length === 0 ? (
-            <MotiView
-              from={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ type: 'timing', duration: 400, delay: 200 }}
-              className="items-center justify-center py-12"
-            >
-              <Text className={`text-lg ${textSecondary}`}>
-                No budgets yet
-              </Text>
-              <Text className={`text-sm ${textSecondary} mt-2 text-center`}>
-                Tap the + button to create your first budget
-              </Text>
-            </MotiView>
-          ) : (
-            <View className="gap-4">
-              {budgetsWithSpent.map((budget, index) => (
-                <BudgetCard
-                  key={budget.id}
-                  budget={budget}
-                  currencySymbol={currencySymbol}
-                  onPress={() => handleEditBudget(budget.id)}
-                  index={index}
-                />
-              ))}
-            </View>
-          )}
-        </ScrollView>
-      )}
+            ))}
+          </View>
+        ) : null}
+      </ScrollView>
     </SafeAreaView>
   );
 }

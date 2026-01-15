@@ -5,7 +5,6 @@ import {
     Alert,
     KeyboardAvoidingView,
     Platform,
-    RefreshControl,
     ScrollView,
     StatusBar,
     Text,
@@ -61,7 +60,6 @@ const EditTransactionScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedDate, setSelectedDate] = useState(transaction ? new Date(transaction.created_at) : new Date());
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -85,15 +83,6 @@ const EditTransactionScreen = () => {
       }
     }
   }, [params.transaction, categories]);
-
-  const refreshData = async () => {
-    setIsRefreshing(true);
-    try {
-      await refreshAll();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   const handleDateChange = (event: any, date?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);
@@ -228,9 +217,6 @@ const EditTransactionScreen = () => {
             contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
             className="flex-1"
             keyboardShouldPersistTaps="handled"
-            refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} />
-            }
           >
             <TransactionHero
             transactionType={transactionType}

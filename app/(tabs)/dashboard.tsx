@@ -16,6 +16,7 @@ import { TimeFrameSelector } from '../components/HomePage/TimeFrameSelector';
 
 // Hooks & Utilities
 import { useDataRefresh } from '../context/DataRefreshContext';
+import { useLock } from '../context/LockContext';
 import { useTheme } from '../context/ThemeContext';
 import { useBudgetsData } from '../hooks/useBudgetsData';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -24,6 +25,7 @@ import { useCurrencyStore } from '../store/useCurrencyStore';
 export default function Dashboard() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
+  const { isUnlocked } = useLock();
 
   const { currencySymbol, isLoading: isCurrencyLoading, loadCurrency } = useCurrencyStore();
 
@@ -91,11 +93,12 @@ export default function Dashboard() {
         // }
       >
         <View className="px-2">
-          <DashboardSummary 
-            totalBalance={totalBalance} 
-            totalIncome={totalIncome} 
-            totalExpenses={totalExpenses} 
-            currencySymbol={currencySymbol} 
+          <DashboardSummary
+            totalBalance={totalBalance}
+            totalIncome={totalIncome}
+            totalExpenses={totalExpenses}
+            currencySymbol={currencySymbol}
+            isUnlocked={isUnlocked}
           />
             
           <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
@@ -106,19 +109,22 @@ export default function Dashboard() {
             font={interFont}
             currencySymbol={currencySymbol}
             budgets={budgetsWithSpent}
+            isUnlocked={isUnlocked}
           />
 
 
           <CategoryDonut
-            aggregates={categoriesAggregated} 
-            categories={categories} 
-            timeFrame={timeFrame} 
+            aggregates={categoriesAggregated}
+            categories={categories}
+            timeFrame={timeFrame}
+            isUnlocked={isUnlocked}
           />
 
             <BudgetHealthCard
               budgets={budgetsWithSpent}
               currencySymbol={currencySymbol}
               isLoading={budgetsLoading}
+              isUnlocked={isUnlocked}
             />
 
           <CategoryBreakdownList

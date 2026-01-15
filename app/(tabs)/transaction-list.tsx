@@ -161,8 +161,13 @@ const TransactionsScreen: React.FC = () => {
       ? new Date(tx.created_at) >= new Date(dateRange.start) &&
         new Date(tx.created_at) <= new Date(dateRange.end)
       : true;
+    const matchesType = transactionType === 'all'
+      ? true
+      : transactionType === 'income'
+        ? tx.amount > 0
+        : tx.amount < 0;
 
-    return matchesCategory && matchesAccount && matchesSearch && matchesDate;
+    return matchesCategory && matchesAccount && matchesSearch && matchesDate && matchesType;
   });
 
   const dedupeById = (transactions: Transaction[]) => {
@@ -180,6 +185,7 @@ const TransactionsScreen: React.FC = () => {
     setFilterAccounts([]);
     setFilterCategory(null);
     setSelectedCategories([]);
+    setTransactionType('all');
     setIsFilterVisible(false);
   };
 
@@ -219,10 +225,8 @@ const TransactionsScreen: React.FC = () => {
           <TransactionsList
             sections={sections}
             categoryIcons={categoryIcons}
-            refreshing={isRefreshing} 
-            onRefresh={loadInitialTransactions} 
-            onEndReached={loadMoreTransactions} 
-            isFetchingMore={isFetchingMore}    
+            onEndReached={loadMoreTransactions}
+            isFetchingMore={isFetchingMore}
             onItemLongPress={handleEditTransaction}
           />
 

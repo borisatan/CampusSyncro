@@ -9,9 +9,41 @@ interface SummaryProps {
   totalIncome: number;
   totalExpenses: number;
   currencySymbol: string;
+  isUnlocked?: boolean;
 }
 
-export const DashboardSummary = ({ totalBalance, totalIncome, totalExpenses, currencySymbol }: SummaryProps) => {
+export const DashboardSummary = ({ totalBalance, totalIncome, totalExpenses, currencySymbol, isUnlocked = true }: SummaryProps) => {
+  // Don't animate until unlocked - show static values
+  if (!isUnlocked) {
+    return (
+      <View className=" flex-col  mb-2">
+        <View className="flex-1  rounded-2xl p-2 shadow-sm mb-1">
+          <Text className="text-textDark text-2xl  font-semibold opacity-90">Total Balance</Text>
+          <View className="flex-row items-center">
+            <Text style={{ fontSize: 48, fontWeight: '700', color: '#FFFFFF' }}>
+              {currencySymbol}0.00
+            </Text>
+          </View>
+        </View>
+        <View className="flex-row gap-4 mb-3">
+          <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark">
+            <View className="flex-row items-center gap-2 mb-2">
+              <TrendingUp color="#fff" size={16} />
+              <Text className="text-textDark text-lg font-medium opacity-90">Income</Text>
+            </View>
+            <Text style={{ fontSize: 30, fontWeight: '700', color: '#FFFFFF' }}>{currencySymbol}0.00</Text>
+          </View>
+          <View className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm border border-borderDark">
+            <View className="flex-row items-center gap-2 mb-2">
+              <TrendingDown color="#fff" size={16} />
+              <Text className="text-textDark text-lg font-medium opacity-90">Expenses</Text>
+            </View>
+            <Text style={{ fontSize: 30, fontWeight: '700', color: '#FFFFFF' }}>{currencySymbol}0.00</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
   return (
         <View className=" flex-col  mb-2">
             <View className="flex-1  rounded-2xl p-2 shadow-sm mb-1">

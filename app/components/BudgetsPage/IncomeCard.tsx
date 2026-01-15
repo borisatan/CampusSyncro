@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
+import { Easing } from 'react-native-reanimated';
 
 // Animated wrapper for staggered fade-in effect
 const AnimatedRow: React.FC<{ index: number; children: React.ReactNode }> = ({
@@ -123,9 +125,15 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
       </View>
 
       {/* Income amount */}
-      <Text className="text-white text-3xl font-bold mb-3">
-        {formatAmount(income, currencySymbol)}
-      </Text>
+      <View className="flex-row items-center mb-3">
+        <Text style={{ fontSize: 30, fontWeight: '700', color: '#FFFFFF' }}>{currencySymbol}</Text>
+        <AnimatedRollingNumber
+          value={income}
+          spinningAnimationConfig={{ duration: 1200, easing: Easing.bounce }}
+          textStyle={{ fontSize: 30, fontWeight: '700', color: '#FFFFFF' }}
+          toFixed={0}
+        />
+      </View>
 
       {/* Progress bar and percentage */}
       <View className="flex-row items-center gap-3">

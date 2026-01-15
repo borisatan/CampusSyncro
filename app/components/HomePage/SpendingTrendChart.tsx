@@ -20,11 +20,32 @@ interface ChartProps {
   timeFrame: 'week' | 'month' | 'year';
   currencySymbol: string;
   budgets?: BudgetWithSpent[];
+  isUnlocked?: boolean;
 }
 
-function ToolTip({ x, y, color }: { x: SharedValue<number>; y: SharedValue<number>; color: string }) {
+function ToolTip({
+  x,
+  y,
+  yPace,
+  color,
+  showPaceCircle
+}: {
+  x: SharedValue<number>;
+  y: SharedValue<number>;
+  yPace: SharedValue<number>;
+  color: string;
+  showPaceCircle: boolean;
+}) {
   return (
     <Group>
+      {/* Budget pace circle (gray dashed style) */}
+      {showPaceCircle && (
+        <>
+          <Circle cx={x} cy={yPace} r={8} color="#64748b" opacity={0.6} />
+          <Circle cx={x} cy={yPace} r={4} color="#fff" />
+        </>
+      )}
+      {/* Actual spending circle */}
       <Circle cx={x} cy={y} r={8} color={color} opacity={0.8} />
       <Circle cx={x} cy={y} r={4} color="#fff" />
     </Group>
@@ -56,9 +77,15 @@ const normalizeBudgetToTimeframe = (
   return limit * 12;
 };
 
-export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budgets = [] }: ChartProps) => {
-  const [tooltipData, setTooltipData] = useState({ label: '', value: '', isOverBudget: false });
-  const { state, isActive } = useChartPressState({ x: 0, y: { amount: 0 } });
+export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budgets = [], isUnlocked = true }: ChartProps) => {
+  const [tooltipData, setTooltipData] = useState({
+    label: '',
+    value: '',
+    paceValue: '',
+    isOverBudget: false,
+    isFuture: false
+  });
+  const { state, isActive } = useChartPressState({ x: 0, y: { amount: 0, pace: 0 } });
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Track last index to prevent redundant JS bridge calls
@@ -137,14 +164,14 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
 
   const instanceKey = useMemo(() => {
     const total = data.reduce((sum, item) => sum + (item.amount || 0), 0);
-    return `${timeFrame}-${total}-${totalBudget}`;
-  }, [timeFrame, data, totalBudget]);
+    return `${timeFrame}-${total}-${totalBudget}-${isUnlocked}`;
+  }, [timeFrame, data, totalBudget, isUnlocked]);
 
   const animatedTooltipStyle = useAnimatedStyle(() => {
     return {
       transform: [
-        { translateX: state.x.position.value - 60 },
-        { translateY: state.y.amount.position.value - 75 },
+        { translateX: state.x.position.value - 100 },
+        { translateY: state.y.amount.position.value - 95 },
       ],
     } as any;
   });
@@ -166,7 +193,7 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
         if (lastIndex.value !== -1) {
           lastIndex.value = -1;
           runOnJS(setShowTooltip)(false);
-          runOnJS(setTooltipData)({ label: '', value: '', isOverBudget: false });
+          runOnJS(setTooltipData)({ label: '', value: '', paceValue: '', isOverBudget: false, isFuture: false });
         }
         return;
       }
@@ -183,11 +210,13 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
           const dataPoint = cumulativeData[index];
           const label = dataPoint?.label || '';
           const isOverBudget = dataPoint?.isOverBudget || false;
-          const valueStr = dataPoint?.isFuture
+          const isFuture = dataPoint?.isFuture || false;
+          const valueStr = isFuture
             ? 'Upcoming'
             : `${currencySymbol}${Math.round(dataPoint?.amount || 0).toLocaleString()}`;
+          const paceValueStr = `${currencySymbol}${Math.round(dataPoint?.pace || 0).toLocaleString()}`;
 
-          runOnJS(setTooltipData)({ label, value: valueStr, isOverBudget });
+          runOnJS(setTooltipData)({ label, value: valueStr, paceValue: paceValueStr, isOverBudget, isFuture });
         }
       }
     }
@@ -197,9 +226,29 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
     <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
       <Text className="text-white text-xl font-bold mb-5">Spending Trend</Text>
 
+      {/* Legend - outside MotiView to prevent re-animation on time period change */}
+      {totalBudget > 0 && (
+        <View className="flex-row items-center justify-center gap-6 mb-3">
+          <View className="flex-row items-center gap-2">
+            <View className="flex-row">
+              <View className="w-[10px] h-[3px] bg-green-500 rounded-l-full" />
+              <View className="w-[10px] h-[3px] bg-red-500 rounded-r-full" />
+            </View>
+            <Text className="text-slate-400 text-xs">Spending</Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-[2px]">
+              <View className="w-[6px] h-[2px] bg-slate-500 rounded-sm" />
+              <View className="w-[6px] h-[2px] bg-slate-500 rounded-sm" />
+            </View>
+            <Text className="text-slate-400 text-xs">Budget Pace</Text>
+          </View>
+        </View>
+      )}
+
       <MotiView
         key={instanceKey}
-        from={{ opacity: 0, translateY: 10 }}
+        from={isUnlocked ? { opacity: 0, translateY: 10 } : { opacity: 1, translateY: 0 }}
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ type: 'timing', duration: 500 }}
       >
@@ -218,10 +267,37 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
             ]}
             pointerEvents="none"
           >
+            <Text className="text-slate-400 text-sm font-medium mb-1">{tooltipData.label}</Text>
             <View className="flex-row items-center">
-              <Text className="text-slate-400 text-sm font-medium">{tooltipData.label}:</Text>
-              <Text className="text-white text-sm font-bold ml-2">{tooltipData.value}</Text>
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: tooltipData.isFuture
+                    ? '#6b7280'
+                    : totalBudget > 0
+                      ? (tooltipData.isOverBudget ? '#ef4444' : '#22c55e')
+                      : '#6366f1',
+                  marginRight: 6
+                }}
+              />
+              <Text className="text-white text-sm font-bold">Spent: {tooltipData.value}</Text>
             </View>
+            {totalBudget > 0 && (
+              <View className="flex-row items-center mt-1">
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: '#64748b',
+                    marginRight: 6
+                  }}
+                />
+                <Text className="text-slate-300 text-sm">Budget: {tooltipData.paceValue}</Text>
+              </View>
+            )}
           </Animated.View>)}
 
           <View className="h-[250px] -ml-2">
@@ -390,7 +466,15 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
                       <ToolTip
                         x={state.x.position}
                         y={state.y.amount.position}
-                        color={totalBudget > 0 ? (tooltipData.isOverBudget ? '#ef4444' : '#22c55e') : '#6366f1'}
+                        yPace={state.y.pace.position}
+                        color={
+                          tooltipData.isFuture
+                            ? '#6b7280'
+                            : totalBudget > 0
+                              ? (tooltipData.isOverBudget ? '#ef4444' : '#22c55e')
+                              : '#6366f1'
+                        }
+                        showPaceCircle={totalBudget > 0}
                       />
                     )}
                   </>

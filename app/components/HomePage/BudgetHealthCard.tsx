@@ -9,6 +9,7 @@ interface BudgetHealthCardProps {
   budgets: BudgetWithSpent[];
   currencySymbol: string;
   isLoading?: boolean;
+  isUnlocked?: boolean;
 }
 
 const formatAmount = (amount: number, symbol: string): string => {
@@ -22,6 +23,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
   budgets,
   currencySymbol,
   isLoading = false,
+  isUnlocked = true,
 }) => {
 
   // Only show monthly budgets for the dashboard view
@@ -35,7 +37,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
   if (monthlyBudgets.length === 0) {
     return (
       <MotiView
-        from={{ opacity: 0 }}
+        from={isUnlocked ? { opacity: 0 } : { opacity: 1 }}
         animate={{ opacity: 1 }}
         transition={{ type: 'timing', duration: 400 }}
       >
@@ -56,7 +58,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
 
   return (
     <MotiView
-      from={{ opacity: 0 }}
+      from={isUnlocked ? { opacity: 0 } : { opacity: 1 }}
       animate={{ opacity: 1 }}
       transition={{ type: 'timing', duration: 400 }}
     >
@@ -82,12 +84,12 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
           return (
             <MotiView
               key={budget.id}
-              from={{ opacity: 0, translateY: 10 }}
+              from={isUnlocked ? { opacity: 0, translateY: 10 } : { opacity: 1, translateY: 0 }}
               animate={{ opacity: 1, translateY: 0 }}
               transition={{
                 type: 'timing',
                 duration: 400,
-                delay: 150 + index * 100,
+                delay: isUnlocked ? 150 + index * 100 : 0,
               }}
             >
               {/* Budget Header */}
@@ -131,7 +133,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                       ? '#f43f5e'
                       : isWarning
                       ? '#eab308'
-                      : budget.color,
+                      : '#22c55e',
                   }}
                 />
               </View>
@@ -167,12 +169,12 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
 
         return (
           <MotiView
-            from={{ opacity: 0, translateY: 10 }}
+            from={isUnlocked ? { opacity: 0, translateY: 10 } : { opacity: 1, translateY: 0 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{
               type: 'timing',
               duration: 400,
-              delay: 150 + monthlyBudgets.length * 100 + 50,
+              delay: isUnlocked ? 150 + monthlyBudgets.length * 100 + 50 : 0,
             }}
             className="mt-4 pt-4 border-t border-slate-800"
           >
