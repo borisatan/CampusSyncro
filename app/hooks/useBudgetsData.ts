@@ -50,13 +50,21 @@ export const useBudgetsData = (): BudgetsDataResult => {
     setCategories(sorted);
     setDynamicIncome(fetchedDynamicIncome);
 
+    // Determine effective income for percentage-based budgets
+    const effectiveIncome = useIncomeStore.getState().useDynamicIncome
+      ? fetchedDynamicIncome
+      : useIncomeStore.getState().manualIncome;
+
     const budgetedCategories = sorted.filter(
-      (cat) => cat.budget_amount != null && cat.budget_amount > 0
+      (cat) => (cat.budget_amount != null && cat.budget_amount > 0) || (cat.budget_percentage != null && cat.budget_percentage > 0)
     );
 
     const results: CategoryBudgetStatus[] = budgetedCategories.map((cat) => {
       const spent = Math.abs(spendingByCategory[cat.category_name] ?? 0);
-      const budget_amount = cat.budget_amount!;
+      // If a percentage is set, recalculate budget_amount from income
+      const budget_amount = cat.budget_percentage != null && cat.budget_percentage > 0
+        ? Math.round((cat.budget_percentage / 100) * effectiveIncome)
+        : cat.budget_amount!;
       const percentage_used = budget_amount > 0 ? (spent / budget_amount) * 100 : 0;
       return { category: cat, budget_amount, spent, percentage_used };
     });

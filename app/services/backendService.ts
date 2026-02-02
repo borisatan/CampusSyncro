@@ -457,10 +457,25 @@ export const updateCategoryBudgetAmount = async (
 ): Promise<void> => {
   const { error } = await supabase
     .from('Categories')
-    .update({ budget_amount: budgetAmount })
+    .update({ budget_amount: budgetAmount, budget_percentage: null })
     .eq('id', categoryId);
 
   if (error) throw error;
+};
+
+export const updateCategoryBudgetPercentages = async (
+  allocations: { categoryId: number; percentage: number; amount: number }[]
+): Promise<void> => {
+  const updates = allocations.map(({ categoryId, percentage, amount }) =>
+    supabase
+      .from('Categories')
+      .update({ budget_percentage: percentage, budget_amount: amount })
+      .eq('id', categoryId)
+  );
+
+  const results = await Promise.all(updates);
+  const failed = results.find((r) => r.error);
+  if (failed?.error) throw failed.error;
 };
 
 export const fetchSpendingByCategory = async (

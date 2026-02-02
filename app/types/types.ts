@@ -33,6 +33,7 @@ export interface Category {
   user_id: string;
   sort_order?: number;
   budget_amount?: number | null;
+  budget_percentage?: number | null;
 }
 
 export interface Profile {

@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import React, { useEffect, useRef, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   LayoutAnimation,
@@ -8,10 +8,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { AnimatedToggle } from '../Shared/AnimatedToggle';
-import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
+import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
+import { AnimatedToggle } from "../Shared/AnimatedToggle";
 
 // Animated wrapper for staggered fade-in effect
 const AnimatedRow: React.FC<{ index: number; children: React.ReactNode }> = ({
@@ -39,7 +39,9 @@ const AnimatedRow: React.FC<{ index: number; children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+    <Animated.View
+      style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+    >
       {children}
     </Animated.View>
   );
@@ -57,7 +59,7 @@ interface IncomeCardProps {
 }
 
 const formatAmount = (amount: number, symbol: string): string => {
-  return `${symbol}${Math.abs(amount).toLocaleString('en-US', {
+  return `${symbol}${Math.abs(amount).toLocaleString("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   })}`;
@@ -76,7 +78,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [localUseDynamic, setLocalUseDynamic] = useState(useDynamicIncome);
   const [localManualIncome, setLocalManualIncome] = useState(
-    manualIncome > 0 ? manualIncome.toString() : ''
+    manualIncome > 0 ? manualIncome.toString() : "",
   );
 
   const remaining = income - totalBudgeted;
@@ -85,7 +87,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   useEffect(() => {
     if (!isExpanded) {
       setLocalUseDynamic(useDynamicIncome);
-      setLocalManualIncome(manualIncome > 0 ? manualIncome.toString() : '');
+      setLocalManualIncome(manualIncome > 0 ? manualIncome.toString() : "");
     }
   }, [useDynamicIncome, manualIncome, isExpanded]);
 
@@ -94,7 +96,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     if (isExpanded) {
       setLocalUseDynamic(useDynamicIncome);
-      setLocalManualIncome(manualIncome > 0 ? manualIncome.toString() : '');
+      setLocalManualIncome(manualIncome > 0 ? manualIncome.toString() : "");
     }
     setIsExpanded(!isExpanded);
   };
@@ -110,7 +112,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   const handleCancel = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setLocalUseDynamic(useDynamicIncome);
-    setLocalManualIncome(manualIncome > 0 ? manualIncome.toString() : '');
+    setLocalManualIncome(manualIncome > 0 ? manualIncome.toString() : "");
     setIsExpanded(false);
   };
 
@@ -127,7 +129,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
             activeOpacity={0.7}
           >
             <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              name={isExpanded ? "chevron-up" : "chevron-down"}
               size={18}
               color="#FFFFFF"
             />
@@ -136,11 +138,13 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
 
         {/* Income amount */}
         <View className="flex-row items-center mb-4">
-          <Text style={{ fontSize: 32, fontWeight: '700', color: '#FFFFFF' }}>{currencySymbol}</Text>
+          <Text style={{ fontSize: 32, fontWeight: "700", color: "#FFFFFF" }}>
+            {currencySymbol}
+          </Text>
           <AnimatedRollingNumber
             value={income}
             spinningAnimationConfig={{ duration: 600 }}
-            textStyle={{ fontSize: 32, fontWeight: '700', color: '#FFFFFF' }}
+            textStyle={{ fontSize: 32, fontWeight: "700", color: "#FFFFFF" }}
             toFixed={0}
           />
         </View>
@@ -157,7 +161,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
             <Text className="text-white/60 text-xs mb-0.5">Remaining</Text>
             <Text
               className="text-lg font-semibold"
-              style={{ color: remaining < 0 ? '#fca5a5' : '#FFFFFF' }}
+              style={{ color: remaining < 0 ? "#fca5a5" : "#FFFFFF" }}
             >
               {formatAmount(remaining, currencySymbol)}
             </Text>
@@ -172,7 +176,9 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           <AnimatedRow index={0}>
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-1 mr-3">
-                <Text className="text-white font-medium">Use Dynamic Income</Text>
+                <Text className="text-white font-medium">
+                  Use Dynamic Income
+                </Text>
                 <Text className="text-white/50 text-xs mt-0.5">
                   Calculate based on recent transactions
                 </Text>
@@ -190,12 +196,16 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           {!localUseDynamic && (
             <AnimatedRow index={1}>
               <View className="mb-4">
-                <Text className="text-white/80 text-sm mb-2">Monthly Income Amount</Text>
+                <Text className="text-white/80 text-sm mb-2">
+                  Monthly Income Amount
+                </Text>
                 <View
                   className="flex-row items-center px-4 py-3 rounded-xl border border-white/20"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}
+                  style={{ backgroundColor: "rgba(0,0,0,0.15)" }}
                 >
-                  <Text className="text-white/60 text-lg mr-2">{currencySymbol}</Text>
+                  <Text className="text-white/60 text-lg mr-2">
+                    {currencySymbol}
+                  </Text>
                   <TextInput
                     value={localManualIncome}
                     onChangeText={setLocalManualIncome}
@@ -214,9 +224,11 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
             <AnimatedRow index={1}>
               <View
                 className="mb-4 p-4 rounded-xl border border-white/20"
-                style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}
+                style={{ backgroundColor: "rgba(0,0,0,0.15)" }}
               >
-                <Text className="text-white/60 text-sm">Current Month Income</Text>
+                <Text className="text-white/60 text-sm">
+                  This Month's Income
+                </Text>
                 <Text className="text-white text-2xl font-bold mt-1">
                   {formatAmount(dynamicIncome, currencySymbol)}
                 </Text>
@@ -235,7 +247,9 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                 className="flex-1 py-3 rounded-xl items-center justify-center bg-surfaceDark border border-borderDark"
                 activeOpacity={0.7}
               >
-                <Text className="text-white font-semibold text-base">Cancel</Text>
+                <Text className="text-white font-semibold text-base">
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSave}

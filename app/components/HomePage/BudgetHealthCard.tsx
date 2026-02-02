@@ -29,7 +29,15 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
   isUnlocked = true,
 }) => {
   if (isLoading) {
-    return null;
+    return (
+      <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className="text-white text-xl font-bold">Budget Health</Text>
+        </View>
+        <View className="h-4 bg-slate-800 rounded-full overflow-hidden w-3/4 mt-2" />
+        <View className="h-4 bg-slate-800 rounded-full overflow-hidden w-1/2 mt-3" />
+      </View>
+    );
   }
 
   if (categoryBudgets.length === 0) {
