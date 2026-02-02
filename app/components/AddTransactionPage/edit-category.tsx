@@ -138,10 +138,6 @@ export default function CategoryEditor() {
       await refreshAll(); 
 
       setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        router.back();
-      }, 1900);
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to save category");
     } finally {
@@ -350,9 +346,13 @@ export default function CategoryEditor() {
       </ScrollView>
 
       {/* Success Modal */}
-      <SuccessModal 
-        visible={showSuccess} 
-        text={categoryId ? 'Category Updated!' : 'Category Created!'} 
+      <SuccessModal
+        visible={showSuccess}
+        text={categoryId ? 'Category Updated!' : 'Category Created!'}
+        onDismiss={() => {
+          setShowSuccess(false);
+          router.back();
+        }}
       />
     </SafeAreaView>
   );

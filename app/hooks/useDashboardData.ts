@@ -3,7 +3,7 @@ import { getDateRange } from '.././utils/dateUtils';
 import {
   fetchCategories,
   fetchCategoryAggregates,
-  fetchTotalBalance,
+  fetchCheckingBalance,
   fetchTotalExpenses,
   fetchTotalIncome,
   fetchTransactionsByDateRange
@@ -45,7 +45,7 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
     const { startDate, endDate } = getDateRange(period);
     
     const [balance, income, expenses, cats, aggregates, transactions] = await Promise.all([
-      fetchTotalBalance(),
+      fetchCheckingBalance(),
       fetchTotalIncome(startDate, endDate),
       fetchTotalExpenses(startDate, endDate),
       fetchCategories(),
@@ -91,6 +91,14 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
     }
   };
 
+  // Apply cached data on timeframe change synchronously to avoid a flash
+  const handleSetTimeFrame = useCallback((newTimeFrame: TimeFrame) => {
+    setTimeFrame(newTimeFrame);
+    if (cache[newTimeFrame]) {
+      applyData(cache[newTimeFrame]);
+    }
+  }, [cache, applyData]);
+
   useEffect(() => {
     if (cache[timeFrame]) {
       applyData(cache[timeFrame]);
@@ -101,7 +109,7 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
 
   return {
     timeFrame,
-    setTimeFrame,
+    setTimeFrame: handleSetTimeFrame,
     loading,
     ...data,
     refresh: () => preloadAllPeriods(true)

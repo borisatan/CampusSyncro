@@ -11,7 +11,7 @@ interface IncomeState {
 
 const INCOME_SETTINGS_KEY = '@perfin_income_settings';
 
-export const useIncomeStore = create<IncomeState>((set) => ({
+export const useIncomeStore = create<IncomeState>((set, get) => ({
   useDynamicIncome: true,
   manualIncome: 0,
   isLoading: true,

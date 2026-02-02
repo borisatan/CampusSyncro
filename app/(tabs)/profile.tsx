@@ -11,7 +11,8 @@ import {
   Wallet
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Modal, Pressable, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { AnimatedToggle } from '../components/Shared/AnimatedToggle';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Custom Hooks & Utils
@@ -48,9 +49,9 @@ export default function ProfileScreen() {
   // Fetch User Data and Currency preference on Mount
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setEmail(user.email ?? null);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setEmail(session.user.email ?? null);
       }
     };
     fetchUserData();
@@ -265,11 +266,11 @@ export default function ProfileScreen() {
                 {biometricAvailable ? 'Require authentication to open app' : 'Lock app when backgrounded'}
               </Text>
             </View>
-            <Switch
+            <AnimatedToggle
               value={isAppLockEnabled}
               onValueChange={setAppLockEnabled}
-              trackColor={{ false: '#3f3f46', true: '#4f46e5' }}
-              thumbColor={isAppLockEnabled ? '#818cf8' : '#a1a1aa'}
+              activeColor="#4f46e5"
+              inactiveColor="#3f3f46"
             />
           </View>
 
@@ -328,8 +329,11 @@ export default function ProfileScreen() {
         transparent={true}
         onRequestClose={() => setShowPinModal(false)}
       >
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className={`rounded-t-3xl p-6 ${isDarkMode ? 'bg-backgroundDark' : 'bg-white'}`}>
+        <KeyboardAvoidingView
+          className="flex-1 bg-black/50 justify-end"
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View className={`rounded-t-3xl p-6 ${isDarkMode ? 'bg-surfaceDark' : 'bg-white'}`}>
             {/* Modal Header */}
             <View className="flex-row items-center justify-between mb-6">
               <Text className={`text-xl font-bold ${textPrimary}`}>
@@ -394,7 +398,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

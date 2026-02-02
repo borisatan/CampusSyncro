@@ -53,7 +53,7 @@ const groupTransactionsByDate = (
 const TransactionsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const router = useRouter();
-  const { registerTransactionListRefresh } = useDataRefresh();
+  const { registerTransactionListRefresh, registerOptimisticDeleteTransaction, registerOptimisticUpdateTransaction } = useDataRefresh();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categoryIcons, setCategoryIcons] = useState<Record<string, CategoryIconInfo>>({});
@@ -130,10 +130,12 @@ const TransactionsScreen: React.FC = () => {
     loadInitialTransactions();
   }, []);
 
-  // Register refresh function so it can be called from other screens
+  // Register refresh and optimistic update functions so they can be called from other screens
   useEffect(() => {
     registerTransactionListRefresh(loadInitialTransactions);
-  }, [registerTransactionListRefresh]);
+    registerOptimisticDeleteTransaction(handleDeleteTransaction);
+    registerOptimisticUpdateTransaction(handleSaveTransaction);
+  }, [registerTransactionListRefresh, registerOptimisticDeleteTransaction, registerOptimisticUpdateTransaction]);
 
   useEffect(() => {
     const loadAccounts = async () => {
@@ -220,7 +222,7 @@ const TransactionsScreen: React.FC = () => {
             onFilterPress={() => setIsFilterVisible(true)}
           />
         </View>
-      
+
         {/* Transactions list */}
           <TransactionsList
             sections={sections}

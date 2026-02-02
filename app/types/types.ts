@@ -32,7 +32,7 @@ export interface Category {
   color: string;
   user_id: string;
   sort_order?: number;
-  budget_id?: number | null;
+  budget_amount?: number | null;
 }
 
 export interface Profile {
@@ -74,32 +74,13 @@ export interface AccountOption {
   type: string;
 }
 
-// Budget Types
-export type BudgetAmountType = 'money_amount' | 'percentage';
-export type BudgetPeriodType = 'weekly' | 'monthly' | 'custom';
 
-export interface Budget {
-  id: number;
-  user_id: string;
-  name: string;
-  color: string;
-  amount_type: BudgetAmountType;
-  amount: number;
-  period_type: BudgetPeriodType;
-  custom_start_date?: string;
-  custom_end_date?: string;
-  manual_income?: number;
-  use_dynamic_income: boolean;
-  created_at: string;
-  updated_at: string;
-  sort_order?: number;
-}
 
-export interface BudgetWithSpent extends Budget {
+export interface CategoryBudgetStatus {
+  category: Category;
+  budget_amount: number;
   spent: number;
-  limit: number;
   percentage_used: number;
-  categories: Category[];
 }
 
 export type TransactionSection = {
@@ -116,7 +97,7 @@ export type RootStackParamList = {
   AddTransaction: undefined;
   TransactionDetails: { transactionId: string };
   AccountDetails: { accountId: string };
-  BudgetDetails: { budgetId: string };
+
   CategoryDetails: { categoryId: string };
 };
 

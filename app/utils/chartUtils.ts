@@ -59,7 +59,7 @@ export const aggregateTransactionsByWeek = (transactions: Transaction[]): ChartD
   });
 
   return weeks.map((total, index) => ({
-    label: `W${index + 1}`,
+    label: `${1 + index * 7}`,
     amount: total,
     x: index
   }));

@@ -1,5 +1,12 @@
-import React from 'react';
+import * as Haptics from 'expo-haptics';
+import React, { useEffect } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  interpolateColor,
+} from 'react-native-reanimated';
 import { useCurrencyStore } from '../../store/useCurrencyStore';
 
 interface TransactionHeroProps {
@@ -26,6 +33,39 @@ export const TransactionHero = ({
   showHeader = true,
 }: TransactionHeroProps) => {
   const { currencySymbol } = useCurrencyStore();
+
+  // 0 = expense, 1 = income
+  const progress = useSharedValue(transactionType === 'income' ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(transactionType === 'income' ? 1 : 0, { duration: 150 });
+  }, [transactionType]);
+
+  const sliderStyle = useAnimatedStyle(() => ({
+    left: `${progress.value * 50}%`,
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      isDarkMode ? ['#EF4444', '#2A9D8F'] : ['#ffffff', '#ffffff']
+    ),
+  }));
+
+  const expenseTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      progress.value,
+      [0, 1],
+      isDarkMode ? ['#ffffff', '#94a3b8'] : ['#111827', '#6b7280']
+    ),
+  }));
+
+  const incomeTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      progress.value,
+      [0, 1],
+      isDarkMode ? ['#94a3b8', '#ffffff'] : ['#6b7280', '#111827']
+    ),
+  }));
+
   return (
     <>
       {/* Header */}
@@ -42,37 +82,42 @@ export const TransactionHero = ({
 
       {/* Transaction Type Toggle */}
       <View className={`${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'} rounded-2xl p-1 flex-row mb-6`}>
+        {/* Animated sliding indicator */}
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              top: 4,
+              width: '50%',
+              height: '100%',
+              borderRadius: 12,
+            },
+            sliderStyle,
+          ]}
+        />
         <TouchableOpacity
-          onPress={() => setTransactionType('expense')}
-          className={`flex-1 py-3 rounded-xl ${
-            transactionType === 'expense'
-              ? isDarkMode ? 'bg-accentRed' : 'bg-white'
-              : ''
-          }`}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setTransactionType('expense');
+          }}
+          className="flex-1 py-3 rounded-xl z-10"
+          activeOpacity={0.7}
         >
-          <Text className={`text-center ${
-            transactionType === 'expense' 
-              ? isDarkMode ? 'text-white' : 'text-gray-900'
-              : isDarkMode ? 'text-slate-400' : 'text-gray-600'
-          }`}>
+          <Animated.Text style={[{ textAlign: 'center', fontWeight: '500' }, expenseTextStyle]}>
             Expense
-          </Text>
+          </Animated.Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => setTransactionType('income')}
-          className={`flex-1 py-3 rounded-xl ${
-            transactionType === 'income'
-              ? isDarkMode ? 'bg-accentTeal' : 'bg-white'
-              : ''
-          }`}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setTransactionType('income');
+          }}
+          className="flex-1 py-3 rounded-xl z-10"
+          activeOpacity={0.7}
         >
-          <Text className={`text-center ${
-            transactionType === 'income' 
-              ? isDarkMode ? 'text-white' : 'text-gray-900'
-              : isDarkMode ? 'text-slate-400' : 'text-gray-600'
-          }`}>
+          <Animated.Text style={[{ textAlign: 'center', fontWeight: '500' }, incomeTextStyle]}>
             Income
-          </Text>
+          </Animated.Text>
         </TouchableOpacity>
       </View>
 
@@ -93,8 +138,8 @@ export const TransactionHero = ({
             placeholder="0.00"
             placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
             className={`w-full pl-10 pr-4 py-4 rounded-xl text-2xl ${
-              isDarkMode 
-                ? 'bg-slate-800 border-slate-700 text-white' 
+              isDarkMode
+                ? 'bg-slate-800 border-slate-700 text-white'
                 : 'bg-white border-gray-300 text-gray-900'
             } border`}
           />

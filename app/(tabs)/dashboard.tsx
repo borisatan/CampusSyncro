@@ -1,33 +1,39 @@
-import { useFont } from '@shopify/react-native-skia';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useChartPressState } from 'victory-native';
+import { useFont } from "@shopify/react-native-skia";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ScrollView, View } from "react-native";
+import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useChartPressState } from "victory-native";
 
 // Custom Components
-import { BudgetHealthCard } from '../components/HomePage/BudgetHealthCard';
-import { CategoryBreakdownList } from '../components/HomePage/CategoryBreakdown';
-import { CategoryDonut } from '../components/HomePage/CategoryDonut';
-import { DashboardSummary } from '../components/HomePage/DashboardSummary';
-import { SpendingTrendChart } from '../components/HomePage/SpendingTrendChart';
-import { TimeFrameSelector } from '../components/HomePage/TimeFrameSelector';
+import { BudgetHealthCard } from "../components/HomePage/BudgetHealthCard";
+import { CategoryBreakdownList } from "../components/HomePage/CategoryBreakdown";
+import { CategoryDonut } from "../components/HomePage/CategoryDonut";
+import { DashboardSummary } from "../components/HomePage/DashboardSummary";
+import { SpendingTrendChart } from "../components/HomePage/SpendingTrendChart";
+import { TimeFrameSelector } from "../components/HomePage/TimeFrameSelector";
 
 // Hooks & Utilities
-import { useDataRefresh } from '../context/DataRefreshContext';
-import { useLock } from '../context/LockContext';
-import { useTheme } from '../context/ThemeContext';
-import { useBudgetsData } from '../hooks/useBudgetsData';
-import { useDashboardData } from '../hooks/useDashboardData';
-import { useCurrencyStore } from '../store/useCurrencyStore';
+import { useDataRefresh } from "../context/DataRefreshContext";
+import { useLock } from "../context/LockContext";
+import { useTheme } from "../context/ThemeContext";
+import { useBudgetsData } from "../hooks/useBudgetsData";
+import { useDashboardData } from "../hooks/useDashboardData";
+import { useCurrencyStore } from "../store/useCurrencyStore";
+import { useDashboardCategoriesStore } from "../store/useDashboardCategoriesStore";
 
 export default function Dashboard() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const { isUnlocked } = useLock();
 
-  const { currencySymbol, isLoading: isCurrencyLoading, loadCurrency } = useCurrencyStore();
+  const {
+    currencySymbol,
+    isLoading: isCurrencyLoading,
+    loadCurrency,
+  } = useCurrencyStore();
 
   const {
     timeFrame,
@@ -39,25 +45,57 @@ export default function Dashboard() {
     totalExpenses,
     categories,
     categoriesAggregated,
-    chartData
-  } = useDashboardData('month');
+    chartData,
+  } = useDashboardData("month");
 
-  const { budgetsWithSpent, isLoading: budgetsLoading, refresh: refreshBudgets } = useBudgetsData();
+  const {
+    categoryBudgets,
+    isLoading: budgetsLoading,
+    refresh: refreshBudgets,
+  } = useBudgetsData();
+  const { pinnedCategoryIds, loadPinnedCategories } =
+    useDashboardCategoriesStore();
+
+  const filteredCategoryBudgets = useMemo(() => {
+    if (pinnedCategoryIds.length === 0) return categoryBudgets;
+    return categoryBudgets.filter((cb) =>
+      pinnedCategoryIds.includes(cb.category.id),
+    );
+  }, [categoryBudgets, pinnedCategoryIds]);
 
   const { registerDashboardRefresh } = useDataRefresh();
 
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     await loadCurrency();
     refreshData();
     refreshBudgets();
-  };
+  }, [loadCurrency, refreshData, refreshBudgets]);
+
+  useEffect(() => {
+    loadPinnedCategories();
+  }, []);
 
   useEffect(() => {
     registerDashboardRefresh(refreshAll);
-  }, [refreshData, registerDashboardRefresh]);
+  }, [refreshAll, registerDashboardRefresh]);
 
-  const [tooltipData, setTooltipData] = useState({ label: '', value: 0 });
-  const interFont = useFont(require("../../assets/fonts/InterVariable.ttf"), 12);
+  // Refresh budget data when the dashboard tab gains focus (e.g. after editing budgets)
+  const hasMountedRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (hasMountedRef.current) {
+        refreshBudgets();
+      } else {
+        hasMountedRef.current = true;
+      }
+    }, [refreshBudgets])
+  );
+
+  const [tooltipData, setTooltipData] = useState({ label: "", value: 0 });
+  const interFont = useFont(
+    require("../../assets/fonts/InterVariable.ttf"),
+    12,
+  );
 
   const { state } = useChartPressState({ x: 0, y: { amount: 0 } });
 
@@ -68,10 +106,10 @@ export default function Dashboard() {
     }),
     (current) => {
       const index = Math.round(current.x);
-      const label = chartData[index]?.label || '';
+      const label = chartData[index]?.label || "";
       const value = Math.round(current.y);
       runOnJS(setTooltipData)({ label, value });
-    }
+    },
   );
 
   const onCategoryPress = (category_name: string) => {
@@ -84,13 +122,13 @@ export default function Dashboard() {
   const isLoading = dataLoading || isCurrencyLoading;
 
   return (
-    <SafeAreaView className={`flex-1 mb-8 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
+    <SafeAreaView
+      className={`flex-1 mb-8 ${isDarkMode ? "bg-backgroundDark" : "bg-background"}`}
+      edges={["top"]}
+    >
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 30 }}
-        // refreshControl={
-        //   <RefreshControl refreshing={isLoading} onRefresh={refreshAll} />
-        // }
       >
         <View className="px-2">
           <DashboardSummary
@@ -100,7 +138,7 @@ export default function Dashboard() {
             currencySymbol={currencySymbol}
             isUnlocked={isUnlocked}
           />
-            
+
           <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
           <SpendingTrendChart
@@ -108,10 +146,9 @@ export default function Dashboard() {
             timeFrame={timeFrame}
             font={interFont}
             currencySymbol={currencySymbol}
-            budgets={budgetsWithSpent}
+            categoryBudgets={categoryBudgets}
             isUnlocked={isUnlocked}
           />
-
 
           <CategoryDonut
             aggregates={categoriesAggregated}
@@ -120,15 +157,16 @@ export default function Dashboard() {
             isUnlocked={isUnlocked}
           />
 
-            <BudgetHealthCard
-              budgets={budgetsWithSpent}
-              currencySymbol={currencySymbol}
-              isLoading={budgetsLoading}
-              isUnlocked={isUnlocked}
-            />
+          <BudgetHealthCard
+            categoryBudgets={filteredCategoryBudgets}
+            allCategoryBudgets={categoryBudgets}
+            currencySymbol={currencySymbol}
+            isLoading={budgetsLoading}
+            isUnlocked={isUnlocked}
+          />
 
           <CategoryBreakdownList
-            currency={currencySymbol} 
+            currency={currencySymbol}
             categories={categories}
             categoriesAggregated={categoriesAggregated}
             onCategoryPress={onCategoryPress}

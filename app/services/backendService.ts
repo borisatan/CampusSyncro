@@ -1,4 +1,4 @@
-import { Budget, CategoryAggregation, CategoryIconInfo, Transaction } from "../types/types";
+import { CategoryAggregation, CategoryIconInfo, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
 
 export const createTransaction = async (payload: any) => {
@@ -100,6 +100,15 @@ export const fetchTotalBalance = async (): Promise<number> => {
     const { data, error } = await supabase.rpc('fetch_total_balance');
     if (error) throw error;
     return data ?? 0;
+  };
+
+export const fetchCheckingBalance = async (): Promise<number> => {
+    const { data, error } = await supabase
+      .from('Accounts')
+      .select('balance')
+      .eq('type', 'checking');
+    if (error) throw error;
+    return (data ?? []).reduce((sum, acc) => sum + (acc.balance || 0), 0);
   };
   
   // Fetch only Income category
@@ -432,64 +441,6 @@ export const updateCategoriesOrder = async (categories: { id: number; sort_order
 
 // Budget Functions
 
-export const fetchBudgets = async (): Promise<Budget[]> => {
-  const { data, error } = await supabase
-    .from('Budgets')
-    .select('*')
-    .order('sort_order', { ascending: true, nullsFirst: false });
-
-  if (error) throw error;
-  return data ?? [];
-};
-
-export const saveBudget = async (
-  payload: Omit<Budget, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
-  id?: number
-): Promise<Budget> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  if (id) {
-    // Update existing budget
-    const { data, error } = await supabase
-      .from('Budgets')
-      .update({
-        ...payload,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  } else {
-    // Create new budget
-    const { data, error } = await supabase
-      .from('Budgets')
-      .insert([{ ...payload, user_id: user.id }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-};
-
-export const deleteBudget = async (id: number): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  const { error } = await supabase
-    .from('Budgets')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', user.id);
-
-  if (error) throw error;
-};
-
 export const fetchIncomeForPeriod = async (startDate: Date, endDate: Date): Promise<number> => {
   const { data, error } = await supabase.rpc('fetch_income_for_period', {
     p_start_date: startDate.toISOString().split('T')[0],
@@ -500,110 +451,34 @@ export const fetchIncomeForPeriod = async (startDate: Date, endDate: Date): Prom
   return data ?? 0;
 };
 
-export const updateCategoryBudgetId = async (
+export const updateCategoryBudgetAmount = async (
   categoryId: number,
-  budgetId: number | null
+  budgetAmount: number | null
 ): Promise<void> => {
   const { error } = await supabase
     .from('Categories')
-    .update({ budget_id: budgetId })
+    .update({ budget_amount: budgetAmount })
     .eq('id', categoryId);
 
   if (error) throw error;
 };
 
-export const fetchBudgetSpending = async (
-  categoryNames: string[],
+export const fetchSpendingByCategory = async (
   startDate: Date,
   endDate: Date
-): Promise<number> => {
-  if (categoryNames.length === 0) return 0;
-
+): Promise<Record<string, number>> => {
   const { data, error } = await supabase
     .from('Transactions')
-    .select('amount')
-    .in('category_name', categoryNames)
+    .select('category_name, amount')
     .neq('category_name', 'Income')
     .gte('created_at', startDate.toISOString())
     .lt('created_at', endDate.toISOString());
 
   if (error) throw error;
 
-  return data?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
-};
-
-export const updateBudgetSortOrder = async (budgetId: number, newSortOrder: number) => {
-  const { data, error } = await supabase
-    .from('Budgets')
-    .update({ sort_order: newSortOrder })
-    .eq('id', budgetId)
-    .select();
-
-  if (error) throw error;
-  return data;
-};
-
-export const reorderBudgetPosition = async (
-  budgetId: number,
-  oldPosition: number,
-  newPosition: number,
-  allBudgets: { id: number; sort_order?: number }[]
-) => {
-  if (oldPosition === newPosition) return;
-
-  const updates: { id: number; sort_order: number }[] = [];
-
-  if (newPosition < oldPosition) {
-    // Moving up: shift budgets between newPosition and oldPosition-1 down by 1
-    for (const budget of allBudgets) {
-      const pos = budget.sort_order ?? 0;
-      if (budget.id === budgetId) {
-        updates.push({ id: budget.id, sort_order: newPosition });
-      } else if (pos >= newPosition && pos < oldPosition) {
-        updates.push({ id: budget.id, sort_order: pos + 1 });
-      }
-    }
-  } else {
-    // Moving down: shift budgets between oldPosition+1 and newPosition up by 1
-    for (const budget of allBudgets) {
-      const pos = budget.sort_order ?? 0;
-      if (budget.id === budgetId) {
-        updates.push({ id: budget.id, sort_order: newPosition });
-      } else if (pos > oldPosition && pos <= newPosition) {
-        updates.push({ id: budget.id, sort_order: pos - 1 });
-      }
-    }
-  }
-
-  if (updates.length > 0) {
-    await updateBudgetsOrder(updates);
-  }
-};
-
-export const shiftBudgetsForInsert = async (
-  insertPosition: number,
-  allBudgets: { id: number; sort_order?: number }[]
-) => {
-  // Shift all budgets at insertPosition or higher by +1 to make room
-  const updates: { id: number; sort_order: number }[] = [];
-
-  for (const budget of allBudgets) {
-    const pos = budget.sort_order ?? 0;
-    if (pos >= insertPosition) {
-      updates.push({ id: budget.id, sort_order: pos + 1 });
-    }
-  }
-
-  if (updates.length > 0) {
-    await updateBudgetsOrder(updates);
-  }
-};
-
-export const updateBudgetsOrder = async (budgets: { id: number; sort_order: number }[]) => {
-  const updates = budgets.map(({ id, sort_order }) =>
-    supabase.from('Budgets').update({ sort_order }).eq('id', id)
-  );
-  const results = await Promise.all(updates);
-  const error = results.find(r => r.error)?.error;
-  if (error) throw error;
+  const result: Record<string, number> = {};
+  data?.forEach(t => {
+    result[t.category_name] = (result[t.category_name] ?? 0) + t.amount;
+  });
+  return result;
 };

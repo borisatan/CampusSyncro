@@ -41,7 +41,7 @@ const EditTransactionScreen = () => {
 
   const { isDarkMode } = useTheme();
   const { userId } = useAuth();
-  const { refreshAll } = useDataRefresh();
+  const { refreshAll, optimisticDeleteTransaction, optimisticUpdateTransaction } = useDataRefresh();
 
 
   // Use global stores
@@ -84,6 +84,13 @@ const EditTransactionScreen = () => {
     }
   }, [params.transaction, categories]);
 
+  // Auto-select first category when switching from income to expense
+  useEffect(() => {
+    if (transactionType === 'expense' && !selectedCategory && categories.length > 0) {
+      setSelectedCategory(categories[0]);
+    }
+  }, [transactionType, categories]);
+
   const handleDateChange = (event: any, date?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);
     if (date) setSelectedDate(date);
@@ -117,11 +124,17 @@ const EditTransactionScreen = () => {
         }
       }
 
+      // Optimistic UI: Update transaction list immediately
+      optimisticUpdateTransaction({
+        ...transaction,
+        amount: finalAmount,
+        description,
+        account_name: selectedAccount,
+        category_name: categoryName || transaction.category_name,
+        created_at: selectedDate.toISOString(),
+      });
+
       setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        router.replace('/transaction-list');
-      }, 1900);
 
       // Make API calls in background
       await updateTransaction(transaction.id, finalAmount, description, selectedAccount, categoryName, selectedDate.toISOString());
@@ -157,11 +170,12 @@ const EditTransactionScreen = () => {
         style: "destructive",
         onPress: async () => {
           try {
-            // Optimistic UI: Update balance immediately
+            // Optimistic UI: Update balance and transaction list immediately
             const acc = accountOptions.find(a => a.account_name === transaction.account_name);
             if (acc) {
               updateAccountBalanceStore(transaction.account_name, acc.balance - transaction.amount);
             }
+            optimisticDeleteTransaction(transaction.id);
 
             router.replace('/transaction-list');
 
@@ -228,6 +242,20 @@ const EditTransactionScreen = () => {
             showHeader={false}
           />
 
+          {/* Description */}
+          <View className="mb-6">
+            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Description</Text>
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              placeholder="e.g. Grocery shopping"
+              placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
+              className={`w-full px-4 py-3 rounded-xl border ${
+                isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </View>
+
           {transactionType === 'expense' && (
             <CategoryGrid
               categories={categories}
@@ -262,11 +290,18 @@ const EditTransactionScreen = () => {
             handleDateChange={handleDateChange}
             handleSubmit={handleSave}
             transactionType={transactionType}
-            buttonText={isSaving ? "Saving..." : "Update Transaction"}
+            buttonText={isSaving ? "Saving..." : `Update ${transactionType === 'expense' ? 'Expense' : 'Income'}`}
             isSubmitting={isSaving}
           />
 
-            <SuccessModal visible={showSuccess} text="Transaction Updated!" />
+            <SuccessModal
+              visible={showSuccess}
+              text="Transaction Updated!"
+              onDismiss={() => {
+                setShowSuccess(false);
+                router.replace('/transaction-list');
+              }}
+            />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

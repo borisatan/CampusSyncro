@@ -68,17 +68,6 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
       : parseFloat(balance);
 
     setShowSuccess(true);
-    
-    setTimeout(() => {
-      onSave({
-        ...account,
-        name: name.trim(),
-        type,
-        balance: sanitizedBalance,
-        sort_order: sortOrder,
-      });
-      setShowSuccess(false);
-    }, 1900);
   };
 
   
@@ -93,7 +82,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
       >
         <ScrollView className="flex-1 px-2">
         {/* Header */}
-        <View className="flex-row items-center mb-8">
+        <View className="flex-row items-center mb-8 mt-2">
           <TouchableOpacity
             onPress={onBack}
             className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"
@@ -141,48 +130,6 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
           </View>
 
           <View className="mb-6">
-            <Text className="text-sm text-secondaryDark mb-3 font-medium">Account Type</Text>
-            <View className="flex-row flex-wrap gap-3">
-              {['checking', 'savings', 'credit', 'investment'].map((item) => {
-                const TypeIcon = accountTypeIcons[item];
-                const isActive = type === item;
-                const isInvestment = item === 'investment'; // Check for investment
-
-                return (
-                  <TouchableOpacity
-                    key={item}
-                    onPress={() => !isInvestment && setType(item)} // Prevent selection if investment
-                    disabled={isInvestment} // Disable the button
-                    style={{ width: '47%' }}
-                    className={`p-4 rounded-2xl border-2 items-center justify-center mb-1 ${
-                      isInvestment 
-                        ? 'border-dashed border-slate-800 bg-slate-900/50 opacity-60' // Grayed out style
-                        : isActive 
-                          ? 'border-accentBlue bg-accentBlue/10' 
-                          : 'border-borderDark bg-surfaceDark'
-                    }`}
-                  >
-                    <TypeIcon 
-                      color={isInvestment ? '#475569' : isActive ? '#3B82F6' : '#94A3B8'} 
-                      size={24} 
-                    />
-                    <Text className={`capitalize font-medium mt-1 ${
-                      isInvestment ? 'text-slate-500' : isActive ? 'text-textDark' : 'text-secondaryDark'
-                    }`}>
-                      {item}
-                    </Text>
-                    {isInvestment && (
-                      <Text className="text-[10px] text-accentTeal font-bold uppercase tracking-tighter">
-                        Coming Soon
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <View className="mb-6">
             <Text className="text-sm text-secondaryDark mb-2 font-medium">Current Balance</Text>
             <View className="relative flex-row items-center bg-surfaceDark border border-borderDark rounded-2xl px-4">
               <Text className="text-xl text-secondaryDark mr-2">{currencySymbol}</Text>
@@ -198,6 +145,39 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
             <Text className="text-xs text-secondaryDark mt-2 italic">
               Use negative values for credit card balances
             </Text>
+          </View>
+
+          <View className="mb-6">
+            <Text className="text-sm text-secondaryDark mb-3 font-medium">Account Type</Text>
+            <View className="flex-row flex-wrap gap-3">
+              {['checking', 'savings'].map((item) => {
+                const TypeIcon = accountTypeIcons[item];
+                const isActive = type === item;
+
+                return (
+                  <TouchableOpacity
+                    key={item}
+                    onPress={() => setType(item)}
+                    style={{ width: '47%' }}
+                    className={`p-4 rounded-2xl border-2 items-center justify-center mb-1 ${
+                      isActive
+                        ? 'border-accentBlue bg-accentBlue/10'
+                        : 'border-borderDark bg-surfaceDark'
+                    }`}
+                  >
+                    <TypeIcon
+                      color={isActive ? '#3B82F6' : '#94A3B8'}
+                      size={24}
+                    />
+                    <Text className={`capitalize font-medium mt-1 ${
+                      isActive ? 'text-textDark' : 'text-secondaryDark'
+                    }`}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           <View className="mb-6">
@@ -241,7 +221,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
           </View>
 
           {/* Action Buttons */}
-          <View className="flex-row space-x-3 pt-6 pb-20">
+          <View className="flex-row space-x-3 pt-6 pb-8">
             <TouchableOpacity
               onPress={onBack}
               className="flex-1 py-4 bg-surfaceDark border border-borderDark rounded-2xl items-center mr-2"
@@ -259,7 +239,20 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
       </ScrollView>
 
         {/* Success Modal Overlay */}
-        <SuccessModal visible={showSuccess} text="Account Updated!" />
+        <SuccessModal
+          visible={showSuccess}
+          text="Account Updated!"
+          onDismiss={() => {
+            onSave({
+              ...account,
+              name: name.trim(),
+              type,
+              balance: parseFloat(balance) || 0,
+              sort_order: sortOrder,
+            });
+            setShowSuccess(false);
+          }}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

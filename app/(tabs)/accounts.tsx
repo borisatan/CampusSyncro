@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
-import { Easing } from 'react-native-reanimated';
+
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccountListItem } from '../components/AccountsPage/AccountListItem';
@@ -147,7 +147,7 @@ export default function Accounts() {
                 <Text style={{ fontSize: 30, fontWeight: '600', color: '#FFFFFF' }}>{currencySymbol}</Text>
                 <AnimatedRollingNumber
                   value={totalBalance}
-                  spinningAnimationConfig={{ duration: 1200, easing: Easing.bounce }}
+                  spinningAnimationConfig={{ duration: 600 }}
                   textStyle={{ fontSize: 30, fontWeight: '600', color: '#FFFFFF' }}
                   toFixed={2}
                 />

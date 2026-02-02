@@ -3,7 +3,7 @@ import { MotiView } from 'moti';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
-import { Easing } from 'react-native-reanimated';
+
 import { COLOR_MAP, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
 
 interface AccountListItemProps {
@@ -48,7 +48,7 @@ export const AccountListItem = ({
                 </Text>
                 <AnimatedRollingNumber
                   value={Math.abs(account.balance)}
-                  spinningAnimationConfig={{ duration: 1200, easing: Easing.bounce }}
+                  spinningAnimationConfig={{ duration: 600 }}
                   textStyle={{ fontSize: 18, fontWeight: '500', color: account.balance < 0 ? '#EF4444' : (isDark ? '#FFFFFF' : '#1F2937') }}
                   toFixed={2}
                 />

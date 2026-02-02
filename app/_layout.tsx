@@ -2,6 +2,12 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppLockScreen from './components/Shared/AppLockScreen';
@@ -46,6 +52,7 @@ export default function RootLayout() {
                       <Stack.Screen name="(auth)" />
                       <Stack.Screen name="(tabs)" />
                       <Stack.Screen name="budgets" />
+                    <Stack.Screen name="budget-help" />
                     </Stack>
                     <AppLockScreen />
                   </KeyboardProvider>

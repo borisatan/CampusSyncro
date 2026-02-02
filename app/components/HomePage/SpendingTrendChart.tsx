@@ -1,114 +1,165 @@
-import { Circle, Group } from '@shopify/react-native-skia';
-import * as Haptics from 'expo-haptics';
-import { MotiView } from 'moti';
-import React, { useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
-import Animated, {
+import {
+  Circle,
+  Group,
+  Rect,
+  rect as skRect,
+} from "@shopify/react-native-skia";
+import { MotiView } from "moti";
+import React, { useMemo, useState } from "react";
+import { Text, View } from "react-native";
+import {
   runOnJS,
   SharedValue,
   useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue
-} from 'react-native-reanimated';
+  useDerivedValue,
+  useSharedValue,
+} from "react-native-reanimated";
 
-import { CartesianChart, Line, useChartPressState, } from 'victory-native';
-import { BudgetWithSpent } from '../../types/types';
+import { CartesianChart, Line, useChartPressState } from "victory-native";
+import { CategoryBudgetStatus } from "../../types/types";
 
 interface ChartProps {
   data: any[];
   font: any;
-  timeFrame: 'week' | 'month' | 'year';
+  timeFrame: "week" | "month" | "year";
   currencySymbol: string;
-  budgets?: BudgetWithSpent[];
+  categoryBudgets?: CategoryBudgetStatus[];
   isUnlocked?: boolean;
 }
 
 function ToolTip({
   x,
   y,
-  yPace,
   color,
-  showPaceCircle
+  isActive,
 }: {
   x: SharedValue<number>;
   y: SharedValue<number>;
-  yPace: SharedValue<number>;
   color: string;
-  showPaceCircle: boolean;
+  isActive: boolean;
 }) {
+  if (!isActive) return null;
   return (
     <Group>
-      {/* Budget pace circle (gray dashed style) */}
-      {showPaceCircle && (
-        <>
-          <Circle cx={x} cy={yPace} r={8} color="#64748b" opacity={0.6} />
-          <Circle cx={x} cy={yPace} r={4} color="#fff" />
-        </>
-      )}
-      {/* Actual spending circle */}
-      <Circle cx={x} cy={y} r={8} color={color} opacity={0.8} />
-      <Circle cx={x} cy={y} r={4} color="#fff" />
+      <Rect x={x} y={0} width={1} height={300} color="#94a3b8" opacity={0.3} />
+      <Circle cx={x} cy={y} r={6} color={color} />
     </Group>
   );
 }
 
-// Helper to normalize budget limits to the chart's timeframe
-const normalizeBudgetToTimeframe = (
-  budget: { limit: number; period_type: 'weekly' | 'monthly' | 'custom' },
-  timeFrame: 'week' | 'month' | 'year'
+// Normalize total budget to chart timeframe (budgets are always monthly for now)
+const normalizeTotalBudgetToTimeframe = (
+  totalBudget: number,
+  timeFrame: "week" | "month" | "year",
 ): number => {
-  const { limit, period_type } = budget;
-
-  if (timeFrame === 'week') {
-    if (period_type === 'weekly') return limit;
-    if (period_type === 'monthly') return limit / 4;
-    return limit / 4; // custom defaults to monthly-ish
-  }
-
-  if (timeFrame === 'month') {
-    if (period_type === 'weekly') return limit * 4;
-    if (period_type === 'monthly') return limit;
-    return limit;
-  }
-
-  // year view
-  if (period_type === 'weekly') return limit * 52;
-  if (period_type === 'monthly') return limit * 12;
-  return limit * 12;
+  if (timeFrame === "week") return totalBudget / 4;
+  if (timeFrame === "month") return totalBudget;
+  return totalBudget * 12; // year
 };
 
-export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budgets = [], isUnlocked = true }: ChartProps) => {
+// Format label for the tooltip display (not x-axis)
+const formatDisplayLabel = (
+  label: string,
+  timeFrame: "week" | "month" | "year",
+): string => {
+  if (!label) return "";
+  if (timeFrame === "week") {
+    const dayMap: Record<string, string> = {
+      Mon: "Monday",
+      Tue: "Tuesday",
+      Wed: "Wednesday",
+      Thu: "Thursday",
+      Fri: "Friday",
+      Sat: "Saturday",
+      Sun: "Sunday",
+    };
+    return dayMap[label] || label;
+  }
+  if (timeFrame === "year") {
+    const monthMap: Record<string, string> = {
+      Jan: "January",
+      Feb: "February",
+      Mar: "March",
+      Apr: "April",
+      May: "May",
+      Jun: "June",
+      Jul: "July",
+      Aug: "August",
+      Sep: "September",
+      Oct: "October",
+      Nov: "November",
+      Dec: "December",
+    };
+    return monthMap[label] || label;
+  }
+  if (timeFrame === "month") {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(Number(label)).padStart(2, "0");
+    return `${day}.${month}`;
+  }
+  return label;
+};
+
+export const SpendingTrendChart = ({
+  data,
+  currencySymbol,
+  font,
+  timeFrame,
+  categoryBudgets = [],
+  isUnlocked = true,
+}: ChartProps) => {
   const [tooltipData, setTooltipData] = useState({
-    label: '',
-    value: '',
-    paceValue: '',
+    label: "",
+    value: "",
+    paceValue: "",
+    diffStr: "",
+    diffPctStr: "",
     isOverBudget: false,
-    isFuture: false
+    isFuture: false,
   });
-  const { state, isActive } = useChartPressState({ x: 0, y: { amount: 0, pace: 0 } });
-  const [showTooltip, setShowTooltip] = useState(false);
+  const { state, isActive } = useChartPressState({
+    x: 0,
+    y: { amount: 0, pace: 0 },
+  });
+  const [pressing, setPressing] = useState(false);
 
   // Track last index to prevent redundant JS bridge calls
   const lastIndex = useSharedValue(-1);
 
   // Calculate total budget normalized to the current timeframe
   const totalBudget = useMemo(() => {
-    if (!budgets || budgets.length === 0) return 0;
-    return budgets.reduce((sum, budget) => {
-      return sum + normalizeBudgetToTimeframe(budget, timeFrame);
-    }, 0);
-  }, [budgets, timeFrame]);
+    if (!categoryBudgets || categoryBudgets.length === 0) return 0;
+    const rawTotal = categoryBudgets.reduce(
+      (sum, cb) => sum + cb.budget_amount,
+      0,
+    );
+    return normalizeTotalBudgetToTimeframe(rawTotal, timeFrame);
+  }, [categoryBudgets, timeFrame]);
 
   // Build cumulative spending data with pace comparison
   const { cumulativeData, lastActualIndex } = useMemo(() => {
     let fullLabels: string[] = [];
 
-    if (timeFrame === 'week') {
-      fullLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    } else if (timeFrame === 'month') {
-      fullLabels = ['W1', 'W2', 'W3', 'W4', 'W5'];
-    } else if (timeFrame === 'year') {
-      fullLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (timeFrame === "week") {
+      fullLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    } else if (timeFrame === "month") {
+      fullLabels = ["1", "8", "15", "22", "29"];
+    } else if (timeFrame === "year") {
+      fullLabels = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
     }
 
     let runningTotal = 0;
@@ -116,20 +167,28 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
     const totalPoints = fullLabels.length;
 
     const result = fullLabels.map((label, index) => {
-      const existingPoint = data.find(d => d.label === label);
+      const existingPoint = data.find((d) => d.label === label);
 
       let isFuture = false;
-      if (timeFrame === 'week') {
-        const dayMap: Record<string, number> = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0 };
+      if (timeFrame === "week") {
+        const dayMap: Record<string, number> = {
+          Mon: 1,
+          Tue: 2,
+          Wed: 3,
+          Thu: 4,
+          Fri: 5,
+          Sat: 6,
+          Sun: 0,
+        };
         const todayNum = new Date().getDay();
         const labelNum = dayMap[label];
         const adjustedToday = todayNum === 0 ? 7 : todayNum;
         const adjustedLabel = labelNum === 0 ? 7 : labelNum;
         isFuture = adjustedLabel > adjustedToday;
-      } else if (timeFrame === 'month') {
+      } else if (timeFrame === "month") {
         const currentWeekIdx = Math.floor((new Date().getDate() - 1) / 7);
         isFuture = index > currentWeekIdx;
-      } else if (timeFrame === 'year') {
+      } else if (timeFrame === "year") {
         isFuture = index > new Date().getMonth();
       }
 
@@ -139,7 +198,8 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
       }
 
       // Calculate pace value at this point (each period gets an equal share of budget)
-      const paceValue = totalBudget > 0 ? (totalBudget / totalPoints) * (index + 1) : 0;
+      const paceValue =
+        totalBudget > 0 ? (totalBudget / totalPoints) * (index + 1) : 0;
       const isOverBudget = runningTotal > paceValue;
 
       return {
@@ -148,197 +208,375 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
         amount: isFuture ? 0 : runningTotal,
         pace: paceValue,
         isFuture: isFuture,
-        isOverBudget: isOverBudget
+        isOverBudget: isOverBudget,
       };
     });
 
     return { cumulativeData: result, lastActualIndex: lastIdx };
   }, [data, timeFrame, totalBudget]);
 
+  // Catmull-Rom spline interpolation for smooth curves
+  const catmullRom = (
+    p0: number,
+    p1: number,
+    p2: number,
+    p3: number,
+    t: number,
+  ) => {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    return (
+      0.5 *
+      (2 * p1 +
+        (-p0 + p2) * t +
+        (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+        (-p0 + 3 * p1 - 3 * p2 + p3) * t3)
+    );
+  };
+
+  // Upsample data for smooth scrubbing (inserts intermediate interpolated points)
+  // week: 7 pts * 86 = ~602, month: 5 pts * 120 = ~600, year: 12 pts * 50 = ~600
+  const INTERPOLATION_STEPS =
+    timeFrame === "month" ? 120 : timeFrame === "week" ? 86 : 50;
+  const { smoothData, smoothLastActualIndex } = useMemo(() => {
+    if (cumulativeData.length < 2) {
+      return {
+        smoothData: cumulativeData,
+        smoothLastActualIndex: lastActualIndex,
+      };
+    }
+
+    const result: typeof cumulativeData = [];
+    const len = cumulativeData.length;
+
+    for (let i = 0; i < len; i++) {
+      // Push original point with new x index
+      result.push({ ...cumulativeData[i], x: i * INTERPOLATION_STEPS });
+
+      // Insert intermediate points between this and next using Catmull-Rom
+      if (i < len - 1) {
+        const curr = cumulativeData[i];
+        const next = cumulativeData[i + 1];
+        // Catmull-Rom needs 4 control points: clamp at edges
+        const prev = cumulativeData[Math.max(0, i - 1)];
+        const nextNext = cumulativeData[Math.min(len - 1, i + 2)];
+
+        for (let j = 1; j < INTERPOLATION_STEPS; j++) {
+          const t = j / INTERPOLATION_STEPS;
+          const interpAmount =
+            curr.isFuture && next.isFuture
+              ? 0
+              : next.isFuture
+                ? curr.amount
+                : catmullRom(
+                    prev.amount,
+                    curr.amount,
+                    next.amount,
+                    nextNext.amount,
+                    t,
+                  );
+          const interpPace = catmullRom(
+            prev.pace,
+            curr.pace,
+            next.pace,
+            nextNext.pace,
+            t,
+          );
+
+          result.push({
+            x: i * INTERPOLATION_STEPS + j,
+            label: "", // no label for intermediate points
+            amount: interpAmount,
+            pace: interpPace,
+            isFuture: next.isFuture && j > INTERPOLATION_STEPS / 2,
+            isOverBudget: interpAmount > interpPace,
+          });
+        }
+      }
+    }
+
+    const newLastIdx =
+      lastActualIndex >= 0 ? lastActualIndex * INTERPOLATION_STEPS : -1;
+    return { smoothData: result, smoothLastActualIndex: newLastIdx };
+  }, [cumulativeData, lastActualIndex]);
+
   const maxValue = useMemo(() => {
-    const maxSpending = Math.max(...cumulativeData.map((d) => d.amount || 0));
+    const maxSpending = Math.max(...smoothData.map((d) => d.amount || 0));
     const maxPace = totalBudget;
     const max = Math.max(maxSpending, maxPace);
     return max === 0 ? 100 : max * 1.2;
-  }, [cumulativeData, totalBudget]);
+  }, [smoothData, totalBudget]);
+
+  // Compute default tooltip from the last actual data point
+  const defaultTooltip = useMemo(() => {
+    if (lastActualIndex < 0 || cumulativeData.length === 0) {
+      return {
+        label: "",
+        value: `${currencySymbol}0`,
+        paceValue: "",
+        diffStr: "",
+        diffPctStr: "",
+        isOverBudget: false,
+        isFuture: false,
+      };
+    }
+    const pt = cumulativeData[lastActualIndex];
+    const amount = Math.round(pt.amount);
+    const pace = Math.round(pt.pace);
+    const diff = amount - pace;
+    const sign = diff >= 0 ? "+" : "-";
+    return {
+      label: formatDisplayLabel(pt.label, timeFrame),
+      value: `${currencySymbol}${amount.toLocaleString()}`,
+      paceValue: `${currencySymbol}${pace.toLocaleString()}`,
+      diffStr: `${sign}${currencySymbol}${Math.abs(diff).toLocaleString()}`,
+      diffPctStr:
+        pace > 0 ? `${(Math.abs(diff / pace) * 100).toFixed(1)}%` : "0.0%",
+      isOverBudget: pt.isOverBudget,
+      isFuture: false,
+    };
+  }, [cumulativeData, lastActualIndex, currencySymbol]);
+
+  // Show scrubbed data if available, otherwise default to latest actual point
+  const displayData = tooltipData.value ? tooltipData : defaultTooltip;
 
   const instanceKey = useMemo(() => {
-    const total = data.reduce((sum, item) => sum + (item.amount || 0), 0);
-    return `${timeFrame}-${total}-${totalBudget}-${isUnlocked}`;
-  }, [timeFrame, data, totalBudget, isUnlocked]);
+    return `${timeFrame}-${totalBudget}-${isUnlocked}`;
+  }, [timeFrame, totalBudget, isUnlocked]);
 
-  const animatedTooltipStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: state.x.position.value - 100 },
-        { translateY: state.y.amount.position.value - 95 },
-      ],
-    } as any;
+  // Clamped tooltip positions - never go past the last actual data point
+  const clampedX = useSharedValue(0);
+  const clampedY = useSharedValue(0);
+  // Store the pixel position of the last actual data point (set during render)
+  const lastActualPixelX = useSharedValue(0);
+  const lastActualPixelY = useSharedValue(0);
+
+  // Animated clip rect for highlight - runs on UI thread, no JS bridge lag
+  const HIGHLIGHT_HALF_WIDTH = 30;
+  const highlightClip = useDerivedValue(() => {
+    return skRect(
+      clampedX.value - HIGHLIGHT_HALF_WIDTH,
+      0,
+      HIGHLIGHT_HALF_WIDTH * 2,
+      300,
+    );
   });
 
-  const labelStep = useMemo(() => {
-    if (timeFrame === 'year') return 3;
-    if (timeFrame === 'month') return 1;
-    return 1;
-  }, [timeFrame]);
+  const handleTooltipUpdate = (
+    rawIndex: number,
+    xPos: number,
+    yPos: number,
+  ) => {
+    const index = Math.min(
+      Math.max(Math.round(rawIndex), 0),
+      smoothLastActualIndex,
+    );
+    if (index < 0 || index >= smoothData.length) return;
+
+    const originalIndex = Math.round(index / INTERPOLATION_STEPS);
+    const dataPoint = smoothData[index];
+    const nearestOriginal =
+      cumulativeData[Math.min(originalIndex, cumulativeData.length - 1)];
+    const label = formatDisplayLabel(nearestOriginal?.label || "", timeFrame);
+    const isOverBudget = dataPoint?.isOverBudget || false;
+    const amount = Math.round(dataPoint?.amount || 0);
+    const pace = Math.round(dataPoint?.pace || 0);
+    const valueStr = `${currencySymbol}${amount.toLocaleString()}`;
+    const paceValueStr = `${currencySymbol}${pace.toLocaleString()}`;
+
+    const diff = amount - pace;
+    const sign = diff >= 0 ? "+" : "-";
+    const diffStr = `${sign}${currencySymbol}${Math.abs(diff).toLocaleString()}`;
+    const diffPct = pace > 0 ? Math.abs(diff / pace) * 100 : 0;
+    const diffPctStr = `${diffPct.toFixed(1)}%`;
+
+    setPressing(true);
+    setTooltipData({
+      label,
+      value: valueStr,
+      paceValue: paceValueStr,
+      diffStr,
+      diffPctStr,
+      isOverBudget,
+      isFuture: false,
+    });
+  };
+
+  const handleTooltipClear = () => {
+    setPressing(false);
+    setTooltipData({
+      label: "",
+      value: "",
+      paceValue: "",
+      diffStr: "",
+      diffPctStr: "",
+      isOverBudget: false,
+      isFuture: false,
+    });
+  };
 
   useAnimatedReaction(
     () => ({
       x: state.x.value.value,
       y: state.y.amount.value.value,
-      active: isActive
+      active: isActive,
     }),
     (current) => {
       if (!current.active) {
-        if (lastIndex.value !== -1) {
-          lastIndex.value = -1;
-          runOnJS(setShowTooltip)(false);
-          runOnJS(setTooltipData)({ label: '', value: '', paceValue: '', isOverBudget: false, isFuture: false });
-        }
+        lastIndex.value = -1;
+        runOnJS(handleTooltipClear)();
         return;
       }
 
-      const index = Math.round(current.x);
-      if (index >= 0 && index < cumulativeData.length) {
-        if (!showTooltip) runOnJS(setShowTooltip)(true);
+      const rawIndex = Math.round(current.x);
 
-        if (index !== lastIndex.value) {
-          lastIndex.value = index;
-
-          runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
-
-          const dataPoint = cumulativeData[index];
-          const label = dataPoint?.label || '';
-          const isOverBudget = dataPoint?.isOverBudget || false;
-          const isFuture = dataPoint?.isFuture || false;
-          const valueStr = isFuture
-            ? 'Upcoming'
-            : `${currencySymbol}${Math.round(dataPoint?.amount || 0).toLocaleString()}`;
-          const paceValueStr = `${currencySymbol}${Math.round(dataPoint?.pace || 0).toLocaleString()}`;
-
-          runOnJS(setTooltipData)({ label, value: valueStr, paceValue: paceValueStr, isOverBudget, isFuture });
-        }
+      // Update clamped positions for tooltip rendering
+      if (rawIndex > smoothLastActualIndex && smoothLastActualIndex >= 0) {
+        clampedX.value = lastActualPixelX.value;
+        clampedY.value = lastActualPixelY.value;
+      } else {
+        clampedX.value = state.x.position.value;
+        clampedY.value = state.y.amount.position.value;
       }
-    }
+
+      runOnJS(handleTooltipUpdate)(
+        current.x,
+        state.x.position.value,
+        state.y.amount.position.value,
+      );
+    },
   );
 
   return (
     <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
-      <Text className="text-white text-xl font-bold mb-5">Spending Trend</Text>
-
-      {/* Legend - outside MotiView to prevent re-animation on time period change */}
-      {totalBudget > 0 && (
-        <View className="flex-row items-center justify-center gap-6 mb-3">
-          <View className="flex-row items-center gap-2">
-            <View className="flex-row">
-              <View className="w-[10px] h-[3px] bg-green-500 rounded-l-full" />
-              <View className="w-[10px] h-[3px] bg-red-500 rounded-r-full" />
-            </View>
-            <Text className="text-slate-400 text-xs">Spending</Text>
-          </View>
-          <View className="flex-row items-center gap-2">
-            <View className="flex-row items-center gap-[2px]">
-              <View className="w-[6px] h-[2px] bg-slate-500 rounded-sm" />
-              <View className="w-[6px] h-[2px] bg-slate-500 rounded-sm" />
-            </View>
-            <Text className="text-slate-400 text-xs">Budget Pace</Text>
-          </View>
-        </View>
-      )}
-
       <MotiView
         key={instanceKey}
-        from={isUnlocked ? { opacity: 0, translateY: 10 } : { opacity: 1, translateY: 0 }}
+        from={
+          isUnlocked
+            ? { opacity: 0, translateY: 10 }
+            : { opacity: 1, translateY: 0 }
+        }
         animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 500 }}
+        transition={{ type: "timing", duration: 500 }}
       >
         <View>
-          {showTooltip && (
-          <Animated.View
-            style={[
-              {
-                position: 'absolute', zIndex: 100, backgroundColor: '#1e293b',
-                borderColor: '#334155', borderWidth: 1, borderRadius: 8,
-                paddingHorizontal: 16, paddingVertical: 8, shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3,
-                shadowRadius: 8, elevation: 6
-              },
-              animatedTooltipStyle
-            ]}
-            pointerEvents="none"
-          >
-            <Text className="text-slate-400 text-sm font-medium mb-1">{tooltipData.label}</Text>
-            <View className="flex-row items-center">
-              <View
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: tooltipData.isFuture
-                    ? '#6b7280'
-                    : totalBudget > 0
-                      ? (tooltipData.isOverBudget ? '#ef4444' : '#22c55e')
-                      : '#6366f1',
-                  marginRight: 6
-                }}
-              />
-              <Text className="text-white text-sm font-bold">Spent: {tooltipData.value}</Text>
+          <View className="mb-2">
+            <View className="flex-row items-baseline">
+              {!displayData.isFuture && displayData.label !== "" && (
+                <Text className="text-textDark text-3xl font-bold mr-2">
+                  {displayData.label}:
+                </Text>
+              )}
+              <Text className="text-white text-3xl font-bold">
+                {displayData.value}
+              </Text>
+              <Text className="text-slate-500 text-xl font-bold ml-2">
+                spent
+              </Text>
             </View>
-            {totalBudget > 0 && (
-              <View className="flex-row items-center mt-1">
-                <View
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: '#64748b',
-                    marginRight: 6
-                  }}
-                />
-                <Text className="text-slate-300 text-sm">Budget: {tooltipData.paceValue}</Text>
-              </View>
-            )}
-          </Animated.View>)}
+            <View
+              className="flex-row items-center mt-0.5"
+              style={{ minHeight: 18 }}
+            >
+              {totalBudget > 0 && !displayData.isFuture && (
+                <>
+                  <Text
+                    style={{
+                      color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
+                      fontSize: 15,
+                    }}
+                  >
+                    {displayData.diffStr}
+                  </Text>
+                  <Text
+                    style={{
+                      color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
+                      fontSize: 15,
+                      marginLeft: 2,
+                    }}
+                  >
+                    {displayData.isOverBudget ? "\u25B2" : "\u25BC"}
+                  </Text>
+                  <Text
+                    style={{
+                      color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
+                      fontSize: 15,
+                      fontWeight: "700",
+                      marginLeft: 4,
+                    }}
+                  >
+                    {displayData.diffPctStr}
+                  </Text>
+                  <Text className="text-slate-500 text-sm ml-1.5">
+                    {displayData.isOverBudget ? "over budget" : "under budget"}
+                  </Text>
+                </>
+              )}
+            </View>
+          </View>
 
-          <View className="h-[250px] -ml-2">
+          <View className="h-[270px] -ml-2">
             <CartesianChart
-              data={cumulativeData}
+              data={smoothData}
               xKey="x"
               yKeys={["amount", "pace"]}
-              padding={10}
+              padding={{ left: 10, right: 10, top: 10, bottom: 30 }}
               domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
               domain={{ y: [0, maxValue] }}
+              gestureLongPressDelay={100}
               xAxis={{
                 font,
-                tickCount: cumulativeData.length,
-                labelOffset: -8,
+                tickValues: (() => {
+                  if (timeFrame === "week") {
+                    // All 7 days
+                    return cumulativeData.map(
+                      (_, i) => i * INTERPOLATION_STEPS,
+                    );
+                  } else if (timeFrame === "month") {
+                    // All 5 week-start dates
+                    return cumulativeData.map(
+                      (_, i) => i * INTERPOLATION_STEPS,
+                    );
+                  } else {
+                    // Year: show ~5 labels including first and last
+                    const indices = [0, 2, 5, 8, 11].filter(
+                      (i) => i < cumulativeData.length,
+                    );
+                    return indices.map((i) => i * INTERPOLATION_STEPS);
+                  }
+                })(),
                 labelColor: "#94a3b8",
                 formatXLabel: (v) => {
-                  const idx = Math.round(v);
-                  if (idx >= 0 && idx < cumulativeData.length && idx % labelStep === 0) {
-                    return cumulativeData[idx].label;
-                  }
-                  return "";
+                  const idx = Math.round(Number(v) / INTERPOLATION_STEPS);
+                  if (idx < 0 || idx >= cumulativeData.length) return "";
+                  return cumulativeData[idx]?.label || "";
                 },
               }}
-              yAxis={[{
-                font,
-                tickCount: 5,
-                labelOffset: -8,
-                labelColor: "#94a3b8",
-                formatYLabel: (v) => `${currencySymbol}${Math.round(v)}`,
-              }]}
+              yAxis={[
+                {
+                  font,
+                  tickCount: 2,
+                  labelOffset: -8,
+                  labelColor: "#94a3b8",
+                  formatYLabel: (v) => `${currencySymbol}${Math.round(v)}`,
+                },
+              ]}
               chartPressState={state}
             >
               {({ points }) => {
                 // Build enhanced pixel points with intersections
                 const buildEnhancedPixelPoints = () => {
-                  if (totalBudget === 0 || lastActualIndex < 0) return null;
+                  if (totalBudget === 0 || smoothLastActualIndex < 0)
+                    return null;
 
-                  const enhancedPixelPoints: Array<{ x: number; y: number; isOverBudget: boolean }> = [];
+                  const enhancedPixelPoints: Array<{
+                    x: number;
+                    y: number;
+                    isOverBudget: boolean;
+                  }> = [];
 
-                  for (let i = 0; i <= lastActualIndex; i++) {
-                    const currentData = cumulativeData[i];
+                  for (let i = 0; i <= smoothLastActualIndex; i++) {
+                    const currentData = smoothData[i];
                     const currentPixel = points.amount[i];
                     const currentPacePixel = points.pace[i];
 
@@ -348,12 +586,12 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
                     enhancedPixelPoints.push({
                       x: currentPixel.x,
                       y: currentPixel.y,
-                      isOverBudget: currentOver
+                      isOverBudget: currentOver,
                     });
 
                     // Check for intersection with next point
-                    if (i < lastActualIndex) {
-                      const nextData = cumulativeData[i + 1];
+                    if (i < smoothLastActualIndex) {
+                      const nextData = smoothData[i + 1];
                       const nextPixel = points.amount[i + 1];
                       const nextPacePixel = points.pace[i + 1];
 
@@ -368,17 +606,22 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
                         const denominator = da - dp;
 
                         if (Math.abs(denominator) > 0.001) {
-                          const t = (currentData.pace - currentData.amount) / denominator;
+                          const t =
+                            (currentData.pace - currentData.amount) /
+                            denominator;
 
                           if (t > 0 && t < 1) {
-                            // Interpolate pixel positions
-                            const intersectPixelX = currentPixel.x + (nextPixel.x - currentPixel.x) * t;
-                            const intersectPixelY = currentPixel.y + (nextPixel.y - currentPixel.y) * t;
+                            const intersectPixelX =
+                              currentPixel.x +
+                              (nextPixel.x - currentPixel.x) * t;
+                            const intersectPixelY =
+                              currentPixel.y +
+                              (nextPixel.y - currentPixel.y) * t;
 
                             enhancedPixelPoints.push({
                               x: intersectPixelX,
                               y: intersectPixelY,
-                              isOverBudget: nextOver
+                              isOverBudget: nextOver,
                             });
                           }
                         }
@@ -390,11 +633,22 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
                 };
 
                 // Build segments from enhanced pixel points
-                const buildSegmentsFromPixelPoints = (pixelPoints: Array<{ x: number; y: number; isOverBudget: boolean }> | null) => {
+                const buildSegmentsFromPixelPoints = (
+                  pixelPoints: Array<{
+                    x: number;
+                    y: number;
+                    isOverBudget: boolean;
+                  }> | null,
+                ) => {
                   if (!pixelPoints || pixelPoints.length < 2) return [];
 
-                  const segments: Array<{ points: Array<{ x: number; y: number }>; isOverBudget: boolean }> = [];
-                  let currentSegment: Array<{ x: number; y: number }> = [{ x: pixelPoints[0].x, y: pixelPoints[0].y }];
+                  const segments: Array<{
+                    points: Array<{ x: number; y: number }>;
+                    isOverBudget: boolean;
+                  }> = [];
+                  let currentSegment: Array<{ x: number; y: number }> = [
+                    { x: pixelPoints[0].x, y: pixelPoints[0].y },
+                  ];
                   let currentIsOver = pixelPoints[0].isOverBudget;
 
                   for (let i = 1; i < pixelPoints.length; i++) {
@@ -404,7 +658,10 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
                       // Status changed - this point is an intersection
                       // Add it to current segment and start new one
                       currentSegment.push({ x: point.x, y: point.y });
-                      segments.push({ points: [...currentSegment], isOverBudget: currentIsOver });
+                      segments.push({
+                        points: [...currentSegment],
+                        isOverBudget: currentIsOver,
+                      });
 
                       // Start new segment from intersection point
                       currentSegment = [{ x: point.x, y: point.y }];
@@ -416,67 +673,85 @@ export const SpendingTrendChart = ({ data, currencySymbol, font, timeFrame, budg
 
                   // Push final segment
                   if (currentSegment.length >= 1) {
-                    segments.push({ points: currentSegment, isOverBudget: currentIsOver });
+                    segments.push({
+                      points: currentSegment,
+                      isOverBudget: currentIsOver,
+                    });
                   }
 
                   return segments;
                 };
 
                 const enhancedPixelPoints = buildEnhancedPixelPoints();
-                const pixelSegments = buildSegmentsFromPixelPoints(enhancedPixelPoints);
+                const pixelSegments =
+                  buildSegmentsFromPixelPoints(enhancedPixelPoints);
+
+                // Determine endpoint circle color
+                const endpointColor =
+                  totalBudget > 0
+                    ? smoothData[smoothLastActualIndex]?.isOverBudget
+                      ? "#ef4444"
+                      : "#22c55e"
+                    : "#6366f1";
+
+                const endpointPixel =
+                  smoothLastActualIndex >= 0
+                    ? points.amount[smoothLastActualIndex]
+                    : null;
+
+                // Store endpoint pixel position for tooltip clamping
+                if (endpointPixel) {
+                  lastActualPixelX.value = endpointPixel.x;
+                  lastActualPixelY.value = endpointPixel.y;
+                }
+
+                const renderLines = () => (
+                  <>
+                    {/* White spending line */}
+                    <Line
+                      points={points.amount.filter(
+                        (_, i) => i <= smoothLastActualIndex,
+                      )}
+                      color="#ffffff"
+                      strokeWidth={3}
+                      curveType="catmullRom"
+                    />
+                  </>
+                );
 
                 return (
                   <>
-                    {/* Budget pace line (dashed gray) - only if budget exists */}
-                    {totalBudget > 0 && (
-                      <Line
-                        points={points.pace}
-                        color="#64748b"
-                        strokeWidth={2}
-                        strokeDasharray={[8, 4]}
-                        opacity={0.6}
+                    {/* Dimmed lines when scrubbing, full opacity otherwise */}
+                    <Group opacity={pressing ? 0.25 : 1}>{renderLines()}</Group>
+
+                    {/* Highlighted section near tooltip at full opacity */}
+                    {pressing && (
+                      <Group clip={highlightClip}>{renderLines()}</Group>
+                    )}
+
+                    {/* Endpoint circle at cutoff - hidden when tooltip is active */}
+                    {!pressing && endpointPixel && (
+                      <Circle
+                        cx={endpointPixel.x}
+                        cy={endpointPixel.y}
+                        r={6}
+                        color={endpointColor}
                       />
                     )}
 
-                    {/* Segmented spending lines with intersection-accurate coloring */}
-                    {totalBudget > 0 && pixelSegments.length > 0 ? (
-                      pixelSegments.map((segment, segIdx) => {
-                        if (segment.points.length < 2) return null;
-                        return (
-                          <Line
-                            key={`segment-${segIdx}`}
-                            points={segment.points}
-                            color={segment.isOverBudget ? '#ef4444' : '#22c55e'}
-                            strokeWidth={3}
-                          />
-                        );
-                      })
-                    ) : totalBudget === 0 ? (
-                      /* Fallback purple line if no budget */
-                      <Line
-                        points={points.amount.filter((_, i) => i <= lastActualIndex)}
-                        color="#6366f1"
-                        strokeWidth={3}
-                        curveType="catmullRom"
-                      />
-                    ) : null}
-
-                    {/* Tooltip indicator - only shown when pressed */}
-                    {showTooltip && (
-                      <ToolTip
-                        x={state.x.position}
-                        y={state.y.amount.position}
-                        yPace={state.y.pace.position}
-                        color={
-                          tooltipData.isFuture
-                            ? '#6b7280'
-                            : totalBudget > 0
-                              ? (tooltipData.isOverBudget ? '#ef4444' : '#22c55e')
-                              : '#6366f1'
-                        }
-                        showPaceCircle={totalBudget > 0}
-                      />
-                    )}
+                    {/* Tooltip indicator */}
+                    <ToolTip
+                      x={clampedX}
+                      y={clampedY}
+                      isActive={pressing}
+                      color={
+                        totalBudget > 0
+                          ? tooltipData.isOverBudget
+                            ? "#ef4444"
+                            : "#22c55e"
+                          : "#6366f1"
+                      }
+                    />
                   </>
                 );
               }}

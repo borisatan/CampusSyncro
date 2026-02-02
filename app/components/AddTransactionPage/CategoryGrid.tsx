@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
-import { Animated, Text, TouchableOpacity, View } from 'react-native';
-import { Category } from '../../types/types';
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef } from "react";
+import { Animated, Text, TouchableOpacity, View } from "react-native";
+import { Category } from "../../types/types";
 
 interface CategoryGridProps {
   categories: Category[];
@@ -13,7 +14,6 @@ interface CategoryGridProps {
   isEditMode: boolean;
   setIsEditMode: (val: boolean) => void;
 }
-
 
 export const CategoryGrid = ({
   categories,
@@ -29,30 +29,40 @@ export const CategoryGrid = ({
   if (isLoadingCategories) {
     return (
       <View className="flex items-center justify-center py-8">
-        <Text className={isDarkMode ? 'text-slate-400' : 'text-gray-600'}>Loading categories...</Text>
+        <Text className={isDarkMode ? "text-slate-400" : "text-gray-600"}>
+          Loading categories...
+        </Text>
       </View>
     );
   }
 
   // Filter categories once to maintain consistent indexing for the stagger
-  const displayCategories = categories.filter(cat => cat.category_name !== 'Income');
+  const displayCategories = categories.filter(
+    (cat) => cat.category_name !== "Income",
+  );
 
   return (
     <View className="mb-6">
       <View className="flex-row justify-between items-center mb-3">
-        <Text className={`text-sm mb-1 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+        <Text
+          className={`text-sm mb-1 ${isDarkMode ? "text-slate-400" : "text-gray-600"}`}
+        >
           Category
         </Text>
         <TouchableOpacity
           onPress={() => setIsEditMode(!isEditMode)}
           className={`px-4 py-1 rounded-lg border ${
             isEditMode
-              ? 'bg-accentBlue border-surfaceDark'
-              : isDarkMode ? 'bg-surfaceDark border-slate-800' : 'bg-white border-gray-200'
+              ? "bg-accentBlue border-surfaceDark"
+              : isDarkMode
+                ? "bg-surfaceDark border-slate-800"
+                : "bg-white border-gray-200"
           }`}
         >
-          <Text className={`text-sm ${isEditMode ? 'text-white' : isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
-            {isEditMode ? 'Done Editing' : 'Edit Categories'}
+          <Text
+            className={`text-sm ${isEditMode ? "text-white" : isDarkMode ? "text-textDark" : "text-textLight"}`}
+          >
+            {isEditMode ? "Done Editing" : "Edit Categories"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -67,10 +77,16 @@ export const CategoryGrid = ({
             isEditMode={isEditMode}
             isSelected={selectedCategory?.id === category.id}
             onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               if (isEditMode) {
                 router.navigate({
-                  pathname: '/components/AddTransactionPage/edit-category',
-                  params: { id: category.id, name: category.category_name, icon: category.icon, color: category.color }
+                  pathname: "/components/AddTransactionPage/edit-category",
+                  params: {
+                    id: category.id,
+                    name: category.category_name,
+                    icon: category.icon,
+                    color: category.color,
+                  },
                 });
               } else {
                 setSelectedCategory(category);
@@ -84,7 +100,9 @@ export const CategoryGrid = ({
             index={displayCategories.length} // Stagger last
             isDarkMode={isDarkMode}
             isEditMode={true}
-            onPress={() => router.navigate('/components/AddTransactionPage/edit-category')}
+            onPress={() =>
+              router.navigate("/components/AddTransactionPage/edit-category")
+            }
             isAddBtn
           />
         )}
@@ -94,8 +112,14 @@ export const CategoryGrid = ({
 };
 
 // --- New Animated Component ---
-const AnimatedCategoryItem = ({ 
-  category, index, isDarkMode, isEditMode, isSelected, onPress, isAddBtn = false 
+const AnimatedCategoryItem = ({
+  category,
+  index,
+  isDarkMode,
+  isEditMode,
+  isSelected,
+  onPress,
+  isAddBtn = false,
 }: any) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current; // Scale up from 80%
@@ -119,30 +143,42 @@ const AnimatedCategoryItem = ({
   }, []);
 
   return (
-    <Animated.View 
+    <Animated.View
       className="w-1/3 px-1.5 mb-3"
       style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
     >
       <TouchableOpacity
         onPress={onPress}
         className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
-          isAddBtn 
-            ? isDarkMode ? 'bg-backgroundDark border-slate-500' : 'bg-gray-100 border-gray-400'
+          isAddBtn
+            ? isDarkMode
+              ? "bg-backgroundDark border-slate-500"
+              : "bg-gray-100 border-gray-400"
             : isEditMode
-              ? isDarkMode ? 'bg-backgroundDark border-borderDark' : 'bg-backgroundMuted border-borderLight'
+              ? isDarkMode
+                ? "bg-backgroundDark border-borderDark"
+                : "bg-backgroundMuted border-borderLight"
               : isSelected
-                ? isDarkMode ? 'bg-surfaceDark border-accentBlue' : 'bg-blue-50 border-accentBlue'
-                : isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
+                ? isDarkMode
+                  ? "bg-surfaceDark border-accentBlue"
+                  : "bg-blue-50 border-accentBlue"
+                : isDarkMode
+                  ? "bg-surfaceDark border-borderDark"
+                  : "bg-background border-borderLight"
         }`}
       >
         <View
           className="w-12 h-12 rounded-xl items-center justify-center"
-          style={{ backgroundColor: isAddBtn ? '#fff' : category.color, borderWidth: isAddBtn ? 1 : 0, borderColor: '#d1d5db' }}
+          style={{
+            backgroundColor: isAddBtn ? "#fff" : category.color,
+            borderWidth: isAddBtn ? 1 : 0,
+            borderColor: "#d1d5db",
+          }}
         >
-          <Ionicons 
-            name={isAddBtn ? "add-outline" : (category.icon as any)} 
-            size={24} 
-            color={isAddBtn ? "#6366f1" : "#fff"} 
+          <Ionicons
+            name={isAddBtn ? "add-outline" : (category.icon as any)}
+            size={24}
+            color={isAddBtn ? "#6366f1" : "#fff"}
           />
           {isEditMode && !isAddBtn && (
             <View className="absolute -top-1 -right-1 bg-white rounded-full border border-white">
@@ -150,8 +186,10 @@ const AnimatedCategoryItem = ({
             </View>
           )}
         </View>
-        <Text className={`text-sm text-center ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
-          {isAddBtn ? 'Add New' : category.category_name}
+        <Text
+          className={`text-sm text-center ${isDarkMode ? "text-slate-300" : "text-gray-700"}`}
+        >
+          {isAddBtn ? "Add New" : category.category_name}
         </Text>
       </TouchableOpacity>
     </Animated.View>
