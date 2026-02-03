@@ -1,5 +1,5 @@
 
-import { Plus } from 'lucide-react-native';
+import { ArrowLeftRight, Plus } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
@@ -9,6 +9,7 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-
 import { AccountListItem } from '../components/AccountsPage/AccountListItem';
 import AddAccountPage from '../components/AccountsPage/AddAccountPage';
 import EditAccountPage from '../components/AccountsPage/EditAccountPage';
+import MoveMoneyPage from '../components/MoveMoneyPage/MoveMoneyPage';
 import { useAuth } from '../context/AuthContext';
 import { useDataRefresh } from '../context/DataRefreshContext';
 import * as AccountService from '../services/backendService';
@@ -29,6 +30,7 @@ export default function Accounts() {
   const { currencySymbol, loadCurrency } = useCurrencyStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showMoveMoneyModal, setShowMoveMoneyModal] = useState(false);
   const [editingAccountId, setEditingAccountId] = useState<number | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<any | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -132,12 +134,20 @@ export default function Accounts() {
                 <Text className={`text-2xl font-semibold ${isDark ? 'text-textDark' : 'text-textLight'}`}>My Accounts</Text>
                 <Text className={`text-md mt-1 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>Manage your financial accounts</Text>
               </View>
-              <TouchableOpacity
-                onPress={() => setShowAddModal(true)}
-                className="w-10 h-10 bg-accentBlue rounded-full items-center justify-center"
-              >
-                <Plus color="#FFFFFF" size={20} />
-              </TouchableOpacity>
+              <View className="flex-row items-center">
+                <TouchableOpacity
+                  onPress={() => setShowMoveMoneyModal(true)}
+                  className={`w-10 h-10 rounded-full items-center justify-center mr-2 ${isDark ? 'bg-surfaceDark' : 'bg-gray-100'}`}
+                >
+                  <ArrowLeftRight color={isDark ? '#94A3B8' : '#6B7280'} size={20} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowAddModal(true)}
+                  className="w-10 h-10 bg-accentBlue rounded-full items-center justify-center"
+                >
+                  <Plus color="#FFFFFF" size={20} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Total Balance Card */}
@@ -174,7 +184,7 @@ export default function Accounts() {
         </ScrollView>
 
         <Modal visible={showAddModal} animationType="slide"><AddAccountPage currencySymbol={currencySymbol} onBack={() => setShowAddModal(false)} onSave={handleAddAccount} accountCount={accounts.length} /></Modal>
-        
+
         <Modal visible={showEditModal} animationType="slide">
           {selectedAccount && (
             <EditAccountPage
@@ -185,6 +195,14 @@ export default function Accounts() {
               accountCount={accounts.length}
             />
           )}
+        </Modal>
+
+        <Modal visible={showMoveMoneyModal} animationType="slide">
+          <MoveMoneyPage
+            onBack={() => setShowMoveMoneyModal(false)}
+            accounts={accounts}
+            currencySymbol={currencySymbol}
+          />
         </Modal>
       </SafeAreaView>
     </SafeAreaProvider>

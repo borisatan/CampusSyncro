@@ -1,14 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FlatList,
   Modal,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import DraggableFlatList, {
+  ScaleDecorator,
+  RenderItemParams,
+} from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoryBudgetRow } from '../components/BudgetsPage/CategoryBudgetRow';
@@ -16,7 +19,7 @@ import { IncomeCard } from '../components/BudgetsPage/IncomeCard';
 import { useTheme } from '../context/ThemeContext';
 import { useBudgetsData } from '../hooks/useBudgetsData';
 import { useDataRefresh } from '../context/DataRefreshContext';
-import { updateCategoryBudgetAmount, updateCategoryBudgetPercentages } from '../services/backendService';
+import { updateCategoryBudgetAmount, updateCategoryBudgetPercentages, updateCategoriesOrder } from '../services/backendService';
 import { useCategoriesStore } from '../store/useCategoriesStore';
 import { useCurrencyStore } from '../store/useCurrencyStore';
 import { useDashboardCategoriesStore } from '../store/useDashboardCategoriesStore';
@@ -43,15 +46,20 @@ export default function BudgetsScreen() {
   } = useBudgetsData();
   const { currencySymbol } = useCurrencyStore();
   const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
-  const { categories, updateCategoryOptimistic } = useCategoriesStore();
+  const { categories, updateCategoryOptimistic, reorderCategories } = useCategoriesStore();
   const { pinnedCategoryIds, togglePinnedCategory } = useDashboardCategoriesStore();
-  const { refreshDashboard } = useDataRefresh();
+  const { refreshDashboard, registerBudgetsRefresh } = useDataRefresh();
   const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [isReorderMode, setIsReorderMode] = useState(false);
 
   const handleToggleExpand = useCallback((categoryId: number) => {
     setExpandedCategoryId((prev) => (prev === categoryId ? null : categoryId));
   }, []);
+
+  useEffect(() => {
+    registerBudgetsRefresh(refresh);
+  }, [registerBudgetsRefresh, refresh]);
 
   const textPrimary = isDarkMode ? 'text-white' : 'text-black';
   const textSecondary = isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight';
@@ -105,26 +113,64 @@ export default function BudgetsScreen() {
     setShowHelpModal(false);
   }, [categories, monthlyIncome]);
 
-  // Build a unified list: budgeted categories first, then unbudgeted
-  const allCategoryItems: CategoryListItem[] = useMemo(() => {
+  const handleDragEnd = useCallback(async ({ data }: { data: CategoryListItem[] }) => {
+    // Update local state immediately for responsive UI
+    const reorderedCategories = data.map((item, index) => ({
+      ...item.category,
+      sort_order: index,
+    }));
+    reorderCategories(reorderedCategories);
+
+    // Persist to backend
+    try {
+      await updateCategoriesOrder(
+        reorderedCategories.map((cat) => ({ id: cat.id, sort_order: cat.sort_order! }))
+      );
+    } catch (error) {
+      console.error('Error saving category order:', error);
+      // Reload on failure to sync with backend
+      refresh();
+    }
+  }, [reorderCategories, refresh]);
+
+  // Build a unified list respecting sort_order if set, otherwise budgeted first
+  const { allCategoryItems, hasCustomOrder } = useMemo(() => {
     const budgetMap = new Map<number, CategoryBudgetStatus>();
     categoryBudgets.forEach((cb) => budgetMap.set(cb.category.id, cb));
 
+    const filteredCategories = categories.filter((cat) => cat.category_name !== 'Income');
+
+    // Check if user has custom sort_order (any category has sort_order defined)
+    const customOrder = filteredCategories.some((cat) => cat.sort_order !== undefined);
+
+    if (customOrder) {
+      // Respect user's custom order
+      return {
+        allCategoryItems: filteredCategories.map((cat) => ({
+          category: cat,
+          budgetStatus: budgetMap.get(cat.id) ?? null,
+        })),
+        hasCustomOrder: true,
+      };
+    }
+
+    // Default: budgeted categories first, then unbudgeted
     const budgeted: CategoryListItem[] = [];
     const unbudgeted: CategoryListItem[] = [];
 
-    categories
-      .filter((cat) => cat.category_name !== 'Income')
-      .forEach((cat) => {
-        const status = budgetMap.get(cat.id) ?? null;
-        if (status) {
-          budgeted.push({ category: cat, budgetStatus: status });
-        } else {
-          unbudgeted.push({ category: cat, budgetStatus: null });
-        }
-      });
+    filteredCategories.forEach((cat) => {
+      const status = budgetMap.get(cat.id) ?? null;
+      if (status) {
+        budgeted.push({ category: cat, budgetStatus: status });
+      } else {
+        unbudgeted.push({ category: cat, budgetStatus: null });
+      }
+    });
 
-    return [...budgeted, ...unbudgeted];
+    return {
+      allCategoryItems: [...budgeted, ...unbudgeted],
+      hasCustomOrder: false,
+    };
   }, [categories, categoryBudgets]);
 
   const formatAmount = (amount: number): string => {
@@ -146,77 +192,126 @@ export default function BudgetsScreen() {
             Budgets
           </Text>
           <Text className={`text-md mt-1 mb-3 ${textSecondary}`}>
-            Per-category spending limits
+            {isReorderMode ? 'Drag to reorder categories' : 'Per-category spending limits'}
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={() => setShowHelpModal(true)}
-          className="h-9 w-9 items-center justify-center rounded-full border border-borderDark"
-          style={{ backgroundColor: '#FACC15' }}
-        >
-          <Ionicons name="help" size={20} color="#fff" />
-        </TouchableOpacity>
+        <View className="flex-row gap-2">
+          <TouchableOpacity
+            onPress={() => setIsReorderMode(!isReorderMode)}
+            className={`h-9 w-9 items-center justify-center rounded-full border ${isReorderMode ? 'border-accentTeal bg-accentTeal' : 'border-borderDark'}`}
+            style={!isReorderMode ? { backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9' } : undefined}
+          >
+            <Ionicons name="reorder-three" size={20} color={isReorderMode ? '#fff' : (isDarkMode ? '#94a3b8' : '#64748b')} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowHelpModal(true)}
+            className="h-9 w-9 items-center justify-center rounded-full border border-borderDark"
+            style={{ backgroundColor: '#FACC15' }}
+          >
+            <Ionicons name="help" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <FlatList
+      <DraggableFlatList
         data={isLoading ? [] : allCategoryItems}
         keyExtractor={(item) => item.category.id.toString()}
-        contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 100 }}
+        onDragEnd={handleDragEnd}
+        contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 150 }}
         ListHeaderComponent={
           <>
             {/* Income Card */}
-            <MotiView
-              from={{ opacity: 0, translateY: 10 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 400 }}
-            >
-              <IncomeCard
-                income={monthlyIncome}
-                currencySymbol={currencySymbol}
-                useDynamicIncome={useDynamicIncome}
-                manualIncome={manualIncome}
-                dynamicIncome={dynamicIncome}
-                totalBudgeted={totalBudgeted}
-                isDarkMode={isDarkMode}
-                onSave={handleSaveIncome}
-              />
-            </MotiView>
-
+            {!isReorderMode && (
+              <MotiView
+                from={{ opacity: 0, translateY: 10 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'timing', duration: 400 }}
+              >
+                <IncomeCard
+                  income={monthlyIncome}
+                  currencySymbol={currencySymbol}
+                  useDynamicIncome={useDynamicIncome}
+                  manualIncome={manualIncome}
+                  dynamicIncome={dynamicIncome}
+                  totalBudgeted={totalBudgeted}
+                  isDarkMode={isDarkMode}
+                  onSave={handleSaveIncome}
+                />
+              </MotiView>
+            )}
+            {isReorderMode && (
+              <Text className={`text-sm ${textSecondary} mb-3 px-1`}>
+                Hold and drag to reorder
+              </Text>
+            )}
           </>
         }
-        renderItem={({ item, index }) => (
-          <>
-            {/* Section headers */}
-            {index === 0 && categoryBudgets.length > 0 && (
-              <Text className={`text-sm ${textSecondary} mb-2 px-1`}>
-                Budgeted Categories
-              </Text>
-            )}
-            {index === unbudgetedStartIndex && unbudgetedStartIndex >= 0 && (
-              <Text className={`text-sm ${textSecondary} mb-2 px-1 ${index > 0 ? 'mt-4' : ''}`}>
-                Other Categories
-              </Text>
-            )}
-            <MotiView
-              from={{ opacity: 0, translateY: 10 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 250, delay: index * 30 }}
-              className="mb-3"
-            >
-              <CategoryBudgetRow
-                item={item.budgetStatus}
-                category={item.category}
-                currencySymbol={currencySymbol}
-                monthlyIncome={monthlyIncome}
-                onSave={handleInlineSave}
-                showOnDashboard={pinnedCategoryIds.length === 0 || pinnedCategoryIds.includes(item.category.id)}
-                onToggleDashboard={togglePinnedCategory}
-                expanded={expandedCategoryId === item.category.id}
-                onToggleExpand={() => handleToggleExpand(item.category.id)}
-              />
-            </MotiView>
-          </>
-        )}
+        renderItem={({ item, drag, isActive, getIndex }: RenderItemParams<CategoryListItem>) => {
+          const index = getIndex() ?? 0;
+          return (
+          <ScaleDecorator>
+            <>
+              {/* Section headers - only when not reordering and no custom order */}
+              {!isReorderMode && !hasCustomOrder && index === 0 && categoryBudgets.length > 0 && (
+                <Text className={`text-sm ${textSecondary} mb-2 px-1`}>
+                  Budgeted Categories
+                </Text>
+              )}
+              {!isReorderMode && !hasCustomOrder && index === unbudgetedStartIndex && unbudgetedStartIndex >= 0 && (
+                <Text className={`text-sm ${textSecondary} mb-2 px-1 ${index > 0 ? 'mt-4' : ''}`}>
+                  Other Categories
+                </Text>
+              )}
+              {isReorderMode ? (
+                <TouchableOpacity
+                  onLongPress={drag}
+                  disabled={isActive}
+                  delayLongPress={100}
+                  className={`mb-2 rounded-2xl p-4 flex-row items-center border ${
+                    isActive ? 'border-accentTeal bg-surfaceDark/80' : 'border-borderDark bg-surfaceDark'
+                  }`}
+                  style={{ opacity: isActive ? 0.9 : 1 }}
+                >
+                  <View className="mr-3">
+                    <Ionicons name="menu" size={22} color="#94a3b8" />
+                  </View>
+                  <View
+                    className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+                    style={{ backgroundColor: item.category.color }}
+                  >
+                    <Ionicons name={item.category.icon as any} size={20} color="#fff" />
+                  </View>
+                  <Text className="text-white text-base flex-1">{item.category.category_name}</Text>
+                  {item.budgetStatus && (
+                    <Text className="text-secondaryDark text-sm">
+                      {currencySymbol}{item.budgetStatus.budget_amount.toLocaleString()}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <MotiView
+                  from={{ opacity: 0, translateY: 10 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  transition={{ type: 'timing', duration: 250, delay: index * 30 }}
+                  className="mb-3"
+                >
+                  <CategoryBudgetRow
+                    item={item.budgetStatus}
+                    category={item.category}
+                    currencySymbol={currencySymbol}
+                    monthlyIncome={monthlyIncome}
+                    onSave={handleInlineSave}
+                    showOnDashboard={pinnedCategoryIds.length === 0 || pinnedCategoryIds.includes(item.category.id)}
+                    onToggleDashboard={togglePinnedCategory}
+                    expanded={expandedCategoryId === item.category.id}
+                    onToggleExpand={() => handleToggleExpand(item.category.id)}
+                  />
+                </MotiView>
+              )}
+            </>
+          </ScaleDecorator>
+        );
+        }}
         ListEmptyComponent={
           !isLoading ? (
             <MotiView

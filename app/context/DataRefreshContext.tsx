@@ -7,11 +7,13 @@ type DataRefreshContextValue = {
   registerDashboardRefresh: (fn: RefreshFunction) => void;
   registerAccountsRefresh: (fn: RefreshFunction) => void;
   registerTransactionListRefresh: (fn: RefreshFunction) => void;
+  registerBudgetsRefresh: (fn: RefreshFunction) => void;
   registerOptimisticDeleteTransaction: (fn: (id: number) => void) => void;
   registerOptimisticUpdateTransaction: (fn: (tx: Transaction) => void) => void;
   refreshDashboard: () => Promise<void>;
   refreshAccounts: () => Promise<void>;
   refreshTransactionList: () => Promise<void>;
+  refreshBudgets: () => Promise<void>;
   refreshAll: () => Promise<void>;
   optimisticDeleteTransaction: (id: number) => void;
   optimisticUpdateTransaction: (tx: Transaction) => void;
@@ -23,6 +25,7 @@ export const DataRefreshProvider = ({ children }: { children: React.ReactNode })
   const dashboardRefreshRef = useRef<RefreshFunction | null>(null);
   const accountsRefreshRef = useRef<RefreshFunction | null>(null);
   const transactionListRefreshRef = useRef<RefreshFunction | null>(null);
+  const budgetsRefreshRef = useRef<RefreshFunction | null>(null);
   const optimisticDeleteRef = useRef<((id: number) => void) | null>(null);
   const optimisticUpdateRef = useRef<((tx: Transaction) => void) | null>(null);
 
@@ -36,6 +39,10 @@ export const DataRefreshProvider = ({ children }: { children: React.ReactNode })
 
   const registerTransactionListRefresh = useCallback((fn: RefreshFunction) => {
     transactionListRefreshRef.current = fn;
+  }, []);
+
+  const registerBudgetsRefresh = useCallback((fn: RefreshFunction) => {
+    budgetsRefreshRef.current = fn;
   }, []);
 
   const registerOptimisticDeleteTransaction = useCallback((fn: (id: number) => void) => {
@@ -64,6 +71,12 @@ export const DataRefreshProvider = ({ children }: { children: React.ReactNode })
     }
   }, []);
 
+  const refreshBudgets = useCallback(async () => {
+    if (budgetsRefreshRef.current) {
+      await budgetsRefreshRef.current();
+    }
+  }, []);
+
   const optimisticDeleteTransaction = useCallback((id: number) => {
     if (optimisticDeleteRef.current) optimisticDeleteRef.current(id);
   }, []);
@@ -77,18 +90,21 @@ export const DataRefreshProvider = ({ children }: { children: React.ReactNode })
       refreshDashboard(),
       refreshAccounts(),
       refreshTransactionList(),
+      refreshBudgets(),
     ]);
-  }, [refreshDashboard, refreshAccounts, refreshTransactionList]);
+  }, [refreshDashboard, refreshAccounts, refreshTransactionList, refreshBudgets]);
 
   const value = {
     registerDashboardRefresh,
     registerAccountsRefresh,
     registerTransactionListRefresh,
+    registerBudgetsRefresh,
     registerOptimisticDeleteTransaction,
     registerOptimisticUpdateTransaction,
     refreshDashboard,
     refreshAccounts,
     refreshTransactionList,
+    refreshBudgets,
     refreshAll,
     optimisticDeleteTransaction,
     optimisticUpdateTransaction,

@@ -10,6 +10,55 @@ export const createTransaction = async (payload: any) => {
   return data;
 };
 
+// Create a money transfer between two accounts
+export const createTransfer = async (payload: {
+  from_account: string;
+  to_account: string;
+  amount: number;
+  user_id: string;
+  created_at: string;
+  description?: string;
+}): Promise<{ outgoing: Transaction; incoming: Transaction }> => {
+  const transfer_id = crypto.randomUUID();
+
+  // Create outgoing transaction (expense from source)
+  const outgoing = await createTransaction({
+    amount: -Math.abs(payload.amount),
+    description: payload.description || `Transfer to ${payload.to_account}`,
+    account_name: payload.from_account,
+    category_name: 'Transfer',
+    user_id: payload.user_id,
+    created_at: payload.created_at,
+    transfer_id,
+  });
+
+  // Create incoming transaction (income to destination)
+  const incoming = await createTransaction({
+    amount: Math.abs(payload.amount),
+    description: payload.description || `Transfer from ${payload.from_account}`,
+    account_name: payload.to_account,
+    category_name: 'Transfer',
+    user_id: payload.user_id,
+    created_at: payload.created_at,
+    transfer_id,
+  });
+
+  return { outgoing: outgoing[0], incoming: incoming[0] };
+};
+
+// Delete a transfer (deletes both linked transactions)
+export const deleteTransfer = async (transfer_id: string, user_id: string) => {
+  const { data, error } = await supabase
+    .from('Transactions')
+    .delete()
+    .eq('transfer_id', transfer_id)
+    .eq('user_id', user_id)
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
 
 
 export async function getUserCurrency() {
@@ -126,16 +175,17 @@ export const fetchIncomeTransactionsTotal = async (startDate: Date, endDate: Dat
     return total;
   };
   
-  // Modified: Fetch transactions excluding Income
+  // Modified: Fetch transactions excluding Income and Transfer
   export const fetchTransactionsByDateRange = async (startDate: Date, endDate: Date): Promise<Transaction[]> => {
     const { data, error } = await supabase
     .from("Transactions")
     .select("*")
     .neq("category_name", "Income")  // Exclude Income
+    .neq("category_name", "Transfer")  // Exclude Transfer
     .gte("created_at", startDate.toISOString())
     .lte("created_at", endDate.toISOString())
     .order("created_at", { ascending: true });
-    
+
   if (error) throw error;
   return data ?? [];
 };
@@ -175,16 +225,18 @@ export const fetchTotalIncome = async (startDate: Date, endDate: Date): Promise<
 
 
 
-// Modified: Fetch category aggregates excluding Income
+// Modified: Fetch category aggregates excluding Income and Transfer
 export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): Promise<CategoryAggregation[]> => {
   const { data, error } = await supabase.rpc('fetch_category_aggregates', {
     start_date: startDate.toISOString(),
     end_date: endDate.toISOString(),
   });
   if (error) throw error;
-  
-  // Filter out Income category
-  return (data ?? []).filter((cat: CategoryAggregation) => cat.category_name !== 'Income');
+
+  // Filter out Income and Transfer categories
+  return (data ?? []).filter((cat: CategoryAggregation) =>
+    cat.category_name !== 'Income' && cat.category_name !== 'Transfer'
+  );
 };
 
 
@@ -486,6 +538,7 @@ export const fetchSpendingByCategory = async (
     .from('Transactions')
     .select('category_name, amount')
     .neq('category_name', 'Income')
+    .neq('category_name', 'Transfer')
     .gte('created_at', startDate.toISOString())
     .lt('created_at', endDate.toISOString());
 
