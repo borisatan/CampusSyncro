@@ -1,18 +1,16 @@
 import { useFont } from "@shopify/react-native-skia";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ScrollView, View } from "react-native";
-import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useChartPressState } from "victory-native";
 
 // Custom Components
 import { BudgetHealthCard } from "../components/HomePage/BudgetHealthCard";
 import { CategoryBreakdownList } from "../components/HomePage/CategoryBreakdown";
 import { CategoryDonut } from "../components/HomePage/CategoryDonut";
 import { DashboardSummary } from "../components/HomePage/DashboardSummary";
-import { SpendingTrendChart } from "../components/HomePage/SpendingTrendChart";
+import { ScrollableSpendingChart } from "../components/HomePage/ScrollableSpendingChart";
 import { TimeFrameSelector } from "../components/HomePage/TimeFrameSelector";
 
 // Hooks & Utilities
@@ -38,6 +36,7 @@ export default function Dashboard() {
   const {
     timeFrame,
     setTimeFrame,
+    setOffset,
     loading: dataLoading,
     refresh: refreshData,
     totalBalance,
@@ -45,7 +44,7 @@ export default function Dashboard() {
     totalExpenses,
     categories,
     categoriesAggregated,
-    chartData,
+    chartDataByOffset,
   } = useDashboardData("month");
 
   const {
@@ -91,25 +90,9 @@ export default function Dashboard() {
     }, [refreshBudgets])
   );
 
-  const [tooltipData, setTooltipData] = useState({ label: "", value: 0 });
   const interFont = useFont(
     require("../../assets/fonts/InterVariable.ttf"),
     12,
-  );
-
-  const { state } = useChartPressState({ x: 0, y: { amount: 0 } });
-
-  useAnimatedReaction(
-    () => ({
-      x: state.x.value.value,
-      y: state.y.amount.value.value,
-    }),
-    (current) => {
-      const index = Math.round(current.x);
-      const label = chartData[index]?.label || "";
-      const value = Math.round(current.y);
-      runOnJS(setTooltipData)({ label, value });
-    },
   );
 
   const onCategoryPress = (category_name: string) => {
@@ -141,13 +124,14 @@ export default function Dashboard() {
 
           <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
-          <SpendingTrendChart
-            data={chartData}
+          <ScrollableSpendingChart
+            chartDataByOffset={chartDataByOffset}
             timeFrame={timeFrame}
             font={interFont}
             currencySymbol={currencySymbol}
             categoryBudgets={categoryBudgets}
             isUnlocked={isUnlocked}
+            onOffsetChange={setOffset}
           />
 
           <CategoryDonut

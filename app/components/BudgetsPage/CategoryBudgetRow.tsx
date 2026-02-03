@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, Text, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
 
@@ -95,7 +94,6 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   }));
 
   const toggleExpanded = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggleExpand();
   };
 
@@ -110,12 +108,10 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
       if (isNaN(amount) || amount <= 0) return;
       onSave(category.id, amount);
     }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onToggleExpand();
   };
 
   const handleClear = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onToggleExpand();
     setAmountText('');
     setPercentText('');
@@ -216,7 +212,6 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                 />
                 <TouchableOpacity
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     setBudgetMode('fixed');
                   }}
                   className="flex-1 py-2.5 rounded-xl z-10"
@@ -228,7 +223,6 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     setBudgetMode('percentage');
                   }}
                   className="flex-1 py-2.5 rounded-xl z-10"

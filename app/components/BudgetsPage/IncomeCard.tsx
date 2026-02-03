@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -92,7 +91,6 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   }, [useDynamicIncome, manualIncome, isExpanded]);
 
   const handleToggleExpand = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     if (isExpanded) {
       setLocalUseDynamic(useDynamicIncome);
@@ -102,7 +100,6 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   };
 
   const handleSave = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const incomeValue = parseFloat(localManualIncome) || 0;
     onSave(localUseDynamic, incomeValue);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);

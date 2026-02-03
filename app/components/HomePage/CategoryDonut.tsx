@@ -14,7 +14,7 @@ interface CategoryDonutProps {
 
 const VISIBLE_COUNT = 5;
 
-export const CategoryDonut = ({ aggregates, categories, timeFrame, isUnlocked = true }: CategoryDonutProps) => {
+export const CategoryDonut = React.memo(({ aggregates, categories, timeFrame, isUnlocked = true }: CategoryDonutProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const categoryData = useMemo(() => {
@@ -156,4 +156,4 @@ export const CategoryDonut = ({ aggregates, categories, timeFrame, isUnlocked = 
       )}
     </View>
   );
-};
+});

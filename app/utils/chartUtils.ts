@@ -1,17 +1,22 @@
 // utils/chartUtils.ts
 import { ChartDataPoint, Transaction } from '../types/types';
 
-export const aggregateTransactionsByDay = (transactions: Transaction[]): ChartDataPoint[] => {
-  const now = new Date();
-  const currentDay = now.getDay();
-  const diff = (currentDay === 0 ? 6 : currentDay - 1);
-  
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - diff);
-  monday.setHours(0, 0, 0, 0);
+export const aggregateTransactionsByDay = (transactions: Transaction[], startDate?: Date): ChartDataPoint[] => {
+  let monday: Date;
+  if (startDate) {
+    monday = new Date(startDate);
+    monday.setHours(0, 0, 0, 0);
+  } else {
+    const now = new Date();
+    const currentDay = now.getDay();
+    const diff = (currentDay === 0 ? 6 : currentDay - 1);
+    monday = new Date(now);
+    monday.setDate(now.getDate() - diff);
+    monday.setHours(0, 0, 0, 0);
+  }
 
   const dailyTotals: Record<string, number> = {};
-  
+
   for (let i = 0; i < 7; i++) {
     const date = new Date(monday);
     date.setDate(monday.getDate() + i);
@@ -38,11 +43,12 @@ export const aggregateTransactionsByDay = (transactions: Transaction[]): ChartDa
   });
 };
 
-export const aggregateTransactionsByWeek = (transactions: Transaction[]): ChartDataPoint[] => {
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+export const aggregateTransactionsByWeek = (transactions: Transaction[], startDate?: Date): ChartDataPoint[] => {
+  const refDate = startDate ?? new Date();
+  const firstDay = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+  const lastDay = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0);
   const weeklyTotals: number[] = [0, 0, 0, 0, 0];
-  
+
   transactions.forEach(t => {
     const date = new Date(t.created_at);
     const dayOfMonth = date.getDate();
@@ -52,10 +58,11 @@ export const aggregateTransactionsByWeek = (transactions: Transaction[]): ChartD
     }
   });
 
+  const endBound = startDate ? lastDay : new Date();
   const weeks = weeklyTotals.filter((_, i) => {
     const weekStart = new Date(firstDay);
     weekStart.setDate(1 + (i * 7));
-    return weekStart <= now;
+    return weekStart <= endBound;
   });
 
   return weeks.map((total, index) => ({
@@ -65,21 +72,25 @@ export const aggregateTransactionsByWeek = (transactions: Transaction[]): ChartD
   }));
 };
 
-export const aggregateTransactionsByMonth = (transactions: Transaction[]): ChartDataPoint[] => {
+export const aggregateTransactionsByMonth = (transactions: Transaction[], startDate?: Date): ChartDataPoint[] => {
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const now = new Date();
-  const currentYear = now.getFullYear();
+  const refDate = startDate ?? new Date();
+  const targetYear = refDate.getFullYear();
+  const isCurrentYear = targetYear === new Date().getFullYear();
+  const maxMonth = isCurrentYear ? new Date().getMonth() : 11;
   const monthlyTotals: Record<number, number> = {};
-  
-  for (let i = 0; i <= now.getMonth(); i++) {
+
+  for (let i = 0; i <= maxMonth; i++) {
     monthlyTotals[i] = 0;
   }
 
   transactions.forEach(t => {
     const date = new Date(t.created_at);
-    if (date.getFullYear() === currentYear) {
+    if (date.getFullYear() === targetYear) {
       const month = date.getMonth();
-      monthlyTotals[month] += Math.abs(t.amount);
+      if (month in monthlyTotals) {
+        monthlyTotals[month] += Math.abs(t.amount);
+      }
     }
   });
 

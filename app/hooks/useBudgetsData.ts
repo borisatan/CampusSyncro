@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fetchCategories, fetchIncomeForPeriod, fetchSpendingByCategory } from '../services/backendService';
+import { fetchIncomeForPeriod, fetchSpendingByCategory } from '../services/backendService';
 import { useCategoriesStore } from '../store/useCategoriesStore';
 import { useIncomeStore } from '../store/useIncomeStore';
 import { CategoryBudgetStatus } from '../types/types';
@@ -24,7 +24,6 @@ export const getPeriodDates = (): { startDate: Date; endDate: Date } => {
 };
 
 export const useBudgetsData = (): BudgetsDataResult => {
-  const { setCategories } = useCategoriesStore();
   const { useDynamicIncome, manualIncome, loadIncomeSettings } = useIncomeStore();
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetStatus[]>([]);
   const [dynamicIncome, setDynamicIncome] = useState(0);
@@ -36,18 +35,15 @@ export const useBudgetsData = (): BudgetsDataResult => {
   const fetchAndBuild = useCallback(async () => {
     const { startDate, endDate } = getPeriodDates();
 
-    const [categoriesData, , fetchedDynamicIncome, spendingByCategory] =
+    const [, fetchedDynamicIncome, spendingByCategory] =
       await Promise.all([
-        fetchCategories(),
         loadIncomeSettings(),
         fetchIncomeForPeriod(startDate, endDate),
         fetchSpendingByCategory(startDate, endDate),
       ]);
 
-    const sorted = [...categoriesData].sort(
-      (a, b) => (a.sort_order ?? a.id) - (b.sort_order ?? b.id)
-    );
-    setCategories(sorted);
+    // Read categories from the Zustand store (already loaded by DataPreloader)
+    const sorted = useCategoriesStore.getState().categories;
     setDynamicIncome(fetchedDynamicIncome);
 
     // Determine effective income for percentage-based budgets
@@ -70,7 +66,7 @@ export const useBudgetsData = (): BudgetsDataResult => {
     });
 
     setCategoryBudgets(results);
-  }, [setCategories, loadIncomeSettings]);
+  }, [loadIncomeSettings]);
 
   // Initial load — shows loading state
   useEffect(() => {

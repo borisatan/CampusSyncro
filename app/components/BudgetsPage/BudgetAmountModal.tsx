@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -44,13 +43,11 @@ export const BudgetAmountModal: React.FC<BudgetAmountModalProps> = ({
     if (!category) return;
     const amount = parseFloat(amountText);
     if (isNaN(amount) || amount <= 0) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onSave(category.id, amount);
   };
 
   const handleClear = () => {
     if (!category) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onSave(category.id, null);
   };
 

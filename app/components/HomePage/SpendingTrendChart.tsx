@@ -24,25 +24,38 @@ interface ChartProps {
   timeFrame: "week" | "month" | "year";
   currencySymbol: string;
   categoryBudgets?: CategoryBudgetStatus[];
+  isCurrentPeriod?: boolean;
   isUnlocked?: boolean;
 }
 
 function ToolTip({
   x,
   y,
-  color,
   isActive,
+  overColor,
+  underColor,
+  defaultColor,
+  isOverBudget,
+  hasBudget,
 }: {
   x: SharedValue<number>;
   y: SharedValue<number>;
-  color: string;
-  isActive: boolean;
+  isActive: SharedValue<boolean>;
+  overColor: string;
+  underColor: string;
+  defaultColor: string;
+  isOverBudget: SharedValue<boolean>;
+  hasBudget: boolean;
 }) {
-  if (!isActive) return null;
+  const opacity = useDerivedValue(() => (isActive.value ? 1 : 0));
+  const dotColor = useDerivedValue(() => {
+    if (!hasBudget) return defaultColor;
+    return isOverBudget.value ? overColor : underColor;
+  });
   return (
-    <Group>
+    <Group opacity={opacity}>
       <Rect x={x} y={0} width={1} height={300} color="#94a3b8" opacity={0.3} />
-      <Circle cx={x} cy={y} r={6} color={color} />
+      <Circle cx={x} cy={y} r={5} color={dotColor} />
     </Group>
   );
 }
@@ -101,12 +114,13 @@ const formatDisplayLabel = (
   return label;
 };
 
-export const SpendingTrendChart = ({
+export const SpendingTrendChart = React.memo(({
   data,
   currencySymbol,
   font,
   timeFrame,
   categoryBudgets = [],
+  isCurrentPeriod = true,
   isUnlocked = true,
 }: ChartProps) => {
   const [tooltipData, setTooltipData] = useState({
@@ -118,11 +132,10 @@ export const SpendingTrendChart = ({
     isOverBudget: false,
     isFuture: false,
   });
-  const { state, isActive } = useChartPressState({
+  const { state } = useChartPressState({
     x: 0,
     y: { amount: 0, pace: 0 },
   });
-  const [pressing, setPressing] = useState(false);
 
   // Track last index to prevent redundant JS bridge calls
   const lastIndex = useSharedValue(-1);
@@ -169,27 +182,31 @@ export const SpendingTrendChart = ({
     const result = fullLabels.map((label, index) => {
       const existingPoint = data.find((d) => d.label === label);
 
+      // Only mark points as future for the current period;
+      // past periods are complete so the line should span the full range.
       let isFuture = false;
-      if (timeFrame === "week") {
-        const dayMap: Record<string, number> = {
-          Mon: 1,
-          Tue: 2,
-          Wed: 3,
-          Thu: 4,
-          Fri: 5,
-          Sat: 6,
-          Sun: 0,
-        };
-        const todayNum = new Date().getDay();
-        const labelNum = dayMap[label];
-        const adjustedToday = todayNum === 0 ? 7 : todayNum;
-        const adjustedLabel = labelNum === 0 ? 7 : labelNum;
-        isFuture = adjustedLabel > adjustedToday;
-      } else if (timeFrame === "month") {
-        const currentWeekIdx = Math.floor((new Date().getDate() - 1) / 7);
-        isFuture = index > currentWeekIdx;
-      } else if (timeFrame === "year") {
-        isFuture = index > new Date().getMonth();
+      if (isCurrentPeriod) {
+        if (timeFrame === "week") {
+          const dayMap: Record<string, number> = {
+            Mon: 1,
+            Tue: 2,
+            Wed: 3,
+            Thu: 4,
+            Fri: 5,
+            Sat: 6,
+            Sun: 0,
+          };
+          const todayNum = new Date().getDay();
+          const labelNum = dayMap[label];
+          const adjustedToday = todayNum === 0 ? 7 : todayNum;
+          const adjustedLabel = labelNum === 0 ? 7 : labelNum;
+          isFuture = adjustedLabel > adjustedToday;
+        } else if (timeFrame === "month") {
+          const currentWeekIdx = Math.floor((new Date().getDate() - 1) / 7);
+          isFuture = index > currentWeekIdx;
+        } else if (timeFrame === "year") {
+          isFuture = index > new Date().getMonth();
+        }
       }
 
       if (!isFuture) {
@@ -213,7 +230,7 @@ export const SpendingTrendChart = ({
     });
 
     return { cumulativeData: result, lastActualIndex: lastIdx };
-  }, [data, timeFrame, totalBudget]);
+  }, [data, timeFrame, totalBudget, isCurrentPeriod]);
 
   // Catmull-Rom spline interpolation for smooth curves
   const catmullRom = (
@@ -302,9 +319,12 @@ export const SpendingTrendChart = ({
 
   const maxValue = useMemo(() => {
     const maxSpending = Math.max(...smoothData.map((d) => d.amount || 0));
-    const maxPace = totalBudget;
-    const max = Math.max(maxSpending, maxPace);
-    return max === 0 ? 100 : max * 1.2;
+    // Only exceed budget scale if spending actually goes over
+    if (maxSpending > totalBudget) {
+      return maxSpending * 1.15;
+    }
+    // Otherwise, show just a bit above the budget
+    return totalBudget > 0 ? totalBudget * 1.12 : (maxSpending > 0 ? maxSpending * 1.15 : 100);
   }, [smoothData, totalBudget]);
 
   // Compute default tooltip from the last actual data point
@@ -337,12 +357,17 @@ export const SpendingTrendChart = ({
     };
   }, [cumulativeData, lastActualIndex, currencySymbol]);
 
+  // Check if there's any actual spending data
+  const hasSpendingData = useMemo(() => {
+    return cumulativeData.some((d) => !d.isFuture && d.amount > 0);
+  }, [cumulativeData]);
+
   // Show scrubbed data if available, otherwise default to latest actual point
   const displayData = tooltipData.value ? tooltipData : defaultTooltip;
 
   const instanceKey = useMemo(() => {
-    return `${timeFrame}-${totalBudget}-${isUnlocked}`;
-  }, [timeFrame, totalBudget, isUnlocked]);
+    return `${timeFrame}-${totalBudget}-${isCurrentPeriod}-${isUnlocked}`;
+  }, [timeFrame, totalBudget, isCurrentPeriod, isUnlocked]);
 
   // Clamped tooltip positions - never go past the last actual data point
   const clampedX = useSharedValue(0);
@@ -350,6 +375,9 @@ export const SpendingTrendChart = ({
   // Store the pixel position of the last actual data point (set during render)
   const lastActualPixelX = useSharedValue(0);
   const lastActualPixelY = useSharedValue(0);
+  // Over-budget status driven on UI thread for instant tooltip color
+  const tooltipIsOverBudget = useSharedValue(false);
+  const endpointIsOverBudget = useSharedValue(false);
 
   // Animated clip rect for highlight - runs on UI thread, no JS bridge lag
   const HIGHLIGHT_HALF_WIDTH = 30;
@@ -361,6 +389,17 @@ export const SpendingTrendChart = ({
       300,
     );
   });
+
+  // Shared-value-driven opacities for instant Skia response (no JS bridge delay)
+  const dimmedOpacity = useDerivedValue(() =>
+    state.isActive.value ? 0.25 : 1,
+  );
+  const highlightOpacity = useDerivedValue(() =>
+    state.isActive.value ? 1 : 0,
+  );
+  const endpointOpacity = useDerivedValue(() =>
+    state.isActive.value ? 0 : 1,
+  );
 
   const handleTooltipUpdate = (
     rawIndex: number,
@@ -390,7 +429,6 @@ export const SpendingTrendChart = ({
     const diffPct = pace > 0 ? Math.abs(diff / pace) * 100 : 0;
     const diffPctStr = `${diffPct.toFixed(1)}%`;
 
-    setPressing(true);
     setTooltipData({
       label,
       value: valueStr,
@@ -403,7 +441,6 @@ export const SpendingTrendChart = ({
   };
 
   const handleTooltipClear = () => {
-    setPressing(false);
     setTooltipData({
       label: "",
       value: "",
@@ -419,7 +456,7 @@ export const SpendingTrendChart = ({
     () => ({
       x: state.x.value.value,
       y: state.y.amount.value.value,
-      active: isActive,
+      active: state.isActive.value,
     }),
     (current) => {
       if (!current.active) {
@@ -434,9 +471,13 @@ export const SpendingTrendChart = ({
       if (rawIndex > smoothLastActualIndex && smoothLastActualIndex >= 0) {
         clampedX.value = lastActualPixelX.value;
         clampedY.value = lastActualPixelY.value;
+        tooltipIsOverBudget.value = endpointIsOverBudget.value;
       } else {
         clampedX.value = state.x.position.value;
         clampedY.value = state.y.amount.position.value;
+        // Compare data values: amount > pace means over budget
+        tooltipIsOverBudget.value =
+          state.y.amount.value.value > state.y.pace.value.value;
       }
 
       runOnJS(handleTooltipUpdate)(
@@ -461,58 +502,69 @@ export const SpendingTrendChart = ({
       >
         <View>
           <View className="mb-2">
-            <View className="flex-row items-baseline">
-              {!displayData.isFuture && displayData.label !== "" && (
-                <Text className="text-textDark text-3xl font-bold mr-2">
-                  {displayData.label}:
+            {hasSpendingData ? (
+              <>
+                <View className="flex-row items-baseline">
+                  {!displayData.isFuture && displayData.label !== "" && (
+                    <Text className="text-textDark text-3xl font-bold mr-2">
+                      {displayData.label}:
+                    </Text>
+                  )}
+                  <Text className="text-white text-3xl font-bold">
+                    {displayData.value}
+                  </Text>
+                  <Text className="text-slate-500 text-xl font-bold ml-2">
+                    spent
+                  </Text>
+                </View>
+                <View
+                  className="flex-row items-center mt-0.5"
+                  style={{ minHeight: 18 }}
+                >
+                  {totalBudget > 0 && !displayData.isFuture && (
+                    <>
+                      <Text
+                        style={{
+                          color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
+                          fontSize: 15,
+                        }}
+                      >
+                        {displayData.diffStr}
+                      </Text>
+                      <Text
+                        style={{
+                          color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
+                          fontSize: 15,
+                          marginLeft: 2,
+                        }}
+                      >
+                        {displayData.isOverBudget ? "\u25B2" : "\u25BC"}
+                      </Text>
+                      <Text
+                        style={{
+                          color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
+                          fontSize: 15,
+                          fontWeight: "700",
+                          marginLeft: 4,
+                        }}
+                      >
+                        {displayData.diffPctStr}
+                      </Text>
+                      <Text className="text-slate-500 text-sm ml-1.5">
+                        {displayData.isOverBudget ? "over budget" : "under budget"}
+                      </Text>
+                    </>
+                  )}
+                </View>
+              </>
+            ) : (
+              <>
+                <Text className="text-slate-500 text-3xl font-bold">
+                  No data
                 </Text>
-              )}
-              <Text className="text-white text-3xl font-bold">
-                {displayData.value}
-              </Text>
-              <Text className="text-slate-500 text-xl font-bold ml-2">
-                spent
-              </Text>
-            </View>
-            <View
-              className="flex-row items-center mt-0.5"
-              style={{ minHeight: 18 }}
-            >
-              {totalBudget > 0 && !displayData.isFuture && (
-                <>
-                  <Text
-                    style={{
-                      color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
-                      fontSize: 15,
-                    }}
-                  >
-                    {displayData.diffStr}
-                  </Text>
-                  <Text
-                    style={{
-                      color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
-                      fontSize: 15,
-                      marginLeft: 2,
-                    }}
-                  >
-                    {displayData.isOverBudget ? "\u25B2" : "\u25BC"}
-                  </Text>
-                  <Text
-                    style={{
-                      color: displayData.isOverBudget ? "#ef4444" : "#22c55e",
-                      fontSize: 15,
-                      fontWeight: "700",
-                      marginLeft: 4,
-                    }}
-                  >
-                    {displayData.diffPctStr}
-                  </Text>
-                  <Text className="text-slate-500 text-sm ml-1.5">
-                    {displayData.isOverBudget ? "over budget" : "under budget"}
-                  </Text>
-                </>
-              )}
-            </View>
+                <View style={{ minHeight: 18 }} />
+              </>
+            )}
           </View>
 
           <View className="h-[270px] -ml-2">
@@ -564,128 +616,6 @@ export const SpendingTrendChart = ({
               chartPressState={state}
             >
               {({ points }) => {
-                // Build enhanced pixel points with intersections
-                const buildEnhancedPixelPoints = () => {
-                  if (totalBudget === 0 || smoothLastActualIndex < 0)
-                    return null;
-
-                  const enhancedPixelPoints: Array<{
-                    x: number;
-                    y: number;
-                    isOverBudget: boolean;
-                  }> = [];
-
-                  for (let i = 0; i <= smoothLastActualIndex; i++) {
-                    const currentData = smoothData[i];
-                    const currentPixel = points.amount[i];
-                    const currentPacePixel = points.pace[i];
-
-                    if (!currentPixel || !currentPacePixel) continue;
-
-                    const currentOver = currentData.amount > currentData.pace;
-                    enhancedPixelPoints.push({
-                      x: currentPixel.x,
-                      y: currentPixel.y,
-                      isOverBudget: currentOver,
-                    });
-
-                    // Check for intersection with next point
-                    if (i < smoothLastActualIndex) {
-                      const nextData = smoothData[i + 1];
-                      const nextPixel = points.amount[i + 1];
-                      const nextPacePixel = points.pace[i + 1];
-
-                      if (!nextPixel || !nextPacePixel) continue;
-
-                      const nextOver = nextData.amount > nextData.pace;
-
-                      // If budget status changes, calculate intersection
-                      if (currentOver !== nextOver) {
-                        const da = nextData.amount - currentData.amount;
-                        const dp = nextData.pace - currentData.pace;
-                        const denominator = da - dp;
-
-                        if (Math.abs(denominator) > 0.001) {
-                          const t =
-                            (currentData.pace - currentData.amount) /
-                            denominator;
-
-                          if (t > 0 && t < 1) {
-                            const intersectPixelX =
-                              currentPixel.x +
-                              (nextPixel.x - currentPixel.x) * t;
-                            const intersectPixelY =
-                              currentPixel.y +
-                              (nextPixel.y - currentPixel.y) * t;
-
-                            enhancedPixelPoints.push({
-                              x: intersectPixelX,
-                              y: intersectPixelY,
-                              isOverBudget: nextOver,
-                            });
-                          }
-                        }
-                      }
-                    }
-                  }
-
-                  return enhancedPixelPoints;
-                };
-
-                // Build segments from enhanced pixel points
-                const buildSegmentsFromPixelPoints = (
-                  pixelPoints: Array<{
-                    x: number;
-                    y: number;
-                    isOverBudget: boolean;
-                  }> | null,
-                ) => {
-                  if (!pixelPoints || pixelPoints.length < 2) return [];
-
-                  const segments: Array<{
-                    points: Array<{ x: number; y: number }>;
-                    isOverBudget: boolean;
-                  }> = [];
-                  let currentSegment: Array<{ x: number; y: number }> = [
-                    { x: pixelPoints[0].x, y: pixelPoints[0].y },
-                  ];
-                  let currentIsOver = pixelPoints[0].isOverBudget;
-
-                  for (let i = 1; i < pixelPoints.length; i++) {
-                    const point = pixelPoints[i];
-
-                    if (point.isOverBudget !== currentIsOver) {
-                      // Status changed - this point is an intersection
-                      // Add it to current segment and start new one
-                      currentSegment.push({ x: point.x, y: point.y });
-                      segments.push({
-                        points: [...currentSegment],
-                        isOverBudget: currentIsOver,
-                      });
-
-                      // Start new segment from intersection point
-                      currentSegment = [{ x: point.x, y: point.y }];
-                      currentIsOver = point.isOverBudget;
-                    } else {
-                      currentSegment.push({ x: point.x, y: point.y });
-                    }
-                  }
-
-                  // Push final segment
-                  if (currentSegment.length >= 1) {
-                    segments.push({
-                      points: currentSegment,
-                      isOverBudget: currentIsOver,
-                    });
-                  }
-
-                  return segments;
-                };
-
-                const enhancedPixelPoints = buildEnhancedPixelPoints();
-                const pixelSegments =
-                  buildSegmentsFromPixelPoints(enhancedPixelPoints);
-
                 // Determine endpoint circle color
                 const endpointColor =
                   totalBudget > 0
@@ -699,11 +629,13 @@ export const SpendingTrendChart = ({
                     ? points.amount[smoothLastActualIndex]
                     : null;
 
-                // Store endpoint pixel position for tooltip clamping
+                // Store endpoint pixel position and over-budget status for tooltip clamping
                 if (endpointPixel) {
                   lastActualPixelX.value = endpointPixel.x;
                   lastActualPixelY.value = endpointPixel.y;
                 }
+                endpointIsOverBudget.value =
+                  smoothData[smoothLastActualIndex]?.isOverBudget || false;
 
                 const renderLines = () => (
                   <>
@@ -719,38 +651,40 @@ export const SpendingTrendChart = ({
                   </>
                 );
 
+                if (!hasSpendingData) return null;
+
                 return (
                   <>
                     {/* Dimmed lines when scrubbing, full opacity otherwise */}
-                    <Group opacity={pressing ? 0.25 : 1}>{renderLines()}</Group>
+                    <Group opacity={dimmedOpacity}>{renderLines()}</Group>
 
                     {/* Highlighted section near tooltip at full opacity */}
-                    {pressing && (
-                      <Group clip={highlightClip}>{renderLines()}</Group>
-                    )}
+                    <Group clip={highlightClip} opacity={highlightOpacity}>
+                      {renderLines()}
+                    </Group>
 
                     {/* Endpoint circle at cutoff - hidden when tooltip is active */}
-                    {!pressing && endpointPixel && (
-                      <Circle
-                        cx={endpointPixel.x}
-                        cy={endpointPixel.y}
-                        r={6}
-                        color={endpointColor}
-                      />
+                    {endpointPixel && (
+                      <Group opacity={endpointOpacity}>
+                        <Circle
+                          cx={endpointPixel.x}
+                          cy={endpointPixel.y}
+                          r={5}
+                          color={endpointColor}
+                        />
+                      </Group>
                     )}
 
                     {/* Tooltip indicator */}
                     <ToolTip
                       x={clampedX}
                       y={clampedY}
-                      isActive={pressing}
-                      color={
-                        totalBudget > 0
-                          ? tooltipData.isOverBudget
-                            ? "#ef4444"
-                            : "#22c55e"
-                          : "#6366f1"
-                      }
+                      isActive={state.isActive}
+                      isOverBudget={tooltipIsOverBudget}
+                      hasBudget={totalBudget > 0}
+                      overColor="#ef4444"
+                      underColor="#22c55e"
+                      defaultColor="#6366f1"
                     />
                   </>
                 );
@@ -761,4 +695,4 @@ export const SpendingTrendChart = ({
       </MotiView>
     </View>
   );
-};
+});
