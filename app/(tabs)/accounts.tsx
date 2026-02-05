@@ -75,13 +75,13 @@ export default function Accounts() {
     setEditingAccountId(null);
   };
 
-  const handleSaveEdit = async (updatedData: { name: string; balance: number; type: string; sort_order?: number }) => {
+  const handleSaveEdit = async (updatedData: { name: string; balance: number; type: string; sort_order?: number; monthly_savings_goal?: number | null }) => {
     if (!selectedAccount) return;
     const originalName = selectedAccount.account_name;
     const oldSortOrder = selectedAccount.sort_order ?? 0;
-    const { name: newName, balance: newBalance, type: newType, sort_order: newSortOrder } = updatedData;
+    const { name: newName, balance: newBalance, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal } = updatedData;
 
-    updateAccountOptimistic(selectedAccount.id, { account_name: newName, balance: newBalance, type: newType, sort_order: newSortOrder });
+    updateAccountOptimistic(selectedAccount.id, { account_name: newName, balance: newBalance, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal });
     setShowEditModal(false);
     setSelectedAccount(null);
 
@@ -89,6 +89,11 @@ export default function Accounts() {
       if (originalName !== newName) await AccountService.updateAccountName(originalName, newName);
       await AccountService.updateAccountBalance(newName, newBalance);
       await AccountService.updateAccountType(newName, newType);
+
+      // Update savings goal if it changed
+      if (newGoal !== selectedAccount.monthly_savings_goal) {
+        await AccountService.updateAccountSavingsGoal(selectedAccount.id, newGoal ?? null);
+      }
 
       // Reorder accounts if sort_order changed
       if (newSortOrder !== undefined && newSortOrder !== oldSortOrder) {
@@ -188,7 +193,7 @@ export default function Accounts() {
         <Modal visible={showEditModal} animationType="slide">
           {selectedAccount && (
             <EditAccountPage
-              account={{ id: selectedAccount.id, name: selectedAccount.account_name, type: selectedAccount.type, balance: selectedAccount.balance, sort_order: selectedAccount.sort_order }}
+              account={{ id: selectedAccount.id, name: selectedAccount.account_name, type: selectedAccount.type, balance: selectedAccount.balance, sort_order: selectedAccount.sort_order, monthly_savings_goal: selectedAccount.monthly_savings_goal }}
               onBack={() => setShowEditModal(false)}
               onSave={handleSaveEdit}
               currencySymbol={currencySymbol}

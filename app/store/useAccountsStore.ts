@@ -11,6 +11,7 @@ interface AccountsState {
   updateAccountOptimistic: (id: number, updates: Partial<Account>) => void;
   deleteAccountOptimistic: (id: number) => void;
   updateAccountBalance: (accountName: string, newBalance: number) => void;
+  updateAccountSavingsGoal: (accountId: number, goalAmount: number | null) => void;
   reorderAccounts: (reorderedAccounts: Account[]) => void;
 }
 
@@ -56,8 +57,13 @@ export const useAccountsStore = create<AccountsState>((set, get) => ({
         acc.account_name === accountName ? { ...acc, balance: newBalance } : acc
       ),
     })),
-    
-    
+
+  updateAccountSavingsGoal: (accountId, goalAmount) =>
+    set((state) => ({
+      accounts: state.accounts.map((acc) =>
+        acc.id === accountId ? { ...acc, monthly_savings_goal: goalAmount } : acc
+      ),
+    })),
 
   reorderAccounts: (reorderedAccounts) =>
     set({ accounts: reorderedAccounts }),

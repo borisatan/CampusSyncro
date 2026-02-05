@@ -1,4 +1,4 @@
-import { CategoryAggregation, CategoryIconInfo, Transaction } from "../types/types";
+import { CategoryAggregation, CategoryIconInfo, PeriodSavingsResult, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
 
 export const createTransaction = async (payload: any) => {
@@ -10,44 +10,79 @@ export const createTransaction = async (payload: any) => {
   return data;
 };
 
-// Create a money transfer between two accounts
+// Create a money transfer between two accounts (balance update only, no transactions)
 export const createTransfer = async (payload: {
   from_account: string;
   to_account: string;
   amount: number;
   user_id: string;
-  created_at: string;
-  description?: string;
-}): Promise<{ outgoing: Transaction; incoming: Transaction }> => {
-  const transfer_id = crypto.randomUUID();
+}): Promise<void> => {
+  // Fetch current balances
+  const { data: accounts, error: fetchError } = await supabase
+    .from('Accounts')
+    .select('account_name, balance')
+    .in('account_name', [payload.from_account, payload.to_account]);
 
-  // Create outgoing transaction (expense from source)
-  const outgoing = await createTransaction({
-    amount: -Math.abs(payload.amount),
-    description: payload.description || `Transfer to ${payload.to_account}`,
-    account_name: payload.from_account,
-    category_name: 'Transfer',
-    user_id: payload.user_id,
-    created_at: payload.created_at,
-    transfer_id,
-  });
+  if (fetchError) throw fetchError;
 
-  // Create incoming transaction (income to destination)
-  const incoming = await createTransaction({
-    amount: Math.abs(payload.amount),
-    description: payload.description || `Transfer from ${payload.from_account}`,
-    account_name: payload.to_account,
-    category_name: 'Transfer',
-    user_id: payload.user_id,
-    created_at: payload.created_at,
-    transfer_id,
-  });
+  const sourceAccount = accounts?.find(a => a.account_name === payload.from_account);
+  const destAccount = accounts?.find(a => a.account_name === payload.to_account);
 
-  return { outgoing: outgoing[0], incoming: incoming[0] };
+  if (!sourceAccount || !destAccount) {
+    throw new Error('One or both accounts not found');
+  }
+
+  // Update source account balance
+  const { error: sourceError } = await supabase
+    .from('Accounts')
+    .update({ balance: sourceAccount.balance - Math.abs(payload.amount) })
+    .eq('account_name', payload.from_account);
+
+  if (sourceError) throw sourceError;
+
+  // Update destination account balance
+  const { error: destError } = await supabase
+    .from('Accounts')
+    .update({ balance: destAccount.balance + Math.abs(payload.amount) })
+    .eq('account_name', payload.to_account);
+
+  if (destError) throw destError;
 };
 
-// Delete a transfer (deletes both linked transactions)
+// Delete a transfer (deletes both linked transactions and reverses account balances)
 export const deleteTransfer = async (transfer_id: string, user_id: string) => {
+  // First, fetch the transfer transactions to get amounts and accounts
+  const { data: transactions, error: fetchError } = await supabase
+    .from('Transactions')
+    .select('id, amount, account_name')
+    .eq('transfer_id', transfer_id)
+    .eq('user_id', user_id);
+
+  if (fetchError) throw fetchError;
+  if (!transactions || transactions.length === 0) {
+    throw new Error('Transfer not found');
+  }
+
+  // Fetch current account balances for the affected accounts
+  const accountNames = transactions.map(t => t.account_name);
+  const { data: accounts, error: accountsError } = await supabase
+    .from('Accounts')
+    .select('account_name, balance')
+    .in('account_name', accountNames);
+
+  if (accountsError) throw accountsError;
+
+  // Reverse the balance changes for each transaction
+  for (const transaction of transactions) {
+    const account = accounts?.find(a => a.account_name === transaction.account_name);
+    if (account) {
+      // Reverse: if transaction was -100 (outgoing), add 100 back; if +100 (incoming), subtract 100
+      const newBalance = account.balance - transaction.amount;
+      await updateAccountBalance(account.account_name, newBalance);
+    }
+  }
+
+  // Now delete the transactions
   const { data, error } = await supabase
     .from('Transactions')
     .delete()
@@ -549,4 +584,66 @@ export const fetchSpendingByCategory = async (
     result[t.category_name] = (result[t.category_name] ?? 0) + t.amount;
   });
   return result;
+};
+
+// Savings & Investment Tracking (balance-based calculation)
+
+export const fetchSavingsForPeriod = async (
+  startDate: Date,
+  _endDate: Date
+): Promise<{ savings: number; investments: number; byAccount: Record<string, number> }> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const periodStart = startDate.toISOString().split('T')[0];
+
+  // Ensure snapshots exist for this period
+  const { error: snapshotError } = await supabase.rpc('ensure_period_snapshots', {
+    p_user_id: user.id,
+    p_period_start: periodStart
+  });
+
+  if (snapshotError) {
+    console.error('Error ensuring snapshots:', snapshotError);
+    // Fall back to returning zeros if RPC not available
+    return { savings: 0, investments: 0, byAccount: {} };
+  }
+
+  // Fetch calculated savings using balance difference
+  const { data, error } = await supabase.rpc('fetch_period_savings', {
+    p_user_id: user.id,
+    p_period_start: periodStart
+  });
+
+  if (error) {
+    console.error('Error fetching period savings:', error);
+    return { savings: 0, investments: 0, byAccount: {} };
+  }
+
+  let savings = 0;
+  let investments = 0;
+  const byAccount: Record<string, number> = {};
+
+  (data as PeriodSavingsResult[] | null)?.forEach((row) => {
+    byAccount[row.account_name] = row.saved_this_period;
+    if (row.account_type === 'savings') {
+      savings += row.saved_this_period;
+    } else if (row.account_type === 'investment') {
+      investments += row.saved_this_period;
+    }
+  });
+
+  return { savings, investments, byAccount };
+};
+
+export const updateAccountSavingsGoal = async (
+  accountId: number,
+  goalAmount: number | null
+): Promise<void> => {
+  const { error } = await supabase
+    .from('Accounts')
+    .update({ monthly_savings_goal: goalAmount })
+    .eq('id', accountId);
+
+  if (error) throw error;
 };

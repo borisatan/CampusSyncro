@@ -1,5 +1,5 @@
 import LottieView from "lottie-react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Modal, Text, View } from "react-native";
 
 interface SuccessModalProps {
@@ -17,20 +17,33 @@ export const SuccessModal = ({
   animationSpeed = 1.2,
   onDismiss,
 }: SuccessModalProps) => {
+  const animationRef = useRef<LottieView>(null);
+  const onDismissRef = useRef(onDismiss);
+
+  // Keep ref updated with latest callback
   useEffect(() => {
-    if (visible && onDismiss) {
-      const timer = setTimeout(onDismiss, duration);
+    onDismissRef.current = onDismiss;
+  }, [onDismiss]);
+
+  useEffect(() => {
+    if (visible) {
+      animationRef.current?.reset();
+      animationRef.current?.play();
+
+      const timer = setTimeout(() => {
+        onDismissRef.current?.();
+      }, duration);
       return () => clearTimeout(timer);
     }
-  }, [visible, duration, onDismiss]);
+  }, [visible, duration]);
 
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View className="flex-1 items-center justify-center bg-black/70">
         <View className="bg-surface rounded-3xl p-6 items-center">
           <LottieView
+            ref={animationRef}
             source={require("../../../assets/animations/success.json")}
-            autoPlay
             speed={animationSpeed}
             loop={false}
             style={{ width: 280, height: 280 }}

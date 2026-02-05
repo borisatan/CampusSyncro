@@ -67,6 +67,7 @@ export interface Account {
   balance: number;
   type: string;
   sort_order?: number;
+  monthly_savings_goal?: number | null;
 }
 export interface AccountOption {
   id: number;
@@ -114,3 +115,33 @@ export type CategoryIconInfo = {
   icon: string;
   color: string;
 };
+
+// AI Budget Allocation Types
+export type BudgetClassification = 'needs' | 'wants' | 'savings';
+
+export interface AIBudgetAllocation {
+  categoryId: number;
+  categoryName: string;
+  classification: BudgetClassification;
+  percentage: number;
+  amount: number;
+}
+
+// Balance Snapshot Types (for savings calculation)
+export interface AccountBalanceSnapshot {
+  id: number;
+  account_id: number;
+  user_id: string;
+  balance: number;
+  period_start: string;
+  created_at: string;
+}
+
+export interface PeriodSavingsResult {
+  account_id: number;
+  account_name: string;
+  account_type: string;
+  current_balance: number;
+  period_start_balance: number;
+  saved_this_period: number;
+}

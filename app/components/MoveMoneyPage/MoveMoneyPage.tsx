@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useDataRefresh } from '../../context/DataRefreshContext';
-import { createTransfer, updateAccountBalance } from '../../services/backendService';
+import { createTransfer } from '../../services/backendService';
 import { useAccountsStore } from '../../store/useAccountsStore';
 import { Account } from '../../types/types';
 import { SuccessModal } from '../Shared/SuccessModal';
@@ -35,11 +35,20 @@ export default function MoveMoneyPage({
 }: MoveMoneyPageProps) {
   const isDark = true;
   const { userId } = useAuth();
-  const { refreshAll } = useDataRefresh();
+  const { refreshAccounts, refreshBudgets } = useDataRefresh();
   const updateAccountBalanceStore = useAccountsStore((state) => state.updateAccountBalance);
 
   const [sourceAccount, setSourceAccount] = useState<Account | null>(null);
   const [destinationAccount, setDestinationAccount] = useState<Account | null>(null);
+
+  // Pre-select accounts based on sort_order (positions 1 and 2)
+  useEffect(() => {
+    if (accounts.length >= 2 && !sourceAccount && !destinationAccount) {
+      const sortedAccounts = [...accounts].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+      setSourceAccount(sortedAccounts[0]);
+      setDestinationAccount(sortedAccounts[1]);
+    }
+  }, [accounts]);
   const [amount, setAmount] = useState<string>('');
   const [showSourcePicker, setShowSourcePicker] = useState(false);
   const [showDestinationPicker, setShowDestinationPicker] = useState(false);
@@ -49,12 +58,23 @@ export default function MoveMoneyPage({
 
   const numericAmount = parseFloat(amount) || 0;
 
+  // Determine actual source/destination based on arrow direction
+  const actualSource = isDirectionDown ? sourceAccount : destinationAccount;
+  const actualDestination = isDirectionDown ? destinationAccount : sourceAccount;
+
+  // Check if destination is a savings or investment account
+  const isSavingsTransfer = actualDestination?.type === 'savings' || actualDestination?.type === 'investment';
+  const headerText = isSavingsTransfer && actualDestination
+    ? `Save to ${actualDestination.account_name}`
+    : 'Move money';
+  const successText = isSavingsTransfer ? 'Saved!' : 'Transfer Complete!';
+
   const canSubmit =
-    sourceAccount &&
-    destinationAccount &&
-    sourceAccount.id !== destinationAccount.id &&
+    actualSource &&
+    actualDestination &&
+    actualSource.id !== actualDestination.id &&
     numericAmount > 0 &&
-    numericAmount <= (sourceAccount?.balance || 0) &&
+    numericAmount <= (actualSource?.balance || 0) &&
     !isSubmitting;
 
   const handleSelectSourceAccount = (account: Account) => {
@@ -73,47 +93,46 @@ export default function MoveMoneyPage({
     setShowDestinationPicker(false);
   };
 
-  const handleSwapAccounts = () => {
+  const handleToggleDirection = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const tempSource = sourceAccount;
-    setSourceAccount(destinationAccount);
-    setDestinationAccount(tempSource);
     setIsDirectionDown(!isDirectionDown);
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit || !sourceAccount || !destinationAccount || !userId) return;
+    if (!canSubmit || !actualSource || !actualDestination || !userId) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsSubmitting(true);
 
     try {
-      const newSourceBalance = sourceAccount.balance - numericAmount;
-      const newDestBalance = destinationAccount.balance + numericAmount;
-      updateAccountBalanceStore(sourceAccount.account_name, newSourceBalance);
-      updateAccountBalanceStore(destinationAccount.account_name, newDestBalance);
+      // Optimistic UI update
+      const newSourceBalance = actualSource.balance - numericAmount;
+      const newDestBalance = actualDestination.balance + numericAmount;
+      updateAccountBalanceStore(actualSource.account_name, newSourceBalance);
+      updateAccountBalanceStore(actualDestination.account_name, newDestBalance);
 
       setShowSuccess(true);
 
+      // Backend transfer (just updates balances, no transactions created)
       await createTransfer({
-        from_account: sourceAccount.account_name,
-        to_account: destinationAccount.account_name,
+        from_account: actualSource.account_name,
+        to_account: actualDestination.account_name,
         amount: numericAmount,
         user_id: userId,
-        created_at: new Date().toISOString(),
       });
 
-      await updateAccountBalance(sourceAccount.account_name, newSourceBalance);
-      await updateAccountBalance(destinationAccount.account_name, newDestBalance);
-
-      await refreshAll();
+      // Refresh to sync with server state
+      await Promise.all([refreshAccounts(), refreshBudgets()]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to complete transfer. Please try again.');
-      if (sourceAccount) {
-        updateAccountBalanceStore(sourceAccount.account_name, sourceAccount.balance);
+      console.error('Transfer error:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to complete transfer: ${message}`);
+      // Rollback optimistic update
+      if (actualSource) {
+        updateAccountBalanceStore(actualSource.account_name, actualSource.balance);
       }
-      if (destinationAccount) {
-        updateAccountBalanceStore(destinationAccount.account_name, destinationAccount.balance);
+      if (actualDestination) {
+        updateAccountBalanceStore(actualDestination.account_name, actualDestination.balance);
       }
       setShowSuccess(false);
     } finally {
@@ -177,16 +196,16 @@ export default function MoveMoneyPage({
             >
               <ArrowLeft color="#94A3B8" size={24} />
             </TouchableOpacity>
-            <Text className="text-xl font-semibold text-textDark">Move money</Text>
+            <Text className="text-xl font-semibold text-textDark">{headerText}</Text>
           </View>
 
           {/* Account Cards */}
           <View className="px-4 mt-4">
             <View className="bg-surfaceDark rounded-3xl p-4">
-              {/* Source Account */}
+              {/* Top Account */}
               <AccountTransferCard
                 account={sourceAccount}
-                type="source"
+                type={isDirectionDown ? "source" : "destination"}
                 amount={numericAmount}
                 currencySymbol={currencySymbol}
                 onPress={() => setShowSourcePicker(true)}
@@ -196,17 +215,17 @@ export default function MoveMoneyPage({
               {/* Arrow Indicator */}
               <View className="items-center py-2">
                 <TouchableOpacity
-                  onPress={handleSwapAccounts}
+                  onPress={handleToggleDirection}
                   className="w-10 h-10 bg-white rounded-full items-center justify-center"
                 >
                   <Ionicons name={isDirectionDown ? "arrow-down" : "arrow-up"} size={20} color="#1F2937" />
                 </TouchableOpacity>
               </View>
 
-              {/* Destination Account */}
+              {/* Bottom Account */}
               <AccountTransferCard
                 account={destinationAccount}
-                type="destination"
+                type={isDirectionDown ? "destination" : "source"}
                 amount={numericAmount}
                 currencySymbol={currencySymbol}
                 onPress={() => setShowDestinationPicker(true)}
@@ -264,7 +283,7 @@ export default function MoveMoneyPage({
         {/* Success Modal */}
         <SuccessModal
           visible={showSuccess}
-          text="Transfer Complete!"
+          text={successText}
           onDismiss={() => {
             setShowSuccess(false);
             onBack();

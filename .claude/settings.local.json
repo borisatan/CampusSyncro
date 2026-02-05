@@ -12,7 +12,10 @@
       "Bash(cd:*)",
       "Bash(node:*)",
       "Bash(npx expo start:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(findstr:*)",
+      "Bash(npx expo install:*)",
+      "Bash(dir:*)"
     ]
   }
 }

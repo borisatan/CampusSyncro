@@ -214,16 +214,14 @@ export const SpendingTrendChart = React.memo(({
         lastIdx = index;
       }
 
-      // Calculate pace value at this point (each period gets an equal share of budget)
-      const paceValue =
-        totalBudget > 0 ? (totalBudget / totalPoints) * (index + 1) : 0;
-      const isOverBudget = runningTotal > paceValue;
+      // Compare against total budget for the entire period (not prorated)
+      const isOverBudget = totalBudget > 0 && runningTotal > totalBudget;
 
       return {
         x: index,
         label: label,
         amount: isFuture ? 0 : runningTotal,
-        pace: paceValue,
+        pace: totalBudget,
         isFuture: isFuture,
         isOverBudget: isOverBudget,
       };
@@ -630,12 +628,15 @@ export const SpendingTrendChart = React.memo(({
                     : null;
 
                 // Store endpoint pixel position and over-budget status for tooltip clamping
+                // Defer shared value updates to avoid setState during render
                 if (endpointPixel) {
-                  lastActualPixelX.value = endpointPixel.x;
-                  lastActualPixelY.value = endpointPixel.y;
+                  queueMicrotask(() => {
+                    lastActualPixelX.value = endpointPixel.x;
+                    lastActualPixelY.value = endpointPixel.y;
+                    endpointIsOverBudget.value =
+                      smoothData[smoothLastActualIndex]?.isOverBudget || false;
+                  });
                 }
-                endpointIsOverBudget.value =
-                  smoothData[smoothLastActualIndex]?.isOverBudget || false;
 
                 const renderLines = () => (
                   <>

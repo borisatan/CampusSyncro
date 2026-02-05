@@ -14,10 +14,14 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AIBudgetPreviewModal } from '../components/BudgetsPage/AIBudgetPreviewModal';
 import { CategoryBudgetRow } from '../components/BudgetsPage/CategoryBudgetRow';
 import { IncomeCard } from '../components/BudgetsPage/IncomeCard';
+import { SavingsCard } from '../components/HomePage/SavingsCard';
+import { BudgetAllocation, getBudgetAllocations } from '../services/budgetAIService';
 import { useTheme } from '../context/ThemeContext';
 import { useBudgetsData } from '../hooks/useBudgetsData';
+import { useSavingsData } from '../hooks/useSavingsData';
 import { useDataRefresh } from '../context/DataRefreshContext';
 import { updateCategoryBudgetAmount, updateCategoryBudgetPercentages, updateCategoriesOrder } from '../services/backendService';
 import { useCategoriesStore } from '../store/useCategoriesStore';
@@ -45,13 +49,30 @@ export default function BudgetsScreen() {
     upsertCategoryBudget,
   } = useBudgetsData();
   const { currencySymbol } = useCurrencyStore();
+  const {
+    totalSavedThisMonth,
+    savingsGoalTotal,
+    goalProgress,
+    accountBreakdown,
+    hasSavingsAccounts,
+    isLoading: savingsLoading,
+    refresh: savingsRefresh,
+  } = useSavingsData();
   const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
   const { categories, updateCategoryOptimistic, reorderCategories } = useCategoriesStore();
   const { pinnedCategoryIds, togglePinnedCategory } = useDashboardCategoriesStore();
-  const { refreshDashboard, registerBudgetsRefresh } = useDataRefresh();
+  const { refreshDashboard, registerBudgetsRefresh, registerSavingsRefresh, registerCategoriesRefresh } = useDataRefresh();
+  const loadCategories = useCategoriesStore((state) => state.loadCategories);
   const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [isReorderMode, setIsReorderMode] = useState(false);
+
+  // AI Budget Preview state
+  const [showAIPreview, setShowAIPreview] = useState(false);
+  const [aiLoading, setAILoading] = useState(false);
+  const [aiError, setAIError] = useState<string | null>(null);
+  const [aiAllocations, setAIAllocations] = useState<BudgetAllocation[] | null>(null);
+  const [aiFromCache, setAIFromCache] = useState(false);
 
   const handleToggleExpand = useCallback((categoryId: number) => {
     setExpandedCategoryId((prev) => (prev === categoryId ? null : categoryId));
@@ -59,7 +80,9 @@ export default function BudgetsScreen() {
 
   useEffect(() => {
     registerBudgetsRefresh(refresh);
-  }, [registerBudgetsRefresh, refresh]);
+    registerSavingsRefresh(savingsRefresh);
+    registerCategoriesRefresh(loadCategories);
+  }, [registerBudgetsRefresh, refresh, registerSavingsRefresh, savingsRefresh, registerCategoriesRefresh, loadCategories]);
 
   const textPrimary = isDarkMode ? 'text-white' : 'text-black';
   const textSecondary = isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight';
@@ -92,26 +115,64 @@ export default function BudgetsScreen() {
 
   const handleSetBudgetWithAI = useCallback(async () => {
     const budgetCategories = categories.filter((cat) => cat.category_name !== 'Income');
-    const categoryNames = budgetCategories.map((cat) => cat.category_name);
 
-    console.log('--- AI Budget Setup ---');
-    console.log('Monthly Income:', monthlyIncome);
-    console.log('Categories:', categoryNames);
-
-    // TODO: Replace with AI API call that returns { categoryName: percentage } allocations
-    // For now, this is where the AI response would be processed into allocations like:
-    // const aiResponse = await callBudgetAI(categoryNames, monthlyIncome);
-    // const allocations = budgetCategories.map((cat) => ({
-    //   categoryId: cat.id,
-    //   percentage: aiResponse[cat.category_name],
-    //   amount: Math.round((aiResponse[cat.category_name] / 100) * monthlyIncome),
-    // }));
-    // await updateCategoryBudgetPercentages(allocations);
-    // await refresh();
-    // refreshDashboard();
-
+    // Close help modal and open preview modal
     setShowHelpModal(false);
+    setShowAIPreview(true);
+    setAILoading(true);
+    setAIError(null);
+    setAIAllocations(null);
+
+    // Call AI service
+    const result = await getBudgetAllocations(
+      budgetCategories.map((c) => ({ id: c.id, category_name: c.category_name })),
+      monthlyIncome
+    );
+
+    setAILoading(false);
+
+    if (result.success) {
+      setAIAllocations(result.allocations);
+      setAIFromCache(result.fromCache);
+    } else {
+      setAIError('error' in result ? result.error : 'Unknown error occurred');
+    }
   }, [categories, monthlyIncome]);
+
+  const handleApplyAIBudget = useCallback(async () => {
+    if (!aiAllocations) return;
+
+    try {
+      const allocations = aiAllocations.map((a) => ({
+        categoryId: a.categoryId,
+        percentage: a.percentage,
+        amount: a.amount,
+      }));
+
+      await updateCategoryBudgetPercentages(allocations);
+      await refresh();
+      refreshDashboard();
+
+      // Close modal and reset state
+      setShowAIPreview(false);
+      setAIAllocations(null);
+      setAIError(null);
+    } catch (error) {
+      console.error('Error applying AI budget:', error);
+      setAIError('Failed to save budget. Please try again.');
+    }
+  }, [aiAllocations, refresh, refreshDashboard]);
+
+  const handleRetryAI = useCallback(() => {
+    handleSetBudgetWithAI();
+  }, [handleSetBudgetWithAI]);
+
+  const handleCancelAIPreview = useCallback(() => {
+    setShowAIPreview(false);
+    setAIAllocations(null);
+    setAIError(null);
+    setAILoading(false);
+  }, []);
 
   const handleDragEnd = useCallback(async ({ data }: { data: CategoryListItem[] }) => {
     // Update local state immediately for responsive UI
@@ -237,6 +298,16 @@ export default function BudgetsScreen() {
                   isDarkMode={isDarkMode}
                   onSave={handleSaveIncome}
                 />
+                {hasSavingsAccounts && (
+                  <SavingsCard
+                    totalSavedThisMonth={totalSavedThisMonth}
+                    savingsGoalTotal={savingsGoalTotal}
+                    goalProgress={goalProgress}
+                    accountBreakdown={accountBreakdown}
+                    currencySymbol={currencySymbol}
+                    isLoading={savingsLoading}
+                  />
+                )}
               </MotiView>
             )}
             {isReorderMode && (
@@ -364,7 +435,7 @@ export default function BudgetsScreen() {
                 How it works
               </Text>
               <Text className={`text-base leading-6 mb-4 ${textSecondary}`}>
-                Based on your income, we'll calculate these categories for you instantly. This method is a proven, simple way to balance living for today while saving for tomorrow.
+                Based on your income, we&apos;ll calculate these categories for you instantly. This method is a proven, simple way to balance living for today while saving for tomorrow.
               </Text>
 
               <View className={`rounded-xl p-3 mb-5 ${isDarkMode ? 'bg-backgroundDark' : 'bg-gray-100'}`}>
@@ -391,6 +462,21 @@ export default function BudgetsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* AI Budget Preview Modal */}
+      <AIBudgetPreviewModal
+        visible={showAIPreview}
+        isLoading={aiLoading}
+        error={aiError}
+        allocations={aiAllocations}
+        categories={categories}
+        monthlyIncome={monthlyIncome}
+        currencySymbol={currencySymbol}
+        fromCache={aiFromCache}
+        onApply={handleApplyAIBudget}
+        onCancel={handleCancelAIPreview}
+        onRetry={handleRetryAI}
+      />
     </SafeAreaView>
   );
 }

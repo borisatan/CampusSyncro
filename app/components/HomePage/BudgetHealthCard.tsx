@@ -208,21 +208,26 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
               {/* Stacked Progress Bar */}
               <View className="h-5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
                 <View className="flex-row h-full">
-                  {allCategoryBudgets.map((cb) => {
-                    const widthPercent =
-                      totalLimit > 0 ? (cb.spent / totalLimit) * 100 : 0;
+                  {[...allCategoryBudgets]
+                    .sort((a, b) => b.spent - a.spent)
+                    .map((cb, index, arr) => {
+                      const widthPercent =
+                        totalLimit > 0 ? (cb.spent / totalLimit) * 100 : 0;
+                      const isLast = index === arr.length - 1;
 
-                    return (
-                      <View
-                        key={cb.category.id}
-                        style={{
-                          height: '100%',
-                          width: `${Math.min(Math.max(widthPercent, 0), 100)}%`,
-                          backgroundColor: cb.category.color,
-                        }}
-                      />
-                    );
-                  })}
+                      return (
+                        <View
+                          key={cb.category.id}
+                          style={{
+                            height: '100%',
+                            width: `${Math.min(Math.max(widthPercent, 0), 100)}%`,
+                            backgroundColor: cb.category.color,
+                            borderRightWidth: isLast ? 0 : 1,
+                            borderRightColor: '#1e293b',
+                          }}
+                        />
+                      );
+                    })}
                 </View>
               </View>
 

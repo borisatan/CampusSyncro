@@ -8,12 +8,16 @@ type DataRefreshContextValue = {
   registerAccountsRefresh: (fn: RefreshFunction) => void;
   registerTransactionListRefresh: (fn: RefreshFunction) => void;
   registerBudgetsRefresh: (fn: RefreshFunction) => void;
+  registerSavingsRefresh: (fn: RefreshFunction) => void;
+  registerCategoriesRefresh: (fn: RefreshFunction) => void;
   registerOptimisticDeleteTransaction: (fn: (id: number) => void) => void;
   registerOptimisticUpdateTransaction: (fn: (tx: Transaction) => void) => void;
   refreshDashboard: () => Promise<void>;
   refreshAccounts: () => Promise<void>;
   refreshTransactionList: () => Promise<void>;
   refreshBudgets: () => Promise<void>;
+  refreshSavings: () => Promise<void>;
+  refreshCategories: () => Promise<void>;
   refreshAll: () => Promise<void>;
   optimisticDeleteTransaction: (id: number) => void;
   optimisticUpdateTransaction: (tx: Transaction) => void;
@@ -26,6 +30,8 @@ export const DataRefreshProvider = ({ children }: { children: React.ReactNode })
   const accountsRefreshRef = useRef<RefreshFunction | null>(null);
   const transactionListRefreshRef = useRef<RefreshFunction | null>(null);
   const budgetsRefreshRef = useRef<RefreshFunction | null>(null);
+  const savingsRefreshRef = useRef<RefreshFunction | null>(null);
+  const categoriesRefreshRef = useRef<RefreshFunction | null>(null);
   const optimisticDeleteRef = useRef<((id: number) => void) | null>(null);
   const optimisticUpdateRef = useRef<((tx: Transaction) => void) | null>(null);
 
@@ -43,6 +49,14 @@ export const DataRefreshProvider = ({ children }: { children: React.ReactNode })
 
   const registerBudgetsRefresh = useCallback((fn: RefreshFunction) => {
     budgetsRefreshRef.current = fn;
+  }, []);
+
+  const registerSavingsRefresh = useCallback((fn: RefreshFunction) => {
+    savingsRefreshRef.current = fn;
+  }, []);
+
+  const registerCategoriesRefresh = useCallback((fn: RefreshFunction) => {
+    categoriesRefreshRef.current = fn;
   }, []);
 
   const registerOptimisticDeleteTransaction = useCallback((fn: (id: number) => void) => {
@@ -77,6 +91,18 @@ export const DataRefreshProvider = ({ children }: { children: React.ReactNode })
     }
   }, []);
 
+  const refreshSavings = useCallback(async () => {
+    if (savingsRefreshRef.current) {
+      await savingsRefreshRef.current();
+    }
+  }, []);
+
+  const refreshCategories = useCallback(async () => {
+    if (categoriesRefreshRef.current) {
+      await categoriesRefreshRef.current();
+    }
+  }, []);
+
   const optimisticDeleteTransaction = useCallback((id: number) => {
     if (optimisticDeleteRef.current) optimisticDeleteRef.current(id);
   }, []);
@@ -91,20 +117,26 @@ export const DataRefreshProvider = ({ children }: { children: React.ReactNode })
       refreshAccounts(),
       refreshTransactionList(),
       refreshBudgets(),
+      refreshSavings(),
+      refreshCategories(),
     ]);
-  }, [refreshDashboard, refreshAccounts, refreshTransactionList, refreshBudgets]);
+  }, [refreshDashboard, refreshAccounts, refreshTransactionList, refreshBudgets, refreshSavings, refreshCategories]);
 
   const value = {
     registerDashboardRefresh,
     registerAccountsRefresh,
     registerTransactionListRefresh,
     registerBudgetsRefresh,
+    registerSavingsRefresh,
+    registerCategoriesRefresh,
     registerOptimisticDeleteTransaction,
     registerOptimisticUpdateTransaction,
     refreshDashboard,
     refreshAccounts,
     refreshTransactionList,
     refreshBudgets,
+    refreshSavings,
+    refreshCategories,
     refreshAll,
     optimisticDeleteTransaction,
     optimisticUpdateTransaction,
