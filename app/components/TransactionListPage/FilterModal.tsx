@@ -123,9 +123,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
             {/* Header */}
             <View className="flex-row justify-between items-center mb-5 mt-2">
               <View>
-                <Text className="text-xl font-bold text-textDark">Filter Transactions</Text>
+                <Text className="text-2xl font-bold text-textDark">Filter Transactions</Text>
                 {activeFiltersCount > 0 && (
-                  <Text className="text-accentTeal text-xs font-bold uppercase mt-1">
+                  <Text className="text-accentTeal text-sm font-bold uppercase mt-1">
                     {activeFiltersCount} active filters
                   </Text>
                 )}
@@ -134,7 +134,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 onPress={onClose}
                 className="bg-inputDark p-2 rounded-full border border-borderDark"
               >
-                <Ionicons name="close" size={22} color="#FFFFFF" />
+                <Ionicons name="close" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
     
@@ -142,7 +142,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               
               {/* Transaction Type - ACTUAL DROPDOWN MENU */}
               <View className="mb-6">
-                <Text className="text-xs font-bold text-textDark mb-3 uppercase">
+                <Text className="text-sm font-bold text-textDark mb-3 uppercase">
                   Transaction Type
                 </Text>
                 <View className="bg-inputDark rounded-xl border border-borderDark overflow-hidden">
@@ -152,23 +152,23 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     className="flex-row items-center justify-between px-4 py-3.5"
                   >
                     <View className="flex-row items-center gap-x-2">
-                      <View className={`w-7 h-7 rounded-lg items-center justify-center ${
+                      <View className={`w-8 h-8 rounded-lg items-center justify-center ${
                         filterType === 'income' ? 'bg-accentTeal' :
                         filterType === 'expense' ? 'bg-accentRed' : 'bg-accentBlue'
                       }`}>
                         <Ionicons
                           name={filterType === 'all' ? 'layers' : filterType === 'income' ? 'arrow-down-circle' : 'arrow-up-circle'}
-                          size={16}
+                          size={18}
                           color="#FFFFFF"
                         />
                       </View>
-                      <Text className="text-sm font-bold text-textDark capitalize">
+                      <Text className="text-base font-bold text-textDark capitalize">
                         {filterType}
                       </Text>
                     </View>
                     <Ionicons
                       name={isTypeDropdownOpen ? "chevron-up" : "chevron-down"}
-                      size={18}
+                      size={20}
                       color="#9CA3AF"
                     />
                   </TouchableOpacity>
@@ -187,10 +187,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
                             }}
                             className={`flex-row items-center justify-between px-4 py-3 ${isSelected ? 'bg-accentBlue/10' : ''}`}
                           >
-                            <Text className={`capitalize text-sm ${isSelected ? "text-accentBlue font-bold" : "text-textDark"}`}>
+                            <Text className={`capitalize text-base ${isSelected ? "text-accentBlue font-bold" : "text-textDark"}`}>
                               {type}
                             </Text>
-                            {isSelected && <Ionicons name="checkmark" size={16} color="#2563EB" />}
+                            {isSelected && <Ionicons name="checkmark" size={18} color="#2563EB" />}
                           </TouchableOpacity>
                         );
                       })}
@@ -201,7 +201,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     
               {/* Date Range Selector */}
               <View className="mb-6">
-                <Text className="text-xs font-bold text-textDark mb-3 uppercase">
+                <Text className="text-sm font-bold text-textDark mb-3 uppercase">
                   Date Range
                 </Text>
                 <View className="gap-y-2.5">
@@ -210,10 +210,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     onPress={() => setShowStartPicker(true)}
                     className="flex-row items-center rounded-xl px-4 py-3.5 border border-borderDark bg-inputDark"
                   >
-                    <Calendar size={16} color="#94a3b8" />
+                    <Calendar size={18} color="#94a3b8" />
                     <View className="ml-3 flex-1">
-                      <Text className="text-xs text-secondaryDark uppercase">Start Date</Text>
-                      <Text className="text-textDark text-sm font-medium">{formatDate(dateRange?.start)}</Text>
+                      <Text className="text-sm text-secondaryDark uppercase">Start Date</Text>
+                      <Text className="text-textDark text-base font-medium">{formatDate(dateRange?.start)}</Text>
                     </View>
                   </TouchableOpacity>
 
@@ -222,10 +222,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     onPress={() => setShowEndPicker(true)}
                     className="flex-row items-center rounded-xl px-4 py-3.5 border border-borderDark bg-inputDark"
                   >
-                    <Calendar size={16} color="#94a3b8" />
+                    <Calendar size={18} color="#94a3b8" />
                     <View className="ml-3 flex-1">
-                      <Text className="text-xs text-secondaryDark uppercase">End Date</Text>
-                      <Text className="text-textDark text-sm font-medium">{formatDate(dateRange?.end)}</Text>
+                      <Text className="text-sm text-secondaryDark uppercase">End Date</Text>
+                      <Text className="text-textDark text-base font-medium">{formatDate(dateRange?.end)}</Text>
                     </View>
                   </TouchableOpacity>
 
@@ -254,7 +254,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     
               {/* Accounts Selection */}
               <View className="mb-6">
-                <Text className="text-xs font-bold text-textDark mb-3 uppercase">
+                <Text className="text-sm font-bold text-textDark mb-3 uppercase">
                   Accounts {filterAccounts.length > 0 && `(${filterAccounts.length})`}
                 </Text>
                 <View className="gap-y-2.5">
@@ -268,11 +268,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
                           isSelected ? "border-accentBlue bg-accentBlue/10" : "border-borderDark bg-inputDark"
                         }`}
                       >
-                        <Text className={`text-sm ${isSelected ? "text-textDark font-bold" : "text-textDark"}`}>
+                        <Text className={`text-base ${isSelected ? "text-textDark font-bold" : "text-textDark"}`}>
                           {account}
                         </Text>
-                        <View className={`w-5 h-5 rounded-full border ${isSelected ? 'bg-accentBlue border-accentBlue' : 'border-borderDark'} items-center justify-center`}>
-                          {isSelected && <Ionicons name="checkmark" size={12} color="white" />}
+                        <View className={`w-6 h-6 rounded-full border ${isSelected ? 'bg-accentBlue border-accentBlue' : 'border-borderDark'} items-center justify-center`}>
+                          {isSelected && <Ionicons name="checkmark" size={14} color="white" />}
                         </View>
                       </TouchableOpacity>
                     );
@@ -282,7 +282,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     
               {/* Categories Multi-Selection Grid (Bigger Icons) */}
               <View className="mb-6">
-                <Text className="text-xs font-bold text-textDark mb-3 uppercase">
+                <Text className="text-sm font-bold text-textDark mb-3 uppercase">
                   Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
                 </Text>
                 <View className="flex-row flex-wrap justify-between gap-y-2.5">
@@ -297,12 +297,12 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         } w-[48%]`}
                       >
                         <View
-                          className="w-8 h-8 rounded-lg items-center justify-center"
+                          className="w-9 h-9 rounded-lg items-center justify-center"
                           style={{ backgroundColor: cat.color }}
                         >
-                          <Ionicons name={cat.icon as any} size={16} color="white" />
+                          <Ionicons name={cat.icon as any} size={18} color="white" />
                         </View>
-                        <Text numberOfLines={1} className={`flex-1 text-xs ${isSelected ? "text-textDark font-bold" : "text-textDark"}`}>
+                        <Text numberOfLines={1} className={`flex-1 text-sm ${isSelected ? "text-textDark font-bold" : "text-textDark"}`}>
                           {cat.category_name}
                         </Text>
                       </TouchableOpacity>
@@ -318,14 +318,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 className="flex-1 py-3.5 rounded-xl bg-inputDark border border-borderDark"
                 onPress={handleReset}
               >
-                <Text className="text-center text-textDark text-sm font-bold">Reset</Text>
+                <Text className="text-center text-textDark text-base font-bold">Reset</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 className="flex-1 py-3.5 rounded-xl bg-accentBlue shadow-xl shadow-accentBlue/40"
                 onPress={onClose}
               >
-                <Text className="text-center text-textDark font-bold text-sm">Apply Filters</Text>
+                <Text className="text-center text-textDark font-bold text-base">Apply Filters</Text>
               </TouchableOpacity>
             </View>
     

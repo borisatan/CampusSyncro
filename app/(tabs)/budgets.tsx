@@ -429,10 +429,10 @@ export default function BudgetsScreen() {
           {aiModalView === 'help' && (
             <View
               style={{
-                marginHorizontal: 16,
+                width: '94%',
                 borderRadius: 20,
-                padding: 24,
-                backgroundColor: isDarkMode ? '#151C2E' : '#FFFFFF',
+                padding: 16,
+                backgroundColor: isDarkMode ? '#0F172A' : '#FFFFFF',
                 borderWidth: 1,
                 borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
                 maxHeight: '80%',
@@ -476,7 +476,7 @@ export default function BudgetsScreen() {
                     key={rule.label}
                     className="flex-row items-center mb-2.5 p-3 rounded-xl"
                     style={{
-                      backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC',
+                      backgroundColor: isDarkMode ? '#151C2E' : '#F8FAFC',
                       borderWidth: 1,
                       borderColor: isDarkMode ? '#1E293B' : '#F1F5F9',
                     }}
@@ -487,7 +487,7 @@ export default function BudgetsScreen() {
                     >
                       <Text style={{ fontSize: 13, fontWeight: '800', color: rule.color }}>{rule.pct}</Text>
                     </View>
-                    <View>
+                    <View className="flex-1">
                       <Text style={{ fontSize: 14, fontWeight: '600', color: isDarkMode ? '#E2E8F0' : '#1E293B' }}>
                         {rule.label}
                       </Text>
@@ -501,7 +501,7 @@ export default function BudgetsScreen() {
                 <View
                   className="rounded-xl p-3 mt-2 mb-4"
                   style={{
-                    backgroundColor: isDarkMode ? '#0F172A' : '#FFFBEB',
+                    backgroundColor: isDarkMode ? '#151C2E' : '#FFFBEB',
                     borderWidth: 1,
                     borderColor: isDarkMode ? '#1E293B' : '#FEF3C7',
                   }}
@@ -514,7 +514,7 @@ export default function BudgetsScreen() {
                 <TouchableOpacity
                   onPress={handleSetBudgetWithAI}
                   className="rounded-xl py-3.5 items-center"
-                  style={{ backgroundColor: '#F59E0B' }}
+                  style={{ backgroundColor: '#2563EB' }}
                   activeOpacity={0.8}
                 >
                   <View className="flex-row items-center" style={{ gap: 6 }}>

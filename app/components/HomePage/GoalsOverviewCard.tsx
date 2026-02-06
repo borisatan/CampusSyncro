@@ -50,7 +50,7 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
       <>
         <TouchableOpacity
           onPress={() => setShowCreateModal(true)}
-          className="bg-surfaceDark rounded-2xl p-4 mb-4"
+          className="bg-surfaceDark rounded-2xl p-4 mb-4 border border-slate-700/50"
           activeOpacity={0.7}
         >
           <View className="flex-row items-center justify-between">
@@ -84,7 +84,7 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
         from={{ opacity: 0, translateY: 10 }}
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ type: 'timing', duration: 300 }}
-        className="bg-surfaceDark rounded-2xl p-4 mb-4"
+        className="bg-surfaceDark rounded-2xl p-4 mb-4 border border-slate-700/50"
       >
         {/* Header */}
         <TouchableOpacity

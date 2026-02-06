@@ -9,56 +9,41 @@ type LockContextValue = {
   isLocked: boolean;
   isUnlocked: boolean; // True once user has authenticated (or app lock disabled)
   isAppLockEnabled: boolean;
-  biometricAvailable: boolean;
-  hasPinSet: boolean;
+  deviceAuthAvailable: boolean;
   unlock: () => Promise<boolean>;
-  unlockWithPin: (pin: string) => Promise<boolean>;
   unlockWithCredentials: (email: string, password: string) => Promise<boolean>;
   setAppLockEnabled: (enabled: boolean) => Promise<void>;
-  setPin: (pin: string) => Promise<void>;
-  removePin: () => Promise<void>;
 };
 
 const LockContext = createContext<LockContextValue>({
   isLocked: false,
   isUnlocked: false,
   isAppLockEnabled: false,
-  biometricAvailable: false,
-  hasPinSet: false,
+  deviceAuthAvailable: false,
   unlock: async () => false,
-  unlockWithPin: async () => false,
   unlockWithCredentials: async () => false,
   setAppLockEnabled: async () => {},
-  setPin: async () => {},
-  removePin: async () => {},
 });
 
 const APP_LOCK_KEY = 'app_lock_enabled';
-const PIN_KEY = 'app_pin';
 
 export const LockProvider = ({ children }: { children: React.ReactNode }) => {
   const { userId, isLoading: authLoading } = useAuth();
   const [isLocked, setIsLocked] = useState(true);
   const [isUnlocked, setIsUnlocked] = useState(false); // Tracks if user has authenticated this session
   const [isAppLockEnabled, setIsAppLockEnabledState] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [hasPinSet, setHasPinSet] = useState(false);
+  const [deviceAuthAvailable, setDeviceAuthAvailable] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const appState = useRef(AppState.currentState);
 
-  // Check biometric availability and load settings
+  // Check device authentication availability and load settings
   useEffect(() => {
     const initialize = async () => {
-      // Check biometric hardware
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const supported = await LocalAuthentication.supportedAuthenticationTypesAsync();
-      const enrolled = await LocalAuthentication.isEnrolledAsync();
-      const available = hasHardware && enrolled && supported.length > 0;
-      setBiometricAvailable(available);
-
-      // Check if PIN is set
-      const storedPin = await SecureStore.getItemAsync(PIN_KEY);
-      setHasPinSet(!!storedPin);
+      // Check if device has any authentication method available (biometrics or passcode)
+      const securityLevel = await LocalAuthentication.getEnrolledLevelAsync();
+      // SECURITY_LEVEL_NONE = 0, SECURITY_LEVEL_SECRET = 1 (PIN/pattern), SECURITY_LEVEL_BIOMETRIC = 2
+      const available = securityLevel > 0;
+      setDeviceAuthAvailable(available);
 
       // Load app lock preference (default to ON if not set)
       const storedPref = await SecureStore.getItemAsync(APP_LOCK_KEY);
@@ -106,10 +91,10 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.remove();
   }, [isAppLockEnabled, userId]);
 
-  // Unlock using biometrics
+  // Unlock using device authentication (biometrics or device PIN/passcode)
   const unlock = useCallback(async (): Promise<boolean> => {
-    if (!biometricAvailable) {
-      // If no biometrics available, don't auto-unlock - user must use PIN or credentials
+    if (!deviceAuthAvailable) {
+      // If no device auth available, user must use password
       return false;
     }
 
@@ -117,6 +102,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
       promptMessage: 'Unlock Perfin',
       fallbackLabel: 'Use Passcode',
       cancelLabel: 'Cancel',
+      disableDeviceFallback: false, // Allow device PIN/passcode as fallback
     });
 
     if (result.success) {
@@ -125,18 +111,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
       return true;
     }
     return false;
-  }, [biometricAvailable]);
-
-  // Unlock using PIN
-  const unlockWithPin = useCallback(async (pin: string): Promise<boolean> => {
-    const storedPin = await SecureStore.getItemAsync(PIN_KEY);
-    if (storedPin && storedPin === pin) {
-      setIsLocked(false);
-      setIsUnlocked(true);
-      return true;
-    }
-    return false;
-  }, []);
+  }, [deviceAuthAvailable]);
 
   // Unlock using email/password (re-authenticate with Supabase)
   const unlockWithCredentials = useCallback(async (email: string, password: string): Promise<boolean> => {
@@ -151,18 +126,6 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     } catch {
       return false;
     }
-  }, []);
-
-  // Set a new PIN
-  const setPin = useCallback(async (pin: string): Promise<void> => {
-    await SecureStore.setItemAsync(PIN_KEY, pin);
-    setHasPinSet(true);
-  }, []);
-
-  // Remove PIN
-  const removePin = useCallback(async (): Promise<void> => {
-    await SecureStore.deleteItemAsync(PIN_KEY);
-    setHasPinSet(false);
   }, []);
 
   // Enable/disable app lock
@@ -181,15 +144,11 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     isLocked: isInitialized && isAppLockEnabled && isLocked && !!userId,
     isUnlocked,
     isAppLockEnabled,
-    biometricAvailable,
-    hasPinSet,
+    deviceAuthAvailable,
     unlock,
-    unlockWithPin,
     unlockWithCredentials,
     setAppLockEnabled,
-    setPin,
-    removePin,
-  }), [isLocked, isUnlocked, isAppLockEnabled, biometricAvailable, hasPinSet, unlock, unlockWithPin, unlockWithCredentials, setAppLockEnabled, setPin, removePin, isInitialized, userId]);
+  }), [isLocked, isUnlocked, isAppLockEnabled, deviceAuthAvailable, unlock, unlockWithCredentials, setAppLockEnabled, isInitialized, userId]);
 
   return <LockContext.Provider value={value}>{children}</LockContext.Provider>;
 };

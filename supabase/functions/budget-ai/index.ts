@@ -61,9 +61,18 @@ ALLOCATION TARGETS:
 - WANTS (non-essential): Target 37.5% total
   Examples: dining out, entertainment, hobbies, subscriptions, shopping, travel, luxury items
 
+TYPICAL PERCENTAGE GUIDELINES (of total 100%):
+- Housing/Rent: 30-35% (this should be the LARGEST single category)
+- Groceries/Food at home: 10-15%
+- Transportation: 10-15%
+- Utilities: 5-10%
+- Insurance/Healthcare: 5-10%
+- Entertainment/Dining out: 5-10% each
+- Other categories: distribute remaining proportionally
+
 INSTRUCTIONS:
 1. Classify each category as "needs" or "wants"
-2. Distribute percentages within each classification proportionally based on typical spending patterns
+2. Distribute percentages following the typical guidelines above - housing/rent MUST be around 30-35%
 3. The sum of ALL category percentages MUST equal exactly 100%
 4. If a classification has no matching categories, give all 100% to the other classification
 5. Round percentages to whole numbers, adjusting the largest category if needed to ensure the total is exactly 100
@@ -127,7 +136,7 @@ async function callGeminiFlash(prompt: string): Promise<string> {
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -146,6 +155,7 @@ async function callGeminiFlash(prompt: string): Promise<string> {
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error("Gemini API error response:", errorText);
     if (response.status === 429) {
       throw new Error("RATE_LIMITED");
     }
@@ -153,8 +163,10 @@ async function callGeminiFlash(prompt: string): Promise<string> {
   }
 
   const data = await response.json();
+  console.log("Gemini raw response:", JSON.stringify(data));
 
   if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    console.error("Invalid response structure:", JSON.stringify(data));
     throw new Error("Invalid Gemini response structure");
   }
 
@@ -177,7 +189,8 @@ function parseGeminiResponse(
 
   try {
     parsed = JSON.parse(responseText);
-  } catch {
+  } catch (e) {
+    console.error("Failed to parse response text:", responseText);
     throw new Error("Failed to parse AI response as JSON");
   }
 

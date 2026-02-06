@@ -123,8 +123,8 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
     };
   };
 
-  const cardBg = isDarkMode ? '#151C2E' : '#FFFFFF';
-  const innerBg = isDarkMode ? '#0F172A' : '#F8FAFC';
+  const cardBg = isDarkMode ? '#0F172A' : '#FFFFFF';
+  const innerBg = isDarkMode ? '#151C2E' : '#F8FAFC';
   const borderColor = isDarkMode ? '#1E293B' : '#E2E8F0';
   const textPrimary = isDarkMode ? '#F1F5F9' : '#0F172A';
   const textSecondary = isDarkMode ? '#8B99AE' : '#94A3B8';
@@ -133,9 +133,9 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
     <View className="items-center justify-center py-12">
       <View
         className="w-16 h-16 rounded-2xl items-center justify-center mb-4"
-        style={{ backgroundColor: 'rgba(245,158,11,0.12)' }}
+        style={{ backgroundColor: 'rgba(37,99,235,0.12)' }}
       >
-        <ActivityIndicator size="small" color="#F59E0B" />
+        <ActivityIndicator size="small" color="#2563EB" />
       </View>
       <Text style={{ fontSize: 17, fontWeight: '600', color: textPrimary }}>
         Analyzing your categories...
@@ -146,24 +146,30 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
     </View>
   );
 
+  const isRateLimited = error?.toLowerCase().includes('rate') || error?.toLowerCase().includes('too many');
+
   const renderErrorState = () => (
     <View className="items-center justify-center py-12">
       <View
         className="w-16 h-16 rounded-2xl items-center justify-center mb-4"
-        style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}
+        style={{ backgroundColor: isRateLimited ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)' }}
       >
-        <Ionicons name="alert-circle" size={28} color="#EF4444" />
+        <Ionicons
+          name={isRateLimited ? 'time-outline' : 'alert-circle'}
+          size={28}
+          color={isRateLimited ? '#F59E0B' : '#EF4444'}
+        />
       </View>
       <Text style={{ fontSize: 17, fontWeight: '600', color: textPrimary, marginBottom: 6 }}>
-        Unable to generate budget
+        {isRateLimited ? 'Too many requests' : 'Unable to generate budget'}
       </Text>
       <Text style={{ fontSize: 13, color: textSecondary, textAlign: 'center', paddingHorizontal: 16, marginBottom: 20 }}>
-        {error}
+        {isRateLimited ? 'Please wait a moment and try again.' : error}
       </Text>
       <TouchableOpacity
         onPress={onRetry}
         className="rounded-xl py-3 px-8"
-        style={{ backgroundColor: '#F59E0B' }}
+        style={{ backgroundColor: '#2563EB' }}
         activeOpacity={0.8}
       >
         <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>Try Again</Text>
@@ -172,14 +178,14 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
   );
 
   const renderSummaryPills = () => (
-    <View className="flex-row justify-center mb-4" style={{ gap: 8 }}>
+    <View className="flex-row justify-between mb-4">
       {(['needs', 'wants'] as BudgetClassification[]).map((classification) => {
         const config = CLASSIFICATION_CONFIG[classification];
         const percentage = totals[classification];
         return (
           <View
             key={classification}
-            className="px-4 py-2.5 rounded-xl items-center"
+            className="flex-1 mx-1 py-3 rounded-xl items-center"
             style={{ backgroundColor: `${config.color}12`, borderWidth: 1, borderColor: `${config.color}20` }}
           >
             <Text style={{ fontWeight: '800', fontSize: 16, color: config.color }}>
@@ -192,7 +198,7 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
         );
       })}
       <View
-        className="px-4 py-2.5 rounded-xl items-center"
+        className="flex-1 mx-1 py-3 rounded-xl items-center"
         style={{ backgroundColor: `${SAVINGS_CONFIG.color}12`, borderWidth: 1, borderColor: `${SAVINGS_CONFIG.color}20` }}
       >
         <Text style={{ fontWeight: '800', fontSize: 16, color: SAVINGS_CONFIG.color }}>
@@ -210,21 +216,21 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
     return (
       <View
         key={alloc.categoryId}
-        className="flex-row items-center py-2.5 px-3 rounded-xl mb-1.5"
+        className="flex-row items-center py-3 px-3 rounded-xl mb-1.5"
         style={{ backgroundColor: innerBg, borderWidth: 1, borderColor: borderColor }}
       >
         <View
-          className="w-9 h-9 rounded-lg items-center justify-center mr-3"
+          className="w-10 h-10 rounded-lg items-center justify-center mr-3"
           style={{ backgroundColor: color }}
         >
-          <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color="#fff" />
+          <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={20} color="#fff" />
         </View>
         <View className="flex-1">
-          <Text style={{ fontWeight: '500', fontSize: 14, color: textPrimary }}>{alloc.categoryName}</Text>
+          <Text style={{ fontWeight: '600', fontSize: 14, color: textPrimary }}>{alloc.categoryName}</Text>
         </View>
         <View className="items-end">
-          <Text style={{ fontWeight: '700', fontSize: 14, color: textPrimary }}>{alloc.percentage}%</Text>
-          <Text style={{ fontSize: 11, color: textSecondary }}>
+          <Text style={{ fontWeight: '700', fontSize: 15, color: textPrimary }}>{alloc.percentage}%</Text>
+          <Text style={{ fontSize: 12, color: textSecondary }}>
             {formatCurrency(alloc.amount, currencySymbol)}
           </Text>
         </View>
@@ -315,7 +321,7 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
       <TouchableOpacity
         onPress={onApply}
         className="rounded-xl py-3.5 items-center"
-        style={{ backgroundColor: '#F59E0B' }}
+        style={{ backgroundColor: '#2A9D8F' }}
         activeOpacity={0.8}
       >
         <View className="flex-row items-center" style={{ gap: 6 }}>
@@ -329,9 +335,9 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
   const content = (
     <View
       style={{
-        marginHorizontal: 16,
+        width: '94%',
         borderRadius: 20,
-        padding: 20,
+        padding: 16,
         backgroundColor: cardBg,
         borderWidth: 1,
         borderColor: borderColor,

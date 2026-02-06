@@ -242,11 +242,12 @@ export async function getBudgetAllocations(
   const savingsAmount = Math.round(monthlyIncome * 0.2);
 
   // Check cache first
-  const cached = await getCachedResult(categories, monthlyIncome);
-  if (cached) {
-    console.log('Budget AI: Using cached response');
-    return cached;
-  }
+  // TEMPORARILY DISABLED FOR TESTING - uncomment to re-enable caching
+  // const cached = await getCachedResult(categories, monthlyIncome);
+  // if (cached) {
+  //   console.log('Budget AI: Using cached response');
+  //   return cached;
+  // }
 
   console.log('Budget AI: Calling edge function');
 

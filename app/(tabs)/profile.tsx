@@ -2,16 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import {
   ChevronRight,
-  Download,
   Fingerprint,
   Globe,
-  KeyRound,
   LogOut,
   User,
   Wallet
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { AnimatedToggle } from '../components/Shared/AnimatedToggle';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -31,18 +29,13 @@ const currencies = [
 export default function ProfileScreen() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
-  const { isAppLockEnabled, biometricAvailable, setAppLockEnabled, hasPinSet, setPin, removePin } = useLock();
+  const { isAppLockEnabled, deviceAuthAvailable, setAppLockEnabled } = useLock();
 
   // State
   const [email, setEmail] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [newPin, setNewPin] = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
-  const [pinStep, setPinStep] = useState<'enter' | 'confirm'>('enter');
-  const [pinError, setPinError] = useState('');
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
 
@@ -98,61 +91,6 @@ export default function ProfileScreen() {
 
   const handleExportCSV = () => {
     console.log("CSV Export triggered");
-  };
-
-  const handleOpenPinSetup = () => {
-    setNewPin('');
-    setConfirmPin('');
-    setPinStep('enter');
-    setPinError('');
-    setShowPinModal(true);
-  };
-
-  const handlePinChange = (value: string, field: 'new' | 'confirm') => {
-    const cleaned = value.replace(/[^0-9]/g, '').slice(0, 6);
-    if (field === 'new') {
-      setNewPin(cleaned);
-    } else {
-      setConfirmPin(cleaned);
-    }
-    setPinError('');
-  };
-
-  const handlePinNext = () => {
-    if (newPin.length < 4) {
-      setPinError('PIN must be at least 4 digits');
-      return;
-    }
-    setPinStep('confirm');
-  };
-
-  const handlePinConfirm = async () => {
-    if (confirmPin !== newPin) {
-      setPinError('PINs do not match');
-      setConfirmPin('');
-      return;
-    }
-    await setPin(newPin);
-    setShowPinModal(false);
-    Alert.alert('Success', 'Your PIN has been set successfully.');
-  };
-
-  const handleRemovePin = () => {
-    Alert.alert(
-      'Remove PIN',
-      'Are you sure you want to remove your PIN?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            await removePin();
-            Alert.alert('Success', 'Your PIN has been removed.');
-          }
-        }
-      ]
-    );
   };
 
   // Styling Variables
@@ -256,14 +194,14 @@ export default function ProfileScreen() {
           </Pressable> */}
 
           {/* App Lock Toggle */}
-          <View className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}>
+          <View className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}>
             <View className="w-10 h-10 bg-rose-500/20 rounded-lg items-center justify-center mr-3">
               <Fingerprint color="#f43f5e" size={20} />
             </View>
             <View className="flex-1">
               <Text className={`font-medium ${textPrimary}`}>App Lock</Text>
               <Text className={`text-sm ${textSecondary}`}>
-                {biometricAvailable ? 'Require authentication to open app' : 'Lock app when backgrounded'}
+                {deviceAuthAvailable ? 'Use your phone\'s PIN or biometrics' : 'Lock app when backgrounded'}
               </Text>
             </View>
             <AnimatedToggle
@@ -273,28 +211,6 @@ export default function ProfileScreen() {
               inactiveColor="#3f3f46"
             />
           </View>
-
-          {/* PIN Setup */}
-          <TouchableOpacity
-            onPress={hasPinSet ? handleRemovePin : handleOpenPinSetup}
-            activeOpacity={0.7}
-            className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
-          >
-            <View className="w-10 h-10 bg-amber-500/20 rounded-lg items-center justify-center mr-3">
-              <KeyRound color="#f59e0b" size={20} />
-            </View>
-            <View className="flex-1">
-              <Text className={`font-medium ${textPrimary}`}>PIN Code</Text>
-              <Text className={`text-sm ${textSecondary}`}>
-                {hasPinSet ? 'PIN is set - tap to remove' : 'Set up a PIN for unlock'}
-              </Text>
-            </View>
-            {hasPinSet ? (
-              <Ionicons name="checkmark-circle" size={20} color="#22c55e" />
-            ) : (
-              <ChevronRight color={isDarkMode ? "#9CA3AF" : "#4B5563"} size={20} />
-            )}
-          </TouchableOpacity>
         </View>
 
         {/* Account Section */}
@@ -321,85 +237,6 @@ export default function ProfileScreen() {
         </View>
 
       </ScrollView>
-
-      {/* PIN Setup Modal */}
-      <Modal
-        visible={showPinModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowPinModal(false)}
-      >
-        <KeyboardAvoidingView
-          className="flex-1 bg-black/50 justify-end"
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View className={`rounded-t-3xl p-6 ${isDarkMode ? 'bg-surfaceDark' : 'bg-white'}`}>
-            {/* Modal Header */}
-            <View className="flex-row items-center justify-between mb-6">
-              <Text className={`text-xl font-bold ${textPrimary}`}>
-                {pinStep === 'enter' ? 'Set Your PIN' : 'Confirm Your PIN'}
-              </Text>
-              <TouchableOpacity onPress={() => setShowPinModal(false)}>
-                <Ionicons name="close" size={24} color={isDarkMode ? '#fff' : '#000'} />
-              </TouchableOpacity>
-            </View>
-
-            {/* PIN Input */}
-            <Text className={`mb-2 ${textSecondary}`}>
-              {pinStep === 'enter' ? 'Enter a 4-6 digit PIN' : 'Re-enter your PIN to confirm'}
-            </Text>
-            <TextInput
-              value={pinStep === 'enter' ? newPin : confirmPin}
-              onChangeText={(v) => handlePinChange(v, pinStep === 'enter' ? 'new' : 'confirm')}
-              placeholder="Enter PIN"
-              placeholderTextColor={isDarkMode ? '#64748b' : '#9ca3af'}
-              keyboardType="number-pad"
-              secureTextEntry
-              maxLength={6}
-              autoFocus
-              className={`text-center text-2xl tracking-widest px-4 py-4 rounded-xl border mb-2 ${
-                isDarkMode ? 'bg-slate-800 text-white' : 'bg-gray-100 text-black'
-              } ${pinError ? 'border-red-500' : isDarkMode ? 'border-slate-700' : 'border-gray-300'}`}
-            />
-
-            {pinError ? (
-              <Text className="text-red-500 text-sm text-center mb-4">{pinError}</Text>
-            ) : (
-              <Text className={`text-sm text-center mb-4 ${textSecondary}`}>
-                {pinStep === 'enter' ? `${newPin.length}/6 digits` : `${confirmPin.length}/6 digits`}
-              </Text>
-            )}
-
-            {/* Action Button */}
-            <Pressable
-              onPress={pinStep === 'enter' ? handlePinNext : handlePinConfirm}
-              disabled={(pinStep === 'enter' ? newPin.length < 4 : confirmPin.length < 4)}
-              className={`py-4 rounded-xl items-center ${
-                (pinStep === 'enter' ? newPin.length < 4 : confirmPin.length < 4)
-                  ? 'bg-slate-600'
-                  : 'bg-accentBlue'
-              }`}
-            >
-              <Text className="text-white font-semibold text-lg">
-                {pinStep === 'enter' ? 'Next' : 'Confirm PIN'}
-              </Text>
-            </Pressable>
-
-            {pinStep === 'confirm' && (
-              <TouchableOpacity
-                onPress={() => {
-                  setPinStep('enter');
-                  setConfirmPin('');
-                  setPinError('');
-                }}
-                className="mt-3 py-2"
-              >
-                <Text className={`text-center ${textSecondary}`}>Go back</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
     </SafeAreaView>
   );
 }

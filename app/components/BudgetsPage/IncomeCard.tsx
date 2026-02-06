@@ -112,9 +112,9 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
     <View
       className="rounded-2xl mb-4 overflow-hidden"
       style={{
-        backgroundColor: isDarkMode ? '#151C2E' : '#F8FAFC',
+        backgroundColor: isDarkMode ? '#20283A' : '#F8FAFC',
         borderWidth: 1,
-        borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+        borderColor: isDarkMode ? '#4B5563' : '#E2E8F0',
       }}
     >
       {/* Main card — compact gauge layout */}
@@ -132,7 +132,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                 cx={ringSize / 2}
                 cy={ringSize / 2}
                 r={radius}
-                stroke={isDarkMode ? '#1E293B' : '#E2E8F0'}
+                stroke={isDarkMode ? '#4B5563' : '#E2E8F0'}
                 strokeWidth={strokeWidth}
                 fill="none"
               />
@@ -183,7 +183,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           {/* Chevron */}
           <View
             className="w-8 h-8 rounded-full items-center justify-center"
-            style={{ backgroundColor: isDarkMode ? '#1E293B' : '#E2E8F0' }}
+            style={{ backgroundColor: isDarkMode ? '#4B5563' : '#E2E8F0' }}
           >
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
@@ -197,17 +197,17 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
         <View className="flex-row mt-4" style={{ gap: 12 }}>
           <View
             className="flex-1 rounded-xl px-3 py-2.5"
-            style={{ backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }}
+            style={{ backgroundColor: isDarkMode ? '#1F2937' : '#F1F5F9', borderWidth: 1, borderColor: isDarkMode ? '#4B5563' : '#E2E8F0' }}
           >
             <Text
               className="text-xs mb-0.5"
-              style={{ color: isDarkMode ? '#64748B' : '#94A3B8' }}
+              style={{ color: isDarkMode ? '#7C8CA0' : '#94A3B8' }}
             >
               Allocated
             </Text>
             <Text
               className="font-semibold"
-              style={{ fontSize: 16, color: isDarkMode ? '#CBD5E1' : '#334155' }}
+              style={{ fontSize: 16, color: isDarkMode ? '#F1F5F9' : '#334155' }}
             >
               {formatAmount(totalBudgeted, currencySymbol)}
             </Text>
@@ -217,7 +217,11 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
             style={{
               backgroundColor: isOverAllocated
                 ? (isDarkMode ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.06)')
-                : (isDarkMode ? '#1E293B' : '#F1F5F9'),
+                : (isDarkMode ? '#1F2937' : '#F1F5F9'),
+              borderWidth: 1,
+              borderColor: isOverAllocated
+                ? (isDarkMode ? 'rgba(239,68,68,0.3)' : 'rgba(239,68,68,0.2)')
+                : (isDarkMode ? '#4B5563' : '#E2E8F0'),
             }}
           >
             <Text
@@ -248,7 +252,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           className="px-4 pb-4"
           style={{
             borderTopWidth: 1,
-            borderTopColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+            borderTopColor: isDarkMode ? '#4B5563' : '#E2E8F0',
             paddingTop: 16,
           }}
         >
@@ -288,9 +292,9 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
               <View
                 className="flex-row items-center px-4 h-12 rounded-xl"
                 style={{
-                  backgroundColor: isDarkMode ? '#0F172A' : '#F1F5F9',
+                  backgroundColor: isDarkMode ? '#1F2937' : '#F1F5F9',
                   borderWidth: 1,
-                  borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+                  borderColor: isDarkMode ? '#4B5563' : '#E2E8F0',
                 }}
               >
                 <Text
@@ -306,7 +310,11 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                   placeholderTextColor={isDarkMode ? '#334155' : '#CBD5E1'}
                   keyboardType="decimal-pad"
                   className="flex-1 text-lg"
-                  style={{ color: isDarkMode ? '#F1F5F9' : '#0F172A' }}
+                  style={{
+                    color: isDarkMode ? '#F1F5F9' : '#0F172A',
+                    textAlignVertical: 'center',
+                    paddingVertical: 0,
+                  }}
                 />
               </View>
             </Animated.View>
@@ -318,9 +326,9 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
               entering={FadeIn.duration(200)}
               className="mb-4 p-4 rounded-xl"
               style={{
-                backgroundColor: isDarkMode ? '#0F172A' : '#F1F5F9',
+                backgroundColor: isDarkMode ? '#1F2937' : '#F1F5F9',
                 borderWidth: 1,
-                borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+                borderColor: isDarkMode ? '#4B5563' : '#E2E8F0',
               }}
             >
               <Text
@@ -350,9 +358,9 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
               onPress={handleCancel}
               className="flex-1 py-3 rounded-xl items-center justify-center"
               style={{
-                backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9',
+                backgroundColor: isDarkMode ? '#1F2937' : '#F1F5F9',
                 borderWidth: 1,
-                borderColor: isDarkMode ? '#334155' : '#E2E8F0',
+                borderColor: isDarkMode ? '#4B5563' : '#E2E8F0',
               }}
               activeOpacity={0.7}
             >

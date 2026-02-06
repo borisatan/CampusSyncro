@@ -59,6 +59,31 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('fixed');
   const [percentText, setPercentText] = useState('');
 
+  // Calculate budget as percentage of income (for display)
+  const budgetPercentOfIncome = monthlyIncome > 0 ? (budget_amount / monthlyIncome) * 100 : 0;
+
+  // Handle mode toggle with pre-population
+  const handleModeChange = (newMode: BudgetMode) => {
+    if (newMode === budgetMode) return;
+
+    if (newMode === 'percentage') {
+      // Switching to percentage mode - calculate % from current amount
+      const currentAmount = parseFloat(amountText) || budget_amount;
+      if (currentAmount > 0 && monthlyIncome > 0) {
+        const pct = (currentAmount / monthlyIncome) * 100;
+        setPercentText(pct.toFixed(1));
+      }
+    } else {
+      // Switching to fixed mode - calculate amount from current percentage
+      const currentPct = parseFloat(percentText);
+      if (!isNaN(currentPct) && currentPct > 0 && monthlyIncome > 0) {
+        const amount = Math.round((currentPct / 100) * monthlyIncome);
+        setAmountText(amount.toString());
+      }
+    }
+    setBudgetMode(newMode);
+  };
+
   const isOver = hasBudget && percentage_used > 100;
   const isWarning = hasBudget && percentage_used >= 80 && percentage_used < 100;
   const remaining = Math.max(budget_amount - spent, 0);
@@ -263,7 +288,7 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                   ]}
                 />
                 <TouchableOpacity
-                  onPress={() => setBudgetMode('fixed')}
+                  onPress={() => handleModeChange('fixed')}
                   className="flex-1 py-2.5 rounded-lg z-10"
                   activeOpacity={0.7}
                 >
@@ -272,7 +297,7 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                   </Animated.Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => setBudgetMode('percentage')}
+                  onPress={() => handleModeChange('percentage')}
                   className="flex-1 py-2.5 rounded-lg z-10"
                   activeOpacity={0.7}
                 >
@@ -309,6 +334,11 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                       selectionColor={category.color}
                     />
                   </View>
+                  {amountText !== '' && !isNaN(parseFloat(amountText)) && monthlyIncome > 0 && (
+                    <Text style={{ color: '#8B99AE', fontSize: 12, marginTop: 6 }}>
+                      = {((parseFloat(amountText) / monthlyIncome) * 100).toFixed(1)}% of income
+                    </Text>
+                  )}
                 </View>
               ) : (
                 <View>

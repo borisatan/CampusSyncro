@@ -1,8 +1,7 @@
-import { AlertCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import React from 'react';
 import { Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 import { CategoryBudgetStatus } from '../../types/types';
 
@@ -30,12 +29,22 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
-        <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-white text-xl font-bold">Budget Health</Text>
+      <View
+        className="rounded-2xl p-4 mb-6"
+        style={{
+          backgroundColor: '#20283A',
+          borderWidth: 1,
+          borderColor: '#4B5563',
+        }}
+      >
+        <View className="flex-row items-center mb-4">
+          <View className="w-1.5 h-1.5 rounded-full mr-2" style={{ backgroundColor: '#2A9D8F' }} />
+          <Text style={{ fontSize: 12, fontWeight: '600', color: '#7C8CA0', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Budget Health
+          </Text>
         </View>
-        <View className="h-4 bg-slate-800 rounded-full overflow-hidden w-3/4 mt-2" />
-        <View className="h-4 bg-slate-800 rounded-full overflow-hidden w-1/2 mt-3" />
+        <View className="h-3 rounded-full overflow-hidden w-3/4" style={{ backgroundColor: '#4B5563' }} />
+        <View className="h-3 rounded-full overflow-hidden w-1/2 mt-3" style={{ backgroundColor: '#4B5563' }} />
       </View>
     );
   }
@@ -43,15 +52,25 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
   if (categoryBudgets.length === 0) {
     return (
       <MotiView
-        from={isUnlocked ? { opacity: 0 } : { opacity: 1 }}
-        animate={{ opacity: 1 }}
-        transition={{ type: 'timing', duration: 400 }}
+        from={isUnlocked ? { opacity: 0, translateY: 8 } : { opacity: 1, translateY: 0 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 350 }}
       >
-        <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
-          <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-white text-xl font-bold">Budget Health</Text>
+        <View
+          className="rounded-2xl p-4 mb-6"
+          style={{
+            backgroundColor: '#20283A',
+            borderWidth: 1,
+            borderColor: '#4B5563',
+          }}
+        >
+          <View className="flex-row items-center mb-3">
+            <View className="w-1.5 h-1.5 rounded-full mr-2" style={{ backgroundColor: '#7C8CA0' }} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#7C8CA0', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+              Budget Health
+            </Text>
           </View>
-          <Text className="text-slate-400 text-sm">
+          <Text style={{ color: '#7C8CA0', fontSize: 14 }}>
             No budget set up yet.
           </Text>
         </View>
@@ -64,99 +83,109 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
 
   return (
     <MotiView
-      from={isUnlocked ? { opacity: 0 } : { opacity: 1 }}
-      animate={{ opacity: 1 }}
-      transition={{ type: 'timing', duration: 400 }}
+      from={isUnlocked ? { opacity: 0, translateY: 8 } : { opacity: 1, translateY: 0 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 350 }}
     >
-      <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6">
+      <View
+        className="rounded-2xl overflow-hidden mb-6"
+        style={{
+          backgroundColor: '#20283A',
+          borderWidth: 1,
+          borderColor: '#4B5563',
+        }}
+      >
         {/* Header */}
-        <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-white text-xl font-bold">Budget Health</Text>
-          <Text className="text-xs text-slate-400">This Period</Text>
+        <View className="p-4 pb-0">
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center">
+              <View className="w-1.5 h-1.5 rounded-full mr-2" style={{ backgroundColor: '#2A9D8F' }} />
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#7C8CA0', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                Budget Health
+              </Text>
+            </View>
+            <Text style={{ fontSize: 11, color: '#7C8CA0' }}>This Period</Text>
+          </View>
         </View>
 
-        {/* Individual Category Budget Progress Bars */}
-        <View className="gap-4">
+        {/* Individual Category Budget Items */}
+        <View className="px-4">
           {categoryBudgets.map((cb, index) => {
             const percentage = cb.percentage_used;
             const isOver = percentage > 100;
             const isWarning = percentage >= 80 && percentage < 100;
             const remaining = Math.max(cb.budget_amount - cb.spent, 0);
 
+            const progressColor = isOver ? '#EF4444' : isWarning ? '#F59E0B' : '#2A9D8F';
+            const statusColor = isOver ? '#FCA5A5' : isWarning ? '#FCD34D' : '#5EEAD4';
+
             return (
               <MotiView
                 key={cb.category.id}
-                from={isUnlocked ? { opacity: 0, translateY: 10 } : { opacity: 1, translateY: 0 }}
+                from={isUnlocked ? { opacity: 0, translateY: 8 } : { opacity: 1, translateY: 0 }}
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{
                   type: 'timing',
-                  duration: 400,
-                  delay: isUnlocked ? 150 + index * 100 : 0,
+                  duration: 250,
+                  delay: isUnlocked ? 100 + index * 50 : 0,
                 }}
+                className="mb-4"
               >
-                {/* Category Header */}
-                <View className="flex-row items-center justify-between mb-2">
-                  <View className="flex-row items-center gap-2">
-                    <View
-                      className="w-7 h-7 rounded-2xl items-center justify-center"
-                      style={{ backgroundColor: cb.category.color }}
-                    >
-                      <Ionicons
-                        name={cb.category.icon as any}
-                        size={16}
-                        color="#fff"
-                      />
-                    </View>
-                    <Text className="text-base text-textDark">{cb.category.category_name}</Text>
+                {/* Category Row */}
+                <View className="flex-row items-center mb-2">
+                  {/* Category Icon */}
+                  <View
+                    className="w-11 h-11 rounded-xl items-center justify-center mr-3"
+                    style={{ backgroundColor: cb.category.color }}
+                  >
+                    <Ionicons
+                      name={cb.category.icon as any}
+                      size={22}
+                      color="#fff"
+                    />
                   </View>
-                  <View className="flex-row items-center gap-2">
-                    <Text
-                      className={`text-sm ${
-                        isOver
-                          ? 'text-rose-400'
-                          : isWarning
-                          ? 'text-yellow-400'
-                          : 'text-textDark'
-                      }`}
-                    >
-                      {formatAmount(cb.spent, currencySymbol)} /{' '}
-                      {formatAmount(cb.budget_amount, currencySymbol)}
+
+                  {/* Category Name & Status */}
+                  <View className="flex-1">
+                    <Text style={{ color: '#F1F5F9', fontSize: 15, fontWeight: '600' }}>
+                      {cb.category.category_name}
                     </Text>
-                    {isOver && <AlertCircle size={16} color="#fb7185" />}
-                    {isWarning && !isOver && (
-                      <AlertCircle size={16} color="#facc15" />
-                    )}
+                    <Text style={{ color: statusColor, fontSize: 12, marginTop: 2 }}>
+                      {isOver
+                        ? `${formatAmount(cb.spent - cb.budget_amount, currencySymbol)} over`
+                        : `${formatAmount(remaining, currencySymbol)} left`}
+                    </Text>
+                  </View>
+
+                  {/* Amount Display */}
+                  <View className="items-end">
+                    <Text style={{ color: '#F1F5F9', fontSize: 16, fontWeight: '700' }}>
+                      {formatAmount(cb.spent, currencySymbol)}
+                    </Text>
+                    <Text style={{ color: '#7C8CA0', fontSize: 12, marginTop: 1 }}>
+                      / {formatAmount(cb.budget_amount, currencySymbol)}
+                    </Text>
                   </View>
                 </View>
 
                 {/* Progress Bar */}
-                <View className="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                <View
+                  className="h-1.5 rounded-full overflow-hidden"
+                  style={{ backgroundColor: '#4B5563' }}
+                >
                   <View
                     style={{
                       height: '100%',
                       width: `${Math.min(Math.max(percentage, 0), 100)}%`,
                       borderRadius: 9999,
-                      backgroundColor:
-                        isOver
-                          ? '#f43f5e'
-                          : isWarning
-                          ? '#eab308'
-                          : '#22c55e',
+                      backgroundColor: progressColor,
                     }}
                   />
                 </View>
 
-                {/* Footer Stats */}
-                <View className="flex-row justify-between mt-1">
-                  <Text className="text-sm text-textDark">
-                    {formatAmount(remaining, currencySymbol)} left
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      color: isOver ? '#fb7185' : isWarning ? '#facc15' : '#22c55e',
-                    }}
-                  >
+                {/* Percentage */}
+                <View className="flex-row justify-end mt-1">
+                  <Text style={{ fontSize: 11, color: progressColor, fontWeight: '600' }}>
                     {Math.round(percentage)}%
                   </Text>
                 </View>
@@ -165,88 +194,80 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
           })}
         </View>
 
-        {/* Total Progress Bar */}
+        {/* Total Budget Summary */}
         {categoryBudgets.length >= 1 && (() => {
           const totalPercentage = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
           const totalIsOver = totalPercentage > 100;
           const totalIsWarning = totalPercentage >= 80 && totalPercentage < 100;
           const totalRemaining = Math.max(totalLimit - totalSpent, 0);
 
+          const totalProgressColor = totalIsOver ? '#EF4444' : totalIsWarning ? '#F59E0B' : '#2A9D8F';
+          const totalStatusColor = totalIsOver ? '#FCA5A5' : totalIsWarning ? '#FCD34D' : '#5EEAD4';
+
           return (
             <MotiView
-              from={isUnlocked ? { opacity: 0, translateY: 10 } : { opacity: 1, translateY: 0 }}
+              from={isUnlocked ? { opacity: 0, translateY: 8 } : { opacity: 1, translateY: 0 }}
               animate={{ opacity: 1, translateY: 0 }}
               transition={{
                 type: 'timing',
-                duration: 400,
-                delay: isUnlocked ? 150 + categoryBudgets.length * 100 + 50 : 0,
+                duration: 250,
+                delay: isUnlocked ? 100 + categoryBudgets.length * 50 + 50 : 0,
               }}
-              className="mt-4 pt-4 border-t border-slate-800"
+              className="px-4 py-3"
+              style={{
+                borderTopWidth: 1,
+                borderTopColor: '#4B5563',
+                backgroundColor: '#1E2536',
+              }}
             >
+              {/* Total Header */}
               <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-sm text-white">Total Budget</Text>
-                <View className="flex-row items-center gap-2">
-                  <Text
-                    className={`text-sm ${
-                      totalIsOver
-                        ? 'text-rose-400'
-                        : totalIsWarning
-                        ? 'text-yellow-400'
-                        : 'text-textDark'
-                    }`}
+                <View className="flex-row items-center">
+                  <View
+                    className="w-8 h-8 rounded-lg items-center justify-center mr-2"
+                    style={{ backgroundColor: '#2A9D8F' }}
                   >
-                    {formatAmount(totalSpent, currencySymbol)} /{' '}
-                    {formatAmount(totalLimit, currencySymbol)}
+                    <Ionicons name="wallet-outline" size={16} color="#fff" />
+                  </View>
+                  <View>
+                    <Text style={{ color: '#F1F5F9', fontSize: 14, fontWeight: '600' }}>
+                      Total Budget
+                    </Text>
+                    <Text style={{ color: totalStatusColor, fontSize: 11, marginTop: 1 }}>
+                      {totalIsOver
+                        ? `${formatAmount(totalSpent - totalLimit, currencySymbol)} over`
+                        : `${formatAmount(totalRemaining, currencySymbol)} left`}
+                    </Text>
+                  </View>
+                </View>
+                <View className="items-end">
+                  <Text style={{ color: '#F1F5F9', fontSize: 15, fontWeight: '700' }}>
+                    {formatAmount(totalSpent, currencySymbol)}
                   </Text>
-                  {totalIsOver && <AlertCircle size={16} color="#fb7185" />}
-                  {totalIsWarning && !totalIsOver && (
-                    <AlertCircle size={16} color="#facc15" />
-                  )}
+                  <Text style={{ color: '#7C8CA0', fontSize: 11, marginTop: 1 }}>
+                    / {formatAmount(totalLimit, currencySymbol)}
+                  </Text>
                 </View>
               </View>
 
-              {/* Stacked Progress Bar */}
-              <View className="h-5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                <View className="flex-row h-full">
-                  {[...allCategoryBudgets]
-                    .sort((a, b) => b.spent - a.spent)
-                    .map((cb, index, arr) => {
-                      const widthPercent =
-                        totalLimit > 0 ? (cb.spent / totalLimit) * 100 : 0;
-                      const isLast = index === arr.length - 1;
-
-                      return (
-                        <View
-                          key={cb.category.id}
-                          style={{
-                            height: '100%',
-                            width: `${Math.min(Math.max(widthPercent, 0), 100)}%`,
-                            backgroundColor: cb.category.color,
-                            borderRightWidth: isLast ? 0 : 1,
-                            borderRightColor: '#1e293b',
-                          }}
-                        />
-                      );
-                    })}
-                </View>
+              {/* Progress Bar */}
+              <View
+                className="h-2 rounded-full overflow-hidden"
+                style={{ backgroundColor: '#4B5563' }}
+              >
+                <View
+                  style={{
+                    height: '100%',
+                    width: `${Math.min(Math.max(totalPercentage, 0), 100)}%`,
+                    borderRadius: 9999,
+                    backgroundColor: totalProgressColor,
+                  }}
+                />
               </View>
 
-              {/* Footer Stats */}
-              <View className="flex-row justify-between mt-1">
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: totalIsOver ? '#fb7185' : totalIsWarning ? '#facc15' : '#22c55e',
-                  }}
-                >
-                  {formatAmount(totalRemaining, currencySymbol)} left
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: totalIsOver ? '#fb7185' : totalIsWarning ? '#facc15' : '#22c55e',
-                  }}
-                >
+              {/* Percentage */}
+              <View className="flex-row justify-end mt-1">
+                <Text style={{ fontSize: 11, color: totalProgressColor, fontWeight: '600' }}>
                   {Math.round(totalPercentage)}%
                 </Text>
               </View>

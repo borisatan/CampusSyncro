@@ -50,7 +50,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
       }}
       ListFooterComponent={
         isFetchingMore ? (
-          <Text className="text-center py-4">Loading more...</Text>
+          <Text className="text-center py-4 text-secondaryLight dark:text-secondaryDark">Loading more...</Text>
         ) : null
       }
     />
