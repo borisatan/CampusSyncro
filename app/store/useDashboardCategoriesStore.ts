@@ -31,13 +31,13 @@ export const useDashboardCategoriesStore = create<DashboardCategoriesState>((set
   },
 
   togglePinnedCategory: async (categoryId: number) => {
+    const { pinnedCategoryIds } = get();
+    const updated = pinnedCategoryIds.includes(categoryId)
+      ? pinnedCategoryIds.filter((id) => id !== categoryId)
+      : [...pinnedCategoryIds, categoryId];
+    set({ pinnedCategoryIds: updated });
     try {
-      const { pinnedCategoryIds } = get();
-      const updated = pinnedCategoryIds.includes(categoryId)
-        ? pinnedCategoryIds.filter((id) => id !== categoryId)
-        : [...pinnedCategoryIds, categoryId];
       await AsyncStorage.setItem(DASHBOARD_CATEGORIES_KEY, JSON.stringify(updated));
-      set({ pinnedCategoryIds: updated });
     } catch (error) {
       console.error('Error saving dashboard categories:', error);
     }

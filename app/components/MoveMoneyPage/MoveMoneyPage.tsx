@@ -16,11 +16,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useDataRefresh } from '../../context/DataRefreshContext';
-import { createTransfer } from '../../services/backendService';
+import { contributeToGoal, createTransfer, fetchGoalsByAccount } from '../../services/backendService';
 import { useAccountsStore } from '../../store/useAccountsStore';
-import { Account } from '../../types/types';
+import { useGoalsStore } from '../../store/useGoalsStore';
+import { Account, Goal } from '../../types/types';
 import { SuccessModal } from '../Shared/SuccessModal';
 import { AccountTransferCard } from './AccountTransferCard';
+import { GoalSelector } from './GoalSelector';
 
 interface MoveMoneyPageProps {
   onBack: () => void;
@@ -35,11 +37,14 @@ export default function MoveMoneyPage({
 }: MoveMoneyPageProps) {
   const isDark = true;
   const { userId } = useAuth();
-  const { refreshAccounts, refreshBudgets } = useDataRefresh();
+  const { refreshAccounts, refreshBudgets, refreshGoals } = useDataRefresh();
   const updateAccountBalanceStore = useAccountsStore((state) => state.updateAccountBalance);
+  const incrementGoalAmount = useGoalsStore((state) => state.incrementGoalAmount);
 
   const [sourceAccount, setSourceAccount] = useState<Account | null>(null);
   const [destinationAccount, setDestinationAccount] = useState<Account | null>(null);
+  const [accountGoals, setAccountGoals] = useState<Goal[]>([]);
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
 
   // Pre-select accounts based on sort_order (positions 1 and 2)
   useEffect(() => {
@@ -64,6 +69,16 @@ export default function MoveMoneyPage({
 
   // Check if destination is a savings or investment account
   const isSavingsTransfer = actualDestination?.type === 'savings' || actualDestination?.type === 'investment';
+
+  // Load goals when destination changes to savings/investment
+  useEffect(() => {
+    if (actualDestination && isSavingsTransfer) {
+      fetchGoalsByAccount(actualDestination.id).then(setAccountGoals);
+    } else {
+      setAccountGoals([]);
+      setSelectedGoal(null);
+    }
+  }, [actualDestination?.id, isSavingsTransfer]);
   const headerText = isSavingsTransfer && actualDestination
     ? `Save to ${actualDestination.account_name}`
     : 'Move money';
@@ -105,24 +120,41 @@ export default function MoveMoneyPage({
     setIsSubmitting(true);
 
     try {
-      // Optimistic UI update
+      // Optimistic UI update for accounts
       const newSourceBalance = actualSource.balance - numericAmount;
       const newDestBalance = actualDestination.balance + numericAmount;
       updateAccountBalanceStore(actualSource.account_name, newSourceBalance);
       updateAccountBalanceStore(actualDestination.account_name, newDestBalance);
 
+      // Optimistic UI update for goal if selected
+      if (selectedGoal) {
+        incrementGoalAmount(selectedGoal.id, numericAmount);
+      }
+
       setShowSuccess(true);
 
-      // Backend transfer (just updates balances, no transactions created)
-      await createTransfer({
-        from_account: actualSource.account_name,
-        to_account: actualDestination.account_name,
-        amount: numericAmount,
-        user_id: userId,
-      });
+      // If a goal is selected, use contributeToGoal (handles transfer + contribution record)
+      if (selectedGoal) {
+        await contributeToGoal({
+          goal_id: selectedGoal.id,
+          user_id: userId,
+          amount: numericAmount,
+          source_account_id: actualSource.id,
+          source_account_name: actualSource.account_name,
+          destination_account_name: actualDestination.account_name,
+        });
+      } else {
+        // Regular transfer (just updates balances, no transactions created)
+        await createTransfer({
+          from_account: actualSource.account_name,
+          to_account: actualDestination.account_name,
+          amount: numericAmount,
+          user_id: userId,
+        });
+      }
 
       // Refresh to sync with server state
-      await Promise.all([refreshAccounts(), refreshBudgets()]);
+      await Promise.all([refreshAccounts(), refreshBudgets(), refreshGoals()]);
     } catch (error) {
       console.error('Transfer error:', error);
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -133,6 +165,9 @@ export default function MoveMoneyPage({
       }
       if (actualDestination) {
         updateAccountBalanceStore(actualDestination.account_name, actualDestination.balance);
+      }
+      if (selectedGoal) {
+        incrementGoalAmount(selectedGoal.id, -numericAmount);
       }
       setShowSuccess(false);
     } finally {
@@ -247,6 +282,16 @@ export default function MoveMoneyPage({
                   />
                 </View>
               </View>
+
+              {/* Goal Selector (only shown for savings transfers with goals) */}
+              {isSavingsTransfer && accountGoals.length > 0 && numericAmount > 0 && (
+                <GoalSelector
+                  goals={accountGoals}
+                  selectedGoal={selectedGoal}
+                  onSelect={setSelectedGoal}
+                  currencySymbol={currencySymbol}
+                />
+              )}
 
               {/* Move Button */}
               <TouchableOpacity

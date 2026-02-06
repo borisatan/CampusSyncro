@@ -127,21 +127,25 @@ export interface AIBudgetAllocation {
   amount: number;
 }
 
-// Balance Snapshot Types (for savings calculation)
-export interface AccountBalanceSnapshot {
+// Savings Goals Types
+export interface Goal {
   id: number;
-  account_id: number;
   user_id: string;
-  balance: number;
-  period_start: string;
+  account_id: number;
+  name: string;
+  target_amount: number;
+  current_amount: number;
+  color: string;
+  icon: string;
   created_at: string;
+  updated_at: string;
 }
 
-export interface PeriodSavingsResult {
-  account_id: number;
-  account_name: string;
-  account_type: string;
-  current_balance: number;
-  period_start_balance: number;
-  saved_this_period: number;
+export interface GoalContribution {
+  id: number;
+  goal_id: number;
+  user_id: string;
+  amount: number;
+  source_account_id: number | null;
+  created_at: string;
 }

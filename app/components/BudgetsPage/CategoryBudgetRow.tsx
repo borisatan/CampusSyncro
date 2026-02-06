@@ -7,6 +7,8 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  withDelay,
+  withSpring,
   interpolateColor,
   FadeIn,
 } from 'react-native-reanimated';
@@ -61,6 +63,27 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   const isWarning = hasBudget && percentage_used >= 80 && percentage_used < 100;
   const remaining = Math.max(budget_amount - spent, 0);
 
+  // Animated progress bar
+  const progressWidth = useSharedValue(0);
+
+  useEffect(() => {
+    if (hasBudget) {
+      progressWidth.value = withDelay(
+        100,
+        withSpring(Math.min(Math.max(percentage_used, 0), 100) / 100, {
+          damping: 20,
+          stiffness: 90,
+        })
+      );
+    } else {
+      progressWidth.value = withTiming(0, { duration: 200 });
+    }
+  }, [percentage_used, hasBudget]);
+
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value * 100}%`,
+  }));
+
   // Animated toggle: 0 = fixed, 1 = percentage
   const toggleProgress = useSharedValue(0);
 
@@ -74,14 +97,13 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
 
   const sliderStyle = useAnimatedStyle(() => ({
     left: `${toggleProgress.value * 50}%`,
-    backgroundColor: '#2563EB',
   }));
 
   const fixedTextStyle = useAnimatedStyle(() => ({
     color: interpolateColor(
       toggleProgress.value,
       [0, 1],
-      ['#ffffff', '#94a3b8']
+      ['#ffffff', '#64748B']
     ),
   }));
 
@@ -89,13 +111,9 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
     color: interpolateColor(
       toggleProgress.value,
       [0, 1],
-      ['#94a3b8', '#ffffff']
+      ['#64748B', '#ffffff']
     ),
   }));
-
-  const toggleExpanded = () => {
-    onToggleExpand();
-  };
 
   const handleSave = () => {
     if (budgetMode === 'percentage') {
@@ -120,70 +138,92 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   };
 
   const progressColor = isOver
-    ? '#f43f5e'
+    ? '#EF4444'
     : isWarning
-    ? '#eab308'
-    : '#22c55e';
+    ? '#F59E0B'
+    : '#2A9D8F';
+
+  const statusColor = isOver
+    ? '#FCA5A5'
+    : isWarning
+    ? '#FCD34D'
+    : '#5EEAD4';
 
   return (
-    <Pressable onPress={toggleExpanded}>
-      <View className="rounded-2xl p-4 shadow-lg bg-surfaceDark border border-borderDark">
+    <Pressable onPress={onToggleExpand}>
+      <View
+        className="rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: '#20283A',
+          borderWidth: 1,
+          borderColor: expanded ? `${category.color}40` : '#4B5563',
+        }}
+      >
         {/* Top row: icon, name, amount */}
-        <View className="flex-row items-center">
+        <View className="p-4 flex-row items-center">
+          {/* Category icon */}
           <View
-            className="w-12 h-12 rounded-xl items-center justify-center mr-3"
+            className="w-11 h-11 rounded-xl items-center justify-center mr-3"
             style={{ backgroundColor: category.color }}
           >
-            <Ionicons name={category.icon as any} size={24} color="#fff" />
+            <Ionicons name={category.icon as any} size={22} color="#fff" />
           </View>
 
           <View className="flex-1">
-            <Text className="text-white text-lg">{category.category_name}</Text>
+            <Text style={{ color: '#F1F5F9', fontSize: 15, fontWeight: '600' }}>
+              {category.category_name}
+            </Text>
+            {hasBudget && (
+              <Text style={{ color: statusColor, fontSize: 12, marginTop: 2 }}>
+                {isOver
+                  ? `${formatAmount(spent - budget_amount, currencySymbol)} over`
+                  : `${formatAmount(remaining, currencySymbol)} left`}
+              </Text>
+            )}
           </View>
 
           <View className="items-end">
             {hasBudget ? (
               <>
-                <Text className="text-white text-lg font-bold">
+                <Text style={{ color: '#F1F5F9', fontSize: 16, fontWeight: '700' }}>
                   {formatAmount(spent, currencySymbol)}
                 </Text>
-                <Text className="text-secondaryDark text-sm">
-                  of {formatAmount(budget_amount, currencySymbol)}
+                <Text style={{ color: '#7C8CA0', fontSize: 12, marginTop: 1 }}>
+                  / {formatAmount(budget_amount, currencySymbol)}
                 </Text>
               </>
             ) : (
-              <Text className="text-secondaryDark text-sm">No budget</Text>
+              <View
+                className="px-3 py-1 rounded-full"
+                style={{ backgroundColor: '#4B5563' }}
+              >
+                <Text style={{ color: '#7C8CA0', fontSize: 12 }}>No budget</Text>
+              </View>
             )}
           </View>
         </View>
 
-        {/* Progress bar */}
+        {/* Progress bar — thin and refined */}
         {hasBudget && (
-          <View className="mt-3">
-            <View className="h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-              <View
-                style={{
-                  height: '100%',
-                  width: `${Math.min(Math.max(percentage_used, 0), 100)}%`,
-                  borderRadius: 9999,
-                  backgroundColor: progressColor,
-                }}
+          <View className="px-4 pb-3">
+            <View
+              className="h-1.5 rounded-full overflow-hidden"
+              style={{ backgroundColor: '#4B5563' }}
+            >
+              <Animated.View
+                style={[
+                  {
+                    height: '100%',
+                    borderRadius: 9999,
+                    backgroundColor: progressColor,
+                  },
+                  progressBarStyle,
+                ]}
               />
             </View>
-            <View className="flex-row justify-between mt-1">
-              <Text className="text-textDark text-xs">
-                {formatAmount(remaining, currencySymbol)} left
-              </Text>
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: isOver
-                    ? '#fb7185'
-                    : isWarning
-                    ? '#facc15'
-                    : '#22c55e',
-                }}
-              >
+            {/* Percentage label */}
+            <View className="flex-row justify-end mt-1">
+              <Text style={{ fontSize: 11, color: progressColor, fontWeight: '600' }}>
                 {Math.round(percentage_used)}%
               </Text>
             </View>
@@ -193,11 +233,22 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
         {/* Expanded Edit Section */}
         {expanded && (
           <View
-            className={`${hasBudget ? 'mt-4' : 'mt-3'} pt-4 border-t border-slate-700`}
+            className="px-4 pb-4"
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: '#4B5563',
+              paddingTop: 14,
+            }}
           >
-            {/* Animated sliding toggle */}
-            <Animated.View entering={FadeIn.duration(300).delay(50)}>
-              <View className="bg-slate-800 rounded-2xl p-1 flex-row mb-4 border border-slate-700" style={{ position: 'relative' }}>
+            {/* Mode toggle */}
+            <Animated.View entering={FadeIn.duration(200).delay(50)}>
+              <View
+                className="rounded-xl p-1 flex-row mb-4"
+                style={{
+                  backgroundColor: '#1F2937',
+                  position: 'relative',
+                }}
+              >
                 <Animated.View
                   style={[
                     {
@@ -205,44 +256,51 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                       top: 4,
                       width: '50%',
                       height: '100%',
-                      borderRadius: 12,
+                      borderRadius: 10,
+                      backgroundColor: '#2A9D8F',
                     },
                     sliderStyle,
                   ]}
                 />
                 <TouchableOpacity
-                  onPress={() => {
-                    setBudgetMode('fixed');
-                  }}
-                  className="flex-1 py-2.5 rounded-xl z-10"
+                  onPress={() => setBudgetMode('fixed')}
+                  className="flex-1 py-2.5 rounded-lg z-10"
                   activeOpacity={0.7}
                 >
-                  <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 14 }, fixedTextStyle]}>
+                  <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 13 }, fixedTextStyle]}>
                     Fixed Amount
                   </Animated.Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => {
-                    setBudgetMode('percentage');
-                  }}
-                  className="flex-1 py-2.5 rounded-xl z-10"
+                  onPress={() => setBudgetMode('percentage')}
+                  className="flex-1 py-2.5 rounded-lg z-10"
                   activeOpacity={0.7}
                 >
-                  <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 14 }, percentTextStyle]}>
+                  <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 13 }, percentTextStyle]}>
                     % of Income
                   </Animated.Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
 
-            <Animated.View entering={FadeIn.duration(300).delay(100)}>
+            <Animated.View entering={FadeIn.duration(200).delay(100)}>
               {budgetMode === 'fixed' ? (
                 <View>
-                  <Text className="text-secondaryDark text-xs mb-2">Budget Amount</Text>
-                  <View className="flex-row items-center bg-slate-800 rounded-xl border border-slate-700 px-3 h-12">
-                    <Text className="text-secondaryDark text-base mr-1">{currencySymbol}</Text>
+                  <Text style={{ color: '#8B99AE', fontSize: 11, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Budget Amount
+                  </Text>
+                  <View
+                    className="flex-row items-center px-3 h-12 rounded-xl"
+                    style={{
+                      backgroundColor: '#1F2937',
+                      borderWidth: 1,
+                      borderColor: '#4B5563',
+                    }}
+                  >
+                    <Text style={{ color: '#7C8CA0', fontSize: 16, marginRight: 4 }}>{currencySymbol}</Text>
                     <TextInput
-                      className="flex-1 text-white text-base py-0"
+                      className="flex-1 py-0"
+                      style={{ color: '#F1F5F9', fontSize: 16 }}
                       value={amountText}
                       onChangeText={setAmountText}
                       keyboardType="numeric"
@@ -254,12 +312,20 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                 </View>
               ) : (
                 <View>
-                  <Text className="text-secondaryDark text-xs mb-2">
+                  <Text style={{ color: '#8B99AE', fontSize: 11, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     Percentage of Income ({formatAmount(monthlyIncome, currencySymbol)}/mo)
                   </Text>
-                  <View className="flex-row items-center bg-slate-800 rounded-xl border border-slate-700 px-3 h-12">
+                  <View
+                    className="flex-row items-center px-3 h-12 rounded-xl"
+                    style={{
+                      backgroundColor: '#1F2937',
+                      borderWidth: 1,
+                      borderColor: '#4B5563',
+                    }}
+                  >
                     <TextInput
-                      className="flex-1 text-white text-base py-0"
+                      className="flex-1 py-0"
+                      style={{ color: '#F1F5F9', fontSize: 16 }}
                       value={percentText}
                       onChangeText={setPercentText}
                       keyboardType="numeric"
@@ -267,10 +333,10 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                       placeholderTextColor="#6B7280"
                       selectionColor={category.color}
                     />
-                    <Text className="text-secondaryDark text-base ml-1">%</Text>
+                    <Text style={{ color: '#7C8CA0', fontSize: 16, marginLeft: 4 }}>%</Text>
                   </View>
                   {percentText !== '' && !isNaN(parseFloat(percentText)) && monthlyIncome > 0 && (
-                    <Text className="text-secondaryDark text-xs mt-2">
+                    <Text style={{ color: '#8B99AE', fontSize: 12, marginTop: 6 }}>
                       = {formatAmount(Math.round((parseFloat(percentText) / 100) * monthlyIncome), currencySymbol)}
                     </Text>
                   )}
@@ -279,22 +345,28 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
             </Animated.View>
 
             {/* Action buttons */}
-            <Animated.View entering={FadeIn.duration(300).delay(150)} className="mt-4 flex-row gap-3">
+            <Animated.View entering={FadeIn.duration(200).delay(150)} className="mt-4 flex-row" style={{ gap: 10 }}>
               {hasBudget && (
                 <TouchableOpacity
                   onPress={handleClear}
-                  className="flex-1 rounded-xl py-3 items-center bg-accentRed"
+                  className="flex-1 rounded-xl py-3 items-center"
+                  style={{
+                    backgroundColor: 'rgba(239,68,68,0.1)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(239,68,68,0.2)',
+                  }}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-white font-semibold text-base">Remove Budget</Text>
+                  <Text style={{ color: '#F87171', fontWeight: '600', fontSize: 14 }}>Remove</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
                 onPress={handleSave}
-                className="flex-1 bg-accentTeal rounded-xl py-3 items-center"
+                className="flex-1 rounded-xl py-3 items-center"
+                style={{ backgroundColor: '#2A9D8F' }}
                 activeOpacity={0.7}
               >
-                <Text className="text-white font-semibold text-base">
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 14 }}>
                   {hasBudget ? 'Save' : 'Set Budget'}
                 </Text>
               </TouchableOpacity>
@@ -302,13 +374,13 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
 
             {/* Show on Dashboard toggle */}
             {hasBudget && (
-              <Animated.View entering={FadeIn.duration(300).delay(200)} className="mt-4 flex-row items-center justify-between">
-                <Text className="text-secondaryDark text-sm">Show on Dashboard</Text>
+              <Animated.View entering={FadeIn.duration(200).delay(200)} className="mt-4 flex-row items-center justify-between">
+                <Text style={{ color: '#8B99AE', fontSize: 13 }}>Show on Dashboard</Text>
                 <View onStartShouldSetResponder={() => true}>
                   <AnimatedToggle
                     value={showOnDashboard}
                     onValueChange={() => onToggleDashboard(category.id)}
-                    activeColor="#22c55e"
+                    activeColor="#2A9D8F"
                     inactiveColor="#334155"
                   />
                 </View>

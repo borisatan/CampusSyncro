@@ -16,7 +16,7 @@ export interface CategoryForAI {
   category_name: string;
 }
 
-export type BudgetClassification = 'needs' | 'wants' | 'savings';
+export type BudgetClassification = 'needs' | 'wants';
 
 export interface BudgetAllocation {
   categoryId: number;
@@ -31,7 +31,8 @@ export interface AIBudgetResult {
   allocations: BudgetAllocation[];
   totalNeeds: number;
   totalWants: number;
-  totalSavings: number;
+  savingsAmount: number; // Fixed 20% of total income allocated to savings/goals
+  spendingBudget: number; // 80% of income that was distributed by AI
   fromCache: boolean;
 }
 
@@ -45,7 +46,11 @@ export type AIBudgetResponse = AIBudgetResult | AIBudgetError;
 
 // ============= CACHE CONFIGURATION =============
 
-const CACHE_KEY_PREFIX = 'budget_ai_cache_';
+// Increment this when the AI prompt or allocation logic changes significantly
+// This ensures old cached responses are invalidated
+const CACHE_VERSION = 4; // v4: Fixed prompt to ensure 100% allocation (5/8 needs, 3/8 wants of 80% spending budget)
+
+const CACHE_KEY_PREFIX = `budget_ai_v${CACHE_VERSION}_`;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface CacheEntry {
@@ -56,7 +61,6 @@ interface CacheEntry {
   }>;
   totalNeeds: number;
   totalWants: number;
-  totalSavings: number;
   timestamp: number;
 }
 
@@ -102,7 +106,11 @@ async function getCachedResult(
       return null;
     }
 
-    // Reconstruct full allocations with IDs and amounts
+    // Calculate spending budget (80% of income) and savings (20%)
+    const spendingBudget = Math.round(income * 0.8);
+    const savingsAmount = Math.round(income * 0.2);
+
+    // Reconstruct full allocations with IDs and amounts based on 80% spending budget
     const allocations: BudgetAllocation[] = entry.allocations.map((a) => {
       const category = categories.find(
         (c) => c.category_name.toLowerCase() === a.categoryName.toLowerCase()
@@ -112,7 +120,7 @@ async function getCachedResult(
         categoryName: a.categoryName,
         classification: a.classification,
         percentage: a.percentage,
-        amount: Math.round((a.percentage / 100) * income),
+        amount: Math.round((a.percentage / 100) * spendingBudget),
       };
     });
 
@@ -121,7 +129,8 @@ async function getCachedResult(
       allocations,
       totalNeeds: entry.totalNeeds,
       totalWants: entry.totalWants,
-      totalSavings: entry.totalSavings,
+      savingsAmount,
+      spendingBudget,
       fromCache: true,
     };
   } catch (error) {
@@ -148,7 +157,6 @@ async function setCachedResult(
       })),
       totalNeeds: result.totalNeeds,
       totalWants: result.totalWants,
-      totalSavings: result.totalSavings,
       timestamp: Date.now(),
     };
     await AsyncStorage.setItem(cacheKey, JSON.stringify(entry));
@@ -198,8 +206,8 @@ function validateAllocations(
     return { valid: false, error: 'Negative percentage detected' };
   }
 
-  // Check all classifications are valid
-  const validClassifications: BudgetClassification[] = ['needs', 'wants', 'savings'];
+  // Check all classifications are valid (only needs/wants, savings handled separately)
+  const validClassifications: BudgetClassification[] = ['needs', 'wants'];
   if (allocations.some((a) => !validClassifications.includes(a.classification))) {
     return { valid: false, error: 'Invalid classification detected' };
   }
@@ -211,7 +219,8 @@ function validateAllocations(
 
 /**
  * Gets AI-generated budget allocations for the given categories and income.
- * Uses 50/30/20 rule: 50% needs, 30% wants, 20% savings.
+ * Uses 80/20 split: 80% for spending (needs + wants), 20% for savings/goals.
+ * The AI distributes the 80% spending budget: 5/8 to needs (62.5%), 3/8 to wants (37.5%).
  *
  * Results are cached for 24 hours based on category names and income.
  */
@@ -227,6 +236,10 @@ export async function getBudgetAllocations(
   if (!monthlyIncome || monthlyIncome <= 0) {
     return { success: false, error: 'Invalid monthly income', code: 'VALIDATION_ERROR' };
   }
+
+  // Calculate spending budget (80%) and savings (20%)
+  const spendingBudget = Math.round(monthlyIncome * 0.8);
+  const savingsAmount = Math.round(monthlyIncome * 0.2);
 
   // Check cache first
   const cached = await getCachedResult(categories, monthlyIncome);
@@ -283,7 +296,7 @@ export async function getBudgetAllocations(
       };
     }
 
-    // Map response with amounts calculated from income
+    // Map response with amounts calculated from 80% spending budget
     const allocations: BudgetAllocation[] = data.allocations.map((a: {
       categoryId: number;
       categoryName: string;
@@ -294,7 +307,7 @@ export async function getBudgetAllocations(
       categoryName: a.categoryName,
       classification: a.classification,
       percentage: a.percentage,
-      amount: Math.round((a.percentage / 100) * monthlyIncome),
+      amount: Math.round((a.percentage / 100) * spendingBudget),
     }));
 
     // Validate response
@@ -313,7 +326,8 @@ export async function getBudgetAllocations(
       allocations,
       totalNeeds: data.totalNeeds,
       totalWants: data.totalWants,
-      totalSavings: data.totalSavings,
+      savingsAmount,
+      spendingBudget,
       fromCache: false,
     };
 

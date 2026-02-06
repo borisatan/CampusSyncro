@@ -1,50 +1,25 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Animated,
   LayoutAnimation,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  FadeIn,
+  useAnimatedProps,
+  useSharedValue,
+  withDelay,
+  withSpring,
+} from "react-native-reanimated";
+import Svg, { Circle } from "react-native-svg";
 
-import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 import { AnimatedToggle } from "../Shared/AnimatedToggle";
 
-// Animated wrapper for staggered fade-in effect
-const AnimatedRow: React.FC<{ index: number; children: React.ReactNode }> = ({
-  index,
-  children,
-}) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(10)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
-    >
-      {children}
-    </Animated.View>
-  );
-};
+// Animated SVG circle for the gauge
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface IncomeCardProps {
   income: number;
@@ -81,8 +56,26 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   );
 
   const remaining = income - totalBudgeted;
+  const allocationPercent = income > 0 ? (totalBudgeted / income) * 100 : 0;
+  const ringPercent = Math.min(allocationPercent, 100);
+  const isOverAllocated = remaining < 0;
 
-  // Sync local state when props change (e.g., after refresh)
+  // Ring animation
+  const ringSize = 72;
+  const strokeWidth = 6;
+  const radius = (ringSize - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const ringProgress = useSharedValue(0);
+
+  useEffect(() => {
+    ringProgress.value = withDelay(200, withSpring(ringPercent / 100, { damping: 18, stiffness: 80 }));
+  }, [ringPercent]);
+
+  const ringAnimatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: circumference * (1 - ringProgress.value),
+  }));
+
+  // Sync local state when props change
   useEffect(() => {
     if (!isExpanded) {
       setLocalUseDynamic(useDynamicIncome);
@@ -113,151 +106,275 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
     setIsExpanded(false);
   };
 
+  const ringColor = isOverAllocated ? '#EF4444' : ringPercent >= 90 ? '#F59E0B' : '#2A9D8F';
+
   return (
-    <View className="bg-accentBlue rounded-2xl mb-4 overflow-hidden border border-borderDark">
-      {/* Main card content */}
-      <View className="p-5">
-        {/* Header with chevron */}
-        <View className="flex-row items-center justify-between mb-1">
-          <Text className="text-white/80 text-sm">Total Monthly Income</Text>
-          <TouchableOpacity
-            onPress={handleToggleExpand}
-            className="w-8 h-8 bg-white/20 rounded-lg items-center justify-center"
-            activeOpacity={0.7}
+    <View
+      className="rounded-2xl mb-4 overflow-hidden"
+      style={{
+        backgroundColor: isDarkMode ? '#151C2E' : '#F8FAFC',
+        borderWidth: 1,
+        borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+      }}
+    >
+      {/* Main card — compact gauge layout */}
+      <TouchableOpacity
+        onPress={handleToggleExpand}
+        activeOpacity={0.8}
+        className="px-4 py-4"
+      >
+        <View className="flex-row items-center">
+          {/* Progress Ring */}
+          <View className="mr-4" style={{ width: ringSize, height: ringSize }}>
+            <Svg width={ringSize} height={ringSize}>
+              {/* Track */}
+              <Circle
+                cx={ringSize / 2}
+                cy={ringSize / 2}
+                r={radius}
+                stroke={isDarkMode ? '#1E293B' : '#E2E8F0'}
+                strokeWidth={strokeWidth}
+                fill="none"
+              />
+              {/* Progress */}
+              <AnimatedCircle
+                cx={ringSize / 2}
+                cy={ringSize / 2}
+                r={radius}
+                stroke={ringColor}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                animatedProps={ringAnimatedProps}
+                transform={`rotate(-90, ${ringSize / 2}, ${ringSize / 2})`}
+              />
+            </Svg>
+            {/* Center text */}
+            <View className="absolute inset-0 items-center justify-center">
+              <Text
+                style={{ fontSize: 14, fontWeight: '700', color: ringColor }}
+              >
+                {Math.round(allocationPercent)}%
+              </Text>
+            </View>
+          </View>
+
+          {/* Income info */}
+          <View className="flex-1">
+            <Text
+              className="text-xs mb-1 tracking-wider uppercase"
+              style={{ color: isDarkMode ? '#8B99AE' : '#94A3B8', letterSpacing: 1 }}
+            >
+              Monthly Income
+            </Text>
+            <Text
+              style={{
+                fontSize: 26,
+                fontWeight: '700',
+                color: isDarkMode ? '#F1F5F9' : '#0F172A',
+                letterSpacing: -0.5,
+              }}
+            >
+              {formatAmount(income, currencySymbol)}
+            </Text>
+          </View>
+
+          {/* Chevron */}
+          <View
+            className="w-8 h-8 rounded-full items-center justify-center"
+            style={{ backgroundColor: isDarkMode ? '#1E293B' : '#E2E8F0' }}
           >
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
-              size={18}
-              color="#FFFFFF"
+              size={16}
+              color={isDarkMode ? '#64748B' : '#94A3B8'}
             />
-          </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Income amount */}
-        <View className="flex-row items-center mb-4">
-          <Text style={{ fontSize: 32, fontWeight: "700", color: "#FFFFFF" }}>
-            {currencySymbol}
-          </Text>
-          <AnimatedRollingNumber
-            value={income}
-            spinningAnimationConfig={{ duration: 600 }}
-            textStyle={{ fontSize: 32, fontWeight: "700", color: "#FFFFFF" }}
-            toFixed={0}
-          />
-        </View>
-
-        {/* Allocated / Remaining row */}
-        <View className="flex-row">
-          <View className="flex-1">
-            <Text className="text-white/60 text-xs mb-0.5">Allocated</Text>
-            <Text className="text-white text-lg font-semibold">
+        {/* Allocated / Remaining stats */}
+        <View className="flex-row mt-4" style={{ gap: 12 }}>
+          <View
+            className="flex-1 rounded-xl px-3 py-2.5"
+            style={{ backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }}
+          >
+            <Text
+              className="text-xs mb-0.5"
+              style={{ color: isDarkMode ? '#64748B' : '#94A3B8' }}
+            >
+              Allocated
+            </Text>
+            <Text
+              className="font-semibold"
+              style={{ fontSize: 16, color: isDarkMode ? '#CBD5E1' : '#334155' }}
+            >
               {formatAmount(totalBudgeted, currencySymbol)}
             </Text>
           </View>
-          <View className="flex-1">
-            <Text className="text-white/60 text-xs mb-0.5">Remaining</Text>
+          <View
+            className="flex-1 rounded-xl px-3 py-2.5"
+            style={{
+              backgroundColor: isOverAllocated
+                ? (isDarkMode ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.06)')
+                : (isDarkMode ? '#1E293B' : '#F1F5F9'),
+            }}
+          >
             <Text
-              className="text-lg font-semibold"
-              style={{ color: remaining < 0 ? "#fca5a5" : "#FFFFFF" }}
+              className="text-xs mb-0.5"
+              style={{
+                color: isOverAllocated ? '#EF4444' : (isDarkMode ? '#64748B' : '#94A3B8'),
+              }}
+            >
+              {isOverAllocated ? 'Over Budget' : 'Remaining'}
+            </Text>
+            <Text
+              className="font-semibold"
+              style={{
+                fontSize: 16,
+                color: isOverAllocated ? '#EF4444' : (isDarkMode ? '#2A9D8F' : '#0D9488'),
+              }}
             >
               {formatAmount(remaining, currencySymbol)}
             </Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
 
-      {/* Expanded Editor Section - same blue bg */}
+      {/* Expanded Editor Section */}
       {isExpanded && (
-        <View className="border-t border-white/15 px-5 pt-5 pb-5 bg-surfaceDark rounded-b-2xl">
+        <Animated.View
+          entering={FadeIn.duration(250)}
+          className="px-4 pb-4"
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+            paddingTop: 16,
+          }}
+        >
           {/* Dynamic Income Toggle */}
-          <AnimatedRow index={0}>
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-1 mr-3">
-                <Text className="text-white font-medium">
-                  Use Dynamic Income
-                </Text>
-                <Text className="text-white/50 text-xs mt-0.5">
-                  Calculate based on recent transactions
-                </Text>
-              </View>
-              <AnimatedToggle
-                value={localUseDynamic}
-                onValueChange={setLocalUseDynamic}
-                activeColor="rgba(255,255,255,0.5)"
-                inactiveColor="rgba(255,255,255,0.2)"
-              />
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-1 mr-3">
+              <Text
+                className="font-medium"
+                style={{ color: isDarkMode ? '#E2E8F0' : '#1E293B' }}
+              >
+                Dynamic Income
+              </Text>
+              <Text
+                className="text-xs mt-0.5"
+                style={{ color: isDarkMode ? '#7C8CA0' : '#94A3B8' }}
+              >
+                Auto-calculate from transactions
+              </Text>
             </View>
-          </AnimatedRow>
+            <AnimatedToggle
+              value={localUseDynamic}
+              onValueChange={setLocalUseDynamic}
+              activeColor="#2A9D8F"
+              inactiveColor={isDarkMode ? '#334155' : '#CBD5E1'}
+            />
+          </View>
 
           {/* Manual Income Input */}
           {!localUseDynamic && (
-            <AnimatedRow index={1}>
-              <View className="mb-4">
-                <Text className="text-white/80 text-sm mb-2">
-                  Monthly Income Amount
-                </Text>
-                <View
-                  className="flex-row items-center px-4 py-3 rounded-xl border border-white/20"
-                  style={{ backgroundColor: "rgba(0,0,0,0.15)" }}
+            <Animated.View entering={FadeIn.duration(200)} className="mb-4">
+              <Text
+                className="text-xs mb-2 uppercase tracking-wider"
+                style={{ color: isDarkMode ? '#8B99AE' : '#94A3B8', letterSpacing: 0.5 }}
+              >
+                Monthly Amount
+              </Text>
+              <View
+                className="flex-row items-center px-4 h-12 rounded-xl"
+                style={{
+                  backgroundColor: isDarkMode ? '#0F172A' : '#F1F5F9',
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+                }}
+              >
+                <Text
+                  className="text-lg mr-2"
+                  style={{ color: isDarkMode ? '#7C8CA0' : '#94A3B8' }}
                 >
-                  <Text className="text-white/60 text-lg mr-2">
-                    {currencySymbol}
-                  </Text>
-                  <TextInput
-                    value={localManualIncome}
-                    onChangeText={setLocalManualIncome}
-                    placeholder="0"
-                    placeholderTextColor="rgba(255,255,255,0.3)"
-                    keyboardType="decimal-pad"
-                    className="flex-1 text-lg text-white"
-                  />
-                </View>
+                  {currencySymbol}
+                </Text>
+                <TextInput
+                  value={localManualIncome}
+                  onChangeText={setLocalManualIncome}
+                  placeholder="0"
+                  placeholderTextColor={isDarkMode ? '#334155' : '#CBD5E1'}
+                  keyboardType="decimal-pad"
+                  className="flex-1 text-lg"
+                  style={{ color: isDarkMode ? '#F1F5F9' : '#0F172A' }}
+                />
               </View>
-            </AnimatedRow>
+            </Animated.View>
           )}
 
           {/* Dynamic Income Display */}
           {localUseDynamic && (
-            <AnimatedRow index={1}>
-              <View
-                className="mb-4 p-4 rounded-xl border border-white/20"
-                style={{ backgroundColor: "rgba(0,0,0,0.15)" }}
+            <Animated.View
+              entering={FadeIn.duration(200)}
+              className="mb-4 p-4 rounded-xl"
+              style={{
+                backgroundColor: isDarkMode ? '#0F172A' : '#F1F5F9',
+                borderWidth: 1,
+                borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+              }}
+            >
+              <Text
+                className="text-xs uppercase tracking-wider"
+                style={{ color: isDarkMode ? '#8B99AE' : '#94A3B8', letterSpacing: 0.5 }}
               >
-                <Text className="text-white/60 text-sm">
-                  This Month's Income
-                </Text>
-                <Text className="text-white text-2xl font-bold mt-1">
-                  {formatAmount(dynamicIncome, currencySymbol)}
-                </Text>
-                <Text className="text-white/40 text-xs mt-2 italic">
-                  Based on transactions in the Income category this month
-                </Text>
-              </View>
-            </AnimatedRow>
+                This Month
+              </Text>
+              <Text
+                className="text-2xl font-bold mt-1"
+                style={{ color: isDarkMode ? '#F1F5F9' : '#0F172A' }}
+              >
+                {formatAmount(dynamicIncome, currencySymbol)}
+              </Text>
+              <Text
+                className="text-xs mt-1.5 italic"
+                style={{ color: isDarkMode ? '#64748B' : '#94A3B8' }}
+              >
+                Based on Income transactions this month
+              </Text>
+            </Animated.View>
           )}
 
           {/* Cancel / Save buttons */}
-          <AnimatedRow index={2}>
-            <View className="flex-row gap-3 mt-1">
-              <TouchableOpacity
-                onPress={handleCancel}
-                className="flex-1 py-3 rounded-xl items-center justify-center bg-surfaceDark border border-borderDark"
-                activeOpacity={0.7}
+          <View className="flex-row" style={{ gap: 10 }}>
+            <TouchableOpacity
+              onPress={handleCancel}
+              className="flex-1 py-3 rounded-xl items-center justify-center"
+              style={{
+                backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9',
+                borderWidth: 1,
+                borderColor: isDarkMode ? '#334155' : '#E2E8F0',
+              }}
+              activeOpacity={0.7}
+            >
+              <Text
+                className="font-semibold text-base"
+                style={{ color: isDarkMode ? '#94A3B8' : '#64748B' }}
               >
-                <Text className="text-white font-semibold text-base">
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleSave}
-                className="flex-1 py-3 rounded-xl items-center justify-center bg-accentBlue"
-                activeOpacity={0.7}
-              >
-                <Text className="text-white font-semibold text-base">Save</Text>
-              </TouchableOpacity>
-            </View>
-          </AnimatedRow>
-        </View>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSave}
+              className="flex-1 py-3 rounded-xl items-center justify-center"
+              style={{ backgroundColor: '#2A9D8F' }}
+              activeOpacity={0.7}
+            >
+              <Text className="font-semibold text-base" style={{ color: '#FFFFFF' }}>
+                Save
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       )}
     </View>
   );

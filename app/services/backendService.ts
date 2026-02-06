@@ -1,4 +1,4 @@
-import { CategoryAggregation, CategoryIconInfo, PeriodSavingsResult, Transaction } from "../types/types";
+import { CategoryAggregation, CategoryIconInfo, Goal, GoalContribution, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
 
 export const createTransaction = async (payload: any) => {
@@ -586,64 +586,104 @@ export const fetchSpendingByCategory = async (
   return result;
 };
 
-// Savings & Investment Tracking (balance-based calculation)
+// ============ Savings Goals ============
 
-export const fetchSavingsForPeriod = async (
-  startDate: Date,
-  _endDate: Date
-): Promise<{ savings: number; investments: number; byAccount: Record<string, number> }> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  const periodStart = startDate.toISOString().split('T')[0];
-
-  // Ensure snapshots exist for this period
-  const { error: snapshotError } = await supabase.rpc('ensure_period_snapshots', {
-    p_user_id: user.id,
-    p_period_start: periodStart
-  });
-
-  if (snapshotError) {
-    console.error('Error ensuring snapshots:', snapshotError);
-    // Fall back to returning zeros if RPC not available
-    return { savings: 0, investments: 0, byAccount: {} };
-  }
-
-  // Fetch calculated savings using balance difference
-  const { data, error } = await supabase.rpc('fetch_period_savings', {
-    p_user_id: user.id,
-    p_period_start: periodStart
-  });
-
-  if (error) {
-    console.error('Error fetching period savings:', error);
-    return { savings: 0, investments: 0, byAccount: {} };
-  }
-
-  let savings = 0;
-  let investments = 0;
-  const byAccount: Record<string, number> = {};
-
-  (data as PeriodSavingsResult[] | null)?.forEach((row) => {
-    byAccount[row.account_name] = row.saved_this_period;
-    if (row.account_type === 'savings') {
-      savings += row.saved_this_period;
-    } else if (row.account_type === 'investment') {
-      investments += row.saved_this_period;
-    }
-  });
-
-  return { savings, investments, byAccount };
+export const fetchGoals = async (): Promise<Goal[]> => {
+  const { data, error } = await supabase
+    .from('Goals')
+    .select('*')
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
 };
 
-export const updateAccountSavingsGoal = async (
-  accountId: number,
-  goalAmount: number | null
+export const fetchGoalsByAccount = async (accountId: number): Promise<Goal[]> => {
+  const { data, error } = await supabase
+    .from('Goals')
+    .select('*')
+    .eq('account_id', accountId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+};
+
+export const createGoal = async (payload: {
+  user_id: string;
+  account_id: number;
+  name: string;
+  target_amount: number;
+  color?: string;
+  icon?: string;
+}): Promise<Goal> => {
+  const { data, error } = await supabase
+    .from('Goals')
+    .insert([payload])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateGoal = async (
+  goalId: number,
+  updates: Partial<Pick<Goal, 'name' | 'target_amount' | 'color' | 'icon'>>
 ): Promise<void> => {
   const { error } = await supabase
-    .from('Accounts')
-    .update({ monthly_savings_goal: goalAmount })
-    .eq('id', accountId);
-
+    .from('Goals')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', goalId);
   if (error) throw error;
+};
+
+export const deleteGoal = async (goalId: number): Promise<void> => {
+  const { error } = await supabase
+    .from('Goals')
+    .delete()
+    .eq('id', goalId);
+  if (error) throw error;
+};
+
+export const contributeToGoal = async (payload: {
+  goal_id: number;
+  user_id: string;
+  amount: number;
+  source_account_id: number;
+  source_account_name: string;
+  destination_account_name: string;
+}): Promise<void> => {
+  // 1. Create the transfer (updates account balances)
+  await createTransfer({
+    from_account: payload.source_account_name,
+    to_account: payload.destination_account_name,
+    amount: payload.amount,
+    user_id: payload.user_id,
+  });
+
+  // 2. Record the contribution
+  const { error: contribError } = await supabase
+    .from('GoalContributions')
+    .insert([{
+      goal_id: payload.goal_id,
+      user_id: payload.user_id,
+      amount: payload.amount,
+      source_account_id: payload.source_account_id,
+    }]);
+  if (contribError) throw contribError;
+
+  // 3. Update goal's current_amount
+  const { error: updateError } = await supabase.rpc('increment_goal_amount', {
+    p_goal_id: payload.goal_id,
+    p_amount: payload.amount,
+  });
+  if (updateError) throw updateError;
+};
+
+export const fetchGoalContributions = async (goalId: number): Promise<GoalContribution[]> => {
+  const { data, error } = await supabase
+    .from('GoalContributions')
+    .select('*')
+    .eq('goal_id', goalId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
 };
