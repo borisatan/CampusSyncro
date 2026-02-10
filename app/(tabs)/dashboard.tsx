@@ -1,6 +1,5 @@
 import { useFont } from "@shopify/react-native-skia";
-import { useRouter } from "expo-router";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,8 +18,10 @@ import { useLock } from "../context/LockContext";
 import { useTheme } from "../context/ThemeContext";
 import { useBudgetsData } from "../hooks/useBudgetsData";
 import { useDashboardData } from "../hooks/useDashboardData";
+import { useSavingsProgress } from "../hooks/useSavingsProgress";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useDashboardCategoriesStore } from "../store/useDashboardCategoriesStore";
+import { useIncomeStore } from "../store/useIncomeStore";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -54,6 +55,13 @@ export default function Dashboard() {
   } = useBudgetsData();
   const { pinnedCategoryIds, loadPinnedCategories } =
     useDashboardCategoriesStore();
+  const { showSavingsOnDashboard } = useIncomeStore();
+  const {
+    target: savingsTarget,
+    saved: savingsSaved,
+    percentage: savingsPercentage,
+    refresh: refreshSavings,
+  } = useSavingsProgress();
 
   const filteredCategoryBudgets = useMemo(() => {
     if (pinnedCategoryIds.length === 0) return categoryBudgets;
@@ -62,13 +70,23 @@ export default function Dashboard() {
     );
   }, [categoryBudgets, pinnedCategoryIds]);
 
+  const savingsData = useMemo(() => {
+    if (!showSavingsOnDashboard || savingsTarget <= 0) return null;
+    return {
+      target: savingsTarget,
+      saved: savingsSaved,
+      percentage: savingsPercentage,
+    };
+  }, [showSavingsOnDashboard, savingsTarget, savingsSaved, savingsPercentage]);
+
   const { registerDashboardRefresh } = useDataRefresh();
 
   const refreshAll = useCallback(async () => {
     await loadCurrency();
     refreshData();
     refreshBudgets();
-  }, [loadCurrency, refreshData, refreshBudgets]);
+    refreshSavings();
+  }, [loadCurrency, refreshData, refreshBudgets, refreshSavings]);
 
   useEffect(() => {
     loadPinnedCategories();
@@ -84,10 +102,11 @@ export default function Dashboard() {
     useCallback(() => {
       if (hasMountedRef.current) {
         refreshBudgets();
+        refreshSavings();
       } else {
         hasMountedRef.current = true;
       }
-    }, [refreshBudgets])
+    }, [refreshBudgets, refreshSavings]),
   );
 
   const interFont = useFont(
@@ -134,18 +153,18 @@ export default function Dashboard() {
             onOffsetChange={setOffset}
           />
 
-          <CategoryDonut
-            aggregates={categoriesAggregated}
-            categories={categories}
-            timeFrame={timeFrame}
-            isUnlocked={isUnlocked}
-          />
-
           <BudgetHealthCard
             categoryBudgets={filteredCategoryBudgets}
             allCategoryBudgets={categoryBudgets}
             currencySymbol={currencySymbol}
             isLoading={budgetsLoading}
+            isUnlocked={isUnlocked}
+            savingsData={savingsData}
+          />
+          <CategoryDonut
+            aggregates={categoriesAggregated}
+            categories={categories}
+            timeFrame={timeFrame}
             isUnlocked={isUnlocked}
           />
 

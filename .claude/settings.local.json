@@ -16,7 +16,10 @@
       "Bash(findstr:*)",
       "Bash(npx expo install:*)",
       "Bash(dir:*)",
-      "Bash(del \"c:\\\\Program Files\\\\Code\\\\Personal Finance App\\\\Perfin\\\\app\\\\components\\\\HomePage\\\\SavingsCard.tsx\")"
+      "Bash(del \"c:\\\\Program Files\\\\Code\\\\Personal Finance App\\\\Perfin\\\\app\\\\components\\\\HomePage\\\\SavingsCard.tsx\")",
+      "Bash(ls:*)",
+      "Skill(frontend-design)",
+      "Bash(grep:*)"
     ]
   }
 }

@@ -13,6 +13,7 @@ import Animated, {
   FadeIn,
 } from 'react-native-reanimated';
 
+import { useBudgetStore } from '../../store/useBudgetStore';
 import { Category, CategoryBudgetStatus } from '../../types/types';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -51,10 +52,17 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   expanded,
   onToggleExpand,
 }) => {
-  const hasBudget = item != null;
-  const budget_amount = item?.budget_amount ?? 0;
-  const spent = item?.spent ?? 0;
-  const percentage_used = item?.percentage_used ?? 0;
+  // Subscribe to this category's budget from the store for reactive updates
+  const storeBudget = useBudgetStore((state) =>
+    state.categoryBudgets.find((cb) => cb.category.id === category.id)
+  );
+
+  // Use store data if available, otherwise fall back to prop
+  const budgetData = storeBudget ?? item;
+  const hasBudget = budgetData != null;
+  const budget_amount = budgetData?.budget_amount ?? 0;
+  const spent = budgetData?.spent ?? 0;
+  const percentage_used = budgetData?.percentage_used ?? 0;
   const [amountText, setAmountText] = useState(budget_amount > 0 ? budget_amount.toString() : '');
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('fixed');
   const [percentText, setPercentText] = useState('');
@@ -166,13 +174,13 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
     ? '#EF4444'
     : isWarning
     ? '#F59E0B'
-    : '#2A9D8F';
+    : '#22c55e';
 
   const statusColor = isOver
     ? '#FCA5A5'
     : isWarning
     ? '#FCD34D'
-    : '#5EEAD4';
+    : '#22c55e';
 
   return (
     <Pressable onPress={onToggleExpand}>
@@ -379,15 +387,10 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
               {hasBudget && (
                 <TouchableOpacity
                   onPress={handleClear}
-                  className="flex-1 rounded-xl py-3 items-center"
-                  style={{
-                    backgroundColor: 'rgba(239,68,68,0.1)',
-                    borderWidth: 1,
-                    borderColor: 'rgba(239,68,68,0.2)',
-                  }}
+                  className="flex-1 rounded-xl py-3 items-center bg-accentRed"
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: '#F87171', fontWeight: '600', fontSize: 14 }}>Remove</Text>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 14 }}>Remove</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity

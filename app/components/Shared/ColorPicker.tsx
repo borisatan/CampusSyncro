@@ -25,6 +25,8 @@ const PRESET_COLORS = [
   '#A855F7', // Purple
   '#EC4899', // Pink
   '#F43F5E', // Rose
+  '#F97316', // Orange
+  '#F59E0B', // Amber
   '#6B7280', // Gray
   '#1F2937', // Dark Gray
 ];

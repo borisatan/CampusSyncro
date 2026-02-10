@@ -31,6 +31,7 @@ const availableIcons = [
   'card-outline', 'cash-outline', 'pricetag-outline', 'pricetags-outline', 'receipt-outline',
   'shirt-outline', 'bag-outline', 'glasses-outline', 'watch-outline', 'diamond-outline',
   'wine-outline', 'beer-outline', 'pizza-outline', 'ice-cream-outline', 'reorder-three-outline',
+  'musical-notes-outline',
 ];
 
 // Default color for new categories
@@ -306,7 +307,7 @@ export default function CategoryEditor() {
               onPress={handleDelete}
               disabled={isProcessing}
               activeOpacity={0.8}
-              className="flex-1 rounded-xl py-4 items-center bg-accentRed border border-accentRed"
+              className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-accentRed"
             >
               <Text className="text-white font-bold text-lg">
                 Delete
@@ -318,7 +319,7 @@ export default function CategoryEditor() {
             onPress={handleSave}
             disabled={isProcessing || !categoryName.trim()}
             activeOpacity={0.8}
-            className={`flex-1 rounded-xl py-4 items-center border ${
+            className={`flex-1 rounded-xl py-3 items-center border ${
               isProcessing || !categoryName.trim()
                 ? 'bg-gray-400 border-gray-400'
                 : 'bg-accentTeal border-accentTeal'

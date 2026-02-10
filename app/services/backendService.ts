@@ -143,6 +143,29 @@ export const fetchCategories = async () => {
     return data ?? [];
 };
 
+export const bulkCreateCategories = async (
+  userId: string,
+  categories: Array<{
+    category_name: string;
+    icon: string;
+    color: string;
+    budget_amount?: number | null;
+  }>
+) => {
+  const payload = categories.map((cat, index) => ({
+    ...cat,
+    user_id: userId,
+    sort_order: index,
+  }));
+
+  const { data, error } = await supabase
+    .from('Categories')
+    .insert(payload)
+    .select();
+
+  if (error) throw error;
+  return data;
+};
 
 export const fetchAccounts = async () => {
   const { data, error } = await supabase.from("Accounts").select("*");
@@ -686,4 +709,38 @@ export const fetchGoalContributions = async (goalId: number): Promise<GoalContri
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data ?? [];
+};
+
+export const fetchMonthlySavingsProgress = async (
+  startDate: Date,
+  endDate: Date
+): Promise<number> => {
+  const { data, error } = await supabase
+    .from('goalcontributions')
+    .select('amount')
+    .gte('created_at', startDate.toISOString())
+    .lt('created_at', endDate.toISOString());
+
+  if (error) throw error;
+
+  const total = data?.reduce((sum, c) => sum + (c.amount ?? 0), 0) ?? 0;
+  return total;
+};
+
+// Record a savings transfer (without requiring a specific goal)
+// This allows any transfer to a savings account to count toward monthly savings progress
+export const recordSavingsTransfer = async (payload: {
+  user_id: string;
+  amount: number;
+  source_account_id: number;
+}): Promise<void> => {
+  const { error } = await supabase
+    .from('GoalContributions')
+    .insert([{
+      goal_id: null,
+      user_id: payload.user_id,
+      amount: payload.amount,
+      source_account_id: payload.source_account_id,
+    }]);
+  if (error) throw error;
 };

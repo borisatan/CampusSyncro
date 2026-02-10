@@ -22,7 +22,7 @@ export const BudgetProgressBar: React.FC<BudgetProgressBarProps> = ({
   const isOverBudget = percentage > 100;
 
   return (
-    <View className="h-3 bg-gray-700 rounded-full overflow-hidden relative border border-slate-700">
+    <View className="h-3 bg-gray-700 rounded-full overflow-hidden relative">
       {/* Main progress bar */}
       <View
         className="h-full rounded-full"

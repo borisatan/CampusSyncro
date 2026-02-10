@@ -5,6 +5,7 @@ import {
   Fingerprint,
   Globe,
   LogOut,
+  RotateCcw,
   User,
   Wallet
 } from "lucide-react-native";
@@ -17,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLock } from '../context/LockContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrencyStore } from '../store/useCurrencyStore';
+import { useOnboardingStore } from '../store/useOnboardingStore';
 import { supabase } from '../utils/supabase';
 
 const currencies = [
@@ -38,6 +40,7 @@ export default function ProfileScreen() {
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
+  const { resetOnboarding } = useOnboardingStore();
 
   // Fetch User Data and Currency preference on Mount
   useEffect(() => {
@@ -91,6 +94,11 @@ export default function ProfileScreen() {
 
   const handleExportCSV = () => {
     console.log("CSV Export triggered");
+  };
+
+  const handleTestOnboarding = () => {
+    resetOnboarding();
+    router.replace('/(onboarding)/emotional-hook');
   };
 
   // Styling Variables
@@ -211,6 +219,26 @@ export default function ProfileScreen() {
               inactiveColor="#3f3f46"
             />
           </View>
+        </View>
+
+        {/* Developer Section */}
+        <View className="mb-8">
+          <Text className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}>
+            Developer
+          </Text>
+          <Pressable
+            onPress={handleTestOnboarding}
+            className={`flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-amber-500/20 rounded-lg items-center justify-center mr-3">
+              <RotateCcw color="#f59e0b" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>Test Onboarding</Text>
+              <Text className={`text-sm ${textSecondary}`}>Reset and restart onboarding flow</Text>
+            </View>
+            <ChevronRight color={isDarkMode ? "#9CA3AF" : "#4B5563"} size={20} />
+          </Pressable>
         </View>
 
         {/* Account Section */}

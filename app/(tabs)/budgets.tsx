@@ -1,39 +1,48 @@
-import { Ionicons } from '@expo/vector-icons';
-import { MotiView } from 'moti';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Modal,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import { PiggyBank } from "lucide-react-native";
+import { MotiView } from "moti";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import DraggableFlatList, {
-  ScaleDecorator,
   RenderItemParams,
-} from 'react-native-draggable-flatlist';
-import { SafeAreaView } from 'react-native-safe-area-context';
+  ScaleDecorator,
+} from "react-native-draggable-flatlist";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AIBudgetPreviewModal } from '../components/BudgetsPage/AIBudgetPreviewModal';
-import { CategoryBudgetRow } from '../components/BudgetsPage/CategoryBudgetRow';
-import { IncomeCard } from '../components/BudgetsPage/IncomeCard';
-import { GoalsOverviewCard } from '../components/HomePage/GoalsOverviewCard';
-import { BudgetAllocation, getBudgetAllocations } from '../services/budgetAIService';
-import { useTheme } from '../context/ThemeContext';
-import { useBudgetsData } from '../hooks/useBudgetsData';
-import { useDataRefresh } from '../context/DataRefreshContext';
-import { updateCategoryBudgetAmount, updateCategoryBudgetPercentages, updateCategoriesOrder } from '../services/backendService';
-import { useAccountsStore } from '../store/useAccountsStore';
-import { useCategoriesStore } from '../store/useCategoriesStore';
-import { useCurrencyStore } from '../store/useCurrencyStore';
-import { useDashboardCategoriesStore } from '../store/useDashboardCategoriesStore';
-import { useIncomeStore } from '../store/useIncomeStore';
-import { Category, CategoryBudgetStatus } from '../types/types';
+import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
+import { CategoryBudgetRow } from "../components/BudgetsPage/CategoryBudgetRow";
+import { IncomeCard } from "../components/BudgetsPage/IncomeCard";
+import { SavingsProgressCard } from "../components/BudgetsPage/SavingsProgressCard";
+import { useSavingsProgress } from "../hooks/useSavingsProgress";
+import { useDataRefresh } from "../context/DataRefreshContext";
+import { useTheme } from "../context/ThemeContext";
+import { useBudgetsData } from "../hooks/useBudgetsData";
+import {
+  updateCategoriesOrder,
+  updateCategoryBudgetAmount,
+  updateCategoryBudgetPercentages,
+} from "../services/backendService";
+import {
+  BudgetAllocation,
+  getBudgetAllocations,
+} from "../services/budgetAIService";
+import { useCategoriesStore } from "../store/useCategoriesStore";
+import { useCurrencyStore } from "../store/useCurrencyStore";
+import { useDashboardCategoriesStore } from "../store/useDashboardCategoriesStore";
+import { useIncomeStore } from "../store/useIncomeStore";
+import { Category, CategoryBudgetStatus } from "../types/types";
 
 interface CategoryListItem {
+  type: 'category';
   category: Category;
   budgetStatus: CategoryBudgetStatus | null;
 }
+
+interface SavingsListItem {
+  type: 'savings';
+}
+
+type BudgetListItem = CategoryListItem | SavingsListItem;
 
 export default function BudgetsScreen() {
   const { isDarkMode } = useTheme();
@@ -49,23 +58,38 @@ export default function BudgetsScreen() {
     upsertCategoryBudget,
   } = useBudgetsData();
   const { currencySymbol } = useCurrencyStore();
-  const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
-  const { categories, updateCategoryOptimistic, reorderCategories } = useCategoriesStore();
-  const { pinnedCategoryIds, togglePinnedCategory } = useDashboardCategoriesStore();
-  const { accounts } = useAccountsStore();
-  const { refreshDashboard, registerBudgetsRefresh, registerCategoriesRefresh } = useDataRefresh();
+  const { useDynamicIncome, manualIncome, saveIncomeSettings, setSavingsTarget, savingsSortOrder, setSavingsSortOrder, showSavingsOnDashboard, toggleShowSavingsOnDashboard } =
+    useIncomeStore();
+  const { target: savingsTarget, saved: savingsSaved, percentage: savingsPercentage } =
+    useSavingsProgress();
+  const { categories, updateCategoryOptimistic, reorderCategories } =
+    useCategoriesStore();
+  const { pinnedCategoryIds, togglePinnedCategory } =
+    useDashboardCategoriesStore();
+    const {
+    refreshDashboard,
+    registerBudgetsRefresh,
+    registerCategoriesRefresh,
+  } = useDataRefresh();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
-  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null);
+  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(
+    null,
+  );
   const [isReorderMode, setIsReorderMode] = useState(false);
 
   // AI Budget state — single modal with two views: 'help' and 'preview'
-  const [aiModalView, setAIModalView] = useState<'help' | 'preview' | null>(null);
+  const [aiModalView, setAIModalView] = useState<"help" | "preview" | null>(
+    null,
+  );
   const [aiLoading, setAILoading] = useState(false);
   const [aiError, setAIError] = useState<string | null>(null);
-  const [aiAllocations, setAIAllocations] = useState<BudgetAllocation[] | null>(null);
+  const [aiAllocations, setAIAllocations] = useState<BudgetAllocation[] | null>(
+    null,
+  );
   const [aiFromCache, setAIFromCache] = useState(false);
   const [aiSpendingBudget, setAISpendingBudget] = useState(0);
   const [aiSavingsAmount, setAISavingsAmount] = useState(0);
+  const [aiApplying, setAIApplying] = useState(false);
 
   const handleToggleExpand = useCallback((categoryId: number) => {
     setExpandedCategoryId((prev) => (prev === categoryId ? null : categoryId));
@@ -74,9 +98,14 @@ export default function BudgetsScreen() {
   useEffect(() => {
     registerBudgetsRefresh(refresh);
     registerCategoriesRefresh(loadCategories);
-  }, [registerBudgetsRefresh, refresh, registerCategoriesRefresh, loadCategories]);
+  }, [
+    registerBudgetsRefresh,
+    refresh,
+    registerCategoriesRefresh,
+    loadCategories,
+  ]);
 
-  const screenBg = isDarkMode ? '#0A0F1F' : '#FFFFFF';
+  const screenBg = isDarkMode ? "#0A0F1F" : "#FFFFFF";
 
   const handleSaveIncome = async (useDynamic: boolean, income: number) => {
     await saveIncomeSettings(useDynamic, income);
@@ -99,23 +128,28 @@ export default function BudgetsScreen() {
         refreshDashboard();
       })
       .catch((error) => {
-        console.error('Error saving budget amount:', error);
+        console.error("Error saving budget amount:", error);
         refresh();
       });
   };
 
   const handleSetBudgetWithAI = useCallback(async () => {
-    const budgetCategories = categories.filter((cat) => cat.category_name !== 'Income');
+    const budgetCategories = categories.filter(
+      (cat) => cat.category_name !== "Income",
+    );
 
     // Switch from help view to preview view within the same modal — no flicker
-    setAIModalView('preview');
+    setAIModalView("preview");
     setAILoading(true);
     setAIError(null);
     setAIAllocations(null);
 
     const result = await getBudgetAllocations(
-      budgetCategories.map((c) => ({ id: c.id, category_name: c.category_name })),
-      monthlyIncome
+      budgetCategories.map((c) => ({
+        id: c.id,
+        category_name: c.category_name,
+      })),
+      monthlyIncome,
     );
 
     setAILoading(false);
@@ -126,13 +160,14 @@ export default function BudgetsScreen() {
       setAISpendingBudget(result.spendingBudget);
       setAISavingsAmount(result.savingsAmount);
     } else {
-      setAIError('error' in result ? result.error : 'Unknown error occurred');
+      setAIError("error" in result ? result.error : "Unknown error occurred");
     }
   }, [categories, monthlyIncome]);
 
   const handleApplyAIBudget = useCallback(async () => {
     if (!aiAllocations) return;
 
+    setAIApplying(true);
     try {
       const allocations = aiAllocations.map((a) => ({
         categoryId: a.categoryId,
@@ -141,6 +176,8 @@ export default function BudgetsScreen() {
       }));
 
       await updateCategoryBudgetPercentages(allocations);
+      await setSavingsTarget(aiSavingsAmount);
+      await loadCategories(); // Reload categories to get updated budget amounts
       await refresh();
       refreshDashboard();
 
@@ -148,10 +185,12 @@ export default function BudgetsScreen() {
       setAIAllocations(null);
       setAIError(null);
     } catch (error) {
-      console.error('Error applying AI budget:', error);
-      setAIError('Failed to save budget. Please try again.');
+      console.error("Error applying AI budget:", error);
+      setAIError("Failed to save budget. Please try again.");
+    } finally {
+      setAIApplying(false);
     }
-  }, [aiAllocations, refresh, refreshDashboard]);
+  }, [aiAllocations, aiSavingsAmount, loadCategories, refresh, refreshDashboard, setSavingsTarget]);
 
   const handleRetryAI = useCallback(() => {
     handleSetBudgetWithAI();
@@ -164,37 +203,73 @@ export default function BudgetsScreen() {
     setAILoading(false);
   }, []);
 
-  const handleDragEnd = useCallback(async ({ data }: { data: CategoryListItem[] }) => {
-    const reorderedCategories = data.map((item, index) => ({
-      ...item.category,
-      sort_order: index,
-    }));
-    reorderCategories(reorderedCategories);
+  const handleDragEnd = useCallback(
+    async ({ data }: { data: BudgetListItem[] }) => {
+      // Find the new position of savings card
+      const savingsIndex = data.findIndex(item => item.type === 'savings');
+      if (savingsIndex !== -1) {
+        setSavingsSortOrder(savingsIndex);
+      }
 
-    try {
-      await updateCategoriesOrder(
-        reorderedCategories.map((cat) => ({ id: cat.id, sort_order: cat.sort_order! }))
-      );
-    } catch (error) {
-      console.error('Error saving category order:', error);
-      refresh();
-    }
-  }, [reorderCategories, refresh]);
+      // Extract and reorder categories (adjust indices for savings position)
+      const categoryItems = data.filter((item): item is CategoryListItem => item.type === 'category');
+      const reorderedCategories = categoryItems.map((item, index) => {
+        // Calculate actual sort order accounting for savings card position
+        let sortOrder = index;
+        if (savingsIndex !== -1 && index >= savingsIndex) {
+          sortOrder = index + 1;
+        }
+        return {
+          ...item.category,
+          sort_order: data.indexOf(item),
+        };
+      });
+      reorderCategories(reorderedCategories);
 
-  const { allCategoryItems, hasCustomOrder } = useMemo(() => {
+      try {
+        await updateCategoriesOrder(
+          reorderedCategories.map((cat) => ({
+            id: cat.id,
+            sort_order: cat.sort_order!,
+          })),
+        );
+      } catch (error) {
+        console.error("Error saving category order:", error);
+        refresh();
+      }
+    },
+    [reorderCategories, refresh, setSavingsSortOrder],
+  );
+
+  const { allBudgetItems, hasCustomOrder } = useMemo(() => {
     const budgetMap = new Map<number, CategoryBudgetStatus>();
     categoryBudgets.forEach((cb) => budgetMap.set(cb.category.id, cb));
 
-    const filteredCategories = categories.filter((cat) => cat.category_name !== 'Income');
+    const filteredCategories = categories.filter(
+      (cat) => cat.category_name !== "Income",
+    );
 
-    const customOrder = filteredCategories.some((cat) => cat.sort_order !== undefined);
+    const customOrder = filteredCategories.some(
+      (cat) => cat.sort_order !== undefined,
+    );
+
+    const savingsItem: SavingsListItem = { type: 'savings' };
 
     if (customOrder) {
+      // Build items with sort orders, including savings card
+      const categoryItems: BudgetListItem[] = filteredCategories.map((cat) => ({
+        type: 'category' as const,
+        category: cat,
+        budgetStatus: budgetMap.get(cat.id) ?? null,
+      }));
+
+      // Insert savings card at its saved position
+      const allItems: BudgetListItem[] = [...categoryItems];
+      const insertPosition = Math.min(savingsSortOrder, allItems.length);
+      allItems.splice(insertPosition, 0, savingsItem);
+
       return {
-        allCategoryItems: filteredCategories.map((cat) => ({
-          category: cat,
-          budgetStatus: budgetMap.get(cat.id) ?? null,
-        })),
+        allBudgetItems: allItems,
         hasCustomOrder: true,
       };
     }
@@ -205,30 +280,38 @@ export default function BudgetsScreen() {
     filteredCategories.forEach((cat) => {
       const status = budgetMap.get(cat.id) ?? null;
       if (status) {
-        budgeted.push({ category: cat, budgetStatus: status });
+        budgeted.push({ type: 'category', category: cat, budgetStatus: status });
       } else {
-        unbudgeted.push({ category: cat, budgetStatus: null });
+        unbudgeted.push({ type: 'category', category: cat, budgetStatus: null });
       }
     });
 
+    // Insert savings at the beginning (position 0) if no custom order
+    const allItems: BudgetListItem[] = [savingsItem, ...budgeted, ...unbudgeted];
+
     return {
-      allCategoryItems: [...budgeted, ...unbudgeted],
+      allBudgetItems: allItems,
       hasCustomOrder: false,
     };
-  }, [categories, categoryBudgets]);
+  }, [categories, categoryBudgets, savingsSortOrder]);
 
-  const unbudgetedStartIndex = allCategoryItems.findIndex((item) => item.budgetStatus === null);
+  const unbudgetedStartIndex = allBudgetItems.findIndex(
+    (item) => item.type === 'category' && item.budgetStatus === null,
+  );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: screenBg }} edges={['top']}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: screenBg }}
+      edges={["top"]}
+    >
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 pt-2 pb-3">
         <View>
           <Text
             style={{
               fontSize: 28,
-              fontWeight: '800',
-              color: isDarkMode ? '#F1F5F9' : '#0F172A',
+              fontWeight: "800",
+              color: isDarkMode ? "#F1F5F9" : "#0F172A",
               letterSpacing: -0.5,
             }}
           >
@@ -237,11 +320,13 @@ export default function BudgetsScreen() {
           <Text
             style={{
               fontSize: 13,
-              color: isDarkMode ? '#7C8CA0' : '#94A3B8',
+              color: isDarkMode ? "#7C8CA0" : "#94A3B8",
               marginTop: 2,
             }}
           >
-            {isReorderMode ? 'Hold & drag to reorder' : 'Manage your spending limits'}
+            {isReorderMode
+              ? "Hold & drag to reorder"
+              : "Manage your spending limits"}
           </Text>
         </View>
         <View className="flex-row" style={{ gap: 8 }}>
@@ -251,28 +336,38 @@ export default function BudgetsScreen() {
               width: 36,
               height: 36,
               borderRadius: 12,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: isReorderMode ? '#2A9D8F' : (isDarkMode ? '#1E293B' : '#F1F5F9'),
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: isReorderMode
+                ? "#2A9D8F"
+                : isDarkMode
+                  ? "#1E293B"
+                  : "#F1F5F9",
               borderWidth: 1,
-              borderColor: isReorderMode ? '#2A9D8F' : (isDarkMode ? '#334155' : '#E2E8F0'),
+              borderColor: isReorderMode
+                ? "#2A9D8F"
+                : isDarkMode
+                  ? "#334155"
+                  : "#E2E8F0",
             }}
           >
             <Ionicons
               name="reorder-three"
               size={18}
-              color={isReorderMode ? '#FFF' : (isDarkMode ? '#8B99AE' : '#94A3B8')}
+              color={
+                isReorderMode ? "#FFF" : isDarkMode ? "#8B99AE" : "#94A3B8"
+              }
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setAIModalView('help')}
+            onPress={() => setAIModalView("help")}
             style={{
               width: 36,
               height: 36,
               borderRadius: 12,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#F59E0B',
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#2563EB",
             }}
           >
             <Ionicons name="sparkles" size={16} color="#FFF" />
@@ -281,8 +376,8 @@ export default function BudgetsScreen() {
       </View>
 
       <DraggableFlatList
-        data={isLoading ? [] : allCategoryItems}
-        keyExtractor={(item) => item.category.id.toString()}
+        data={isLoading ? [] : allBudgetItems}
+        keyExtractor={(item) => item.type === 'savings' ? 'savings' : item.category.id.toString()}
         onDragEnd={handleDragEnd}
         contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 150 }}
         ListHeaderComponent={
@@ -291,7 +386,7 @@ export default function BudgetsScreen() {
               <MotiView
                 from={{ opacity: 0, translateY: 12 }}
                 animate={{ opacity: 1, translateY: 0 }}
-                transition={{ type: 'timing', duration: 350 }}
+                transition={{ type: "timing", duration: 350 }}
               >
                 <IncomeCard
                   income={monthlyIncome}
@@ -299,118 +394,232 @@ export default function BudgetsScreen() {
                   useDynamicIncome={useDynamicIncome}
                   manualIncome={manualIncome}
                   dynamicIncome={dynamicIncome}
-                  totalBudgeted={totalBudgeted}
                   isDarkMode={isDarkMode}
                   onSave={handleSaveIncome}
-                />
-                <GoalsOverviewCard
-                  currencySymbol={currencySymbol}
-                  accounts={accounts}
                 />
               </MotiView>
             )}
 
             {/* Section label */}
-            {!isReorderMode && !hasCustomOrder && categoryBudgets.length > 0 && (
-              <View className="flex-row items-center mb-2 mt-1 px-1">
-                <View
-                  className="w-1.5 h-1.5 rounded-full mr-2"
-                  style={{ backgroundColor: '#2A9D8F' }}
-                />
-                <Text style={{ fontSize: 12, fontWeight: '600', color: isDarkMode ? '#7C8CA0' : '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Budgeted
-                </Text>
-              </View>
-            )}
+            {!isReorderMode &&
+              !hasCustomOrder &&
+              categoryBudgets.length > 0 && (
+                <View className="flex-row items-center mb-2 mt-1 px-1">
+                  <View
+                    className="w-1.5 h-1.5 rounded-full mr-2"
+                    style={{ backgroundColor: "#2A9D8F" }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "600",
+                      color: isDarkMode ? "#7C8CA0" : "#94A3B8",
+                      textTransform: "uppercase",
+                      letterSpacing: 0.8,
+                    }}
+                  >
+                    Budgeted
+                  </Text>
+                </View>
+              )}
 
             {isReorderMode && (
-              <Text style={{ fontSize: 13, color: isDarkMode ? '#7C8CA0' : '#94A3B8', marginBottom: 12, paddingHorizontal: 4 }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: isDarkMode ? "#7C8CA0" : "#94A3B8",
+                  marginBottom: 12,
+                  paddingHorizontal: 4,
+                }}
+              >
                 Hold and drag to reorder
               </Text>
             )}
           </>
         }
-        renderItem={({ item, drag, isActive, getIndex }: RenderItemParams<CategoryListItem>) => {
+        renderItem={({
+          item,
+          drag,
+          isActive,
+          getIndex,
+        }: RenderItemParams<BudgetListItem>) => {
           const index = getIndex() ?? 0;
-          return (
-          <ScaleDecorator>
-            <>
-              {/* "Unbudgeted" section header */}
-              {!isReorderMode && !hasCustomOrder && index === unbudgetedStartIndex && unbudgetedStartIndex >= 0 && (
-                <View className="flex-row items-center mb-2 px-1" style={{ marginTop: index > 0 ? 16 : 0 }}>
-                  <View
-                    className="w-1.5 h-1.5 rounded-full mr-2"
-                    style={{ backgroundColor: '#7C8CA0' }}
-                  />
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: isDarkMode ? '#7C8CA0' : '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                    Unbudgeted
-                  </Text>
-                </View>
-              )}
-              {isReorderMode ? (
-                <TouchableOpacity
-                  onLongPress={drag}
-                  disabled={isActive}
-                  delayLongPress={100}
-                  className="mb-2 rounded-2xl p-4 flex-row items-center"
-                  style={{
-                    backgroundColor: isActive ? '#4B5563' : '#20283A',
-                    borderWidth: 1,
-                    borderColor: isActive ? '#2A9D8F' : '#4B5563',
-                    opacity: isActive ? 0.9 : 1,
-                  }}
-                >
-                  <View className="mr-3">
-                    <Ionicons name="menu" size={20} color="#7C8CA0" />
-                  </View>
-                  <View
-                    className="w-9 h-9 rounded-lg items-center justify-center mr-3"
-                    style={{ backgroundColor: item.category.color }}
+
+          // Render savings card
+          if (item.type === 'savings') {
+            return (
+              <ScaleDecorator>
+                {isReorderMode ? (
+                  <TouchableOpacity
+                    onLongPress={drag}
+                    disabled={isActive}
+                    delayLongPress={100}
+                    className="mb-2 rounded-2xl p-4 flex-row items-center"
+                    style={{
+                      backgroundColor: isActive ? "#4B5563" : "#20283A",
+                      borderWidth: 1,
+                      borderColor: isActive ? "#8A00C2" : "#4B5563",
+                      opacity: isActive ? 0.9 : 1,
+                    }}
                   >
-                    <Ionicons name={item.category.icon as any} size={18} color="#fff" />
-                  </View>
-                  <Text style={{ color: '#E2E8F0', fontSize: 14, flex: 1 }}>
-                    {item.category.category_name}
-                  </Text>
-                  {item.budgetStatus && (
-                    <Text style={{ color: '#7C8CA0', fontSize: 13 }}>
-                      {currencySymbol}{item.budgetStatus.budget_amount.toLocaleString()}
+                    <View className="mr-3">
+                      <Ionicons name="menu" size={20} color="#7C8CA0" />
+                    </View>
+                    <View
+                      className="w-9 h-9 rounded-lg items-center justify-center mr-3"
+                      style={{ backgroundColor: "#8A00C2" }}
+                    >
+                      <PiggyBank size={18} color="#fff" />
+                    </View>
+                    <Text style={{ color: "#E2E8F0", fontSize: 14, flex: 1 }}>
+                      Monthly Savings
                     </Text>
+                    {savingsTarget > 0 && (
+                      <Text style={{ color: "#7C8CA0", fontSize: 13 }}>
+                        {currencySymbol}
+                        {savingsTarget.toLocaleString()}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  <MotiView
+                    from={{ opacity: 0, translateY: 8 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{
+                      type: "timing",
+                      duration: 250,
+                      delay: index * 25,
+                    }}
+                    className="mb-2.5"
+                  >
+                    <SavingsProgressCard
+                      target={savingsTarget}
+                      saved={savingsSaved}
+                      percentage={savingsPercentage}
+                      currencySymbol={currencySymbol}
+                      monthlyIncome={monthlyIncome}
+                      showOnDashboard={showSavingsOnDashboard}
+                      onToggleDashboard={toggleShowSavingsOnDashboard}
+                    />
+                  </MotiView>
+                )}
+              </ScaleDecorator>
+            );
+          }
+
+          // Render category item
+          return (
+            <ScaleDecorator>
+              <>
+                {/* "Unbudgeted" section header */}
+                {!isReorderMode &&
+                  !hasCustomOrder &&
+                  index === unbudgetedStartIndex &&
+                  unbudgetedStartIndex >= 0 && (
+                    <View
+                      className="flex-row items-center mb-2 px-1"
+                      style={{ marginTop: index > 0 ? 16 : 0 }}
+                    >
+                      <View
+                        className="w-1.5 h-1.5 rounded-full mr-2"
+                        style={{ backgroundColor: "#7C8CA0" }}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: "600",
+                          color: isDarkMode ? "#7C8CA0" : "#94A3B8",
+                          textTransform: "uppercase",
+                          letterSpacing: 0.8,
+                        }}
+                      >
+                        Unbudgeted
+                      </Text>
+                    </View>
                   )}
-                </TouchableOpacity>
-              ) : (
-                <MotiView
-                  from={{ opacity: 0, translateY: 8 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ type: 'timing', duration: 250, delay: index * 25 }}
-                  className="mb-2.5"
-                >
-                  <CategoryBudgetRow
-                    item={item.budgetStatus}
-                    category={item.category}
-                    currencySymbol={currencySymbol}
-                    monthlyIncome={monthlyIncome}
-                    onSave={handleInlineSave}
-                    showOnDashboard={pinnedCategoryIds.length === 0 || pinnedCategoryIds.includes(item.category.id)}
-                    onToggleDashboard={togglePinnedCategory}
-                    expanded={expandedCategoryId === item.category.id}
-                    onToggleExpand={() => handleToggleExpand(item.category.id)}
-                  />
-                </MotiView>
-              )}
-            </>
-          </ScaleDecorator>
-        );
+                {isReorderMode ? (
+                  <TouchableOpacity
+                    onLongPress={drag}
+                    disabled={isActive}
+                    delayLongPress={100}
+                    className="mb-2 rounded-2xl p-4 flex-row items-center"
+                    style={{
+                      backgroundColor: isActive ? "#4B5563" : "#20283A",
+                      borderWidth: 1,
+                      borderColor: isActive ? "#2A9D8F" : "#4B5563",
+                      opacity: isActive ? 0.9 : 1,
+                    }}
+                  >
+                    <View className="mr-3">
+                      <Ionicons name="menu" size={20} color="#7C8CA0" />
+                    </View>
+                    <View
+                      className="w-9 h-9 rounded-lg items-center justify-center mr-3"
+                      style={{ backgroundColor: item.category.color }}
+                    >
+                      <Ionicons
+                        name={item.category.icon as any}
+                        size={18}
+                        color="#fff"
+                      />
+                    </View>
+                    <Text style={{ color: "#E2E8F0", fontSize: 14, flex: 1 }}>
+                      {item.category.category_name}
+                    </Text>
+                    {item.budgetStatus && (
+                      <Text style={{ color: "#7C8CA0", fontSize: 13 }}>
+                        {currencySymbol}
+                        {item.budgetStatus.budget_amount.toLocaleString()}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  <MotiView
+                    from={{ opacity: 0, translateY: 8 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{
+                      type: "timing",
+                      duration: 250,
+                      delay: index * 25,
+                    }}
+                    className="mb-2.5"
+                  >
+                    <CategoryBudgetRow
+                      item={item.budgetStatus}
+                      category={item.category}
+                      currencySymbol={currencySymbol}
+                      monthlyIncome={monthlyIncome}
+                      onSave={handleInlineSave}
+                      showOnDashboard={
+                        pinnedCategoryIds.length === 0 ||
+                        pinnedCategoryIds.includes(item.category.id)
+                      }
+                      onToggleDashboard={togglePinnedCategory}
+                      expanded={expandedCategoryId === item.category.id}
+                      onToggleExpand={() =>
+                        handleToggleExpand(item.category.id)
+                      }
+                    />
+                  </MotiView>
+                )}
+              </>
+            </ScaleDecorator>
+          );
         }}
         ListEmptyComponent={
           !isLoading ? (
             <MotiView
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ type: 'timing', duration: 400, delay: 200 }}
+              transition={{ type: "timing", duration: 400, delay: 200 }}
               className="items-center justify-center py-8"
             >
-              <Text style={{ fontSize: 16, color: isDarkMode ? '#7C8CA0' : '#94A3B8' }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: isDarkMode ? "#7C8CA0" : "#94A3B8",
+                }}
+              >
                 No categories found
               </Text>
             </MotiView>
@@ -418,24 +627,35 @@ export default function BudgetsScreen() {
         }
       />
 
-      {/* Unified AI Modal — shows help or preview view without re-mounting */}
-      <Modal
-        visible={aiModalView !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={handleCloseAIModal}
-      >
-        <View className="flex-1 items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-          {aiModalView === 'help' && (
+      {/* Unified AI overlay — always mounted, no native Modal delay */}
+      {aiModalView !== null && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 100,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <Pressable
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+            onPress={handleCloseAIModal}
+          />
+          {aiModalView === "help" && (
             <View
               style={{
-                width: '94%',
+                width: "94%",
                 borderRadius: 20,
                 padding: 16,
-                backgroundColor: isDarkMode ? '#0F172A' : '#FFFFFF',
+                backgroundColor: isDarkMode ? "#151C2E" : "#FFFFFF",
                 borderWidth: 1,
-                borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
-                maxHeight: '80%',
+                borderColor: isDarkMode ? "#1E293B" : "#E2E8F0",
+                maxHeight: "80%",
               }}
             >
               <ScrollView showsVerticalScrollIndicator={false}>
@@ -443,55 +663,93 @@ export default function BudgetsScreen() {
                 <View className="items-center mb-4">
                   <View
                     className="w-14 h-14 rounded-2xl items-center justify-center"
-                    style={{ backgroundColor: 'rgba(245,158,11,0.12)' }}
+                    style={{ backgroundColor: "#2563EB" }}
                   >
-                    <Ionicons name="sparkles" size={28} color="#F59E0B" />
+                    <Ionicons name="sparkles" size={28} color="#FFFFFF" />
                   </View>
                 </View>
 
                 <Text
                   className="text-center mb-2"
                   style={{
-                    fontSize: 22,
-                    fontWeight: '700',
-                    color: isDarkMode ? '#F1F5F9' : '#0F172A',
+                    fontSize: 23,
+                    fontWeight: "700",
+                    color: isDarkMode ? "#F1F5F9" : "#0F172A",
                   }}
                 >
                   Smart Budget Setup
                 </Text>
                 <Text
                   className="text-center mb-5"
-                  style={{ fontSize: 14, color: isDarkMode ? '#8B99AE' : '#94A3B8', lineHeight: 20 }}
+                  style={{
+                    fontSize: 15,
+                    color: isDarkMode ? "#8B99AE" : "#94A3B8",
+                    lineHeight: 22,
+                  }}
                 >
-                  Let AI allocate your budget using the proven 50/30/20 rule
+                  Let us allocate your budget using the proven 50/30/20 rule
                 </Text>
 
                 {/* Rule cards */}
                 {[
-                  { pct: '50%', label: 'Needs', desc: 'Rent, groceries, utilities', color: '#2A9D8F' },
-                  { pct: '30%', label: 'Wants', desc: 'Dining, hobbies, entertainment', color: '#3B82F6' },
-                  { pct: '20%', label: 'Savings', desc: 'Emergency fund, investments', color: '#A855F7' },
+                  {
+                    pct: "50%",
+                    label: "Needs",
+                    desc: "Rent, groceries, utilities",
+                    color: "#3B82F6",
+                  },
+                  {
+                    pct: "30%",
+                    label: "Wants",
+                    desc: "Dining, hobbies, entertainment",
+                    color: "#EF4444",
+                  },
+                  {
+                    pct: "20%",
+                    label: "Savings",
+                    desc: "Emergency fund, investments",
+                    color: "#22C55E",
+                  },
                 ].map((rule) => (
                   <View
                     key={rule.label}
                     className="flex-row items-center mb-2.5 p-3 rounded-xl"
                     style={{
-                      backgroundColor: isDarkMode ? '#151C2E' : '#F8FAFC',
+                      backgroundColor: isDarkMode ? "#0F172A" : "#F8FAFC",
                       borderWidth: 1,
-                      borderColor: isDarkMode ? '#1E293B' : '#F1F5F9',
+                      borderColor: isDarkMode ? "#1E293B" : "#F1F5F9",
                     }}
                   >
                     <View
                       className="w-10 h-10 rounded-lg items-center justify-center mr-3"
-                      style={{ backgroundColor: `${rule.color}18` }}
+                      style={{ backgroundColor: `${rule.color}60` }}
                     >
-                      <Text style={{ fontSize: 13, fontWeight: '800', color: rule.color }}>{rule.pct}</Text>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "800",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        {rule.pct}
+                      </Text>
                     </View>
                     <View className="flex-1">
-                      <Text style={{ fontSize: 14, fontWeight: '600', color: isDarkMode ? '#E2E8F0' : '#1E293B' }}>
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          fontWeight: "600",
+                          color: isDarkMode ? "#E2E8F0" : "#1E293B",
+                        }}
+                      >
                         {rule.label}
                       </Text>
-                      <Text style={{ fontSize: 12, color: isDarkMode ? '#7C8CA0' : '#94A3B8' }}>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: isDarkMode ? "#7C8CA0" : "#94A3B8",
+                        }}
+                      >
                         {rule.desc}
                       </Text>
                     </View>
@@ -501,25 +759,36 @@ export default function BudgetsScreen() {
                 <View
                   className="rounded-xl p-3 mt-2 mb-4"
                   style={{
-                    backgroundColor: isDarkMode ? '#151C2E' : '#FFFBEB',
+                    backgroundColor: isDarkMode ? "#0F172A" : "#FFFBEB",
                     borderWidth: 1,
-                    borderColor: isDarkMode ? '#1E293B' : '#FEF3C7',
+                    borderColor: isDarkMode ? "#1E293B" : "#FEF3C7",
                   }}
                 >
-                  <Text style={{ fontSize: 13, color: isDarkMode ? '#8B99AE' : '#92400E', lineHeight: 18 }}>
-                    <Text style={{ fontWeight: '600' }}>Tip:</Text> You can always tweak the amounts afterwards to match your lifestyle.
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: isDarkMode ? "#8B99AE" : "#92400E",
+                      lineHeight: 18,
+                    }}
+                  >
+                    <Text style={{ fontWeight: "600" }}>Tip:</Text> You can
+                    always tweak the amounts afterwards to match your lifestyle.
                   </Text>
                 </View>
 
                 <TouchableOpacity
                   onPress={handleSetBudgetWithAI}
                   className="rounded-xl py-3.5 items-center"
-                  style={{ backgroundColor: '#2563EB' }}
+                  style={{ backgroundColor: "#2563EB" }}
                   activeOpacity={0.8}
                 >
                   <View className="flex-row items-center" style={{ gap: 6 }}>
                     <Ionicons name="sparkles" size={16} color="#FFF" />
-                    <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>Generate My Budget</Text>
+                    <Text
+                      style={{ color: "#FFF", fontWeight: "700", fontSize: 16 }}
+                    >
+                      Generate My Budget
+                    </Text>
                   </View>
                 </TouchableOpacity>
 
@@ -528,11 +797,17 @@ export default function BudgetsScreen() {
                   className="mt-2.5 rounded-xl py-3 items-center"
                   style={{
                     borderWidth: 1,
-                    borderColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+                    borderColor: isDarkMode ? "#1E293B" : "#E2E8F0",
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: isDarkMode ? '#8B99AE' : '#94A3B8' }}>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "600",
+                      color: isDarkMode ? "#8B99AE" : "#94A3B8",
+                    }}
+                  >
                     I'll do it myself
                   </Text>
                 </TouchableOpacity>
@@ -540,9 +815,10 @@ export default function BudgetsScreen() {
             </View>
           )}
 
-          {aiModalView === 'preview' && (
+          {aiModalView === "preview" && (
             <AIBudgetPreviewModal
               isLoading={aiLoading}
+              isApplying={aiApplying}
               error={aiError}
               allocations={aiAllocations}
               categories={categories}
@@ -557,7 +833,7 @@ export default function BudgetsScreen() {
             />
           )}
         </View>
-      </Modal>
+      )}
     </SafeAreaView>
   );
 }

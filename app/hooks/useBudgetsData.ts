@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchIncomeForPeriod, fetchSpendingByCategory } from '../services/backendService';
+import { useBudgetStore } from '../store/useBudgetStore';
 import { useCategoriesStore } from '../store/useCategoriesStore';
 import { useIncomeStore } from '../store/useIncomeStore';
 import { CategoryBudgetStatus } from '../types/types';
@@ -25,9 +26,15 @@ export const getPeriodDates = (): { startDate: Date; endDate: Date } => {
 
 export const useBudgetsData = (): BudgetsDataResult => {
   const { useDynamicIncome, manualIncome, loadIncomeSettings } = useIncomeStore();
-  const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgetStatus[]>([]);
+
+  // Subscribe to state values (will trigger re-render when these change)
+  const categoryBudgets = useBudgetStore((state) => state.categoryBudgets);
+  const isLoading = useBudgetStore((state) => state.isLoading);
+
+  // Get actions (stable references, won't trigger re-renders)
+  const { setCategoryBudgets, upsertCategoryBudget, removeCategoryBudget, setLoading } = useBudgetStore.getState();
+
   const [dynamicIncome, setDynamicIncome] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const hasMounted = useRef(false);
 
   const monthlyIncome = useDynamicIncome ? dynamicIncome : manualIncome;
@@ -74,9 +81,9 @@ export const useBudgetsData = (): BudgetsDataResult => {
       hasMounted.current = true;
       fetchAndBuild()
         .catch((error) => console.error('Error loading budgets data:', error))
-        .finally(() => setIsLoading(false));
+        .finally(() => setLoading(false));
     }
-  }, [fetchAndBuild]);
+  }, [fetchAndBuild, setLoading]);
 
   // Background refresh — no loading flash, no list clearing
   const refresh = useCallback(async () => {
@@ -86,29 +93,6 @@ export const useBudgetsData = (): BudgetsDataResult => {
       console.error('Error refreshing budgets data:', error);
     }
   }, [fetchAndBuild]);
-
-  // Optimistic removal of a single category budget
-  const removeCategoryBudget = useCallback((categoryId: number) => {
-    setCategoryBudgets((prev) => prev.filter((cb) => cb.category.id !== categoryId));
-  }, []);
-
-  // Optimistic add/update of a category budget
-  const upsertCategoryBudget = useCallback((categoryId: number, amount: number) => {
-    setCategoryBudgets((prev) => {
-      const existing = prev.find((cb) => cb.category.id === categoryId);
-      if (existing) {
-        return prev.map((cb) =>
-          cb.category.id === categoryId
-            ? { ...cb, budget_amount: amount, percentage_used: amount > 0 ? (cb.spent / amount) * 100 : 0 }
-            : cb
-        );
-      }
-      // New budget — find the category from the categories store
-      const cat = useCategoriesStore.getState().categories.find((c) => c.id === categoryId);
-      if (!cat) return prev;
-      return [...prev, { category: cat, budget_amount: amount, spent: 0, percentage_used: 0 }];
-    });
-  }, []);
 
   const totalBudgeted = categoryBudgets.reduce((sum, cb) => sum + cb.budget_amount, 0);
   const totalSpent = categoryBudgets.reduce((sum, cb) => sum + cb.spent, 0);

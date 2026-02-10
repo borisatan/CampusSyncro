@@ -48,7 +48,7 @@ export type AIBudgetResponse = AIBudgetResult | AIBudgetError;
 
 // Increment this when the AI prompt or allocation logic changes significantly
 // This ensures old cached responses are invalidated
-const CACHE_VERSION = 4; // v4: Fixed prompt to ensure 100% allocation (5/8 needs, 3/8 wants of 80% spending budget)
+const CACHE_VERSION = 5; // v5: AI now allocates % of total income (sum to 80%), not % of spending budget
 
 const CACHE_KEY_PREFIX = `budget_ai_v${CACHE_VERSION}_`;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -110,7 +110,7 @@ async function getCachedResult(
     const spendingBudget = Math.round(income * 0.8);
     const savingsAmount = Math.round(income * 0.2);
 
-    // Reconstruct full allocations with IDs and amounts based on 80% spending budget
+    // Reconstruct full allocations with IDs and amounts (percentages are of total income)
     const allocations: BudgetAllocation[] = entry.allocations.map((a) => {
       const category = categories.find(
         (c) => c.category_name.toLowerCase() === a.categoryName.toLowerCase()
@@ -120,7 +120,7 @@ async function getCachedResult(
         categoryName: a.categoryName,
         classification: a.classification,
         percentage: a.percentage,
-        amount: Math.round((a.percentage / 100) * spendingBudget),
+        amount: Math.round((a.percentage / 100) * income),
       };
     });
 
@@ -192,12 +192,12 @@ function validateAllocations(
     };
   }
 
-  // Check percentages sum to approximately 100%
+  // Check percentages sum to approximately 80% (of total income, remaining 20% is savings)
   const totalPercentage = allocations.reduce((sum, a) => sum + a.percentage, 0);
-  if (Math.abs(totalPercentage - 100) > 2) {
+  if (Math.abs(totalPercentage - 80) > 2) {
     return {
       valid: false,
-      error: `Percentages sum to ${totalPercentage}%, expected 100%`,
+      error: `Percentages sum to ${totalPercentage}%, expected 80%`,
     };
   }
 
@@ -220,7 +220,7 @@ function validateAllocations(
 /**
  * Gets AI-generated budget allocations for the given categories and income.
  * Uses 80/20 split: 80% for spending (needs + wants), 20% for savings/goals.
- * The AI distributes the 80% spending budget: 5/8 to needs (62.5%), 3/8 to wants (37.5%).
+ * The AI allocates percentages of total income: ~50% needs + ~30% wants = 80%.
  *
  * Results are cached for 24 hours based on category names and income.
  */
@@ -242,12 +242,11 @@ export async function getBudgetAllocations(
   const savingsAmount = Math.round(monthlyIncome * 0.2);
 
   // Check cache first
-  // TEMPORARILY DISABLED FOR TESTING - uncomment to re-enable caching
-  // const cached = await getCachedResult(categories, monthlyIncome);
-  // if (cached) {
-  //   console.log('Budget AI: Using cached response');
-  //   return cached;
-  // }
+  const cached = await getCachedResult(categories, monthlyIncome);
+  if (cached) {
+    console.log('Budget AI: Using cached response');
+    return cached;
+  }
 
   console.log('Budget AI: Calling edge function');
 
@@ -297,7 +296,7 @@ export async function getBudgetAllocations(
       };
     }
 
-    // Map response with amounts calculated from 80% spending budget
+    // Map response with amounts (percentages are of total income)
     const allocations: BudgetAllocation[] = data.allocations.map((a: {
       categoryId: number;
       categoryName: string;
@@ -308,7 +307,7 @@ export async function getBudgetAllocations(
       categoryName: a.categoryName,
       classification: a.classification,
       percentage: a.percentage,
-      amount: Math.round((a.percentage / 100) * spendingBudget),
+      amount: Math.round((a.percentage / 100) * monthlyIncome),
     }));
 
     // Validate response

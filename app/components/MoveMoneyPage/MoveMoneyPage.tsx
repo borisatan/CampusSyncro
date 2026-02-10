@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useDataRefresh } from '../../context/DataRefreshContext';
-import { contributeToGoal, createTransfer, fetchGoalsByAccount } from '../../services/backendService';
+import { contributeToGoal, createTransfer, fetchGoalsByAccount, recordSavingsTransfer } from '../../services/backendService';
 import { useAccountsStore } from '../../store/useAccountsStore';
 import { useGoalsStore } from '../../store/useGoalsStore';
 import { Account, Goal } from '../../types/types';
@@ -151,6 +151,15 @@ export default function MoveMoneyPage({
           amount: numericAmount,
           user_id: userId,
         });
+
+        // If transferring to a savings/investment account, record it as savings progress
+        if (isSavingsTransfer) {
+          await recordSavingsTransfer({
+            user_id: userId,
+            amount: numericAmount,
+            source_account_id: actualSource.id,
+          });
+        }
       }
 
       // Refresh to sync with server state

@@ -23,6 +23,7 @@ import { Category } from '../../types/types';
 interface AIBudgetPreviewModalProps {
   visible?: boolean;
   isLoading: boolean;
+  isApplying?: boolean;
   error: string | null;
   allocations: BudgetAllocation[] | null;
   categories: Category[];
@@ -49,25 +50,26 @@ const CLASSIFICATION_CONFIG: Record<
 > = {
   needs: {
     label: 'Needs',
-    color: '#2A9D8F',
+    color: '#3B82F6',
     icon: 'home',
   },
   wants: {
     label: 'Wants',
-    color: '#3B82F6',
+    color: '#EF4444',
     icon: 'heart',
   },
 };
 
 const SAVINGS_CONFIG = {
   label: 'Savings',
-  color: '#A855F7',
+  color: '#22C55E',
   icon: 'trending-up',
 };
 
 export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
   visible,
   isLoading,
+  isApplying,
   error,
   allocations,
   categories,
@@ -123,57 +125,54 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
     };
   };
 
-  const cardBg = isDarkMode ? '#0F172A' : '#FFFFFF';
-  const innerBg = isDarkMode ? '#151C2E' : '#F8FAFC';
+  const cardBg = isDarkMode ? '#151C2E' : '#FFFFFF';
+  const innerBg = isDarkMode ? '#0F172A' : '#F8FAFC';
   const borderColor = isDarkMode ? '#1E293B' : '#E2E8F0';
   const textPrimary = isDarkMode ? '#F1F5F9' : '#0F172A';
   const textSecondary = isDarkMode ? '#8B99AE' : '#94A3B8';
 
   const renderLoadingState = () => (
-    <View className="items-center justify-center py-12">
-      <View
-        className="w-16 h-16 rounded-2xl items-center justify-center mb-4"
-        style={{ backgroundColor: 'rgba(37,99,235,0.12)' }}
-      >
-        <ActivityIndicator size="small" color="#2563EB" />
-      </View>
+    <View className="py-12 items-center">
       <Text style={{ fontSize: 17, fontWeight: '600', color: textPrimary }}>
         Analyzing your categories...
       </Text>
       <Text style={{ fontSize: 13, color: textSecondary, marginTop: 6 }}>
         This may take a few seconds
       </Text>
+      <ActivityIndicator size="large" color="#FFFFFF" style={{ marginTop: 24 }} />
     </View>
   );
 
   const isRateLimited = error?.toLowerCase().includes('rate') || error?.toLowerCase().includes('too many');
 
   const renderErrorState = () => (
-    <View className="items-center justify-center py-12">
+    <View className="py-12">
       <View
-        className="w-16 h-16 rounded-2xl items-center justify-center mb-4"
+        className="w-9 h-9 rounded-xl items-center justify-center mb-4 self-end"
         style={{ backgroundColor: isRateLimited ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)' }}
       >
         <Ionicons
           name={isRateLimited ? 'time-outline' : 'alert-circle'}
-          size={28}
+          size={18}
           color={isRateLimited ? '#F59E0B' : '#EF4444'}
         />
       </View>
-      <Text style={{ fontSize: 17, fontWeight: '600', color: textPrimary, marginBottom: 6 }}>
-        {isRateLimited ? 'Too many requests' : 'Unable to generate budget'}
-      </Text>
-      <Text style={{ fontSize: 13, color: textSecondary, textAlign: 'center', paddingHorizontal: 16, marginBottom: 20 }}>
-        {isRateLimited ? 'Please wait a moment and try again.' : error}
-      </Text>
-      <TouchableOpacity
-        onPress={onRetry}
-        className="rounded-xl py-3 px-8"
-        style={{ backgroundColor: '#2563EB' }}
-        activeOpacity={0.8}
-      >
-        <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>Try Again</Text>
-      </TouchableOpacity>
+      <View className="items-center">
+        <Text style={{ fontSize: 17, fontWeight: '600', color: textPrimary, marginBottom: 6 }}>
+          {isRateLimited ? 'Too many requests' : 'Unable to generate budget'}
+        </Text>
+        <Text style={{ fontSize: 13, color: textSecondary, textAlign: 'center', paddingHorizontal: 16, marginBottom: 20 }}>
+          {isRateLimited ? 'Please wait a moment and try again.' : error}
+        </Text>
+        <TouchableOpacity
+          onPress={onRetry}
+          className="rounded-xl py-3 px-8"
+          style={{ backgroundColor: '#2563EB' }}
+          activeOpacity={0.8}
+        >
+          <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -244,6 +243,9 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
 
     if (items.length === 0) return null;
 
+    // Sort by percentage, highest first
+    const sortedItems = [...items].sort((a, b) => b.percentage - a.percentage);
+
     return (
       <View key={classification} className="mb-3">
         <View className="flex-row items-center mb-2">
@@ -258,7 +260,7 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
             ({items.reduce((sum, a) => sum + a.percentage, 0)}%)
           </Text>
         </View>
-        {items.map(renderCategoryRow)}
+        {sortedItems.map(renderCategoryRow)}
       </View>
     );
   };
@@ -266,23 +268,21 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
   const renderSuccessState = () => (
     <>
       {/* Header */}
-      <View className="items-center mb-4">
-        <View
-          className="w-14 h-14 rounded-2xl items-center justify-center mb-3"
-          style={{ backgroundColor: 'rgba(245,158,11,0.12)' }}
-        >
-          <Ionicons name="sparkles" size={26} color="#F59E0B" />
-        </View>
+      <View className="flex-row items-center justify-between mb-1">
         <Text style={{ fontSize: 22, fontWeight: '700', color: textPrimary }}>
-          Your AI Budget
+          Your Budget
         </Text>
-        <Text style={{ fontSize: 13, color: textSecondary, marginTop: 4 }}>
-          80% spending, 20% savings
-          {fromCache ? ' (cached)' : ''}
-        </Text>
+        <View
+          className="w-11 h-11 rounded-2xl items-center justify-center"
+          style={{ backgroundColor: '#2563EB' }}
+        >
+          <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+        </View>
       </View>
-
-      {renderSummaryPills()}
+      <Text style={{ fontSize: 13, color: textSecondary, marginBottom: 12 }}>
+        80% spending, 20% savings
+        {fromCache ? ' (cached)' : ''}
+      </Text>
 
       {/* Budget summary bar */}
       <View
@@ -310,7 +310,7 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
       </View>
 
       <ScrollView
-        style={{ maxHeight: 280 }}
+        style={{ maxHeight: 360 }}
         showsVerticalScrollIndicator={false}
         className="mb-4"
       >
@@ -318,17 +318,37 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
         {renderSection('wants')}
       </ScrollView>
 
-      <TouchableOpacity
-        onPress={onApply}
-        className="rounded-xl py-3.5 items-center"
-        style={{ backgroundColor: '#2A9D8F' }}
-        activeOpacity={0.8}
-      >
-        <View className="flex-row items-center" style={{ gap: 6 }}>
-          <Ionicons name="checkmark-circle" size={18} color="#FFF" />
-          <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>Apply Budget</Text>
-        </View>
-      </TouchableOpacity>
+      <View className="flex-row mt-1" style={{ gap: 10 }}>
+        <TouchableOpacity
+          onPress={onCancel}
+          disabled={isApplying}
+          className="flex-1 rounded-xl py-3.5 items-center"
+          style={{
+            borderWidth: 1,
+            borderColor: borderColor,
+            opacity: isApplying ? 0.5 : 1,
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '600', color: textSecondary }}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={onApply}
+          disabled={isApplying}
+          className="flex-1 rounded-xl py-3.5 items-center flex-row justify-center"
+          style={{ backgroundColor: '#2A9D8F', opacity: isApplying ? 0.8 : 1 }}
+          activeOpacity={0.8}
+        >
+          {isApplying ? (
+            <>
+              <ActivityIndicator size="small" color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>Applying...</Text>
+            </>
+          ) : (
+            <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>Apply Budget</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </>
   );
 
@@ -347,7 +367,7 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
       {!isLoading && error && renderErrorState()}
       {!isLoading && !error && allocations && renderSuccessState()}
 
-      {!isLoading && (
+      {!isLoading && !allocations && (
         <TouchableOpacity
           onPress={onCancel}
           className="mt-2.5 rounded-xl py-3 items-center"
