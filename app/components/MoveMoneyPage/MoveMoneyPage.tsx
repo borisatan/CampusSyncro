@@ -288,6 +288,7 @@ export default function MoveMoneyPage({
                     placeholderTextColor="#64748B"
                     keyboardType="decimal-pad"
                     className="flex-1 py-4 text-textDark text-xl"
+                    autoFocus
                   />
                 </View>
               </View>

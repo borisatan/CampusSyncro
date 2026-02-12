@@ -8,8 +8,9 @@ import TransactionsHeader from "../components/TransactionListPage/TransactionHea
 import TransactionsList from "../components/TransactionListPage/TransactionsList";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
-import { fetchAccountNames, fetchCategoryIcons, fetchTransactions } from "../services/backendService";
-import { CategoryIconInfo, Transaction } from "../types/types";
+import { fetchAccountNames, fetchCategoryIcons, fetchFilteredTransactions, fetchTransactions } from "../services/backendService";
+import { CategoryIconInfo, TimeFrame, Transaction } from "../types/types";
+import { getDateRange } from "../utils/dateUtils";
 
 type RouteParams = {
   initialCategory?: string;
@@ -62,7 +63,7 @@ const TransactionsScreen: React.FC = () => {
   
   const [transactionType, setTransactionType] = useState<'all' |'expense' | 'income'>('all');
 
-  const { initialCategory } = useLocalSearchParams<{ initialCategory?: string }>();
+  const { initialCategory, initialTimeFrame, initialOffset, t } = useLocalSearchParams<{ initialCategory?: string; initialTimeFrame?: string; initialOffset?: string; t?: string }>();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -71,21 +72,14 @@ const TransactionsScreen: React.FC = () => {
   const [accountsList, setAccountsList] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   const LIMIT = 50;
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-  
-  useEffect(() => {
-    if (initialCategory) {
-      setFilterCategory(initialCategory);
-      setSelectedCategories([initialCategory]);
-    } else {
-      setFilterCategory(null);
-      setSelectedCategories([]);
-    }
-  }, [initialCategory]);
+
+  // Track if we're using filtered mode (category from dashboard)
+  const [isFilteredMode, setIsFilteredMode] = useState(false);
 
   // --- Load initial transactions (first page / refresh)
   const loadInitialTransactions = async () => {
@@ -95,7 +89,7 @@ const TransactionsScreen: React.FC = () => {
         fetchTransactions(LIMIT, 0),
         fetchCategoryIcons(),
       ]);
-      
+
       setTransactions(transactionsData);
       setCategoryIcons(iconsData);
       setPage(1);
@@ -107,13 +101,91 @@ const TransactionsScreen: React.FC = () => {
     }
   };
 
+  // --- Load filtered transactions (for category + time period from dashboard)
+  const loadFilteredTransactionsAsync = async (category: string, timeFrame: string, periodOffset: number = 0) => {
+    setIsRefreshing(true);
+    try {
+      const { startDate, endDate } = getDateRange(timeFrame as TimeFrame, periodOffset);
+      const [transactionsData, iconsData] = await Promise.all([
+        fetchFilteredTransactions({
+          category,
+          startDate,
+          endDate,
+          limit: LIMIT,
+          offset: 0,
+        }),
+        fetchCategoryIcons(),
+      ]);
+
+      setTransactions(transactionsData);
+      setCategoryIcons(iconsData);
+      setPage(1);
+      setHasMore(transactionsData.length === LIMIT);
+    } catch (err) {
+      console.error("Failed to load filtered transactions:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Set filters when navigating from dashboard with category
+  useEffect(() => {
+    if (initialCategory) {
+      setFilterCategory(initialCategory);
+      setSelectedCategories([initialCategory]);
+
+      if (initialTimeFrame) {
+        const periodOffset = initialOffset ? parseInt(initialOffset, 10) : 0;
+        const { startDate, endDate } = getDateRange(initialTimeFrame as TimeFrame, periodOffset);
+        setDateRange({
+          start: startDate.toISOString().split('T')[0],
+          end: endDate.toISOString().split('T')[0],
+        });
+        setIsFilteredMode(true);
+      } else {
+        setIsFilteredMode(false);
+      }
+    } else {
+      setFilterCategory(null);
+      setSelectedCategories([]);
+      setDateRange(null);
+      setIsFilteredMode(false);
+    }
+  }, [initialCategory, initialTimeFrame, initialOffset, t]);
+
+  // Load transactions - either filtered or all
+  useEffect(() => {
+    if (initialCategory) {
+      const periodOffset = initialOffset ? parseInt(initialOffset, 10) : 0;
+      loadFilteredTransactionsAsync(initialCategory, initialTimeFrame || 'year', periodOffset);
+    } else {
+      loadInitialTransactions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCategory, initialTimeFrame, initialOffset, t]);
+
   // --- Load more transactions (next page)
   const loadMoreTransactions = async () => {
     if (!hasMore || isFetchingMore) return;
 
     setIsFetchingMore(true);
     try {
-      const data = await fetchTransactions(LIMIT, page * LIMIT);
+      let data: Transaction[];
+
+      // If in filtered mode, continue fetching with the same filters
+      if (isFilteredMode && initialCategory && initialTimeFrame) {
+        const periodOffset = initialOffset ? parseInt(initialOffset, 10) : 0;
+        const { startDate, endDate } = getDateRange(initialTimeFrame as TimeFrame, periodOffset);
+        data = await fetchFilteredTransactions({
+          category: initialCategory,
+          startDate,
+          endDate,
+          limit: LIMIT,
+          offset: page * LIMIT,
+        });
+      } else {
+        data = await fetchTransactions(LIMIT, page * LIMIT);
+      }
 
       if (data.length < LIMIT) setHasMore(false);
 
@@ -125,10 +197,6 @@ const TransactionsScreen: React.FC = () => {
       setIsFetchingMore(false);
     }
   };
-
-  useEffect(() => {
-    loadInitialTransactions();
-  }, []);
 
   // Register refresh and optimistic update functions so they can be called from other screens
   useEffect(() => {
@@ -189,6 +257,12 @@ const TransactionsScreen: React.FC = () => {
     setSelectedCategories([]);
     setTransactionType('all');
     setIsFilterVisible(false);
+
+    // If we were in filtered mode, exit and reload all transactions
+    if (isFilteredMode) {
+      setIsFilteredMode(false);
+      loadInitialTransactions();
+    }
   };
 
   const handleEditTransaction = (transactionId: string) => {
@@ -215,7 +289,7 @@ const TransactionsScreen: React.FC = () => {
     <SafeAreaProvider>
       <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
 
-        <View className="px-4">
+        <View className="px-2">
           <TransactionsHeader
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}

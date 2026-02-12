@@ -20,7 +20,6 @@ interface Account {
   type: string;
   balance: number;
   sort_order?: number;
-  monthly_savings_goal?: number | null;
 }
 
 const accountTypeIcons: { [key: string]: any } = {
@@ -54,13 +53,8 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
   const [type, setType] = useState(account?.type?.toLowerCase() || 'checking');
   const [balance, setBalance] = useState(account?.balance.toString() || '0');
   const [sortOrder, setSortOrder] = useState(account?.sort_order ?? 0);
-  const [savingsGoal, setSavingsGoal] = useState(
-    account?.monthly_savings_goal != null ? account.monthly_savings_goal.toString() : ''
-  );
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  const isSavingsOrInvestment = type === 'savings' || type === 'investment';
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -186,27 +180,6 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
             </View>
           </View>
 
-          {/* Monthly Savings Goal - only for savings/investment accounts */}
-          {isSavingsOrInvestment && (
-            <View className="mb-6">
-              <Text className="text-sm text-secondaryDark mb-2 font-medium">Monthly Savings Goal</Text>
-              <View className="relative flex-row items-center bg-surfaceDark border border-borderDark rounded-2xl px-4">
-                <Text className="text-xl text-secondaryDark mr-2">{currencySymbol}</Text>
-                <TextInput
-                  keyboardType="numeric"
-                  value={savingsGoal}
-                  onChangeText={setSavingsGoal}
-                  placeholder="0"
-                  placeholderTextColor="#475569"
-                  className="flex-1 py-4 text-textDark text-xl"
-                />
-              </View>
-              <Text className="text-xs text-secondaryDark mt-2 italic">
-                Set a monthly target for saving to this account (optional)
-              </Text>
-            </View>
-          )}
-
           <View className="mb-6">
             <Text className="text-sm text-secondaryDark mb-2 font-medium">Display Order</Text>
             <TouchableOpacity
@@ -270,14 +243,12 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
           visible={showSuccess}
           text="Account Updated!"
           onDismiss={() => {
-            const goalValue = savingsGoal.trim() === '' ? null : parseFloat(savingsGoal) || null;
             onSave({
               ...account,
               name: name.trim(),
               type,
               balance: parseFloat(balance) || 0,
               sort_order: sortOrder,
-              monthly_savings_goal: isSavingsOrInvestment ? goalValue : null,
             });
             setShowSuccess(false);
           }}

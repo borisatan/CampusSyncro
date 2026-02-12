@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { PiggyBank } from "lucide-react-native";
@@ -25,12 +27,13 @@ interface SavingsProgressCardProps {
   monthlyIncome: number;
   showOnDashboard: boolean;
   onToggleDashboard: () => void;
+  onAddPress?: () => void;
 }
 
 const formatAmount = (amount: number, symbol: string): string => {
   return `${symbol}${Math.abs(amount).toLocaleString("en-US", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   })}`;
 };
 
@@ -42,6 +45,7 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
   monthlyIncome,
   showOnDashboard,
   onToggleDashboard,
+  onAddPress,
 }) => {
   const { isDarkMode } = useTheme();
   const { setSavingsTarget } = useIncomeStore();
@@ -187,7 +191,7 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
                     marginTop: 2,
                   }}
                 >
-                  {formatAmount(target - saved, currencySymbol)} to go
+                  {saved >= target ? "Goal Reached!" : `${formatAmount(target - saved, currencySymbol)} to go`}
                 </Text>
               ) : (
                 <Text
@@ -202,38 +206,57 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
               )}
             </View>
 
-            <View className="items-end">
-              {hasTarget ? (
-                <>
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "700",
-                      color: "#22C55E",
-                    }}
-                  >
-                    {formatAmount(saved, currencySymbol)}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-                      marginTop: 1,
-                    }}
-                  >
-                    / {formatAmount(target, currencySymbol)}
-                  </Text>
-                </>
-              ) : (
-                <View
-                  className="px-3 py-1 rounded-full"
-                  style={{ backgroundColor: isDarkMode ? "#4B5563" : "#E2E8F0" }}
+            <View className="flex-row items-center" style={{ gap: 10 }}>
+              {/* Add button */}
+              {onAddPress && (
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    onAddPress();
+                  }}
+                  className="w-9 h-9 rounded-full items-center justify-center border border-borderDark"
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#16A34A" : "#22C55E",
+                  })}
                 >
-                  <Text style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8", fontSize: 12 }}>
-                    No target
-                  </Text>
-                </View>
+                  <Ionicons name="add" size={20} color="#FFFFFF" />
+                </Pressable>
               )}
+
+              <View className="items-end">
+                {hasTarget ? (
+                  <>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "700",
+                        color: "#22C55E",
+                      }}
+                    >
+                      {formatAmount(saved, currencySymbol)}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: isDarkMode ? "#7C8CA0" : "#94A3B8",
+                        marginTop: 1,
+                      }}
+                    >
+                      / {formatAmount(target, currencySymbol)}
+                    </Text>
+                  </>
+                ) : (
+                  <View
+                    className="px-3 py-1 rounded-full"
+                    style={{ backgroundColor: isDarkMode ? "#4B5563" : "#E2E8F0" }}
+                  >
+                    <Text style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8", fontSize: 12 }}>
+                      No target
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
 

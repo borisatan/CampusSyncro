@@ -27,7 +27,7 @@ interface CategoryBudgetRowProps {
   category: Category;
   currencySymbol: string;
   monthlyIncome: number;
-  onSave: (categoryId: number, amount: number | null) => void;
+  onSave: (categoryId: number, amount: number | null, percentage?: number | null) => void;
   showOnDashboard: boolean;
   onToggleDashboard: (categoryId: number) => void;
   expanded: boolean;
@@ -37,7 +37,7 @@ interface CategoryBudgetRowProps {
 const formatAmount = (amount: number, symbol: string): string => {
   return `${symbol}${Math.abs(amount).toLocaleString('en-US', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   })}`;
 };
 
@@ -64,8 +64,15 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   const spent = budgetData?.spent ?? 0;
   const percentage_used = budgetData?.percentage_used ?? 0;
   const [amountText, setAmountText] = useState(budget_amount > 0 ? budget_amount.toString() : '');
-  const [budgetMode, setBudgetMode] = useState<BudgetMode>('fixed');
-  const [percentText, setPercentText] = useState('');
+  // Initialize mode based on whether a percentage is saved
+  const [budgetMode, setBudgetMode] = useState<BudgetMode>(
+    category.budget_percentage != null && category.budget_percentage > 0 ? 'percentage' : 'fixed'
+  );
+  const [percentText, setPercentText] = useState(
+    category.budget_percentage != null && category.budget_percentage > 0
+      ? category.budget_percentage.toString()
+      : ''
+  );
 
   // Calculate budget as percentage of income (for display)
   const budgetPercentOfIncome = monthlyIncome > 0 ? (budget_amount / monthlyIncome) * 100 : 0;
@@ -93,7 +100,7 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   };
 
   const isOver = hasBudget && percentage_used > 100;
-  const isWarning = hasBudget && percentage_used >= 80 && percentage_used < 100;
+  const isWarning = hasBudget && percentage_used >= 90 && percentage_used <= 100;
   const remaining = Math.max(budget_amount - spent, 0);
 
   // Animated progress bar
@@ -124,6 +131,16 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
     setAmountText(budget_amount > 0 ? budget_amount.toString() : '');
   }, [budget_amount]);
 
+  // Sync budgetMode and percentText when category data changes
+  useEffect(() => {
+    if (category.budget_percentage != null && category.budget_percentage > 0) {
+      setBudgetMode('percentage');
+      setPercentText(category.budget_percentage.toString());
+    } else {
+      setBudgetMode('fixed');
+    }
+  }, [category.budget_percentage]);
+
   useEffect(() => {
     toggleProgress.value = withTiming(budgetMode === 'percentage' ? 1 : 0, { duration: 200 });
   }, [budgetMode]);
@@ -153,11 +170,11 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
       const pct = parseFloat(percentText);
       if (isNaN(pct) || pct <= 0 || monthlyIncome <= 0) return;
       const computedAmount = Math.round((pct / 100) * monthlyIncome);
-      onSave(category.id, computedAmount);
+      onSave(category.id, computedAmount, pct);
     } else {
       const amount = parseFloat(amountText);
       if (isNaN(amount) || amount <= 0) return;
-      onSave(category.id, amount);
+      onSave(category.id, amount, null);
     }
     onToggleExpand();
   };
@@ -167,7 +184,7 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
     setAmountText('');
     setPercentText('');
     setBudgetMode('fixed');
-    onSave(category.id, null);
+    onSave(category.id, null, null);
   };
 
   const progressColor = isOver

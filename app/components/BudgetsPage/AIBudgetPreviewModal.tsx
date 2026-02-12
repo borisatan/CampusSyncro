@@ -40,7 +40,7 @@ interface AIBudgetPreviewModalProps {
 const formatCurrency = (amount: number, symbol: string): string => {
   return `${symbol}${Math.abs(amount).toLocaleString('en-US', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   })}`;
 };
 
@@ -125,21 +125,15 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
     };
   };
 
-  const cardBg = isDarkMode ? '#151C2E' : '#FFFFFF';
-  const innerBg = isDarkMode ? '#0F172A' : '#F8FAFC';
-  const borderColor = isDarkMode ? '#1E293B' : '#E2E8F0';
-  const textPrimary = isDarkMode ? '#F1F5F9' : '#0F172A';
-  const textSecondary = isDarkMode ? '#8B99AE' : '#94A3B8';
-
   const renderLoadingState = () => (
     <View className="py-12 items-center">
-      <Text style={{ fontSize: 17, fontWeight: '600', color: textPrimary }}>
+      <Text className={`text-[17px] font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
         Analyzing your categories...
       </Text>
-      <Text style={{ fontSize: 13, color: textSecondary, marginTop: 6 }}>
+      <Text className={`text-[13px] mt-1.5 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
         This may take a few seconds
       </Text>
-      <ActivityIndicator size="large" color="#FFFFFF" style={{ marginTop: 24 }} />
+      <ActivityIndicator size="large" color={isDarkMode ? '#FFFFFF' : '#000000'} className="mt-6" />
     </View>
   );
 
@@ -158,19 +152,18 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
         />
       </View>
       <View className="items-center">
-        <Text style={{ fontSize: 17, fontWeight: '600', color: textPrimary, marginBottom: 6 }}>
+        <Text className={`text-[17px] font-semibold mb-1.5 ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
           {isRateLimited ? 'Too many requests' : 'Unable to generate budget'}
         </Text>
-        <Text style={{ fontSize: 13, color: textSecondary, textAlign: 'center', paddingHorizontal: 16, marginBottom: 20 }}>
+        <Text className={`text-[13px] text-center px-4 mb-5 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
           {isRateLimited ? 'Please wait a moment and try again.' : error}
         </Text>
         <TouchableOpacity
           onPress={onRetry}
-          className="rounded-xl py-3 px-8"
-          style={{ backgroundColor: '#2563EB' }}
+          className="rounded-xl py-3 px-8 bg-accentBlue"
           activeOpacity={0.8}
         >
-          <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>Try Again</Text>
+          <Text className="text-white font-bold text-sm">Try Again</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -190,7 +183,7 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
             <Text style={{ fontWeight: '800', fontSize: 16, color: config.color }}>
               {percentage}%
             </Text>
-            <Text style={{ fontSize: 11, color: textSecondary, marginTop: 2 }}>
+            <Text className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
               {config.label}
             </Text>
           </View>
@@ -203,7 +196,7 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
         <Text style={{ fontWeight: '800', fontSize: 16, color: SAVINGS_CONFIG.color }}>
           20%
         </Text>
-        <Text style={{ fontSize: 11, color: textSecondary, marginTop: 2 }}>
+        <Text className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
           {SAVINGS_CONFIG.label}
         </Text>
       </View>
@@ -215,8 +208,9 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
     return (
       <View
         key={alloc.categoryId}
-        className="flex-row items-center py-3 px-3 rounded-xl mb-1.5"
-        style={{ backgroundColor: innerBg, borderWidth: 1, borderColor: borderColor }}
+        className={`flex-row items-center py-3 px-3 rounded-xl mb-1.5 border ${
+          isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
+        }`}
       >
         <View
           className="w-10 h-10 rounded-lg items-center justify-center mr-3"
@@ -225,11 +219,15 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
           <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={20} color="#fff" />
         </View>
         <View className="flex-1">
-          <Text style={{ fontWeight: '600', fontSize: 14, color: textPrimary }}>{alloc.categoryName}</Text>
+          <Text className={`font-semibold text-sm ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
+            {alloc.categoryName}
+          </Text>
         </View>
         <View className="items-end">
-          <Text style={{ fontWeight: '700', fontSize: 15, color: textPrimary }}>{alloc.percentage}%</Text>
-          <Text style={{ fontSize: 12, color: textSecondary }}>
+          <Text className={`font-bold text-[15px] ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
+            {alloc.percentage}%
+          </Text>
+          <Text className={`text-xs ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
             {formatCurrency(alloc.amount, currencySymbol)}
           </Text>
         </View>
@@ -253,10 +251,10 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
             className="w-2 h-2 rounded-full mr-2"
             style={{ backgroundColor: config.color }}
           />
-          <Text style={{ fontWeight: '600', fontSize: 13, color: textPrimary }}>
+          <Text className={`font-semibold text-[13px] ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
             {config.label}
           </Text>
-          <Text style={{ marginLeft: 6, fontSize: 12, color: textSecondary }}>
+          <Text className={`ml-1.5 text-xs ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
             ({items.reduce((sum, a) => sum + a.percentage, 0)}%)
           </Text>
         </View>
@@ -269,40 +267,38 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
     <>
       {/* Header */}
       <View className="flex-row items-center justify-between mb-1">
-        <Text style={{ fontSize: 22, fontWeight: '700', color: textPrimary }}>
+        <Text className={`text-[22px] font-bold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
           Your Budget
         </Text>
-        <View
-          className="w-11 h-11 rounded-2xl items-center justify-center"
-          style={{ backgroundColor: '#2563EB' }}
-        >
+        <View className="w-11 h-11 rounded-2xl items-center justify-center bg-accentBlue">
           <Ionicons name="sparkles" size={18} color="#FFFFFF" />
         </View>
       </View>
-      <Text style={{ fontSize: 13, color: textSecondary, marginBottom: 12 }}>
+      <Text className={`text-[13px] mb-3 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
         80% spending, 20% savings
         {fromCache ? ' (cached)' : ''}
       </Text>
 
       {/* Budget summary bar */}
       <View
-        className="rounded-xl p-3 mb-4"
-        style={{ backgroundColor: innerBg, borderWidth: 1, borderColor: borderColor }}
+        className={`rounded-xl p-3 mb-4 border ${
+          isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
+        }`}
       >
         <View className="flex-row justify-between">
           <View>
-            <Text style={{ fontSize: 11, color: textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text className={`text-[11px] uppercase tracking-wide ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
               Spending
             </Text>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: textPrimary, marginTop: 2 }}>
+            <Text className={`text-base font-bold mt-0.5 ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
               {formatCurrency(spendingBudget, currencySymbol)}
             </Text>
           </View>
           <View className="items-end">
-            <Text style={{ fontSize: 11, color: textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text className={`text-[11px] uppercase tracking-wide ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
               Savings
             </Text>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: SAVINGS_CONFIG.color, marginTop: 2 }}>
+            <Text className="text-base font-bold mt-0.5" style={{ color: SAVINGS_CONFIG.color }}>
               {formatCurrency(savingsAmount, currencySymbol)}
             </Text>
           </View>
@@ -318,34 +314,34 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
         {renderSection('wants')}
       </ScrollView>
 
-      <View className="flex-row mt-1" style={{ gap: 10 }}>
+      <View className="flex-row mt-1 gap-2.5">
         <TouchableOpacity
           onPress={onCancel}
           disabled={isApplying}
-          className="flex-1 rounded-xl py-3.5 items-center"
-          style={{
-            borderWidth: 1,
-            borderColor: borderColor,
-            opacity: isApplying ? 0.5 : 1,
-          }}
+          className={`flex-1 rounded-xl py-3.5 items-center border ${
+            isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
+          }`}
+          style={{ opacity: isApplying ? 0.5 : 1 }}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: textSecondary }}>Cancel</Text>
+          <Text className={`text-sm font-semibold ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+            Cancel
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onApply}
           disabled={isApplying}
-          className="flex-1 rounded-xl py-3.5 items-center flex-row justify-center"
-          style={{ backgroundColor: '#2A9D8F', opacity: isApplying ? 0.8 : 1 }}
+          className="flex-1 rounded-xl py-3.5 items-center flex-row justify-center bg-accentTeal"
+          style={{ opacity: isApplying ? 0.8 : 1 }}
           activeOpacity={0.8}
         >
           {isApplying ? (
             <>
-              <ActivityIndicator size="small" color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>Applying...</Text>
+              <ActivityIndicator size="small" color="#FFF" className="mr-2" />
+              <Text className="text-white font-bold text-[15px]">Applying...</Text>
             </>
           ) : (
-            <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>Apply Budget</Text>
+            <Text className="text-white font-bold text-[15px]">Apply Budget</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -354,14 +350,9 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
 
   const content = (
     <View
-      style={{
-        width: '94%',
-        borderRadius: 20,
-        padding: 16,
-        backgroundColor: cardBg,
-        borderWidth: 1,
-        borderColor: borderColor,
-      }}
+      className={`w-[94%] rounded-2xl p-4 border ${
+        isDarkMode ? 'bg-backgroundDark border-borderDark' : 'bg-background border-borderLight'
+      }`}
     >
       {isLoading && renderLoadingState()}
       {!isLoading && error && renderErrorState()}
@@ -370,14 +361,14 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
       {!isLoading && !allocations && (
         <TouchableOpacity
           onPress={onCancel}
-          className="mt-2.5 rounded-xl py-3 items-center"
-          style={{
-            borderWidth: 1,
-            borderColor: borderColor,
-          }}
+          className={`mt-2.5 rounded-xl py-3 items-center border ${
+            isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
+          }`}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: textSecondary }}>Cancel</Text>
+          <Text className={`text-sm font-semibold ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+            Cancel
+          </Text>
         </TouchableOpacity>
       )}
     </View>

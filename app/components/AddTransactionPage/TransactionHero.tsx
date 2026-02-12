@@ -70,11 +70,24 @@ export const TransactionHero = ({
     <>
       {/* Header */}
       {showHeader && (
-        <View className="mb-6">
-          <Text className={isDarkMode ? "text-2xl font-semibold text-white" : "text-2xl font-semibold text-gray-900"}>
+        <View className="pt-4 pb-3">
+          <Text
+            style={{
+              fontSize: 28,
+              fontWeight: "800",
+              color: isDarkMode ? "#F1F5F9" : "#0F172A",
+              letterSpacing: -0.5,
+            }}
+          >
             {title}
           </Text>
-          <Text className={isDarkMode ? "text-slate-400" : "text-gray-600"}>
+          <Text
+            style={{
+              fontSize: 13,
+              color: isDarkMode ? "#7C8CA0" : "#94A3B8",
+              marginTop: 2,
+            }}
+          >
             {subtitle}
           </Text>
         </View>

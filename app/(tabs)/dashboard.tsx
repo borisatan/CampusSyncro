@@ -36,6 +36,7 @@ export default function Dashboard() {
 
   const {
     timeFrame,
+    offset,
     setTimeFrame,
     setOffset,
     loading: dataLoading,
@@ -115,9 +116,14 @@ export default function Dashboard() {
   );
 
   const onCategoryPress = (category_name: string) => {
-    router.push({
-      pathname: "/transaction-list",
-      params: { initialCategory: category_name, t: Date.now().toString() },
+    router.navigate({
+      pathname: "/(tabs)/transaction-list",
+      params: {
+        initialCategory: category_name,
+        initialTimeFrame: timeFrame,
+        initialOffset: offset.toString(),
+        t: Date.now().toString()
+      },
     });
   };
 
@@ -132,7 +138,7 @@ export default function Dashboard() {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 30 }}
       >
-        <View className="px-2">
+        <View className="px-2 pt-4">
           <DashboardSummary
             totalBalance={totalBalance}
             totalIncome={totalIncome}

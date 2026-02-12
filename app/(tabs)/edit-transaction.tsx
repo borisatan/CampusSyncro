@@ -228,7 +228,7 @@ const EditTransactionScreen = () => {
           className="flex-1"
         >
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
+            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
             className="flex-1"
             keyboardShouldPersistTaps="handled"
           >

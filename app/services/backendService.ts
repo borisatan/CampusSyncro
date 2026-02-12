@@ -137,6 +137,55 @@ export async function updateUserCurrency(newCurrency: string) {
   return data;
 }
 
+// ============ Income & Savings Settings ============
+
+export interface IncomeSettings {
+  use_dynamic_income: boolean;
+  manual_income: number;
+  monthly_savings_target: number;
+}
+
+export async function getIncomeSettings(): Promise<IncomeSettings | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('Profiles')
+    .select('use_dynamic_income, manual_income, monthly_savings_target')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching income settings:', error.message);
+    return null;
+  }
+
+  return {
+    use_dynamic_income: data.use_dynamic_income ?? true,
+    manual_income: data.manual_income ?? 0,
+    monthly_savings_target: data.monthly_savings_target ?? 0,
+  };
+}
+
+export async function updateIncomeSettings(settings: Partial<IncomeSettings>): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { error } = await supabase
+    .from('Profiles')
+    .update({
+      ...settings,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export const fetchCategories = async () => {
     const { data, error } = await supabase.from("Categories").select("*");
     if (error) throw error;
@@ -188,16 +237,57 @@ export const fetchTransactions = async (
     .from("Transactions")
       .select("*")
       .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1); 
-      
+      .range(offset, offset + limit - 1);
+
       if (error) {
         console.error("Error fetching transactions:", error.message);
       return [];
     }
-    
+
     return data || [];
   } catch (err) {
     console.error("Unexpected error fetching transactions:", err);
+    return [];
+  }
+};
+
+export const fetchFilteredTransactions = async (options: {
+  category?: string;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+  offset?: number;
+}): Promise<Transaction[]> => {
+  try {
+    let query = supabase
+      .from("Transactions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (options.category) {
+      query = query.eq("category_name", options.category);
+    }
+    if (options.startDate) {
+      query = query.gte("created_at", options.startDate.toISOString());
+    }
+    if (options.endDate) {
+      query = query.lte("created_at", options.endDate.toISOString());
+    }
+
+    const limit = options.limit ?? 50;
+    const offset = options.offset ?? 0;
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching filtered transactions:", error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Unexpected error fetching filtered transactions:", err);
     return [];
   }
 };
@@ -563,11 +653,15 @@ export const fetchIncomeForPeriod = async (startDate: Date, endDate: Date): Prom
 
 export const updateCategoryBudgetAmount = async (
   categoryId: number,
-  budgetAmount: number | null
+  budgetAmount: number | null,
+  budgetPercentage?: number | null
 ): Promise<void> => {
   const { error } = await supabase
     .from('Categories')
-    .update({ budget_amount: budgetAmount, budget_percentage: null })
+    .update({
+      budget_amount: budgetAmount,
+      budget_percentage: budgetPercentage ?? null,
+    })
     .eq('id', categoryId);
 
   if (error) throw error;
@@ -716,7 +810,7 @@ export const fetchMonthlySavingsProgress = async (
   endDate: Date
 ): Promise<number> => {
   const { data, error } = await supabase
-    .from('goalcontributions')
+    .from('GoalContributions')
     .select('amount')
     .gte('created_at', startDate.toISOString())
     .lt('created_at', endDate.toISOString());
@@ -743,4 +837,34 @@ export const recordSavingsTransfer = async (payload: {
       source_account_id: payload.source_account_id,
     }]);
   if (error) throw error;
+};
+
+// Quick save: deduct from account and record as savings progress
+// This is a "set aside" model - money is marked as saved without transferring to another account
+export const quickSaveFromAccount = async (payload: {
+  user_id: string;
+  account_name: string;
+  amount: number;
+  source_account_id: number;
+  new_balance: number;
+}): Promise<void> => {
+  // Update account balance
+  const { error: balanceError } = await supabase
+    .from('Accounts')
+    .update({ balance: payload.new_balance })
+    .eq('account_name', payload.account_name);
+
+  if (balanceError) throw balanceError;
+
+  // Record as savings contribution
+  const { error: contributionError } = await supabase
+    .from('GoalContributions')
+    .insert([{
+      goal_id: null,
+      user_id: payload.user_id,
+      amount: payload.amount,
+      source_account_id: payload.source_account_id,
+    }]);
+
+  if (contributionError) throw contributionError;
 };

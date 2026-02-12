@@ -40,6 +40,10 @@ export interface Profile {
   id: string;
   currency: string;
   updated_at: string;
+  // Income & savings settings
+  use_dynamic_income?: boolean;
+  manual_income?: number;
+  monthly_savings_target?: number;
 }
 
 export interface CategoryAggregation {

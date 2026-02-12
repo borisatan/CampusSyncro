@@ -16,7 +16,7 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
-    Animated.spring(scale, { toValue: 0.95, friction: 3, useNativeDriver: true }).start();
+    Animated.spring(scale, { toValue: 0.96, friction: 3, useNativeDriver: true }).start();
   };
 
   const handlePressOut = () => {

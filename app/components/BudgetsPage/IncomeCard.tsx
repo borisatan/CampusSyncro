@@ -35,7 +35,7 @@ interface IncomeCardProps {
 const formatAmount = (amount: number, symbol: string): string => {
   return `${symbol}${Math.abs(amount).toLocaleString("en-US", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   })}`;
 };
 
@@ -178,7 +178,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           <View className="flex-1">
             <Text
               className="text-md mb-1"
-              style={{ color: isDarkMode ? "#8B99AE" : "#64748B" }}
+              style={{ color: isDarkMode ? "rgb(139, 153, 174)" : "#64748B" }}
             >
               Monthly Income
             </Text>

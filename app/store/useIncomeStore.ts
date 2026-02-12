@@ -1,15 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { getIncomeSettings, updateIncomeSettings } from '../services/backendService';
 
 interface IncomeState {
+  // Synced to Supabase
   useDynamicIncome: boolean;
   manualIncome: number;
-  isLoading: boolean;
   monthlySavingsTarget: number;
-  savingsTargetMonth: string;
+  // Local UI preferences (AsyncStorage only)
   savingsSortOrder: number;
   showSavingsOnDashboard: boolean;
+  // Computed/runtime state
   totalBudgeted: number;
+  isLoading: boolean;
+  // Actions
   loadIncomeSettings: () => Promise<void>;
   saveIncomeSettings: (useDynamic: boolean, manualIncome: number) => Promise<void>;
   setSavingsTarget: (amount: number) => Promise<void>;
@@ -18,36 +22,64 @@ interface IncomeState {
   setTotalBudgeted: (amount: number) => void;
 }
 
-const INCOME_SETTINGS_KEY = '@perfin_income_settings';
+const LOCAL_PREFS_KEY = '@perfin_income_local_prefs';
+
+interface LocalPrefs {
+  savingsSortOrder: number;
+  showSavingsOnDashboard: boolean;
+}
+
+const loadLocalPrefs = async (): Promise<LocalPrefs> => {
+  try {
+    const stored = await AsyncStorage.getItem(LOCAL_PREFS_KEY);
+    if (stored) {
+      const prefs = JSON.parse(stored);
+      return {
+        savingsSortOrder: prefs.savingsSortOrder ?? 0,
+        showSavingsOnDashboard: prefs.showSavingsOnDashboard ?? true,
+      };
+    }
+  } catch (error) {
+    console.error('Error loading local prefs:', error);
+  }
+  return { savingsSortOrder: 0, showSavingsOnDashboard: true };
+};
+
+const saveLocalPrefs = async (prefs: LocalPrefs): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(LOCAL_PREFS_KEY, JSON.stringify(prefs));
+  } catch (error) {
+    console.error('Error saving local prefs:', error);
+  }
+};
 
 export const useIncomeStore = create<IncomeState>((set, get) => ({
   useDynamicIncome: true,
   manualIncome: 0,
-  isLoading: true,
   monthlySavingsTarget: 0,
-  savingsTargetMonth: '',
   savingsSortOrder: 0,
   showSavingsOnDashboard: true,
   totalBudgeted: 0,
+  isLoading: true,
 
   loadIncomeSettings: async () => {
     try {
       set({ isLoading: true });
-      const stored = await AsyncStorage.getItem(INCOME_SETTINGS_KEY);
-      if (stored) {
-        const settings = JSON.parse(stored);
-        set({
-          useDynamicIncome: settings.useDynamicIncome ?? true,
-          manualIncome: settings.manualIncome ?? 0,
-          monthlySavingsTarget: settings.monthlySavingsTarget ?? 0,
-          savingsTargetMonth: settings.savingsTargetMonth ?? '',
-          savingsSortOrder: settings.savingsSortOrder ?? 0,
-          showSavingsOnDashboard: settings.showSavingsOnDashboard ?? true,
-          isLoading: false,
-        });
-      } else {
-        set({ isLoading: false });
-      }
+
+      // Load from Supabase and local storage in parallel
+      const [supabaseSettings, localPrefs] = await Promise.all([
+        getIncomeSettings(),
+        loadLocalPrefs(),
+      ]);
+
+      set({
+        useDynamicIncome: supabaseSettings?.use_dynamic_income ?? true,
+        manualIncome: supabaseSettings?.manual_income ?? 0,
+        monthlySavingsTarget: supabaseSettings?.monthly_savings_target ?? 0,
+        savingsSortOrder: localPrefs.savingsSortOrder,
+        showSavingsOnDashboard: localPrefs.showSavingsOnDashboard,
+        isLoading: false,
+      });
     } catch (error) {
       console.error('Error loading income settings:', error);
       set({ isLoading: false });
@@ -56,16 +88,10 @@ export const useIncomeStore = create<IncomeState>((set, get) => ({
 
   saveIncomeSettings: async (useDynamic, manualIncome) => {
     try {
-      const { monthlySavingsTarget, savingsTargetMonth, savingsSortOrder, showSavingsOnDashboard } = get();
-      const settings = {
-        useDynamicIncome: useDynamic,
-        manualIncome,
-        monthlySavingsTarget,
-        savingsTargetMonth,
-        savingsSortOrder,
-        showSavingsOnDashboard,
-      };
-      await AsyncStorage.setItem(INCOME_SETTINGS_KEY, JSON.stringify(settings));
+      await updateIncomeSettings({
+        use_dynamic_income: useDynamic,
+        manual_income: manualIncome,
+      });
       set({ useDynamicIncome: useDynamic, manualIncome });
     } catch (error) {
       console.error('Error saving income settings:', error);
@@ -74,60 +100,26 @@ export const useIncomeStore = create<IncomeState>((set, get) => ({
 
   setSavingsTarget: async (amount: number) => {
     try {
-      const { useDynamicIncome, manualIncome, savingsSortOrder, showSavingsOnDashboard } = get();
-      const now = new Date();
-      const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-      const settings = {
-        useDynamicIncome,
-        manualIncome,
-        monthlySavingsTarget: amount,
-        savingsTargetMonth: month,
-        savingsSortOrder,
-        showSavingsOnDashboard,
-      };
-      await AsyncStorage.setItem(INCOME_SETTINGS_KEY, JSON.stringify(settings));
-      set({ monthlySavingsTarget: amount, savingsTargetMonth: month });
+      await updateIncomeSettings({
+        monthly_savings_target: amount,
+      });
+      set({ monthlySavingsTarget: amount });
     } catch (error) {
       console.error('Error saving savings target:', error);
     }
   },
 
   setSavingsSortOrder: async (order: number) => {
-    try {
-      const { useDynamicIncome, manualIncome, monthlySavingsTarget, savingsTargetMonth, showSavingsOnDashboard } = get();
-      const settings = {
-        useDynamicIncome,
-        manualIncome,
-        monthlySavingsTarget,
-        savingsTargetMonth,
-        savingsSortOrder: order,
-        showSavingsOnDashboard,
-      };
-      await AsyncStorage.setItem(INCOME_SETTINGS_KEY, JSON.stringify(settings));
-      set({ savingsSortOrder: order });
-    } catch (error) {
-      console.error('Error saving savings sort order:', error);
-    }
+    const { showSavingsOnDashboard } = get();
+    await saveLocalPrefs({ savingsSortOrder: order, showSavingsOnDashboard });
+    set({ savingsSortOrder: order });
   },
 
   toggleShowSavingsOnDashboard: async () => {
-    try {
-      const { useDynamicIncome, manualIncome, monthlySavingsTarget, savingsTargetMonth, savingsSortOrder, showSavingsOnDashboard } = get();
-      const newValue = !showSavingsOnDashboard;
-      const settings = {
-        useDynamicIncome,
-        manualIncome,
-        monthlySavingsTarget,
-        savingsTargetMonth,
-        savingsSortOrder,
-        showSavingsOnDashboard: newValue,
-      };
-      await AsyncStorage.setItem(INCOME_SETTINGS_KEY, JSON.stringify(settings));
-      set({ showSavingsOnDashboard: newValue });
-    } catch (error) {
-      console.error('Error toggling show savings on dashboard:', error);
-    }
+    const { savingsSortOrder, showSavingsOnDashboard } = get();
+    const newValue = !showSavingsOnDashboard;
+    await saveLocalPrefs({ savingsSortOrder, showSavingsOnDashboard: newValue });
+    set({ showSavingsOnDashboard: newValue });
   },
 
   setTotalBudgeted: (amount: number) => {

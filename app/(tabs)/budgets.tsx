@@ -10,18 +10,23 @@ import DraggableFlatList, {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
+import { BudgetsSkeleton } from "../components/BudgetsPage/BudgetsSkeleton";
 import { CategoryBudgetRow } from "../components/BudgetsPage/CategoryBudgetRow";
 import { IncomeCard } from "../components/BudgetsPage/IncomeCard";
+import { QuickSavingsModal } from "../components/BudgetsPage/QuickSavingsModal";
 import { SavingsProgressCard } from "../components/BudgetsPage/SavingsProgressCard";
+import { useAuth } from "../context/AuthContext";
 import { useSavingsProgress } from "../hooks/useSavingsProgress";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
 import { useBudgetsData } from "../hooks/useBudgetsData";
 import {
+  quickSaveFromAccount,
   updateCategoriesOrder,
   updateCategoryBudgetAmount,
   updateCategoryBudgetPercentages,
 } from "../services/backendService";
+import { useAccountsStore } from "../store/useAccountsStore";
 import {
   BudgetAllocation,
   getBudgetAllocations,
@@ -60,14 +65,17 @@ export default function BudgetsScreen() {
   const { currencySymbol } = useCurrencyStore();
   const { useDynamicIncome, manualIncome, saveIncomeSettings, setSavingsTarget, savingsSortOrder, setSavingsSortOrder, showSavingsOnDashboard, toggleShowSavingsOnDashboard } =
     useIncomeStore();
-  const { target: savingsTarget, saved: savingsSaved, percentage: savingsPercentage } =
+  const { target: savingsTarget, saved: savingsSaved, percentage: savingsPercentage, refresh: refreshSavingsProgress } =
     useSavingsProgress();
   const { categories, updateCategoryOptimistic, reorderCategories } =
     useCategoriesStore();
   const { pinnedCategoryIds, togglePinnedCategory } =
     useDashboardCategoriesStore();
-    const {
+  const { accounts, updateAccountBalance } = useAccountsStore();
+  const { userId } = useAuth();
+  const {
     refreshDashboard,
+    refreshAccounts,
     registerBudgetsRefresh,
     registerCategoriesRefresh,
   } = useDataRefresh();
@@ -91,6 +99,38 @@ export default function BudgetsScreen() {
   const [aiSavingsAmount, setAISavingsAmount] = useState(0);
   const [aiApplying, setAIApplying] = useState(false);
 
+  // Quick savings modal state
+  const [showQuickSavingsModal, setShowQuickSavingsModal] = useState(false);
+
+  const handleQuickSave = useCallback(async (accountId: number, accountName: string, amount: number) => {
+    if (!userId) return;
+
+    const account = accounts.find(a => a.id === accountId);
+    if (!account) return;
+
+    const newBalance = account.balance - amount;
+
+    // Optimistic UI update
+    updateAccountBalance(accountName, newBalance);
+
+    try {
+      await quickSaveFromAccount({
+        user_id: userId,
+        account_name: accountName,
+        amount,
+        source_account_id: accountId,
+        new_balance: newBalance,
+      });
+
+      // Refresh savings progress and accounts
+      await Promise.all([refreshSavingsProgress(), refreshAccounts()]);
+    } catch (error) {
+      // Rollback on error
+      updateAccountBalance(accountName, account.balance);
+      throw error;
+    }
+  }, [userId, accounts, updateAccountBalance, refreshSavingsProgress, refreshAccounts]);
+
   const handleToggleExpand = useCallback((categoryId: number) => {
     setExpandedCategoryId((prev) => (prev === categoryId ? null : categoryId));
   }, []);
@@ -112,9 +152,9 @@ export default function BudgetsScreen() {
     await refresh();
   };
 
-  const handleInlineSave = (categoryId: number, amount: number | null) => {
+  const handleInlineSave = (categoryId: number, amount: number | null, percentage?: number | null) => {
     // Optimistic updates — immediate UI feedback
-    updateCategoryOptimistic(categoryId, { budget_amount: amount });
+    updateCategoryOptimistic(categoryId, { budget_amount: amount, budget_percentage: percentage });
     if (amount === null) {
       removeCategoryBudget(categoryId);
     } else {
@@ -122,7 +162,7 @@ export default function BudgetsScreen() {
     }
 
     // Persist in background, refresh on completion
-    updateCategoryBudgetAmount(categoryId, amount)
+    updateCategoryBudgetAmount(categoryId, amount, percentage)
       .then(() => {
         refresh();
         refreshDashboard();
@@ -305,7 +345,7 @@ export default function BudgetsScreen() {
       edges={["top"]}
     >
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 pt-2 pb-3">
+      <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
         <View>
           <Text
             style={{
@@ -382,7 +422,12 @@ export default function BudgetsScreen() {
         contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 150 }}
         ListHeaderComponent={
           <>
-            {!isReorderMode && (
+            {/* Show skeleton when loading */}
+            {isLoading && !isReorderMode && (
+              <BudgetsSkeleton isDarkMode={isDarkMode} />
+            )}
+
+            {!isLoading && !isReorderMode && (
               <MotiView
                 from={{ opacity: 0, translateY: 12 }}
                 animate={{ opacity: 1, translateY: 0 }}
@@ -401,7 +446,8 @@ export default function BudgetsScreen() {
             )}
 
             {/* Section label */}
-            {!isReorderMode &&
+            {!isLoading &&
+              !isReorderMode &&
               !hasCustomOrder &&
               categoryBudgets.length > 0 && (
                 <View className="flex-row items-center mb-2 mt-1 px-1">
@@ -423,18 +469,6 @@ export default function BudgetsScreen() {
                 </View>
               )}
 
-            {isReorderMode && (
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-                  marginBottom: 12,
-                  paddingHorizontal: 4,
-                }}
-              >
-                Hold and drag to reorder
-              </Text>
-            )}
           </>
         }
         renderItem={({
@@ -500,6 +534,7 @@ export default function BudgetsScreen() {
                       monthlyIncome={monthlyIncome}
                       showOnDashboard={showSavingsOnDashboard}
                       onToggleDashboard={toggleShowSavingsOnDashboard}
+                      onAddPress={() => setShowQuickSavingsModal(true)}
                     />
                   </MotiView>
                 )}
@@ -648,44 +683,29 @@ export default function BudgetsScreen() {
           />
           {aiModalView === "help" && (
             <View
-              style={{
-                width: "94%",
-                borderRadius: 20,
-                padding: 16,
-                backgroundColor: isDarkMode ? "#151C2E" : "#FFFFFF",
-                borderWidth: 1,
-                borderColor: isDarkMode ? "#1E293B" : "#E2E8F0",
-                maxHeight: "80%",
-              }}
+              className={`w-[94%] rounded-2xl p-4 border max-h-[80%] ${
+                isDarkMode ? "bg-backgroundDark border-borderDark" : "bg-background border-borderLight"
+              }`}
             >
               <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Sparkle badge */}
                 <View className="items-center mb-4">
-                  <View
-                    className="w-14 h-14 rounded-2xl items-center justify-center"
-                    style={{ backgroundColor: "#2563EB" }}
-                  >
+                  <View className="w-14 h-14 rounded-2xl items-center justify-center bg-accentBlue">
                     <Ionicons name="sparkles" size={28} color="#FFFFFF" />
                   </View>
                 </View>
 
                 <Text
-                  className="text-center mb-2"
-                  style={{
-                    fontSize: 23,
-                    fontWeight: "700",
-                    color: isDarkMode ? "#F1F5F9" : "#0F172A",
-                  }}
+                  className={`text-center mb-2 text-[23px] font-bold ${
+                    isDarkMode ? "text-textDark" : "text-textLight"
+                  }`}
                 >
                   Smart Budget Setup
                 </Text>
                 <Text
-                  className="text-center mb-5"
-                  style={{
-                    fontSize: 15,
-                    color: isDarkMode ? "#8B99AE" : "#94A3B8",
-                    lineHeight: 22,
-                  }}
+                  className={`text-center mb-5 text-[15px] leading-[22px] ${
+                    isDarkMode ? "text-secondaryDark" : "text-secondaryLight"
+                  }`}
                 >
                   Let us allocate your budget using the proven 50/30/20 rule
                 </Text>
@@ -713,42 +733,30 @@ export default function BudgetsScreen() {
                 ].map((rule) => (
                   <View
                     key={rule.label}
-                    className="flex-row items-center mb-2.5 p-3 rounded-xl"
-                    style={{
-                      backgroundColor: isDarkMode ? "#0F172A" : "#F8FAFC",
-                      borderWidth: 1,
-                      borderColor: isDarkMode ? "#1E293B" : "#F1F5F9",
-                    }}
+                    className={`flex-row items-center mb-2.5 p-3 rounded-xl border ${
+                      isDarkMode ? "bg-surfaceDark border-borderDark" : "bg-background border-borderLight"
+                    }`}
                   >
                     <View
                       className="w-10 h-10 rounded-lg items-center justify-center mr-3"
                       style={{ backgroundColor: `${rule.color}60` }}
                     >
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "800",
-                          color: "#FFFFFF",
-                        }}
-                      >
+                      <Text className="text-sm font-extrabold text-white">
                         {rule.pct}
                       </Text>
                     </View>
                     <View className="flex-1">
                       <Text
-                        style={{
-                          fontSize: 15,
-                          fontWeight: "600",
-                          color: isDarkMode ? "#E2E8F0" : "#1E293B",
-                        }}
+                        className={`text-[15px] font-semibold ${
+                          isDarkMode ? "text-textDark" : "text-textLight"
+                        }`}
                       >
                         {rule.label}
                       </Text>
                       <Text
-                        style={{
-                          fontSize: 13,
-                          color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-                        }}
+                        className={`text-[13px] ${
+                          isDarkMode ? "text-secondaryDark" : "text-secondaryLight"
+                        }`}
                       >
                         {rule.desc}
                       </Text>
@@ -757,36 +765,28 @@ export default function BudgetsScreen() {
                 ))}
 
                 <View
-                  className="rounded-xl p-3 mt-2 mb-4"
-                  style={{
-                    backgroundColor: isDarkMode ? "#0F172A" : "#FFFBEB",
-                    borderWidth: 1,
-                    borderColor: isDarkMode ? "#1E293B" : "#FEF3C7",
-                  }}
+                  className={`rounded-xl p-3 mt-2 mb-4 border ${
+                    isDarkMode ? "bg-surfaceDark border-borderDark" : "bg-amber-50 border-amber-100"
+                  }`}
                 >
                   <Text
-                    style={{
-                      fontSize: 13,
-                      color: isDarkMode ? "#8B99AE" : "#92400E",
-                      lineHeight: 18,
-                    }}
+                    className={`text-[13px] leading-[18px] ${
+                      isDarkMode ? "text-secondaryDark" : "text-amber-800"
+                    }`}
                   >
-                    <Text style={{ fontWeight: "600" }}>Tip:</Text> You can
+                    <Text className="font-semibold">Tip:</Text> You can
                     always tweak the amounts afterwards to match your lifestyle.
                   </Text>
                 </View>
 
                 <TouchableOpacity
                   onPress={handleSetBudgetWithAI}
-                  className="rounded-xl py-3.5 items-center"
-                  style={{ backgroundColor: "#2563EB" }}
+                  className="rounded-xl py-3.5 items-center bg-accentBlue"
                   activeOpacity={0.8}
                 >
-                  <View className="flex-row items-center" style={{ gap: 6 }}>
+                  <View className="flex-row items-center gap-1.5">
                     <Ionicons name="sparkles" size={16} color="#FFF" />
-                    <Text
-                      style={{ color: "#FFF", fontWeight: "700", fontSize: 16 }}
-                    >
+                    <Text className="text-white font-bold text-base">
                       Generate My Budget
                     </Text>
                   </View>
@@ -794,19 +794,15 @@ export default function BudgetsScreen() {
 
                 <TouchableOpacity
                   onPress={handleCloseAIModal}
-                  className="mt-2.5 rounded-xl py-3 items-center"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: isDarkMode ? "#1E293B" : "#E2E8F0",
-                  }}
+                  className={`mt-2.5 rounded-xl py-3 items-center border ${
+                    isDarkMode ? "bg-surfaceDark border-borderDark" : "bg-background border-borderLight"
+                  }`}
                   activeOpacity={0.7}
                 >
                   <Text
-                    style={{
-                      fontSize: 15,
-                      fontWeight: "600",
-                      color: isDarkMode ? "#8B99AE" : "#94A3B8",
-                    }}
+                    className={`text-[15px] font-semibold ${
+                      isDarkMode ? "text-secondaryDark" : "text-secondaryLight"
+                    }`}
                   >
                     I'll do it myself
                   </Text>
@@ -834,6 +830,16 @@ export default function BudgetsScreen() {
           )}
         </View>
       )}
+
+      {/* Quick Savings Modal */}
+      <QuickSavingsModal
+        visible={showQuickSavingsModal}
+        accounts={accounts}
+        currencySymbol={currencySymbol}
+        targetRemaining={Math.max(0, savingsTarget - savingsSaved)}
+        onSave={handleQuickSave}
+        onClose={() => setShowQuickSavingsModal(false)}
+      />
     </SafeAreaView>
   );
 }

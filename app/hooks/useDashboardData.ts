@@ -11,8 +11,8 @@ import { useCategoriesStore } from '../store/useCategoriesStore';
 import { Category, CategoryAggregation, ChartDataPoint, TimeFrame } from '../types/types';
 import {
   aggregateTransactionsByDay,
-  aggregateTransactionsByMonth,
-  aggregateTransactionsByWeek
+  aggregateTransactionsByDayOfMonth,
+  aggregateTransactionsByMonth
 } from '../utils/chartUtils';
 
 const OFFSETS = [0, -1, -2] as const;
@@ -66,7 +66,7 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
 
     let chartData: ChartDataPoint[];
     if (period === 'week') chartData = aggregateTransactionsByDay(transactions, startDate);
-    else if (period === 'month') chartData = aggregateTransactionsByWeek(transactions, startDate);
+    else if (period === 'month') chartData = aggregateTransactionsByDayOfMonth(transactions, startDate);
     else chartData = aggregateTransactionsByMonth(transactions, startDate);
 
     const total = aggregates.reduce((sum, cat) => sum + cat.total_amount, 0);

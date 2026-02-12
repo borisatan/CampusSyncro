@@ -19,11 +19,24 @@ const TransactionsHeader: React.FC<TransactionsHeaderProps> = ({
   return (
     <>
       {/* Title */}
-      <View className="mb-6">
-        <Text className="text-2xl font-semibold text-textLight dark:text-textDark">
+      <View className="pt-4 pb-3">
+        <Text
+          style={{
+            fontSize: 28,
+            fontWeight: "800",
+            color: isDarkMode ? "#F1F5F9" : "#0F172A",
+            letterSpacing: -0.5,
+          }}
+        >
           Transactions
         </Text>
-        <Text className="text-md mt-1 text-secondaryLight dark:text-secondaryDark">
+        <Text
+          style={{
+            fontSize: 13,
+            color: isDarkMode ? "#7C8CA0" : "#94A3B8",
+            marginTop: 2,
+          }}
+        >
           View your transaction history
         </Text>
       </View>

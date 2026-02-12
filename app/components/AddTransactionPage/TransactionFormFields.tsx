@@ -7,6 +7,7 @@ import {
   Platform,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View
 } from "react-native";
 
@@ -37,6 +38,7 @@ export const TransactionFormFields = ({
   buttonText,
   isSubmitting = false,
 }: FormFieldsProps) => {
+  const systemColorScheme = useColorScheme();
   const defaultButtonText = `Add ${transactionType === "expense" ? "Expense" : "Income"}`;
   const displayButtonText = buttonText || defaultButtonText;
   return (
@@ -92,7 +94,7 @@ export const TransactionFormFields = ({
                     display="spinner"
                     onChange={handleDateChange}
                     maximumDate={new Date()}
-                    textColor={isDarkMode ? "#ffffff" : "#000000"}
+                    themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
                   />
                 </View>
               </TouchableOpacity>
@@ -110,7 +112,10 @@ export const TransactionFormFields = ({
 
       {/* Submit Button */}
       <TouchableOpacity
-        onPress={handleSubmit}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          handleSubmit();
+        }}
         disabled={isSubmitting}
         className={`w-full py-4 rounded-xl items-center mb-6 ${
           transactionType === "expense" ? "bg-accentRed" : "bg-accentTeal"
@@ -137,7 +142,9 @@ export const DateSelector = ({
   | "showDatePicker"
   | "setShowDatePicker"
   | "handleDateChange"
->) => (
+>) => {
+  const systemColorScheme = useColorScheme();
+  return (
   <View className="mb-6">
     <Text
       className={`text-sm mb-2 ${isDarkMode ? "text-slate-400" : "text-gray-600"}`}
@@ -188,7 +195,7 @@ export const DateSelector = ({
                 display="spinner"
                 onChange={handleDateChange}
                 maximumDate={new Date()}
-                textColor={isDarkMode ? "#ffffff" : "#000000"}
+                themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
               />
             </View>
           </TouchableOpacity>
@@ -200,10 +207,12 @@ export const DateSelector = ({
           display="default"
           onChange={handleDateChange}
           maximumDate={new Date()}
+          themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
         />
       ))}
   </View>
-);
+  );
+};
 
 export const SubmitButton = ({
   isDarkMode,

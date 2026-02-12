@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  useColorScheme,
   View,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -51,6 +52,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const systemColorScheme = useColorScheme();
 
 
   useEffect(() => {
@@ -77,7 +79,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
     setShowStartPicker(Platform.OS === "ios");
     if (date) {
       const newStart = date.toISOString().split("T")[0];
-      setDateRange({ start: newStart, end: dateRange?.end || "" });
+      // Auto-select today as end date when selecting a start date
+      const todayStr = new Date().toISOString().split("T")[0];
+      setDateRange({ start: newStart, end: dateRange?.end || todayStr });
     }
   };
 
@@ -104,11 +108,22 @@ const FilterModal: React.FC<FilterModalProps> = ({
     }
   };
 
-  const activeFiltersCount = 
-    (filterType !== "all" ? 1 : 0) + 
-    selectedCategories.length + 
-    filterAccounts.length + 
+  const activeFiltersCount =
+    (filterType !== "all" ? 1 : 0) +
+    selectedCategories.length +
+    filterAccounts.length +
     (dateRange ? 1 : 0);
+
+  // Filter out Income category from the list
+  const filteredCategories = categoriesList.filter(
+    (cat) => cat.category_name.toLowerCase() !== "income"
+  );
+
+  // Find selected categories that aren't in the loaded list (to display them)
+  const loadedCategoryNames = categoriesList.map((c) => c.category_name);
+  const unloadedSelectedCategories = selectedCategories.filter(
+    (name) => !loadedCategoryNames.includes(name) && name.toLowerCase() !== "income"
+  );
 
     return (
       <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -235,7 +250,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       mode="date"
                       display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={handleStartDateChange}
-                      themeVariant="dark"
+                      themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
                     />
                   )}
 
@@ -246,7 +261,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={handleEndDateChange}
                       minimumDate={startDate}
-                      themeVariant="dark"
+                      themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
                     />
                   )}
                 </View>
@@ -286,7 +301,22 @@ const FilterModal: React.FC<FilterModalProps> = ({
                   Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
                 </Text>
                 <View className="flex-row flex-wrap justify-between gap-y-2.5">
-                  {categoriesList.map((cat) => {
+                  {/* Show unloaded selected categories first */}
+                  {unloadedSelectedCategories.map((catName) => (
+                    <TouchableOpacity
+                      key={catName}
+                      onPress={() => toggleCategory(catName)}
+                      className="flex-row items-center gap-2.5 px-3 py-3 rounded-xl border border-accentBlue bg-accentBlue/10 w-[48%]"
+                    >
+                      <View className="w-9 h-9 rounded-lg items-center justify-center bg-gray-500">
+                        <Ionicons name="pricetag" size={18} color="white" />
+                      </View>
+                      <Text numberOfLines={1} className="flex-1 text-sm text-textDark font-bold">
+                        {catName}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                  {filteredCategories.map((cat) => {
                     const isSelected = selectedCategories.includes(cat.category_name);
                     return (
                       <TouchableOpacity

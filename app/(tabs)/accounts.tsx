@@ -134,10 +134,27 @@ export default function Accounts() {
         <ScrollView className="flex-1">
           <View className="px-2" style={{ paddingBottom: insets.bottom + 20 }}>
             {/* Header */}
-            <View className="flex-row items-center justify-between mb-6 px-2">
+            <View className="flex-row items-center justify-between pt-4 pb-3 px-2">
               <View>
-                <Text className={`text-2xl font-semibold ${isDark ? 'text-textDark' : 'text-textLight'}`}>My Accounts</Text>
-                <Text className={`text-md mt-1 ${isDark ? 'text-secondaryDark' : 'text-secondaryLight'}`}>Manage your financial accounts</Text>
+                <Text
+                  style={{
+                    fontSize: 28,
+                    fontWeight: "800",
+                    color: isDark ? "#F1F5F9" : "#0F172A",
+                    letterSpacing: -0.5,
+                  }}
+                >
+                  My Accounts
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: isDark ? "#7C8CA0" : "#94A3B8",
+                    marginTop: 2,
+                  }}
+                >
+                  Manage your financial accounts
+                </Text>
               </View>
               <View className="flex-row items-center">
                 <TouchableOpacity

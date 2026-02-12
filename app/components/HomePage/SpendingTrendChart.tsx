@@ -157,7 +157,10 @@ export const SpendingTrendChart = React.memo(({
     if (timeFrame === "week") {
       fullLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     } else if (timeFrame === "month") {
-      fullLabels = ["1", "8", "15", "22", "29"];
+      // Get the number of days in the current month
+      const now = new Date();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      fullLabels = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
     } else if (timeFrame === "year") {
       fullLabels = [
         "Jan",
@@ -202,8 +205,8 @@ export const SpendingTrendChart = React.memo(({
           const adjustedLabel = labelNum === 0 ? 7 : labelNum;
           isFuture = adjustedLabel > adjustedToday;
         } else if (timeFrame === "month") {
-          const currentWeekIdx = Math.floor((new Date().getDate() - 1) / 7);
-          isFuture = index > currentWeekIdx;
+          const todayDate = new Date().getDate();
+          isFuture = index + 1 > todayDate;
         } else if (timeFrame === "year") {
           isFuture = index > new Date().getMonth();
         }
@@ -250,9 +253,9 @@ export const SpendingTrendChart = React.memo(({
   };
 
   // Upsample data for smooth scrubbing (inserts intermediate interpolated points)
-  // week: 7 pts * 86 = ~602, month: 5 pts * 120 = ~600, year: 12 pts * 50 = ~600
+  // week: 7 pts * 86 = ~602, month: ~30 pts * 20 = ~600, year: 12 pts * 50 = ~600
   const INTERPOLATION_STEPS =
-    timeFrame === "month" ? 120 : timeFrame === "week" ? 86 : 50;
+    timeFrame === "month" ? 20 : timeFrame === "week" ? 86 : 50;
   const { smoothData, smoothLastActualIndex } = useMemo(() => {
     if (cumulativeData.length < 2) {
       return {
@@ -583,10 +586,16 @@ export const SpendingTrendChart = React.memo(({
                       (_, i) => i * INTERPOLATION_STEPS,
                     );
                   } else if (timeFrame === "month") {
-                    // All 5 week-start dates
-                    return cumulativeData.map(
-                      (_, i) => i * INTERPOLATION_STEPS,
+                    // Show labels at days 1, 8, 15, 22, 29 (or last day if month is shorter)
+                    const tickDays = [1, 8, 15, 22, 29].filter(
+                      (d) => d <= cumulativeData.length,
                     );
+                    // Replace 29 with the last day if it's different
+                    if (cumulativeData.length > 28 && cumulativeData.length !== 29) {
+                      const lastIdx = tickDays.indexOf(29);
+                      if (lastIdx >= 0) tickDays[lastIdx] = cumulativeData.length;
+                    }
+                    return tickDays.map((d) => (d - 1) * INTERPOLATION_STEPS);
                   } else {
                     // Year: show ~5 labels including first and last
                     const indices = [0, 2, 5, 8, 11].filter(

@@ -5,6 +5,8 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StatusBar,
   Text,
@@ -205,11 +207,15 @@ export default function CategoryEditor() {
         <View className="w-11" />
       </View>
 
-      <ScrollView 
-        className="flex-1" 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
       >
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 32 }}
+        >
         {/* Live Preview Card - Always at top */}
         <Animated.View
           style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
@@ -334,7 +340,8 @@ export default function CategoryEditor() {
             )}
           </TouchableOpacity>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Success Modal */}
       <SuccessModal
