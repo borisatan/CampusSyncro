@@ -277,7 +277,7 @@ export default function ProfileScreen() {
 
         {/* Footer Info */}
         <View className="items-center pb-10">
-          <Text className={`text-sm ${textSecondary}`}>Finance Tracker</Text>
+          <Text className={`text-sm ${textSecondary}`}>Monelo</Text>
           <Text className={`text-xs mt-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Version 1.0.0</Text>
         </View>
 

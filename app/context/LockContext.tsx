@@ -99,7 +99,7 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'Unlock Perfin',
+      promptMessage: 'Unlock Monelo',
       fallbackLabel: 'Use Passcode',
       cancelLabel: 'Cancel',
       disableDeviceFallback: false, // Allow device PIN/passcode as fallback

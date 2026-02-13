@@ -80,7 +80,7 @@ export default function AppLockScreen() {
         </View>
 
         {/* App Name */}
-        <Text className="text-white text-3xl font-bold mb-2">Perfin</Text>
+        <Text className="text-white text-3xl font-bold mb-2">Monelo</Text>
         <Text className="text-secondaryDark text-base mb-8">Your finances are locked</Text>
 
         {/* Auth Method Tabs */}

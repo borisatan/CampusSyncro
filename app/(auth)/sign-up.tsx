@@ -74,7 +74,7 @@ export default function SignUpScreen() {
           Create your account
         </Text>
         <Text className={isDarkMode ? "text-secondaryDark mt-1" : "text-secondaryLight mt-1"}>
-          Join Perfin in seconds
+          Join Monelo in seconds
         </Text>
       </View>
 
