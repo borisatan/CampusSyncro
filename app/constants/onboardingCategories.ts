@@ -21,6 +21,22 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
   { name: 'Personal Care', icon: 'sparkles', color: '#A855F7', section: 'lifestyle', defaultSelected: false },
 ];
 
+// V3 Onboarding - Simplified category list (all pre-selected)
+export interface V3Category {
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export const V3_DEFAULT_CATEGORIES: V3Category[] = [
+  { name: 'Groceries', icon: 'cart', color: '#22C55E' },
+  { name: 'Eating Out', icon: 'restaurant', color: '#EF4444' },
+  { name: 'Subscriptions', icon: 'tv', color: '#8B5CF6' },
+  { name: 'Transport', icon: 'car', color: '#3B82F6' },
+  { name: 'Shopping', icon: 'bag-handle', color: '#06B6D4' },
+  { name: 'Other', icon: 'apps', color: '#6B7280' },
+];
+
 export const EMOTION_OPTIONS = [
   { id: 'anxious', label: 'Anxious', emoji: '😰' },
   { id: 'overwhelmed', label: 'Overwhelmed', emoji: '😵' },

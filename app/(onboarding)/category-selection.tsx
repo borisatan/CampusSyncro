@@ -10,7 +10,7 @@ import { useOnboardingStore } from '../store/useOnboardingStore';
 export default function CategorySelectionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { setOnboardingStep, setPendingCategories, pendingCategories } = useOnboardingStore();
+  const { setOnboardingStep, setPendingCategories, pendingCategories, completeOnboarding } = useOnboardingStore();
 
   // Initialize with default selections or previously saved
   const [selectedCategories, setSelectedCategories] = useState<OnboardingCategory[]>(() => {
@@ -38,6 +38,11 @@ export default function CategorySelectionScreen() {
   const handleContinue = () => {
     setPendingCategories(selectedCategories);
     router.push('/(onboarding)/budget-setting');
+  };
+
+  const handleSkip = () => {
+    completeOnboarding();
+    router.replace('/(tabs)/dashboard');
   };
 
   const isSelected = (category: OnboardingCategory) =>
@@ -73,6 +78,7 @@ export default function CategorySelectionScreen() {
         currentStep={3}
         title="Choose your focus areas."
         subtitle="We'll track these to keep your spending intentional."
+        onSkip={handleSkip}
       />
 
       {/* Category List */}
@@ -87,8 +93,8 @@ export default function CategorySelectionScreen() {
 
       {/* Footer */}
       <View
-        style={{ paddingBottom: insets.bottom + 16 }}
-        className="px-2 pt-4 bg-backgroundDark border-t border-borderDark"
+        className="px-2 pt-4 bg-backgroundDark border-t border-borderDark pb-4"
+        style={{ paddingBottom: insets.bottom + 16 }} // Dynamic safe area inset
       >
         <Text className="text-secondaryDark text-sm text-center mb-3">
           {selectedCategories.length} categories selected

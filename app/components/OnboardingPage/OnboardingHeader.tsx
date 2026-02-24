@@ -13,9 +13,12 @@ import ProgressBar from './ProgressBar';
 
 interface OnboardingHeaderProps {
   currentStep: number;
+  totalSteps?: number;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   showBack?: boolean;
+  onSkip?: () => void;
+  onBack?: () => void;
 }
 
 const STEP_ROUTES: Record<number, string> = {
@@ -29,9 +32,12 @@ const STEP_ROUTES: Record<number, string> = {
 
 export default function OnboardingHeader({
   currentStep,
+  totalSteps = 6,
   title,
   subtitle,
   showBack = true,
+  onSkip,
+  onBack,
 }: OnboardingHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -56,6 +62,10 @@ export default function OnboardingHeader({
   }));
 
   const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
     const previousStep = currentStep - 1;
     const route = STEP_ROUTES[previousStep];
     if (route) {
@@ -64,7 +74,21 @@ export default function OnboardingHeader({
   };
 
   return (
-    <View style={{ paddingTop: insets.top + 8 }} className="px-2">
+    <View className="px-2 pt-2" style={{ paddingTop: insets.top + 8 }}>
+      {onSkip && (
+        <View className="flex-row justify-end mb-2">
+          <TouchableOpacity
+            onPress={onSkip}
+            activeOpacity={0.7}
+            className="bg-accentBlue px-8 py-3 rounded-full"
+          >
+            <Text className="text-white text-base font-semibold">
+              Skip
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Progress Bar */}
       <ProgressBar currentStep={currentStep} />
 
@@ -88,12 +112,14 @@ export default function OnboardingHeader({
         >
           {title}
         </Animated.Text>
-        <Animated.Text
-          style={subtitleAnimatedStyle}
-          className="text-secondaryDark text-base mt-2"
-        >
-          {subtitle}
-        </Animated.Text>
+        {subtitle && (
+          <Animated.Text
+            style={subtitleAnimatedStyle}
+            className="text-secondaryDark text-base mt-2"
+          >
+            {subtitle}
+          </Animated.Text>
+        )}
       </View>
     </View>
   );

@@ -158,7 +158,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                     <Text className="text-[15px] font-semibold text-slate-100">
                       {cb.category.category_name}
                     </Text>
-                    <Text className="text-xs mt-0.5" style={{ color: statusColor }}>
+                    <Text className="text-xs mt-0.5" style={{ color: statusColor }}> {/* Dynamic color based on status */}
                       {isOver
                         ? `${formatAmount(cb.spent - cb.budget_amount, currencySymbol)} over`
                         : `${formatAmount(remaining, currencySymbol)} left`}
@@ -231,14 +231,14 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                   <Text className="text-[15px] font-semibold text-slate-100">
                     Monthly Savings
                   </Text>
-                  <Text className="text-xs mt-0.5" style={{ color: "#22C55E" }}>
+                  <Text className="text-xs mt-0.5 text-accentGreen">
                     {formatAmount(savingsData.target - savingsData.saved, currencySymbol)} to go
                   </Text>
                 </View>
 
                 {/* Amount Display */}
                 <View className="items-end">
-                  <Text className="text-base font-bold" style={{ color: "#22C55E" }}>
+                  <Text className="text-base font-bold text-accentGreen">
                     {formatAmount(savingsData.saved, currencySymbol)}
                   </Text>
                   <Text className="text-xs mt-px text-secondaryDark">
@@ -309,8 +309,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                     ? 100 + itemCount * 50 + 50
                     : 0,
                 }}
-                className="px-4 py-3 border-t border-borderDark"
-                style={{ backgroundColor: "#1E2536" }}
+                className="px-4 py-3 border-t border-borderDark bg-surfaceDark"
               >
                 {/* Total Header */}
                 <View className="flex-row items-center justify-between mb-2">
@@ -324,7 +323,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                       </Text>
                       <Text
                         className="text-[11px] mt-px"
-                        style={{ color: totalStatusColor }}
+                        style={{ color: totalStatusColor }} // Dynamic color based on status
                       >
                         {totalIsOver
                           ? `${formatAmount(totalSpent - totalLimit, currencySymbol)} over`

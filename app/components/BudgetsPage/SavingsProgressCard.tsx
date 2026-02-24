@@ -56,12 +56,10 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
   const [amountText, setAmountText] = useState(target > 0 ? target.toString() : "");
   const [percentText, setPercentText] = useState("");
 
-  // Sync amount text when target changes externally
   useEffect(() => {
     setAmountText(target > 0 ? target.toString() : "");
   }, [target]);
 
-  // Animated progress bar
   const progressWidth = useSharedValue(0);
 
   useEffect(() => {
@@ -82,7 +80,6 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
     width: `${progressWidth.value * 100}%`,
   }));
 
-  // Animated toggle: 0 = fixed, 1 = percentage
   const toggleProgress = useSharedValue(0);
 
   useEffect(() => {
@@ -145,7 +142,6 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
 
   const handleToggleExpand = () => {
     if (!expanded && hasTarget) {
-      // Pre-populate when expanding
       setAmountText(target.toString());
       if (monthlyIncome > 0) {
         setPercentText(((target / monthlyIncome) * 100).toFixed(1));
@@ -157,56 +153,34 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
   return (
     <Pressable onPress={handleToggleExpand}>
       <View
-        className="rounded-2xl overflow-hidden"
-        style={{
-          backgroundColor: isDarkMode ? "#20283A" : "#F8FAFC",
-          borderWidth: 1,
-          borderColor: expanded ? "#22C55E40" : (isDarkMode ? "#4B5563" : "#E2E8F0"),
-        }}
+        className={`rounded-2xl overflow-hidden border ${
+          isDarkMode ? 'bg-surfaceDark' : 'bg-surfaceLight'
+        } ${
+          expanded ? 'border-overlayGreen' : isDarkMode ? 'border-borderDark' : 'border-slate100'
+        }`}
       >
         <View className="px-4 py-4">
           {/* Header */}
           <View className="flex-row items-center">
-            <View
-              className="w-11 h-11 rounded-xl items-center justify-center mr-3"
-              style={{ backgroundColor: "#8A00C2" }}
-            >
+            <View className="w-11 h-11 rounded-xl items-center justify-center mr-3 bg-accentPurple">
               <PiggyBank size={22} color="#FFFFFF" />
             </View>
             <View className="flex-1">
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: "600",
-                  color: isDarkMode ? "#F1F5F9" : "#0F172A",
-                }}
-              >
+              <Text className={`text-base font-semibold ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}>
                 Monthly Savings
               </Text>
               {hasTarget ? (
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: "#22C55E",
-                    marginTop: 2,
-                  }}
-                >
+                <Text className="text-xs mt-0.5 text-accentGreen">
                   {saved >= target ? "Goal Reached!" : `${formatAmount(target - saved, currencySymbol)} to go`}
                 </Text>
               ) : (
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-                    marginTop: 2,
-                  }}
-                >
+                <Text className={`text-xs mt-0.5 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
                   Goal contributions this month
                 </Text>
               )}
             </View>
 
-            <View className="flex-row items-center" style={{ gap: 10 }}>
+            <View className="flex-row items-center gap-2.5">
               {/* Add button */}
               {onAddPress && (
                 <Pressable
@@ -216,8 +190,8 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
                     onAddPress();
                   }}
                   className="w-9 h-9 rounded-full items-center justify-center border border-borderDark"
-                  style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#16A34A" : "#22C55E",
+                  style={({ pressed }: any) => ({
+                    backgroundColor: pressed ? "#16A34A" : "#22D97A",
                   })}
                 >
                   <Ionicons name="add" size={20} color="#FFFFFF" />
@@ -227,31 +201,16 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
               <View className="items-end">
                 {hasTarget ? (
                   <>
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        fontWeight: "700",
-                        color: "#22C55E",
-                      }}
-                    >
+                    <Text className="text-lg font-bold text-accentGreen">
                       {formatAmount(saved, currencySymbol)}
                     </Text>
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-                        marginTop: 1,
-                      }}
-                    >
+                    <Text className={`text-xs mt-0.5 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
                       / {formatAmount(target, currencySymbol)}
                     </Text>
                   </>
                 ) : (
-                  <View
-                    className="px-3 py-1 rounded-full"
-                    style={{ backgroundColor: isDarkMode ? "#4B5563" : "#E2E8F0" }}
-                  >
-                    <Text style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8", fontSize: 12 }}>
+                  <View className={`px-3 py-1 rounded-full ${isDarkMode ? 'bg-gray600' : 'bg-slate100'}`}>
+                    <Text className={`text-xs ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
                       No target
                     </Text>
                   </View>
@@ -263,23 +222,14 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
           {/* Progress bar */}
           {hasTarget && (
             <View className="mt-3">
-              <View
-                className="h-1.5 rounded-full overflow-hidden"
-                style={{ backgroundColor: "#4B5563" }}
-              >
+              <View className="h-1.5 rounded-full overflow-hidden bg-gray600">
                 <Animated.View
-                  style={[
-                    {
-                      height: "100%",
-                      borderRadius: 9999,
-                      backgroundColor: "#22C55E",
-                    },
-                    progressBarStyle,
-                  ]}
+                  className="h-full rounded-full bg-accentGreen"
+                  style={progressBarStyle}
                 />
               </View>
               <View className="flex-row justify-end mt-1">
-                <Text style={{ fontSize: 11, color: "#22C55E", fontWeight: "600" }}>
+                <Text className="text-[11px] text-accentGreen font-semibold">
                   {Math.round(percentage)}%
                 </Text>
               </View>
@@ -289,55 +239,38 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
 
         {/* Expanded Edit Section */}
         {expanded && (
-          <View
-            className="px-4 pb-4"
-            style={{
-              borderTopWidth: 1,
-              borderTopColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-              paddingTop: 14,
-            }}
-          >
+          <View className="px-4 pb-4 pt-[14px] border-t border-borderDark">
             {/* Mode toggle */}
             <Animated.View entering={FadeIn.duration(200).delay(50)}>
-              <View
-                className="rounded-xl p-1 flex-row mb-4"
-                style={{
-                  backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-                  position: "relative",
-                }}
-              >
+              <View className="rounded-xl flex-row mb-4 bg-inputDark border border-borderDark overflow-hidden">
                 <Animated.View
                   style={[
                     {
-                      position: "absolute",
-                      top: 4,
-                      width: "50%",
-                      height: "100%",
-                      borderRadius: 10,
-                      backgroundColor: "#2A9D8F",
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      width: '50%',
+                      borderRadius: 11,
+                      backgroundColor: '#1DB8A3',
                     },
                     sliderStyle,
                   ]}
                 />
                 <TouchableOpacity
                   onPress={() => handleModeChange("fixed")}
-                  className="flex-1 py-2.5 rounded-lg z-10"
+                  className="flex-1 py-2.5 z-10"
                   activeOpacity={0.7}
                 >
-                  <Animated.Text
-                    style={[{ textAlign: "center", fontWeight: "500", fontSize: 13 }, fixedTextStyle]}
-                  >
+                  <Animated.Text style={[{ textAlign: "center", fontWeight: "500", fontSize: 13 }, fixedTextStyle]}>
                     Fixed Amount
                   </Animated.Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => handleModeChange("percentage")}
-                  className="flex-1 py-2.5 rounded-lg z-10"
+                  className="flex-1 py-2.5 z-10"
                   activeOpacity={0.7}
                 >
-                  <Animated.Text
-                    style={[{ textAlign: "center", fontWeight: "500", fontSize: 13 }, percentTextStyle]}
-                  >
+                  <Animated.Text style={[{ textAlign: "center", fontWeight: "500", fontSize: 13 }, percentTextStyle]}>
                     % of Income
                   </Animated.Text>
                 </TouchableOpacity>
@@ -347,82 +280,46 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
             <Animated.View entering={FadeIn.duration(200).delay(100)}>
               {budgetMode === "fixed" ? (
                 <View>
-                  <Text
-                    style={{
-                      color: isDarkMode ? "#8B99AE" : "#64748B",
-                      fontSize: 11,
-                      marginBottom: 6,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                    }}
-                  >
+                  <Text className="text-secondaryDark text-[11px] mb-1.5 uppercase tracking-wide">
                     Savings Target
                   </Text>
-                  <View
-                    className="flex-row items-center px-3 h-12 rounded-xl"
-                    style={{
-                      backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-                      borderWidth: 1,
-                      borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-                    }}
-                  >
-                    <Text style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8", fontSize: 16, marginRight: 4 }}>
-                      {currencySymbol}
-                    </Text>
+                  <View className="flex-row items-center px-3 h-12 rounded-xl bg-inputDark border border-borderDark">
+                    <Text className="text-slateMuted text-base mr-1">{currencySymbol}</Text>
                     <TextInput
-                      className="flex-1 py-0"
-                      style={{ color: isDarkMode ? "#F1F5F9" : "#0F172A", fontSize: 16 }}
+                      className="flex-1 py-0 text-slate50 text-base"
                       value={amountText}
                       onChangeText={setAmountText}
                       keyboardType="numeric"
                       placeholder="0"
-                      placeholderTextColor={isDarkMode ? "#6B7280" : "#CBD5E1"}
-                      selectionColor="#22C55E"
+                      placeholderTextColor="#6B7280"
+                      selectionColor="#22D97A"
                     />
                   </View>
                   {amountText !== "" && !isNaN(parseFloat(amountText)) && monthlyIncome > 0 && (
-                    <Text style={{ color: isDarkMode ? "#8B99AE" : "#64748B", fontSize: 12, marginTop: 6 }}>
+                    <Text className="text-secondaryDark text-xs mt-1.5">
                       = {((parseFloat(amountText) / monthlyIncome) * 100).toFixed(1)}% of income
                     </Text>
                   )}
                 </View>
               ) : (
                 <View>
-                  <Text
-                    style={{
-                      color: isDarkMode ? "#8B99AE" : "#64748B",
-                      fontSize: 11,
-                      marginBottom: 6,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                    }}
-                  >
+                  <Text className="text-secondaryDark text-[11px] mb-1.5 uppercase tracking-wide">
                     Percentage of Income ({formatAmount(monthlyIncome, currencySymbol)}/mo)
                   </Text>
-                  <View
-                    className="flex-row items-center px-3 h-12 rounded-xl"
-                    style={{
-                      backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-                      borderWidth: 1,
-                      borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-                    }}
-                  >
+                  <View className="flex-row items-center px-3 h-12 rounded-xl bg-inputDark border border-borderDark">
                     <TextInput
-                      className="flex-1 py-0"
-                      style={{ color: isDarkMode ? "#F1F5F9" : "#0F172A", fontSize: 16 }}
+                      className="flex-1 py-0 text-slate50 text-base"
                       value={percentText}
                       onChangeText={setPercentText}
                       keyboardType="numeric"
                       placeholder="0"
-                      placeholderTextColor={isDarkMode ? "#6B7280" : "#CBD5E1"}
-                      selectionColor="#22C55E"
+                      placeholderTextColor="#6B7280"
+                      selectionColor="#22D97A"
                     />
-                    <Text style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8", fontSize: 16, marginLeft: 4 }}>
-                      %
-                    </Text>
+                    <Text className="text-slateMuted text-base ml-1">%</Text>
                   </View>
                   {percentText !== "" && !isNaN(parseFloat(percentText)) && monthlyIncome > 0 && (
-                    <Text style={{ color: isDarkMode ? "#8B99AE" : "#64748B", fontSize: 12, marginTop: 6 }}>
+                    <Text className="text-secondaryDark text-xs mt-1.5">
                       = {formatAmount(Math.round((parseFloat(percentText) / 100) * monthlyIncome), currencySymbol)}
                     </Text>
                   )}
@@ -431,24 +328,22 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
             </Animated.View>
 
             {/* Action buttons */}
-            <Animated.View entering={FadeIn.duration(200).delay(150)} className="mt-4 flex-row" style={{ gap: 10 }}>
+            <Animated.View entering={FadeIn.duration(200).delay(150)} className="mt-4 flex-row gap-2.5">
               {hasTarget && (
                 <TouchableOpacity
                   onPress={handleRemove}
-                  className="flex-1 rounded-xl py-3 items-center"
-                  style={{ backgroundColor: "#EF4444" }}
+                  className="flex-1 rounded-xl py-3 items-center bg-accentRed"
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 14 }}>Remove</Text>
+                  <Text className="text-white font-semibold text-sm">Remove</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
                 onPress={handleSave}
-                className="flex-1 rounded-xl py-3 items-center"
-                style={{ backgroundColor: "#2A9D8F" }}
+                className="flex-1 rounded-xl py-3 items-center bg-accentTeal"
                 activeOpacity={0.7}
               >
-                <Text style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 14 }}>
+                <Text className="text-white font-semibold text-sm">
                   {hasTarget ? "Save" : "Set Target"}
                 </Text>
               </TouchableOpacity>
@@ -457,18 +352,17 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
             {/* Show on Dashboard toggle */}
             {hasTarget && (
               <Animated.View entering={FadeIn.duration(200).delay(200)} className="mt-4 flex-row items-center justify-between">
-                <Text style={{ color: isDarkMode ? "#8B99AE" : "#64748B", fontSize: 13 }}>Show on Dashboard</Text>
+                <Text className="text-secondaryDark text-[13px]">Show on Dashboard</Text>
                 <View onStartShouldSetResponder={() => true}>
                   <AnimatedToggle
                     value={showOnDashboard}
                     onValueChange={onToggleDashboard}
-                    activeColor="#2A9D8F"
+                    activeColor="#1DB8A3"
                     inactiveColor="#334155"
                   />
                 </View>
               </Animated.View>
             )}
-
           </View>
         )}
       </View>

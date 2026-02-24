@@ -50,19 +50,19 @@ const CLASSIFICATION_CONFIG: Record<
 > = {
   needs: {
     label: 'Needs',
-    color: '#3B82F6',
+    color: '#3B7EFF',
     icon: 'home',
   },
   wants: {
     label: 'Wants',
-    color: '#EF4444',
+    color: '#F2514A',
     icon: 'heart',
   },
 };
 
 const SAVINGS_CONFIG = {
   label: 'Savings',
-  color: '#22C55E',
+  color: '#22D97A',
   icon: 'trending-up',
 };
 
@@ -142,13 +142,14 @@ export const AIBudgetPreviewModal: React.FC<AIBudgetPreviewModalProps> = ({
   const renderErrorState = () => (
     <View className="py-12">
       <View
-        className="w-9 h-9 rounded-xl items-center justify-center mb-4 self-end"
-        style={{ backgroundColor: isRateLimited ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)' }}
+        className={`w-9 h-9 rounded-xl items-center justify-center mb-4 self-end ${
+          isRateLimited ? 'bg-overlayAmber' : 'bg-overlayRed'
+        }`}
       >
         <Ionicons
           name={isRateLimited ? 'time-outline' : 'alert-circle'}
           size={18}
-          color={isRateLimited ? '#F59E0B' : '#EF4444'}
+          color={isRateLimited ? '#F4A623' : '#F2514A'}
         />
       </View>
       <View className="items-center">

@@ -31,6 +31,7 @@ export default function BudgetSettingScreen() {
     setOnboardingStep,
     pendingIncome,
     setPendingIncome,
+    completeOnboarding,
   } = useOnboardingStore();
 
   const [income, setIncome] = useState(pendingIncome > 0 ? pendingIncome.toString() : '');
@@ -64,6 +65,11 @@ export default function BudgetSettingScreen() {
     router.push('/(onboarding)/savings-potential');
   };
 
+  const handleSkip = () => {
+    completeOnboarding();
+    router.replace('/(tabs)/dashboard');
+  };
+
   const incomeNum = parseInt(income, 10) || 0;
   const isValid = incomeNum > 0;
   const currentCurrency = CURRENCY_OPTIONS.find(c => c.code === selectedCurrency) || CURRENCY_OPTIONS[0];
@@ -74,6 +80,7 @@ export default function BudgetSettingScreen() {
         currentStep={4}
         title="What's your monthly income?"
         subtitle="This helps us calculate your savings potential."
+        onSkip={handleSkip}
       />
 
       <KeyboardAvoidingView
@@ -121,8 +128,8 @@ export default function BudgetSettingScreen() {
 
         {/* Footer */}
         <View
-          style={{ paddingBottom: insets.bottom + 16 }}
-          className="px-2 pt-4 bg-backgroundDark"
+          className="px-2 pt-4 bg-backgroundDark pb-4"
+          style={{ paddingBottom: insets.bottom + 16 }} // Dynamic safe area inset
         >
           <TouchableOpacity
             onPress={handleContinue}

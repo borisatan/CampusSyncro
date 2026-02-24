@@ -145,8 +145,6 @@ export default function BudgetsScreen() {
     loadCategories,
   ]);
 
-  const screenBg = isDarkMode ? "#0A0F1F" : "#FFFFFF";
-
   const handleSaveIncome = async (useDynamic: boolean, income: number) => {
     await saveIncomeSettings(useDynamic, income);
     await refresh();
@@ -341,55 +339,31 @@ export default function BudgetsScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: screenBg }}
+      className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`}
       edges={["top"]}
     >
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
         <View>
-          <Text
-            style={{
-              fontSize: 28,
-              fontWeight: "800",
-              color: isDarkMode ? "#F1F5F9" : "#0F172A",
-              letterSpacing: -0.5,
-            }}
-          >
+          <Text className={`text-3xl font-extrabold -tracking-tight ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}>
             Budgets
           </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-              marginTop: 2,
-            }}
-          >
+          <Text className={`text-xs mt-0.5 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
             {isReorderMode
               ? "Hold & drag to reorder"
               : "Manage your spending limits"}
           </Text>
         </View>
-        <View className="flex-row" style={{ gap: 8 }}>
+        <View className="flex-row gap-2">
           <TouchableOpacity
             onPress={() => setIsReorderMode(!isReorderMode)}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 12,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: isReorderMode
-                ? "#2A9D8F"
+            className={`w-9 h-9 rounded-xl items-center justify-center border ${
+              isReorderMode
+                ? 'bg-accentTeal border-accentTeal'
                 : isDarkMode
-                  ? "#1E293B"
-                  : "#F1F5F9",
-              borderWidth: 1,
-              borderColor: isReorderMode
-                ? "#2A9D8F"
-                : isDarkMode
-                  ? "#334155"
-                  : "#E2E8F0",
-            }}
+                  ? 'bg-slate700 border-slate600'
+                  : 'bg-slate50 border-slate100'
+            }`}
           >
             <Ionicons
               name="reorder-three"
@@ -401,14 +375,7 @@ export default function BudgetsScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setAIModalView("help")}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 12,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#2563EB",
-            }}
+            className="w-9 h-9 rounded-xl items-center justify-center bg-accentBlue"
           >
             <Ionicons name="sparkles" size={16} color="#FFF" />
           </TouchableOpacity>
@@ -451,19 +418,8 @@ export default function BudgetsScreen() {
               !hasCustomOrder &&
               categoryBudgets.length > 0 && (
                 <View className="flex-row items-center mb-2 mt-1 px-1">
-                  <View
-                    className="w-1.5 h-1.5 rounded-full mr-2"
-                    style={{ backgroundColor: "#2A9D8F" }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "600",
-                      color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.8,
-                    }}
-                  >
+                  <View className="w-1.5 h-1.5 rounded-full mr-2 bg-accentTeal" />
+                  <Text className={`text-xs font-semibold uppercase tracking-wide ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
                     Budgeted
                   </Text>
                 </View>
@@ -488,28 +444,21 @@ export default function BudgetsScreen() {
                     onLongPress={drag}
                     disabled={isActive}
                     delayLongPress={100}
-                    className="mb-2 rounded-2xl p-4 flex-row items-center"
-                    style={{
-                      backgroundColor: isActive ? "#4B5563" : "#20283A",
-                      borderWidth: 1,
-                      borderColor: isActive ? "#8A00C2" : "#4B5563",
-                      opacity: isActive ? 0.9 : 1,
-                    }}
+                    className={`mb-2 rounded-2xl p-4 flex-row items-center border ${
+                      isActive ? 'bg-gray600 border-accentPurple opacity-90' : 'bg-surfaceDark border-borderDark'
+                    }`}
                   >
                     <View className="mr-3">
                       <Ionicons name="menu" size={20} color="#7C8CA0" />
                     </View>
-                    <View
-                      className="w-9 h-9 rounded-lg items-center justify-center mr-3"
-                      style={{ backgroundColor: "#8A00C2" }}
-                    >
+                    <View className="w-9 h-9 rounded-lg items-center justify-center mr-3 bg-accentPurple">
                       <PiggyBank size={18} color="#fff" />
                     </View>
-                    <Text style={{ color: "#E2E8F0", fontSize: 14, flex: 1 }}>
+                    <Text className="text-slate100 text-sm flex-1">
                       Monthly Savings
                     </Text>
                     {savingsTarget > 0 && (
-                      <Text style={{ color: "#7C8CA0", fontSize: 13 }}>
+                      <Text className="text-slateMuted text-xs">
                         {currencySymbol}
                         {savingsTarget.toLocaleString()}
                       </Text>
@@ -551,23 +500,9 @@ export default function BudgetsScreen() {
                   !hasCustomOrder &&
                   index === unbudgetedStartIndex &&
                   unbudgetedStartIndex >= 0 && (
-                    <View
-                      className="flex-row items-center mb-2 px-1"
-                      style={{ marginTop: index > 0 ? 16 : 0 }}
-                    >
-                      <View
-                        className="w-1.5 h-1.5 rounded-full mr-2"
-                        style={{ backgroundColor: "#7C8CA0" }}
-                      />
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontWeight: "600",
-                          color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-                          textTransform: "uppercase",
-                          letterSpacing: 0.8,
-                        }}
-                      >
+                    <View className={`flex-row items-center mb-2 px-1 ${index > 0 ? 'mt-4' : ''}`}>
+                      <View className="w-1.5 h-1.5 rounded-full mr-2 bg-slateMuted" />
+                      <Text className={`text-xs font-semibold uppercase tracking-wide ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
                         Unbudgeted
                       </Text>
                     </View>
@@ -577,20 +512,16 @@ export default function BudgetsScreen() {
                     onLongPress={drag}
                     disabled={isActive}
                     delayLongPress={100}
-                    className="mb-2 rounded-2xl p-4 flex-row items-center"
-                    style={{
-                      backgroundColor: isActive ? "#4B5563" : "#20283A",
-                      borderWidth: 1,
-                      borderColor: isActive ? "#2A9D8F" : "#4B5563",
-                      opacity: isActive ? 0.9 : 1,
-                    }}
+                    className={`mb-2 rounded-2xl p-4 flex-row items-center border ${
+                      isActive ? 'bg-gray600 border-accentTeal opacity-90' : 'bg-surfaceDark border-borderDark'
+                    }`}
                   >
                     <View className="mr-3">
                       <Ionicons name="menu" size={20} color="#7C8CA0" />
                     </View>
                     <View
                       className="w-9 h-9 rounded-lg items-center justify-center mr-3"
-                      style={{ backgroundColor: item.category.color }}
+                      style={{ backgroundColor: item.category.color }} // Dynamic color from data
                     >
                       <Ionicons
                         name={item.category.icon as any}
@@ -598,11 +529,11 @@ export default function BudgetsScreen() {
                         color="#fff"
                       />
                     </View>
-                    <Text style={{ color: "#E2E8F0", fontSize: 14, flex: 1 }}>
+                    <Text className="text-slate100 text-sm flex-1">
                       {item.category.category_name}
                     </Text>
                     {item.budgetStatus && (
-                      <Text style={{ color: "#7C8CA0", fontSize: 13 }}>
+                      <Text className="text-slateMuted text-xs">
                         {currencySymbol}
                         {item.budgetStatus.budget_amount.toLocaleString()}
                       </Text>
@@ -649,12 +580,7 @@ export default function BudgetsScreen() {
               transition={{ type: "timing", duration: 400, delay: 200 }}
               className="items-center justify-center py-8"
             >
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-                }}
-              >
+              <Text className={`text-base ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
                 No categories found
               </Text>
             </MotiView>
@@ -664,21 +590,9 @@ export default function BudgetsScreen() {
 
       {/* Unified AI overlay — always mounted, no native Modal delay */}
       {aiModalView !== null && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 100,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.6)",
-          }}
-        >
+        <View className="absolute inset-0 z-[100] justify-center items-center bg-overlayDark">
           <Pressable
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+            className="absolute inset-0"
             onPress={handleCloseAIModal}
           />
           {aiModalView === "help" && (
@@ -716,19 +630,19 @@ export default function BudgetsScreen() {
                     pct: "50%",
                     label: "Needs",
                     desc: "Rent, groceries, utilities",
-                    color: "#3B82F6",
+                    color: "#3B7EFF",
                   },
                   {
                     pct: "30%",
                     label: "Wants",
                     desc: "Dining, hobbies, entertainment",
-                    color: "#EF4444",
+                    color: "#F2514A",
                   },
                   {
                     pct: "20%",
                     label: "Savings",
                     desc: "Emergency fund, investments",
-                    color: "#22C55E",
+                    color: "#22D97A",
                   },
                 ].map((rule) => (
                   <View

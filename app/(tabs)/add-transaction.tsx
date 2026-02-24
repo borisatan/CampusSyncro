@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AccountSelector } from "../components/AddTransactionPage/AccountSelector";
+import { AddTransactionSkeleton } from "../components/AddTransactionPage/AddTransactionSkeleton";
 import { CategoryGrid } from "../components/AddTransactionPage/CategoryGrid";
 import {
   DateSelector,
@@ -39,6 +40,7 @@ const TransactionAdder = () => {
 
   // Use global stores
   const categories = useCategoriesStore((state) => state.categories);
+  const isCategoriesLoading = useCategoriesStore((state) => state.isLoading);
   const accountOptions = useAccountsStore((state) => state.accounts);
   const expenseAccountOptions = accountOptions.filter(
     (acc) => acc.type !== "investment",
@@ -179,7 +181,7 @@ const TransactionAdder = () => {
           {/* Description */}
           <View className="mb-6">
             <Text
-              className={`text-sm mb-2 ${isDarkMode ? "text-slate-400" : "text-gray-600"}`}
+              className={`text-sm mb-2 ${isDarkMode ? "text-slate300" : "text-secondaryLight"}`}
             >
               Description
             </Text>
@@ -190,42 +192,48 @@ const TransactionAdder = () => {
               placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
               className={`w-full px-4 py-3 rounded-xl border ${
                 isDarkMode
-                  ? "bg-slate-800 border-slate-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
+                  ? "bg-slate700 border-slate600 text-textDark"
+                  : "bg-background border-borderLight text-textLight"
               }`}
             />
           </View>
 
-          {transactionType === "expense" && (
-            <CategoryGrid
-              categories={categories}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              isDarkMode={isDarkMode}
-              isLoadingCategories={false}
-              isEditMode={isEditMode}
-              setIsEditMode={setIsEditMode}
-            />
-          )}
+          {isCategoriesLoading || categories.length === 0 ? (
+            <AddTransactionSkeleton isDarkMode={isDarkMode} />
+          ) : (
+            <>
+              {transactionType === "expense" && (
+                <CategoryGrid
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  isDarkMode={isDarkMode}
+                  isLoadingCategories={false}
+                  isEditMode={isEditMode}
+                  setIsEditMode={setIsEditMode}
+                />
+              )}
 
-          <MotiView
-            key={`account-${transactionType}`}
-            from={{ opacity: 0, translateY: 8 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "timing", duration: 250, delay: 0 }}
-          >
-            <AccountSelector
-              isDarkMode={isDarkMode}
-              showAccountDropdown={showAccountDropdown}
-              setShowAccountDropdown={setShowAccountDropdown}
-              isLoadingAccounts={false}
-              selectedAccount={selectedAccount}
-              setSelectedAccount={setSelectedAccount}
-              accountOptions={accountOptions}
-              expenseAccountOptions={expenseAccountOptions}
-              transactionType={transactionType}
-            />
-          </MotiView>
+              <MotiView
+                key={`account-${transactionType}`}
+                from={{ opacity: 0, translateY: 8 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: "timing", duration: 250, delay: 0 }}
+              >
+                <AccountSelector
+                  isDarkMode={isDarkMode}
+                  showAccountDropdown={showAccountDropdown}
+                  setShowAccountDropdown={setShowAccountDropdown}
+                  isLoadingAccounts={false}
+                  selectedAccount={selectedAccount}
+                  setSelectedAccount={setSelectedAccount}
+                  accountOptions={accountOptions}
+                  expenseAccountOptions={expenseAccountOptions}
+                  transactionType={transactionType}
+                />
+              </MotiView>
+            </>
+          )}
 
           <MotiView
             key={`date-${transactionType}`}

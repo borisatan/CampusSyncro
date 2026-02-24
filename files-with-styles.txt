@@ -1,0 +1,258 @@
+Files and Components Using styles {} or Inline Styles Instead of Tailwind CSS
+================================================================================
+
+PAGES (app/ directory):
+----------------------
+1. app/_layout.tsx
+   - Uses: style={{ flex: 1 }} (GestureHandlerRootView)
+   - Uses: contentStyle: { backgroundColor: "#20283A", flex: 1 }
+
+2. app/(tabs)/_layout.tsx
+   - Uses: style={{ flex: 1, backgroundColor: "#20283A" }} (tabBarBackground)
+   - Uses: sceneStyle: { backgroundColor: "#20283A", flex: 1 }
+   - Uses: tabBarStyle with backgroundColor, borderTopColor, etc.
+
+3. app/(tabs)/accounts.tsx
+   - Uses: style={{ paddingBottom: insets.bottom + 20 }}
+   - Uses: style={{ backgroundColor, borderRadius, padding, marginTop }}
+   - Uses: style={{ fontSize: 30, fontWeight: '600', color: '#FFFFFF' }}
+
+4. app/(tabs)/budgets.tsx
+   - Uses: style={{ flex: 1, backgroundColor: screenBg }}
+   - Multiple inline styles for colors, spacing, positioning
+   - Uses: style={{ gap: 8 }}, style={{ backgroundColor: "#2A9D8F" }}, etc.
+
+5. app/(onboarding)/savings-potential.tsx
+   - Uses: StyleSheet.absoluteFill (imports StyleSheet from react-native)
+   - Uses: style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+   - Uses: style={{ fontSize: 48, fontWeight: '200', marginTop: 12 }}
+   - Uses: textStyle={{ fontSize: 88, fontWeight: '200', color: '#FFFFFF', letterSpacing: -2 }}
+
+6. app/(onboarding)/emotional-hook.tsx
+   - Uses: style={{ paddingBottom: insets.bottom + 16 }}
+
+7. app/(onboarding)/budget-setting.tsx
+   - Uses: style={{ paddingBottom: insets.bottom + 16 }}
+
+8. app/(onboarding)/category-selection.tsx
+   - Uses: style={{ paddingBottom: insets.bottom + 16 }}
+
+9. app/(onboarding)/value-alignment.tsx
+   - Uses: style={{ paddingBottom: insets.bottom + 16 }}
+
+
+COMPONENTS (app/components/ directory):
+--------------------------------------
+
+HomePage Components:
+10. app/components/HomePage/BudgetHealthCard.tsx
+    - Multiple inline styles for colors, backgrounds, positioning
+    - Uses: style={{ backgroundColor: cb.category.color }}
+    - Uses: style={{ color: statusColor }}
+    - Uses: style={{ backgroundColor: "#8A00C2" }}
+    - Uses: style={{ color: "#22C55E" }}
+    - Uses: style={{ backgroundColor: "#1E2536" }}
+    - Many more inline style usages
+
+11. app/components/HomePage/DashboardSummary.tsx
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+    - Uses: style={{ fontSize: 48, fontWeight: "700", color: "#FFFFFF" }}
+    - Uses: style={{ fontSize: 30, fontWeight: "700", color: "#FFFFFF" }}
+    - Multiple inline styles
+
+12. app/components/HomePage/SpendingTrendChart.tsx
+    - Uses: style={{ minHeight: 18 }}
+    - Uses: style={{ backgroundColor, borderRadius, padding, marginTop }}
+    - Multiple inline styles for chart elements
+
+13. app/components/HomePage/DashboardSkeleton.tsx
+    - Uses: style={{ marginBottom: 12 }}
+    - Uses: style={{ backgroundColor: isDarkMode ? "#0D9488" : "#14B8A6", opacity: 0.6 }}
+    - Uses: style={{ backgroundColor: isDarkMode ? "#DC2626" : "#EF4444", opacity: 0.6 }}
+    - Uses: style={{ backgroundColor, borderRadius, padding, marginRight }}
+    - Multiple inline styles
+
+14. app/components/HomePage/CategoryDonut.tsx
+    - Uses: style={{ transform: [{ rotate: '-90deg' }] }}
+    - Uses: style={{ backgroundColor: category?.color }}
+
+15. app/components/HomePage/GoalsOverviewCard.tsx
+    - Uses: style={{ width: `${Math.min(overallProgress, 100)}%` }}
+
+16. app/components/HomePage/ScrollableSpendingChart.tsx
+    - Uses: style={{ opacity }}
+
+BudgetsPage Components:
+17. app/components/BudgetsPage/BudgetsSkeleton.tsx
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+    - Uses: style={{ width: ringSize, height: ringSize }}
+    - Uses: style={{ marginBottom: 8 }}
+    - Uses: style={{ gap: 12 }}
+    - Multiple inline styles
+
+18. app/components/BudgetsPage/SavingsProgressCard.tsx
+    - Extensive use of inline styles
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+    - Uses: style={{ backgroundColor: "#8A00C2" }}
+    - Uses: style={{ gap: 10 }}
+    - Uses: style={{ backgroundColor: isDarkMode ? "#4B5563" : "#E2E8F0" }}
+    - Uses: style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8", fontSize: 12 }}
+    - Uses: style={{ backgroundColor: "#4B5563" }}
+    - Uses: style={{ fontSize: 11, color: "#22C55E", fontWeight: "600" }}
+    - Many more inline style usages
+
+19. app/components/BudgetsPage/IncomeCard.tsx
+    - Extensive use of inline styles
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+    - Uses: style={{ width: ringSize, height: ringSize }}
+    - Uses: style={{ fontSize: 14, fontWeight: "700", color: ringColor }}
+    - Uses: style={{ color: isDarkMode ? "rgb(139, 153, 174)" : "#64748B" }}
+    - Uses: style={{ backgroundColor: "#20283A" }}
+    - Uses: style={{ gap: 12 }}
+    - Many more inline style usages
+
+20. app/components/BudgetsPage/AIBudgetPreviewModal.tsx
+    - Uses: style={{ backgroundColor: isRateLimited ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)' }}
+    - Uses: style={{ backgroundColor: `${config.color}12`, borderWidth: 1, borderColor: `${config.color}20` }}
+    - Uses: style={{ fontWeight: '800', fontSize: 16, color: config.color }}
+    - Uses: style={{ backgroundColor: color }}
+    - Uses: style={{ backgroundColor: config.color }}
+    - Uses: style={{ maxHeight: 360 }}
+    - Uses: style={{ opacity: isApplying ? 0.5 : 1 }}
+    - Uses: style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+
+AddTransactionPage Components:
+21. app/components/AddTransactionPage/TransactionHero.tsx
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+    - Uses: style={{ overflow: 'hidden' }}
+
+22. app/components/AddTransactionPage/AccountSelector.tsx
+    - Uses: style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+
+23. app/components/AddTransactionPage/edit-category.tsx
+    - Uses: style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
+    - Uses: style={{ backgroundColor: selectedColor }}
+    - Uses: style={{ gap: 8 }}
+
+24. app/components/AddTransactionPage/CategoryGrid.tsx
+    - Uses: style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
+    - Uses: style={{ backgroundColor, borderRadius }}
+
+AccountsPage Components:
+25. app/components/AccountsPage/AddAccountPage.tsx
+    - Uses: style={{ width: '47%' }}
+    - Uses: style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+
+26. app/components/AccountsPage/EditAccountPage.tsx
+    - Uses: style={{ width: '47%' }}
+    - Uses: style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+
+27. app/components/AccountsPage/AccountListItem.tsx
+    - Uses: style={{ fontSize: 18, fontWeight: '500', color: account.balance < 0 ? '#EF4444' : (isDark ? '#FFFFFF' : '#1F2937') }}
+    - Uses: style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+
+28. app/components/AccountsPage/AccountsSkeleton.tsx
+    - Uses: style={{ backgroundColor: "#3B82F6", opacity: 0.8 }}
+
+TransactionListPage Components:
+29. app/components/TransactionListPage/TransactionsList.tsx
+    - Uses: style={{ backgroundColor, borderRadius }}
+
+30. app/components/TransactionListPage/TransactionItem.tsx
+    - Uses: style={{ backgroundColor: iconInfo.color }}
+
+31. app/components/TransactionListPage/TransactionHeader.tsx
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+    - Uses: style={{ backgroundColor, borderRadius }}
+
+32. app/components/TransactionListPage/TransactionListSkeleton.tsx
+    - Uses: style={{ backgroundColor: isDarkMode ? "#20283A" : "#F5F5F4", borderWidth: 1, borderColor: isDarkMode ? "#4B5563" : "#E2E8F0" }}
+    - Uses: style={{ marginRight: 12 }}
+    - Uses: style={{ marginBottom: 6 }}
+    - Uses: style={{ marginBottom: 8, marginTop: 16, marginLeft: 4 }}
+
+GoalsPage Components:
+33. app/components/GoalsPage/GoalProgressCard.tsx
+    - Uses: style={{ backgroundColor: goal.color || '#a78bfa' }}
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+    - Multiple inline styles
+
+34. app/components/GoalsPage/EditGoalModal.tsx
+    - Uses: style={{ backgroundColor: goal.color || '#a78bfa' }}
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+
+MoveMoneyPage Components:
+35. app/components/MoveMoneyPage/GoalSelector.tsx
+    - Uses: style={{ backgroundColor: isSelected ? goal.color : '#374151' }}
+    - Uses: style={{ backgroundColor, borderRadius }}
+
+36. app/components/MoveMoneyPage/AccountTransferCard.tsx
+    - Uses: style={{ marginLeft: 4 }}
+
+OnboardingPage Components:
+37. app/components/OnboardingPage/OnboardingHeader.tsx
+    - Uses: style={{ paddingTop: insets.top + 8 }}
+
+38. app/components/OnboardingPage/ValueCard.tsx
+    - Uses: style={{ backgroundColor: color }}
+
+39. app/components/OnboardingPage/BudgetCategoryRow.tsx
+    - Uses: style={{ backgroundColor: color }}
+
+Shared Components:
+40. app/components/Shared/ColorPicker.tsx
+    - Extensive use of inline styles
+    - Uses: style={{ marginBottom: 24 }}
+    - Uses: style={{ fontSize: 14, marginBottom: 12, color: isDarkMode ? '#94a3b8' : '#4b5563' }}
+    - Uses: style={{ backgroundColor, borderRadius, padding }}
+    - Uses: style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
+    - Uses: style={{ fontSize: 14, color: isDarkMode ? '#94a3b8' : '#4b5563' }}
+    - Uses: style={{ flex: 1 }}
+    - Uses: style={{ gap: 12 }}
+    - Multiple inline styles
+
+41. app/components/Shared/SuccessModal.tsx
+    - Uses: style={{ width: 280, height: 280 }}
+
+42. app/components/Shared/AppLockScreen.tsx
+    - Uses: style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
+
+ProfilePage Components:
+43. app/components/ProfilePage/ProfileSkeleton.tsx
+    - Uses: style={{ backgroundColor: "#4338CA" }}
+    - Uses: style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+    - Uses: style={{ opacity: 0.5 }}
+    - Uses: style={{ marginBottom: 8, opacity: 0.5 }}
+    - Uses: style={{ opacity: 0.4 }}
+
+AddTransactionPage Components (continued):
+44. app/components/AddTransactionPage/AddTransactionSkeleton.tsx
+    - Uses: style={{ marginBottom: 12 }}
+    - Uses: style={{ width: "23%", alignItems: "center" }}
+    - Uses: style={{ marginBottom: 6 }}
+
+
+SUMMARY:
+--------
+Total files found: 44 files
+
+Files using StyleSheet:
+- app/(onboarding)/savings-potential.tsx (uses StyleSheet.absoluteFill)
+
+Files with extensive inline styles (style={{}}):
+- Most components use inline styles for dynamic values (colors, spacing, animations)
+- Many files mix Tailwind CSS classes with inline styles
+- Common patterns:
+  * Dynamic colors: style={{ backgroundColor: color }}
+  * Safe area insets: style={{ paddingTop: insets.top }}
+  * Animations: style={{ opacity: fadeAnim, transform: [...] }}
+  * Dynamic widths/heights: style={{ width: `${progress}%` }}
+  * Font sizes/weights: style={{ fontSize: 48, fontWeight: '700' }}
+
+Note: Some inline styles may be necessary for:
+- Dynamic values (colors from data, calculated percentages)
+- Animation values (opacity, transform)
+- Safe area insets
+- Third-party component props (textStyle for AnimatedRollingNumber)
+
+However, many static styles could potentially be converted to Tailwind CSS classes.

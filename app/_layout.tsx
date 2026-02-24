@@ -2,13 +2,8 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
-
-configureReanimatedLogger({
-  level: ReanimatedLogLevel.warn,
-  strict: false,
-});
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppLockScreen from './components/Shared/AppLockScreen';
 import CurrencyInitializer from './components/Shared/CurrencyInitializer';
@@ -17,6 +12,11 @@ import { AuthProvider } from './context/AuthContext';
 import { DataRefreshProvider } from './context/DataRefreshContext';
 import { LockProvider } from './context/LockContext';
 import { AppThemeProvider } from './context/ThemeContext';
+
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -30,7 +30,7 @@ export default function RootLayout() {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView className="flex-1">
       <SafeAreaProvider>
         <AuthProvider>
           <LockProvider>
@@ -45,7 +45,7 @@ export default function RootLayout() {
                         headerShown: false,
                         animation: 'fade_from_bottom',
                         animationDuration: 400,
-                        contentStyle: { backgroundColor: "#20283A", flex: 1 },
+                        contentStyle: { backgroundColor: "#20283A", flex: 1 }, // Using hex for React Navigation compatibility
                       }}
                     >
                       <Stack.Screen name="index" />

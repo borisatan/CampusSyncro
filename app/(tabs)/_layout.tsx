@@ -26,18 +26,18 @@ export default function TabLayout() {
         headerShown: false,
         animation: "shift",
 
-        sceneStyle: { backgroundColor: "#20283A", flex: 1 },
+        sceneStyle: { backgroundColor: "#20283A", flex: 1 }, // Using hex for React Navigation compatibility
         tabBarShowLabel: false,
         tabBarActiveTintColor: "#2563EB", // accentBlue
         tabBarInactiveTintColor: "#9CA3AF", // secondaryDark
 
         tabBarBackground: () => (
-          <View style={{ flex: 1, backgroundColor: "#20283A" }} />
+          <View className="flex-1 bg-surfaceDark" />
         ),
 
         tabBarStyle: {
-          backgroundColor: "#20283A", // background
-          borderTopColor: "#0A0F1F", // borderLight
+          backgroundColor: "#20283A", // surfaceDark - using hex for React Navigation compatibility
+          borderTopColor: "#0A0F1F", // backgroundDark - using hex for React Navigation compatibility
           borderTopWidth: 1,
           position: "absolute",
           height: 60 + insets.bottom, // adjust height with safe area

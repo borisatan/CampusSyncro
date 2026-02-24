@@ -215,7 +215,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
                 {/* Insufficient balance warning */}
                 {selectedAccount && amount > selectedAccount.balance && (
                   <View className="flex-row items-center gap-2 mt-4 p-3 rounded-xl bg-accentRed/10 border border-accentRed/30">
-                    <Ionicons name="warning" size={16} color="#EF4444" />
+                    <Ionicons name="warning" size={16} color="#F2514A" />
                     <Text className="text-accentRed text-sm flex-1">
                       Insufficient balance in {selectedAccount.account_name}
                     </Text>

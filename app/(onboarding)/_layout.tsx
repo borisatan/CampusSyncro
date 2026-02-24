@@ -6,11 +6,33 @@ export default function OnboardingLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'fade',
-        animationDuration: 100,
+        animation: 'slide_from_right',
+        animationDuration: 250,
         contentStyle: { backgroundColor: '#0A0F1F', flex: 1 },
       }}
     >
+      {/* V3 Onboarding Screens */}
+      <Stack.Screen
+        name="outcome-preview"
+        options={{ animation: 'fade' }}
+      />
+      <Stack.Screen name="monthly-target" />
+      <Stack.Screen
+        name="dashboard-generation"
+        options={{
+          animation: 'fade',
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen name="category-confirmation" />
+      <Stack.Screen name="account-name" />
+      <Stack.Screen name="first-transaction" />
+      <Stack.Screen
+        name="transformation-moment"
+        options={{ gestureEnabled: false }}
+      />
+
+      {/* Old V2 Screens (archived, kept for backwards compatibility) */}
       <Stack.Screen name="emotional-hook" />
       <Stack.Screen name="value-alignment" />
       <Stack.Screen name="category-selection" />

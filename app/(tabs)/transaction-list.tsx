@@ -5,6 +5,7 @@ import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import FilterModal from "../components/TransactionListPage/FilterModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
+import { TransactionListSkeleton } from "../components/TransactionListPage/TransactionListSkeleton";
 import TransactionsList from "../components/TransactionListPage/TransactionsList";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
@@ -72,6 +73,7 @@ const TransactionsScreen: React.FC = () => {
   const [accountsList, setAccountsList] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const LIMIT = 50;
   const [page, setPage] = useState(0);
@@ -98,6 +100,7 @@ const TransactionsScreen: React.FC = () => {
       console.error("Failed to load transactions:", err);
     } finally {
       setIsRefreshing(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -125,6 +128,7 @@ const TransactionsScreen: React.FC = () => {
       console.error("Failed to load filtered transactions:", err);
     } finally {
       setIsRefreshing(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -298,6 +302,9 @@ const TransactionsScreen: React.FC = () => {
         </View>
 
         {/* Transactions list */}
+        {isInitialLoading ? (
+          <TransactionListSkeleton isDarkMode={isDarkMode} />
+        ) : (
           <TransactionsList
             sections={sections}
             categoryIcons={categoryIcons}
@@ -305,6 +312,7 @@ const TransactionsScreen: React.FC = () => {
             isFetchingMore={isFetchingMore}
             onItemLongPress={handleEditTransaction}
           />
+        )}
 
         {/* Filter Modal */}
         <FilterModal

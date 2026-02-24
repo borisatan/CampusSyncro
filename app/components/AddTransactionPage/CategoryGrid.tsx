@@ -29,7 +29,7 @@ export const CategoryGrid = ({
   if (isLoadingCategories) {
     return (
       <View className="flex items-center justify-center py-8">
-        <Text className={isDarkMode ? "text-slate-400" : "text-gray-600"}>
+        <Text className={isDarkMode ? "text-slate300" : "text-secondaryLight"}>
           Loading categories...
         </Text>
       </View>
@@ -45,7 +45,7 @@ export const CategoryGrid = ({
     <View className="mb-6">
       <View className="flex-row justify-between items-center mb-3">
         <Text
-          className={`text-sm mb-1 ${isDarkMode ? "text-slate-400" : "text-gray-600"}`}
+          className={`text-sm mb-1 ${isDarkMode ? "text-slate300" : "text-secondaryLight"}`}
         >
           Category
         </Text>
@@ -55,8 +55,8 @@ export const CategoryGrid = ({
             isEditMode
               ? "bg-accentBlue border-surfaceDark"
               : isDarkMode
-                ? "bg-surfaceDark border-slate-800"
-                : "bg-white border-gray-200"
+                ? "bg-surfaceDark border-slate700"
+                : "bg-background border-borderLight"
           }`}
         >
           <Text
@@ -152,8 +152,8 @@ const AnimatedCategoryItem = ({
         className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
           isAddBtn
             ? isDarkMode
-              ? "bg-backgroundDark border-slate-500"
-              : "bg-gray-100 border-gray-400"
+              ? "bg-backgroundDark border-slate400"
+              : "bg-surfaceLightGray border-gray400"
             : isEditMode
               ? isDarkMode
                 ? "bg-backgroundDark border-borderDark"
@@ -187,7 +187,7 @@ const AnimatedCategoryItem = ({
           )}
         </View>
         <Text
-          className={`text-sm text-center ${isDarkMode ? "text-slate-300" : "text-gray-700"}`}
+          className={`text-sm text-center ${isDarkMode ? "text-slate200" : "text-gray700"}`}
         >
           {isAddBtn ? "Add New" : category.category_name}
         </Text>

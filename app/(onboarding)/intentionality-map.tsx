@@ -82,12 +82,18 @@ export default function IntentionalityMapScreen() {
     }
   };
 
+  const handleSkip = () => {
+    completeOnboarding();
+    router.replace('/(tabs)/dashboard');
+  };
+
   return (
     <View className="flex-1 bg-backgroundDark">
       <OnboardingHeader
         currentStep={5}
         title="Your path to clarity is set."
         subtitle="Here is how your money will support your life."
+        onSkip={handleSkip}
       />
 
       {/* Visualization Placeholder */}

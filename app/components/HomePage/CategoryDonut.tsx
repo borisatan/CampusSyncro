@@ -72,7 +72,7 @@ export const CategoryDonut = React.memo(({ aggregates, categories, timeFrame, is
             className="w-[140px] h-[140px] items-center justify-center"
           >
             <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: [{ rotate: '-90deg' }] }}>
-              <SvgCircle cx={center} cy={center} r={radius - strokeWidth/2} fill="#20283A" />
+              <SvgCircle cx={center} cy={center} r={radius - strokeWidth/2} fill="#161B2E" />
               {categoryData.map((item, index) => {
                 const category = categories.find(c => c.category_name === item.category_name);
                 const color = category?.color || '#E4E4E4';

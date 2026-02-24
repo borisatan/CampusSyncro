@@ -33,17 +33,19 @@ export default function RootIndex() {
   if (session?.user) {
     // Check if user has completed onboarding
     if (!hasCompletedOnboarding) {
-      // Route to appropriate onboarding screen based on saved progress
+      // Route to appropriate V3 onboarding screen based on saved progress
       if (onboardingStep === 0 || onboardingStep === 1) {
-        return <Redirect href="/(onboarding)/emotional-hook" />;
+        return <Redirect href="/(onboarding)/outcome-preview" />;
       } else if (onboardingStep === 2) {
-        return <Redirect href="/(onboarding)/value-alignment" />;
+        return <Redirect href="/(onboarding)/monthly-target" />;
       } else if (onboardingStep === 3) {
-        return <Redirect href="/(onboarding)/category-selection" />;
+        return <Redirect href="/(onboarding)/category-confirmation" />;
       } else if (onboardingStep === 4) {
-        return <Redirect href="/(onboarding)/budget-setting" />;
+        return <Redirect href="/(onboarding)/account-name" />;
       } else if (onboardingStep === 5) {
-        return <Redirect href="/(onboarding)/intentionality-map" />;
+        return <Redirect href="/(onboarding)/first-transaction" />;
+      } else if (onboardingStep === 6) {
+        return <Redirect href="/(onboarding)/transformation-moment" />;
       }
     }
     return <Redirect href="/(tabs)/dashboard" />;

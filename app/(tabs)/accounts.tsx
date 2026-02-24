@@ -7,6 +7,7 @@ import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccountListItem } from '../components/AccountsPage/AccountListItem';
+import { AccountsSkeleton } from '../components/AccountsPage/AccountsSkeleton';
 import AddAccountPage from '../components/AccountsPage/AddAccountPage';
 import EditAccountPage from '../components/AccountsPage/EditAccountPage';
 import MoveMoneyPage from '../components/MoveMoneyPage/MoveMoneyPage';
@@ -23,6 +24,7 @@ export default function Accounts() {
   const { registerAccountsRefresh, refreshDashboard, refreshTransactionList } = useDataRefresh();
   
   const accounts = useAccountsStore((state) => state.accounts);
+  const isLoading = useAccountsStore((state) => state.isLoading);
   const loadAccounts = useAccountsStore((state) => state.loadAccounts);
   const addAccountOptimistic = useAccountsStore((state) => state.addAccountOptimistic);
   const updateAccountOptimistic = useAccountsStore((state) => state.updateAccountOptimistic);
@@ -132,27 +134,14 @@ export default function Accounts() {
     <SafeAreaProvider>
       <SafeAreaView className={`flex-1 ${isDark ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
         <ScrollView className="flex-1">
-          <View className="px-2" style={{ paddingBottom: insets.bottom + 20 }}>
+          <View className="px-2 pb-5" style={{ paddingBottom: insets.bottom + 20 }}> 
             {/* Header */}
             <View className="flex-row items-center justify-between pt-4 pb-3 px-2">
               <View>
-                <Text
-                  style={{
-                    fontSize: 28,
-                    fontWeight: "800",
-                    color: isDark ? "#F1F5F9" : "#0F172A",
-                    letterSpacing: -0.5,
-                  }}
-                >
+                <Text className={`text-3xl font-extrabold -tracking-tight ${isDark ? 'text-slate50' : 'text-slate800'}`}>
                   My Accounts
                 </Text>
-                <Text
-                  style={{
-                    fontSize: 13,
-                    color: isDark ? "#7C8CA0" : "#94A3B8",
-                    marginTop: 2,
-                  }}
-                >
+                <Text className={`text-xs mt-0.5 ${isDark ? 'text-slateMuted' : 'text-slate300'}`}>
                   Manage your financial accounts
                 </Text>
               </View>
@@ -172,36 +161,42 @@ export default function Accounts() {
               </View>
             </View>
 
-            {/* Total Balance Card */}
-            <View className="bg-accentBlue rounded-2xl p-6 mb-6">
-              <Text className="text-textDark/70 text-sm mb-2">Total Net Worth</Text>
-              <View className="flex-row items-center mb-4">
-                <Text style={{ fontSize: 30, fontWeight: '600', color: '#FFFFFF' }}>{currencySymbol}</Text>
-                <AnimatedRollingNumber
-                  value={totalBalance}
-                  spinningAnimationConfig={{ duration: 600 }}
-                  textStyle={{ fontSize: 30, fontWeight: '600', color: '#FFFFFF' }}
-                  toFixed={2}
-                />
-              </View>
-              <View><Text className="text-textDark/70 text-xs">Accounts</Text><Text className="text-textDark text-xl font-medium mt-1">{accounts.length}</Text></View>
-            </View>
+            {isLoading && accounts.length === 0 ? (
+              <AccountsSkeleton isDarkMode={isDark} />
+            ) : (
+              <>
+                {/* Total Balance Card */}
+                <View className="bg-accentBlue rounded-2xl p-6 mb-6">
+                  <Text className="text-textDark/70 text-sm mb-2">Total Net Worth</Text>
+                  <View className="flex-row items-center mb-4">
+                    <Text className="text-3xl font-semibold text-textDark">{currencySymbol}</Text>
+                    <AnimatedRollingNumber
+                      value={totalBalance}
+                      spinningAnimationConfig={{ duration: 600 }}
+                      textStyle={{ fontSize: 30, fontWeight: '600', color: '#FFFFFF' }} // Third-party component prop
+                      toFixed={2}
+                    />
+                  </View>
+                  <View><Text className="text-textDark/70 text-xs">Accounts</Text><Text className="text-textDark text-xl font-medium mt-1">{accounts.length}</Text></View>
+                </View>
 
-            {/* List */}
-            <Text className={`text-base font-medium mb-3 ${isDark ? 'text-textDark' : 'text-textLight'}`}>All Accounts</Text>
-            {accounts.map((account, index) => (
-              <AccountListItem
-                key={account.id}
-                account={account}
-                index={index}
-                isDark={isDark}
-                currencySymbol={currencySymbol}
-                isMenuOpen={editingAccountId === account.id}
-                onToggleMenu={() => setEditingAccountId(editingAccountId === account.id ? null : account.id)}
-                onEdit={handleEditAccount}
-                onDelete={handleDeleteAccount}
-              />
-            ))}
+                {/* List */}
+                <Text className={`text-base font-medium mb-3 ${isDark ? 'text-textDark' : 'text-textLight'}`}>All Accounts</Text>
+                {accounts.map((account, index) => (
+                  <AccountListItem
+                    key={account.id}
+                    account={account}
+                    index={index}
+                    isDark={isDark}
+                    currencySymbol={currencySymbol}
+                    isMenuOpen={editingAccountId === account.id}
+                    onToggleMenu={() => setEditingAccountId(editingAccountId === account.id ? null : account.id)}
+                    onEdit={handleEditAccount}
+                    onDelete={handleDeleteAccount}
+                  />
+                ))}
+              </>
+            )}
           </View>
         </ScrollView>
 

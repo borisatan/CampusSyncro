@@ -327,7 +327,7 @@ export default function CategoryEditor() {
             activeOpacity={0.8}
             className={`flex-1 rounded-xl py-3 items-center border ${
               isProcessing || !categoryName.trim()
-                ? 'bg-gray-400 border-gray-400'
+                ? 'bg-gray400 border-gray400'
                 : 'bg-accentTeal border-accentTeal'
             }`}
           >

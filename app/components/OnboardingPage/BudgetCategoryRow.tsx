@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Text, TextInput, View } from "react-native";
 
 interface BudgetCategoryRowProps {
   name: string;
@@ -30,7 +30,10 @@ export default function BudgetCategoryRow({
       </View>
 
       {/* Name */}
-      <Text className="flex-1 text-textDark text-base font-medium ml-3" numberOfLines={1}>
+      <Text
+        className="flex-1 text-textDark text-base font-medium ml-3"
+        numberOfLines={1}
+      >
         {name}
       </Text>
 

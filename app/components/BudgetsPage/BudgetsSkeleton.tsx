@@ -1,55 +1,20 @@
 import { MotiView } from "moti";
 import React from "react";
 import { View } from "react-native";
+import { SkeletonBox } from "../Shared/Skeleton";
 
 interface BudgetsSkeletonProps {
   isDarkMode: boolean;
 }
-
-const SkeletonBox = ({
-  width,
-  height,
-  borderRadius = 8,
-  isDarkMode,
-  style,
-}: {
-  width: number | string;
-  height: number;
-  borderRadius?: number;
-  isDarkMode: boolean;
-  style?: object;
-}) => (
-  <MotiView
-    from={{ opacity: 0.5 }}
-    animate={{ opacity: 1 }}
-    transition={{
-      type: "timing",
-      duration: 800,
-      loop: true,
-    }}
-    style={[
-      {
-        width,
-        height,
-        borderRadius,
-        backgroundColor: isDarkMode ? "#2D3748" : "#E2E8F0",
-      },
-      style,
-    ]}
-  />
-);
 
 const IncomeCardSkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const ringSize = 72;
 
   return (
     <View
-      className="rounded-2xl mb-4 overflow-hidden"
-      style={{
-        backgroundColor: isDarkMode ? "#20283A" : "#F8FAFC",
-        borderWidth: 1,
-        borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-      }}
+      className={`rounded-2xl mb-4 overflow-hidden border ${
+        isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-surfaceLight border-slate100'
+      }`}
     >
       <View className="px-4 py-4">
         <View className="flex-row items-center">
@@ -84,14 +49,11 @@ const IncomeCardSkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => {
         </View>
 
         {/* Allocated / Remaining stats skeleton */}
-        <View className="flex-row mt-4" style={{ gap: 12 }}>
+        <View className="flex-row mt-4 gap-3">
           <View
-            className="flex-1 rounded-xl px-3 py-2.5"
-            style={{
-              backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-              borderWidth: 1,
-              borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-            }}
+            className={`flex-1 rounded-xl px-3 py-2.5 border ${
+              isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-slate50 border-slate100'
+            }`}
           >
             <SkeletonBox
               width={60}
@@ -102,12 +64,9 @@ const IncomeCardSkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => {
             <SkeletonBox width={80} height={18} isDarkMode={isDarkMode} />
           </View>
           <View
-            className="flex-1 rounded-xl px-3 py-2.5"
-            style={{
-              backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-              borderWidth: 1,
-              borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-            }}
+            className={`flex-1 rounded-xl px-3 py-2.5 border ${
+              isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-slate50 border-slate100'
+            }`}
           >
             <SkeletonBox
               width={60}
@@ -141,12 +100,9 @@ const CategoryBudgetRowSkeleton = ({
     className="mb-2.5"
   >
     <View
-      className="rounded-2xl overflow-hidden"
-      style={{
-        backgroundColor: isDarkMode ? "#20283A" : "#F8FAFC",
-        borderWidth: 1,
-        borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-      }}
+      className={`rounded-2xl overflow-hidden border ${
+        isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-surfaceLight border-slate100'
+      }`}
     >
       <View className="p-4 flex-row items-center">
         {/* Category icon skeleton */}
@@ -201,7 +157,7 @@ export const BudgetsSkeleton: React.FC<BudgetsSkeletonProps> = ({
   isDarkMode,
 }) => {
   return (
-    <View style={{ paddingHorizontal: 8 }}>
+    <View>
       <MotiView
         from={{ opacity: 0, translateY: 12 }}
         animate={{ opacity: 1, translateY: 0 }}

@@ -23,18 +23,11 @@ export const DashboardSummary = ({
     return (
       <View className=" flex-col  mb-2">
         <View className="flex-1  rounded-2xl p-2 shadow-sm mb-1">
-          <Text
-            style={{
-              fontSize: 28,
-              fontWeight: "800",
-              color: "#F1F5F9",
-              letterSpacing: -0.5,
-            }}
-          >
+          <Text className="text-3xl font-extrabold text-slate50 -tracking-tight">
             Total Balance
           </Text>
           <View className="flex-row items-center">
-            <Text style={{ fontSize: 48, fontWeight: "700", color: "#FFFFFF" }}>
+            <Text className="text-5xl font-bold text-textDark">
               {currencySymbol}0.00
             </Text>
           </View>
@@ -47,7 +40,7 @@ export const DashboardSummary = ({
                 Income
               </Text>
             </View>
-            <Text style={{ fontSize: 30, fontWeight: "700", color: "#FFFFFF" }}>
+            <Text className="text-3xl font-bold text-textDark">
               {currencySymbol}0.00
             </Text>
           </View>
@@ -58,7 +51,7 @@ export const DashboardSummary = ({
                 Expenses
               </Text>
             </View>
-            <Text style={{ fontSize: 30, fontWeight: "700", color: "#FFFFFF" }}>
+            <Text className="text-3xl font-bold text-textDark">
               {currencySymbol}0.00
             </Text>
           </View>
@@ -67,56 +60,37 @@ export const DashboardSummary = ({
     );
   }
   return (
-    <View className=" flex-col  mb-2">
-      <View className="flex-1  rounded-2xl p-2 shadow-sm mb-1">
-        <Text
-          style={{
-            fontSize: 28,
-            fontWeight: "800",
-            color: "#F1F5F9",
-            letterSpacing: -0.5,
-          }}
-        >
-          Total Balance
-        </Text>
-        <View className="flex-row items-center">
-          <Text
-            style={{
-              fontSize: 48,
-              fontWeight: "700",
-              color: "#FFFFFF",
-            }}
-          >
-            {currencySymbol}
+      <View className=" flex-col  mb-2">
+        <View className="flex-1  rounded-2xl p-2 shadow-sm mb-1">
+          <Text className="text-3xl font-extrabold text-slate50 -tracking-tight">
+            Total Balance
           </Text>
-          <AnimatedRollingNumber
-            value={totalBalance}
-            spinningAnimationConfig={{ duration: 600 }}
-            textStyle={{
-              fontSize: 48,
-              fontWeight: "700",
-              color: "#FFFFFF",
-            }}
-            toFixed={2}
-          />
-        </View>
-      </View>
-      <View className="flex-row gap-4 mb-3">
-        <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark">
-          <View className="flex-row items-center gap-2 mb-2">
-            <TrendingUp color="#fff" size={16} />
-            <Text className="text-textDark text-lg font-medium opacity-90">
-              Income
-            </Text>
-          </View>
           <View className="flex-row items-center">
-            <Text
-              style={{
-                fontSize: 30,
+            <Text className="text-5xl font-bold text-textDark">
+              {currencySymbol}
+            </Text>
+            <AnimatedRollingNumber
+              value={totalBalance}
+              spinningAnimationConfig={{ duration: 600 }}
+              textStyle={{
+                fontSize: 48,
                 fontWeight: "700",
                 color: "#FFFFFF",
-              }}
-            >
+              }} // Third-party component prop
+              toFixed={2}
+            />
+          </View>
+        </View>
+        <View className="flex-row gap-4 mb-3">
+          <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark">
+            <View className="flex-row items-center gap-2 mb-2">
+              <TrendingUp color="#fff" size={16} />
+              <Text className="text-textDark text-lg font-medium opacity-90">
+                Income
+              </Text>
+            </View>
+            <View className="flex-row items-center">
+            <Text className="text-3xl font-bold text-textDark">
               {currencySymbol}
             </Text>
             <AnimatedRollingNumber
@@ -128,7 +102,7 @@ export const DashboardSummary = ({
                 fontSize: 30,
                 fontWeight: "700",
                 color: "#FFFFFF",
-              }}
+              }} // Third-party component prop
               toFixed={2}
             />
           </View>
@@ -142,13 +116,7 @@ export const DashboardSummary = ({
             </Text>
           </View>
           <View className="flex-row items-center">
-            <Text
-              style={{
-                fontSize: 30,
-                fontWeight: "700",
-                color: "#FFFFFF",
-              }}
-            >
+            <Text className="text-3xl font-bold text-textDark">
               {currencySymbol}
             </Text>
             <AnimatedRollingNumber
@@ -160,7 +128,7 @@ export const DashboardSummary = ({
                 fontSize: 30,
                 fontWeight: "700",
                 color: "#FFFFFF",
-              }}
+              }} // Third-party component prop
               toFixed={2}
             />
           </View>

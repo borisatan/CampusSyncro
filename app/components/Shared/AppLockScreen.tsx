@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useLock } from '../../context/LockContext';
 
 type AuthMethod = 'device' | 'password';
@@ -65,18 +65,19 @@ export default function AppLockScreen() {
   }
 
   return (
-    <View
-      className="absolute inset-0 bg-backgroundDark z-50"
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
-    >
+    <View className="absolute inset-0 bg-backgroundDark z-[9999]">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
         <View className="flex-1 items-center justify-center px-6">
         {/* App Icon/Logo */}
-        <View className="w-24 h-24 bg-accentBlue/20 rounded-3xl items-center justify-center mb-6">
-          <Ionicons name="wallet" size={48} color="#4A90D9" />
+        <View className="w-24 h-24 rounded-3xl items-center justify-center mb-6">
+          <Image
+            source={require('../../../assets/icons/splash-icon-dark.png')}
+            style={{ width: 96, height: 96 }}
+            resizeMode="contain"
+          />
         </View>
 
         {/* App Name */}

@@ -25,11 +25,14 @@ export const getPeriodDates = (): { startDate: Date; endDate: Date } => {
 };
 
 export const useBudgetsData = (): BudgetsDataResult => {
-  const { useDynamicIncome, manualIncome, loadIncomeSettings } = useIncomeStore();
+  const { useDynamicIncome, manualIncome, loadIncomeSettings, isLoading: isIncomeLoading } = useIncomeStore();
 
   // Subscribe to state values (will trigger re-render when these change)
   const categoryBudgets = useBudgetStore((state) => state.categoryBudgets);
-  const isLoading = useBudgetStore((state) => state.isLoading);
+  const isBudgetLoading = useBudgetStore((state) => state.isLoading);
+
+  // Combined loading state - show skeleton until both budget and income data are loaded
+  const isLoading = isBudgetLoading || isIncomeLoading;
 
   // Get actions (stable references, won't trigger re-renders)
   const { setCategoryBudgets, upsertCategoryBudget, removeCategoryBudget, setLoading } = useBudgetStore.getState();

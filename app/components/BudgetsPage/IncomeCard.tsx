@@ -19,7 +19,6 @@ import Svg, { Circle } from "react-native-svg";
 import { useIncomeStore } from "../../store/useIncomeStore";
 import { AnimatedToggle } from "../Shared/AnimatedToggle";
 
-// Animated SVG circle for the gauge
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface IncomeCardProps {
@@ -48,7 +47,6 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   isDarkMode,
   onSave,
 }) => {
-  // Subscribe to totalBudgeted and savings target from store for reactive updates
   const totalBudgeted = useIncomeStore((state) => state.totalBudgeted);
   const monthlySavingsTarget = useIncomeStore(
     (state) => state.monthlySavingsTarget,
@@ -59,14 +57,12 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
     manualIncome > 0 ? manualIncome.toString() : "",
   );
 
-  // Include monthly savings in total allocated amount
   const totalAllocated = totalBudgeted + monthlySavingsTarget;
   const remaining = income - totalAllocated;
   const allocationPercent = income > 0 ? (totalAllocated / income) * 100 : 0;
   const ringPercent = Math.min(allocationPercent, 100);
   const isOverAllocated = remaining < 0;
 
-  // Ring animation
   const ringSize = 72;
   const strokeWidth = 6;
   const radius = (ringSize - strokeWidth) / 2;
@@ -84,7 +80,6 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
     strokeDashoffset: circumference * (1 - ringProgress.value),
   }));
 
-  // Sync local state when props change
   useEffect(() => {
     if (!isExpanded) {
       setLocalUseDynamic(useDynamicIncome);
@@ -117,21 +112,18 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
 
   const ringColor =
     allocationPercent < 30
-      ? "#EF4444" // Red: < 30%
+      ? "#F2514A"
       : allocationPercent < 80
-        ? "#F59E0B" // Yellow: 30-80%
-        : "#22C55E"; // Green: >= 80%
+        ? "#F4A623"
+        : "#22D97A";
 
   return (
     <View
-      className="rounded-2xl mb-4 overflow-hidden"
-      style={{
-        backgroundColor: isDarkMode ? "#20283A" : "#F8FAFC",
-        borderWidth: 1,
-        borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-      }}
+      className={`rounded-2xl mb-4 overflow-hidden border ${
+        isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-surfaceLight border-slate100'
+      }`}
     >
-      {/* Main card — compact gauge layout */}
+      {/* Main card */}
       <TouchableOpacity
         onPress={handleToggleExpand}
         activeOpacity={0.8}
@@ -141,16 +133,14 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           {/* Progress Ring */}
           <View className="mr-4" style={{ width: ringSize, height: ringSize }}>
             <Svg width={ringSize} height={ringSize}>
-              {/* Track */}
               <Circle
                 cx={ringSize / 2}
                 cy={ringSize / 2}
                 r={radius}
-                stroke={isDarkMode ? "#4B5563" : "#E2E8F0"}
+                stroke={isDarkMode ? "#2A3250" : "#E2E8F0"}
                 strokeWidth={strokeWidth}
                 fill="none"
               />
-              {/* Progress */}
               <AnimatedCircle
                 cx={ringSize / 2}
                 cy={ringSize / 2}
@@ -164,11 +154,8 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                 transform={`rotate(-90, ${ringSize / 2}, ${ringSize / 2})`}
               />
             </Svg>
-            {/* Center text */}
             <View className="absolute inset-0 items-center justify-center">
-              <Text
-                style={{ fontSize: 14, fontWeight: "700", color: ringColor }}
-              >
+              <Text style={{ fontSize: 14, fontWeight: "700", color: ringColor }}>
                 {Math.round(allocationPercent)}%
               </Text>
             </View>
@@ -176,105 +163,63 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
 
           {/* Income info */}
           <View className="flex-1">
-            <Text
-              className="text-md mb-1"
-              style={{ color: isDarkMode ? "rgb(139, 153, 174)" : "#64748B" }}
-            >
+            <Text className={`text-md mb-1 ${isDarkMode ? 'text-secondaryDark' : 'text-slate400'}`}>
               Monthly Income
             </Text>
             <Text
-              style={{
-                fontSize: 26,
-                fontWeight: "700",
-                color: isDarkMode ? "#F1F5F9" : "#0F172A",
-                letterSpacing: -0.5,
-              }}
+              className={`font-bold ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}
+              style={{ fontSize: 26, letterSpacing: -0.5 }}
             >
               {formatAmount(income, currencySymbol)}
             </Text>
           </View>
 
           {/* Chevron */}
-          <View
-            className="w-8 h-8 rounded-xl items-center justify-center"
-            style={{ backgroundColor: "#20283A" }}
-          >
+          <View className="w-8 h-8 rounded-xl items-center justify-center bg-surfaceDark">
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
               size={16}
-              color="#FFFFFF"
+              color="#EDF0FA"
             />
           </View>
         </View>
 
         {/* Allocated / Remaining stats */}
-        <View className="flex-row mt-4" style={{ gap: 12 }}>
+        <View className="flex-row mt-4 gap-3">
           <View
-            className="flex-1 rounded-xl px-3 py-2.5"
-            style={{
-              backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-              borderWidth: 1,
-              borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-            }}
+            className={`flex-1 rounded-xl px-3 py-2.5 border ${
+              isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-slate50 border-slate100'
+            }`}
           >
-            <Text
-              className="text-xs mb-0.5"
-              style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8" }}
-            >
+            <Text className={`text-xs mb-0.5 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
               Allocated
             </Text>
-            <Text
-              className="font-semibold"
-              style={{
-                fontSize: 16,
-                color: isDarkMode ? "#F1F5F9" : "#334155",
-              }}
-            >
+            <Text className={`font-semibold text-base ${isDarkMode ? 'text-slate50' : 'text-slate600'}`}>
               {formatAmount(totalAllocated, currencySymbol)}
             </Text>
           </View>
           <View
-            className="flex-1 rounded-xl px-3 py-2.5"
-            style={{
-              backgroundColor: isOverAllocated
+            className={`flex-1 rounded-xl px-3 py-2.5 border ${
+              isOverAllocated
                 ? isDarkMode
-                  ? "rgba(239,68,68,0.1)"
-                  : "rgba(239,68,68,0.06)"
+                  ? 'bg-overlayRed border-overlayRedDark'
+                  : 'bg-overlayRedLight border-overlayRedMedium'
                 : isDarkMode
-                  ? "#1F2937"
-                  : "#F1F5F9",
-              borderWidth: 1,
-              borderColor: isOverAllocated
-                ? isDarkMode
-                  ? "rgba(239,68,68,0.3)"
-                  : "rgba(239,68,68,0.2)"
-                : isDarkMode
-                  ? "#4B5563"
-                  : "#E2E8F0",
-            }}
+                  ? 'bg-inputDark border-borderDark'
+                  : 'bg-slate50 border-slate100'
+            }`}
           >
             <Text
-              className="text-xs mb-0.5"
-              style={{
-                color: isOverAllocated
-                  ? "#EF4444"
-                  : isDarkMode
-                    ? "#64748B"
-                    : "#94A3B8",
-              }}
+              className={`text-xs mb-0.5 ${
+                isOverAllocated ? 'text-accentRed' : isDarkMode ? 'text-slate400' : 'text-slate300'
+              }`}
             >
               {isOverAllocated ? "Over Budget" : "Remaining"}
             </Text>
             <Text
-              className="font-semibold"
-              style={{
-                fontSize: 16,
-                color: isOverAllocated
-                  ? "#EF4444"
-                  : isDarkMode
-                    ? "#22C55E"
-                    : "#22C55E",
-              }}
+              className={`font-semibold text-base ${
+                isOverAllocated ? 'text-accentRed' : 'text-accentGreen'
+              }`}
             >
               {formatAmount(remaining, currencySymbol)}
             </Text>
@@ -286,33 +231,22 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
       {isExpanded && (
         <Animated.View
           entering={FadeIn.duration(250)}
-          className="px-4 pb-4"
-          style={{
-            borderTopWidth: 1,
-            borderTopColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-            paddingTop: 16,
-          }}
+          className={`px-4 pb-4 pt-4 border-t ${isDarkMode ? 'border-borderDark' : 'border-slate100'}`}
         >
           {/* Dynamic Income Toggle */}
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-1 mr-3">
-              <Text
-                className="font-medium"
-                style={{ color: isDarkMode ? "#E2E8F0" : "#1E293B" }}
-              >
+              <Text className={`font-medium ${isDarkMode ? 'text-slate100' : 'text-slate700'}`}>
                 Dynamic Income
               </Text>
-              <Text
-                className="text-xs mt-0.5"
-                style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8" }}
-              >
+              <Text className={`text-xs mt-0.5 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
                 Auto-calculate from transactions
               </Text>
             </View>
             <AnimatedToggle
               value={localUseDynamic}
               onValueChange={setLocalUseDynamic}
-              activeColor="#2A9D8F"
+              activeColor="#1DB8A3"
               inactiveColor={isDarkMode ? "#334155" : "#CBD5E1"}
             />
           </View>
@@ -320,27 +254,15 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           {/* Manual Income Input */}
           {!localUseDynamic && (
             <Animated.View entering={FadeIn.duration(200)} className="mb-4">
-              <Text
-                className="text-xs mb-2 uppercase tracking-wider"
-                style={{
-                  color: isDarkMode ? "#8B99AE" : "#94A3B8",
-                  letterSpacing: 0.5,
-                }}
-              >
+              <Text className={`text-xs mb-2 uppercase tracking-wide ${isDarkMode ? 'text-secondaryDark' : 'text-slate300'}`}>
                 Monthly Amount
               </Text>
               <View
-                className="flex-row items-center px-4 h-12 rounded-xl"
-                style={{
-                  backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-                  borderWidth: 1,
-                  borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-                }}
+                className={`flex-row items-center px-4 h-12 rounded-xl border ${
+                  isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-slate50 border-slate100'
+                }`}
               >
-                <Text
-                  className="text-lg mr-2"
-                  style={{ color: isDarkMode ? "#7C8CA0" : "#94A3B8" }}
-                >
+                <Text className={`text-lg mr-2 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
                   {currencySymbol}
                 </Text>
                 <TextInput
@@ -349,12 +271,8 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                   placeholder="0"
                   placeholderTextColor={isDarkMode ? "#334155" : "#CBD5E1"}
                   keyboardType="decimal-pad"
-                  className="flex-1 text-lg"
-                  style={{
-                    color: isDarkMode ? "#F1F5F9" : "#0F172A",
-                    textAlignVertical: "center",
-                    paddingVertical: 0,
-                  }}
+                  className={`flex-1 text-lg ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}
+                  style={{ textAlignVertical: "center", paddingVertical: 0 }}
                 />
               </View>
             </Animated.View>
@@ -364,66 +282,41 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           {localUseDynamic && (
             <Animated.View
               entering={FadeIn.duration(200)}
-              className="mb-4 p-4 rounded-xl"
-              style={{
-                backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-                borderWidth: 1,
-                borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-              }}
+              className={`mb-4 p-4 rounded-xl border ${
+                isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-slate50 border-slate100'
+              }`}
             >
-              <Text
-                className="text-xs uppercase tracking-wider"
-                style={{
-                  color: isDarkMode ? "#8B99AE" : "#94A3B8",
-                  letterSpacing: 0.5,
-                }}
-              >
+              <Text className={`text-xs uppercase tracking-wide ${isDarkMode ? 'text-secondaryDark' : 'text-slate300'}`}>
                 This Month
               </Text>
-              <Text
-                className="text-2xl font-bold mt-1"
-                style={{ color: isDarkMode ? "#F1F5F9" : "#0F172A" }}
-              >
+              <Text className={`text-2xl font-bold mt-1 ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}>
                 {formatAmount(dynamicIncome, currencySymbol)}
               </Text>
-              <Text
-                className="text-xs mt-1.5 italic"
-                style={{ color: isDarkMode ? "#64748B" : "#94A3B8" }}
-              >
+              <Text className={`text-xs mt-1.5 italic ${isDarkMode ? 'text-slate400' : 'text-slate300'}`}>
                 Based on Income transactions this month
               </Text>
             </Animated.View>
           )}
 
           {/* Cancel / Save buttons */}
-          <View className="flex-row" style={{ gap: 10 }}>
+          <View className="flex-row gap-2.5">
             <TouchableOpacity
               onPress={handleCancel}
-              className="flex-1 py-3 rounded-xl items-center justify-center"
-              style={{
-                backgroundColor: isDarkMode ? "#1F2937" : "#F1F5F9",
-                borderWidth: 1,
-                borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
-              }}
+              className={`flex-1 py-3 rounded-xl items-center justify-center border ${
+                isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-slate50 border-slate100'
+              }`}
               activeOpacity={0.7}
             >
-              <Text
-                className="font-semibold text-base"
-                style={{ color: isDarkMode ? "#94A3B8" : "#64748B" }}
-              >
+              <Text className={`font-semibold text-base ${isDarkMode ? 'text-slate300' : 'text-slate400'}`}>
                 Cancel
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSave}
-              className="flex-1 py-3 rounded-xl items-center justify-center"
-              style={{ backgroundColor: "#2A9D8F" }}
+              className="flex-1 py-3 rounded-xl items-center justify-center bg-accentTeal"
               activeOpacity={0.7}
             >
-              <Text
-                className="font-semibold text-base"
-                style={{ color: "#FFFFFF" }}
-              >
+              <Text className="font-semibold text-base text-white">
                 Save
               </Text>
             </TouchableOpacity>

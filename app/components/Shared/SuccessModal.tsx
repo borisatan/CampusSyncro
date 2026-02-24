@@ -46,7 +46,7 @@ export const SuccessModal = ({
             source={require("../../../assets/animations/success.json")}
             speed={animationSpeed}
             loop={false}
-            style={{ width: 280, height: 280 }}
+            className="w-[280px] h-[280px]"
           />
           <Text className="text-textDark text-lg font-semibold mt-2">
             {text}

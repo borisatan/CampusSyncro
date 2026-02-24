@@ -11,7 +11,7 @@ export default function ValueAlignmentScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selectedValues, setSelectedValues] = useState<ValueId[]>([]);
-  const { setOnboardingStep } = useOnboardingStore();
+  const { setOnboardingStep, completeOnboarding } = useOnboardingStore();
 
   useEffect(() => {
     setOnboardingStep(2);
@@ -29,6 +29,11 @@ export default function ValueAlignmentScreen() {
     router.push('/(onboarding)/category-selection');
   };
 
+  const handleSkip = () => {
+    completeOnboarding();
+    router.replace('/(tabs)/dashboard');
+  };
+
   const isValid = selectedValues.length > 0;
 
   return (
@@ -37,6 +42,7 @@ export default function ValueAlignmentScreen() {
         currentStep={2}
         title="What do you want to prioritize?"
         subtitle="Select the areas that bring you the most value."
+        onSkip={handleSkip}
       />
 
       {/* Value Cards Grid */}
@@ -87,7 +93,7 @@ export default function ValueAlignmentScreen() {
       </View>
 
       {/* Footer */}
-      <View style={{ paddingBottom: insets.bottom + 16 }} className="px-2">
+      <View className="px-2 pb-4" style={{ paddingBottom: insets.bottom + 16 }}> {/* Dynamic safe area inset */}
         <TouchableOpacity
           onPress={handleContinue}
           disabled={!isValid}

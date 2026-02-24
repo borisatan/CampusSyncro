@@ -15,11 +15,13 @@ export default function ProgressBar({ currentStep, totalSteps = 6 }: ProgressBar
   }));
 
   return (
-    <View className="w-full h-1 bg-borderDark rounded-full overflow-hidden">
-      <Animated.View
-        style={animatedStyle}
-        className="h-full bg-accentBlue rounded-full"
-      />
+    <View className="w-full items-center">
+      <View className="w-1/4 h-1 bg-borderDark rounded-full overflow-hidden">
+        <Animated.View
+          style={animatedStyle}
+          className="h-full bg-accentBlue rounded-full"
+        />
+      </View>
     </View>
   );
 }

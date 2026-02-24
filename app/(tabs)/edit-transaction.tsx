@@ -244,14 +244,14 @@ const EditTransactionScreen = () => {
 
           {/* Description */}
           <View className="mb-6">
-            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Description</Text>
+            <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate300' : 'text-secondaryLight'}`}>Description</Text>
             <TextInput
               value={description}
               onChangeText={setDescription}
               placeholder="e.g. Grocery shopping"
               placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
               className={`w-full px-4 py-3 rounded-xl border ${
-                isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                isDarkMode ? 'bg-slate700 border-slate600 text-textDark' : 'bg-background border-borderLight text-textLight'
               }`}
             />
           </View>

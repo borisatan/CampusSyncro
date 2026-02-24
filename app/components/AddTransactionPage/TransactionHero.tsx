@@ -72,21 +72,12 @@ export const TransactionHero = ({
       {showHeader && (
         <View className="pt-4 pb-3">
           <Text
-            style={{
-              fontSize: 28,
-              fontWeight: "800",
-              color: isDarkMode ? "#F1F5F9" : "#0F172A",
-              letterSpacing: -0.5,
-            }}
+            className={`text-3xl font-extrabold tracking-tight ${isDarkMode ? "text-slate50" : "text-slate800"}`}
           >
             {title}
           </Text>
           <Text
-            style={{
-              fontSize: 13,
-              color: isDarkMode ? "#7C8CA0" : "#94A3B8",
-              marginTop: 2,
-            }}
+            className={`text-sm mt-0.5 ${isDarkMode ? "text-slateMuted" : "text-slate300"}`}
           >
             {subtitle}
           </Text>
@@ -94,15 +85,18 @@ export const TransactionHero = ({
       )}
 
       {/* Transaction Type Toggle */}
-      <View className={`${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'} rounded-2xl p-1 flex-row mb-6`}>
+      <View
+        className={`${isDarkMode ? 'bg-slate700 border-slate600' : 'bg-backgroundMuted border-borderLight'} rounded-2xl flex-row mb-6 border`}
+        style={{ overflow: 'hidden' }}
+      >
         {/* Animated sliding indicator */}
         <Animated.View
           style={[
             {
               position: 'absolute',
-              top: 4,
+              top: 0,
+              bottom: 0,
               width: '50%',
-              height: '100%',
               borderRadius: 12,
             },
             sliderStyle,
@@ -136,11 +130,11 @@ export const TransactionHero = ({
 
       {/* Amount Input */}
       <View className="mb-6">
-        <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+        <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate300' : 'text-secondaryLight'}`}>
           Amount
         </Text>
         <View className="relative">
-          <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>
+          <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate400' : 'text-gray400'}`}>
             {currencySymbol}
           </Text>
           <TextInput
@@ -152,8 +146,8 @@ export const TransactionHero = ({
             placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
             className={`w-full pl-10 pr-4 py-4 rounded-xl text-2xl ${
               isDarkMode
-                ? 'bg-slate-800 border-slate-700 text-white'
-                : 'bg-white border-gray-300 text-gray-900'
+                ? 'bg-slate700 border-slate600 text-textDark'
+                : 'bg-background border-borderLight text-textLight'
             } border`}
           />
         </View>

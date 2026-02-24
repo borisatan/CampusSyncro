@@ -52,19 +52,16 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   expanded,
   onToggleExpand,
 }) => {
-  // Subscribe to this category's budget from the store for reactive updates
   const storeBudget = useBudgetStore((state) =>
     state.categoryBudgets.find((cb) => cb.category.id === category.id)
   );
 
-  // Use store data if available, otherwise fall back to prop
   const budgetData = storeBudget ?? item;
   const hasBudget = budgetData != null;
   const budget_amount = budgetData?.budget_amount ?? 0;
   const spent = budgetData?.spent ?? 0;
   const percentage_used = budgetData?.percentage_used ?? 0;
   const [amountText, setAmountText] = useState(budget_amount > 0 ? budget_amount.toString() : '');
-  // Initialize mode based on whether a percentage is saved
   const [budgetMode, setBudgetMode] = useState<BudgetMode>(
     category.budget_percentage != null && category.budget_percentage > 0 ? 'percentage' : 'fixed'
   );
@@ -74,22 +71,16 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
       : ''
   );
 
-  // Calculate budget as percentage of income (for display)
-  const budgetPercentOfIncome = monthlyIncome > 0 ? (budget_amount / monthlyIncome) * 100 : 0;
-
-  // Handle mode toggle with pre-population
   const handleModeChange = (newMode: BudgetMode) => {
     if (newMode === budgetMode) return;
 
     if (newMode === 'percentage') {
-      // Switching to percentage mode - calculate % from current amount
       const currentAmount = parseFloat(amountText) || budget_amount;
       if (currentAmount > 0 && monthlyIncome > 0) {
         const pct = (currentAmount / monthlyIncome) * 100;
         setPercentText(pct.toFixed(1));
       }
     } else {
-      // Switching to fixed mode - calculate amount from current percentage
       const currentPct = parseFloat(percentText);
       if (!isNaN(currentPct) && currentPct > 0 && monthlyIncome > 0) {
         const amount = Math.round((currentPct / 100) * monthlyIncome);
@@ -103,7 +94,6 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   const isWarning = hasBudget && percentage_used >= 90 && percentage_used <= 100;
   const remaining = Math.max(budget_amount - spent, 0);
 
-  // Animated progress bar
   const progressWidth = useSharedValue(0);
 
   useEffect(() => {
@@ -124,14 +114,12 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
     width: `${progressWidth.value * 100}%`,
   }));
 
-  // Animated toggle: 0 = fixed, 1 = percentage
   const toggleProgress = useSharedValue(0);
 
   useEffect(() => {
     setAmountText(budget_amount > 0 ? budget_amount.toString() : '');
   }, [budget_amount]);
 
-  // Sync budgetMode and percentText when category data changes
   useEffect(() => {
     if (category.budget_percentage != null && category.budget_percentage > 0) {
       setBudgetMode('percentage');
@@ -150,19 +138,11 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   }));
 
   const fixedTextStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(
-      toggleProgress.value,
-      [0, 1],
-      ['#ffffff', '#64748B']
-    ),
+    color: interpolateColor(toggleProgress.value, [0, 1], ['#ffffff', '#64748B']),
   }));
 
   const percentTextStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(
-      toggleProgress.value,
-      [0, 1],
-      ['#64748B', '#ffffff']
-    ),
+    color: interpolateColor(toggleProgress.value, [0, 1], ['#64748B', '#ffffff']),
   }));
 
   const handleSave = () => {
@@ -187,31 +167,17 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
     onSave(category.id, null, null);
   };
 
-  const progressColor = isOver
-    ? '#EF4444'
-    : isWarning
-    ? '#F59E0B'
-    : '#22c55e';
-
-  const statusColor = isOver
-    ? '#FCA5A5'
-    : isWarning
-    ? '#FCD34D'
-    : '#22c55e';
+  const progressColor = isOver ? '#F2514A' : isWarning ? '#F4A623' : '#22D97A';
+  const statusColor = isOver ? '#FCA5A5' : isWarning ? '#FCD34D' : '#22D97A';
 
   return (
     <Pressable onPress={onToggleExpand}>
       <View
-        className="rounded-2xl overflow-hidden"
-        style={{
-          backgroundColor: '#20283A',
-          borderWidth: 1,
-          borderColor: expanded ? `${category.color}40` : '#4B5563',
-        }}
+        className="rounded-2xl overflow-hidden border bg-surfaceDark"
+        style={{ borderColor: expanded ? `${category.color}40` : '#2A3250' }}
       >
         {/* Top row: icon, name, amount */}
         <View className="p-4 flex-row items-center">
-          {/* Category icon */}
           <View
             className="w-11 h-11 rounded-xl items-center justify-center mr-3"
             style={{ backgroundColor: category.color }}
@@ -220,11 +186,11 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
           </View>
 
           <View className="flex-1">
-            <Text style={{ color: '#F1F5F9', fontSize: 15, fontWeight: '600' }}>
+            <Text className="text-slate50 text-[15px] font-semibold">
               {category.category_name}
             </Text>
             {hasBudget && (
-              <Text style={{ color: statusColor, fontSize: 12, marginTop: 2 }}>
+              <Text className="text-xs mt-0.5" style={{ color: statusColor }}>
                 {isOver
                   ? `${formatAmount(spent - budget_amount, currencySymbol)} over`
                   : `${formatAmount(remaining, currencySymbol)} left`}
@@ -235,45 +201,32 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
           <View className="items-end">
             {hasBudget ? (
               <>
-                <Text style={{ color: '#F1F5F9', fontSize: 16, fontWeight: '700' }}>
+                <Text className="text-slate50 text-base font-bold">
                   {formatAmount(spent, currencySymbol)}
                 </Text>
-                <Text style={{ color: '#7C8CA0', fontSize: 12, marginTop: 1 }}>
+                <Text className="text-slateMuted text-xs mt-0.5">
                   / {formatAmount(budget_amount, currencySymbol)}
                 </Text>
               </>
             ) : (
-              <View
-                className="px-3 py-1 rounded-full"
-                style={{ backgroundColor: '#4B5563' }}
-              >
-                <Text style={{ color: '#7C8CA0', fontSize: 12 }}>No budget</Text>
+              <View className="px-3 py-1 rounded-full bg-gray600">
+                <Text className="text-slateMuted text-xs">No budget</Text>
               </View>
             )}
           </View>
         </View>
 
-        {/* Progress bar — thin and refined */}
+        {/* Progress bar */}
         {hasBudget && (
           <View className="px-4 pb-3">
-            <View
-              className="h-1.5 rounded-full overflow-hidden"
-              style={{ backgroundColor: '#4B5563' }}
-            >
+            <View className="h-1.5 rounded-full overflow-hidden bg-gray600">
               <Animated.View
-                style={[
-                  {
-                    height: '100%',
-                    borderRadius: 9999,
-                    backgroundColor: progressColor,
-                  },
-                  progressBarStyle,
-                ]}
+                className="h-full rounded-full"
+                style={[{ backgroundColor: progressColor }, progressBarStyle]}
               />
             </View>
-            {/* Percentage label */}
             <View className="flex-row justify-end mt-1">
-              <Text style={{ fontSize: 11, color: progressColor, fontWeight: '600' }}>
+              <Text className="text-[11px] font-semibold" style={{ color: progressColor }}>
                 {Math.round(percentage_used)}%
               </Text>
             </View>
@@ -282,39 +235,26 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
 
         {/* Expanded Edit Section */}
         {expanded && (
-          <View
-            className="px-4 pb-4"
-            style={{
-              borderTopWidth: 1,
-              borderTopColor: '#4B5563',
-              paddingTop: 14,
-            }}
-          >
+          <View className="px-4 pb-4 pt-[14px] border-t border-borderDark">
             {/* Mode toggle */}
             <Animated.View entering={FadeIn.duration(200).delay(50)}>
-              <View
-                className="rounded-xl p-1 flex-row mb-4"
-                style={{
-                  backgroundColor: '#1F2937',
-                  position: 'relative',
-                }}
-              >
+              <View className="rounded-xl flex-row mb-4 bg-inputDark border border-borderDark overflow-hidden">
                 <Animated.View
                   style={[
                     {
                       position: 'absolute',
-                      top: 4,
+                      top: 0,
+                      bottom: 0,
                       width: '50%',
-                      height: '100%',
-                      borderRadius: 10,
-                      backgroundColor: '#2A9D8F',
+                      borderRadius: 11,
+                      backgroundColor: '#1DB8A3',
                     },
                     sliderStyle,
                   ]}
                 />
                 <TouchableOpacity
                   onPress={() => handleModeChange('fixed')}
-                  className="flex-1 py-2.5 rounded-lg z-10"
+                  className="flex-1 py-2.5 z-10"
                   activeOpacity={0.7}
                 >
                   <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 13 }, fixedTextStyle]}>
@@ -323,7 +263,7 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => handleModeChange('percentage')}
-                  className="flex-1 py-2.5 rounded-lg z-10"
+                  className="flex-1 py-2.5 z-10"
                   activeOpacity={0.7}
                 >
                   <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 13 }, percentTextStyle]}>
@@ -336,21 +276,13 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
             <Animated.View entering={FadeIn.duration(200).delay(100)}>
               {budgetMode === 'fixed' ? (
                 <View>
-                  <Text style={{ color: '#8B99AE', fontSize: 11, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <Text className="text-secondaryDark text-[11px] mb-1.5 uppercase tracking-wide">
                     Budget Amount
                   </Text>
-                  <View
-                    className="flex-row items-center px-3 h-12 rounded-xl"
-                    style={{
-                      backgroundColor: '#1F2937',
-                      borderWidth: 1,
-                      borderColor: '#4B5563',
-                    }}
-                  >
-                    <Text style={{ color: '#7C8CA0', fontSize: 16, marginRight: 4 }}>{currencySymbol}</Text>
+                  <View className="flex-row items-center px-3 h-12 rounded-xl bg-inputDark border border-borderDark">
+                    <Text className="text-slateMuted text-base mr-1">{currencySymbol}</Text>
                     <TextInput
-                      className="flex-1 py-0"
-                      style={{ color: '#F1F5F9', fontSize: 16 }}
+                      className="flex-1 py-0 text-slate50 text-base"
                       value={amountText}
                       onChangeText={setAmountText}
                       keyboardType="numeric"
@@ -360,27 +292,19 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                     />
                   </View>
                   {amountText !== '' && !isNaN(parseFloat(amountText)) && monthlyIncome > 0 && (
-                    <Text style={{ color: '#8B99AE', fontSize: 12, marginTop: 6 }}>
+                    <Text className="text-secondaryDark text-xs mt-1.5">
                       = {((parseFloat(amountText) / monthlyIncome) * 100).toFixed(1)}% of income
                     </Text>
                   )}
                 </View>
               ) : (
                 <View>
-                  <Text style={{ color: '#8B99AE', fontSize: 11, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <Text className="text-secondaryDark text-[11px] mb-1.5 uppercase tracking-wide">
                     Percentage of Income ({formatAmount(monthlyIncome, currencySymbol)}/mo)
                   </Text>
-                  <View
-                    className="flex-row items-center px-3 h-12 rounded-xl"
-                    style={{
-                      backgroundColor: '#1F2937',
-                      borderWidth: 1,
-                      borderColor: '#4B5563',
-                    }}
-                  >
+                  <View className="flex-row items-center px-3 h-12 rounded-xl bg-inputDark border border-borderDark">
                     <TextInput
-                      className="flex-1 py-0"
-                      style={{ color: '#F1F5F9', fontSize: 16 }}
+                      className="flex-1 py-0 text-slate50 text-base"
                       value={percentText}
                       onChangeText={setPercentText}
                       keyboardType="numeric"
@@ -388,10 +312,10 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                       placeholderTextColor="#6B7280"
                       selectionColor={category.color}
                     />
-                    <Text style={{ color: '#7C8CA0', fontSize: 16, marginLeft: 4 }}>%</Text>
+                    <Text className="text-slateMuted text-base ml-1">%</Text>
                   </View>
                   {percentText !== '' && !isNaN(parseFloat(percentText)) && monthlyIncome > 0 && (
-                    <Text style={{ color: '#8B99AE', fontSize: 12, marginTop: 6 }}>
+                    <Text className="text-secondaryDark text-xs mt-1.5">
                       = {formatAmount(Math.round((parseFloat(percentText) / 100) * monthlyIncome), currencySymbol)}
                     </Text>
                   )}
@@ -400,23 +324,22 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
             </Animated.View>
 
             {/* Action buttons */}
-            <Animated.View entering={FadeIn.duration(200).delay(150)} className="mt-4 flex-row" style={{ gap: 10 }}>
+            <Animated.View entering={FadeIn.duration(200).delay(150)} className="mt-4 flex-row gap-2.5">
               {hasBudget && (
                 <TouchableOpacity
                   onPress={handleClear}
                   className="flex-1 rounded-xl py-3 items-center bg-accentRed"
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 14 }}>Remove</Text>
+                  <Text className="text-white font-semibold text-sm">Remove</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
                 onPress={handleSave}
-                className="flex-1 rounded-xl py-3 items-center"
-                style={{ backgroundColor: '#2A9D8F' }}
+                className="flex-1 rounded-xl py-3 items-center bg-accentTeal"
                 activeOpacity={0.7}
               >
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 14 }}>
+                <Text className="text-white font-semibold text-sm">
                   {hasBudget ? 'Save' : 'Set Budget'}
                 </Text>
               </TouchableOpacity>
@@ -425,12 +348,12 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
             {/* Show on Dashboard toggle */}
             {hasBudget && (
               <Animated.View entering={FadeIn.duration(200).delay(200)} className="mt-4 flex-row items-center justify-between">
-                <Text style={{ color: '#8B99AE', fontSize: 13 }}>Show on Dashboard</Text>
+                <Text className="text-secondaryDark text-[13px]">Show on Dashboard</Text>
                 <View onStartShouldSetResponder={() => true}>
                   <AnimatedToggle
                     value={showOnDashboard}
                     onValueChange={() => onToggleDashboard(category.id)}
-                    activeColor="#2A9D8F"
+                    activeColor="#1DB8A3"
                     inactiveColor="#334155"
                   />
                 </View>

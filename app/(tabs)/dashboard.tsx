@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BudgetHealthCard } from "../components/HomePage/BudgetHealthCard";
 import { CategoryBreakdownList } from "../components/HomePage/CategoryBreakdown";
 import { CategoryDonut } from "../components/HomePage/CategoryDonut";
+import { DashboardSkeleton } from "../components/HomePage/DashboardSkeleton";
 import { DashboardSummary } from "../components/HomePage/DashboardSummary";
 import { ScrollableSpendingChart } from "../components/HomePage/ScrollableSpendingChart";
 import { TimeFrameSelector } from "../components/HomePage/TimeFrameSelector";
@@ -139,47 +140,53 @@ export default function Dashboard() {
         contentContainerStyle={{ paddingBottom: 30 }}
       >
         <View className="px-2 pt-4">
-          <DashboardSummary
-            totalBalance={totalBalance}
-            totalIncome={totalIncome}
-            totalExpenses={totalExpenses}
-            currencySymbol={currencySymbol}
-            isUnlocked={isUnlocked}
-          />
+          {isLoading ? (
+            <DashboardSkeleton isDarkMode={isDarkMode} />
+          ) : (
+            <>
+              <DashboardSummary
+                totalBalance={totalBalance}
+                totalIncome={totalIncome}
+                totalExpenses={totalExpenses}
+                currencySymbol={currencySymbol}
+                isUnlocked={isUnlocked}
+              />
 
-          <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
+              <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
-          <ScrollableSpendingChart
-            chartDataByOffset={chartDataByOffset}
-            timeFrame={timeFrame}
-            font={interFont}
-            currencySymbol={currencySymbol}
-            categoryBudgets={categoryBudgets}
-            isUnlocked={isUnlocked}
-            onOffsetChange={setOffset}
-          />
+              <ScrollableSpendingChart
+                chartDataByOffset={chartDataByOffset}
+                timeFrame={timeFrame}
+                font={interFont}
+                currencySymbol={currencySymbol}
+                categoryBudgets={categoryBudgets}
+                isUnlocked={isUnlocked}
+                onOffsetChange={setOffset}
+              />
 
-          <BudgetHealthCard
-            categoryBudgets={filteredCategoryBudgets}
-            allCategoryBudgets={categoryBudgets}
-            currencySymbol={currencySymbol}
-            isLoading={budgetsLoading}
-            isUnlocked={isUnlocked}
-            savingsData={savingsData}
-          />
-          <CategoryDonut
-            aggregates={categoriesAggregated}
-            categories={categories}
-            timeFrame={timeFrame}
-            isUnlocked={isUnlocked}
-          />
+              <BudgetHealthCard
+                categoryBudgets={filteredCategoryBudgets}
+                allCategoryBudgets={categoryBudgets}
+                currencySymbol={currencySymbol}
+                isLoading={budgetsLoading}
+                isUnlocked={isUnlocked}
+                savingsData={savingsData}
+              />
+              <CategoryDonut
+                aggregates={categoriesAggregated}
+                categories={categories}
+                timeFrame={timeFrame}
+                isUnlocked={isUnlocked}
+              />
 
-          <CategoryBreakdownList
-            currency={currencySymbol}
-            categories={categories}
-            categoriesAggregated={categoriesAggregated}
-            onCategoryPress={onCategoryPress}
-          />
+              <CategoryBreakdownList
+                currency={currencySymbol}
+                categories={categories}
+                categoriesAggregated={categoriesAggregated}
+                onCategoryPress={onCategoryPress}
+              />
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

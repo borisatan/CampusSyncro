@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -104,7 +104,7 @@ export default function SavingsPotentialScreen() {
       <LinearGradient
         colors={['#050810', '#0A1628', '#0D1F35', '#0A1628', '#050810']}
         locations={[0, 0.3, 0.5, 0.7, 1]}
-        style={StyleSheet.absoluteFill}
+        className="absolute inset-0"
       />
 
       {/* Main content */}
@@ -123,16 +123,13 @@ export default function SavingsPotentialScreen() {
             </Animated.Text>
 
             <View className="flex-row items-start justify-center">
-              <Text
-                className="text-white mr-1"
-                style={{ fontSize: 48, fontWeight: '200', marginTop: 12 }}
-              >
+              <Text className="text-white mr-1 text-5xl font-extralight mt-3">
                 {currencySymbol || '$'}
               </Text>
               <AnimatedRollingNumber
                 value={displayMonthly}
                 spinningAnimationConfig={{ duration: 3000 }}
-                textStyle={{ fontSize: 88, fontWeight: '200', color: '#FFFFFF', letterSpacing: -2 }}
+                textStyle={{ fontSize: 88, fontWeight: '200', color: '#FFFFFF', letterSpacing: -2 }} // Third-party component prop
                 toFixed={0}
               />
             </View>
@@ -157,16 +154,13 @@ export default function SavingsPotentialScreen() {
             </Animated.Text>
 
             <View className="flex-row items-start justify-center">
-              <Text
-                className="text-white mr-1"
-                style={{ fontSize: 48, fontWeight: '200', marginTop: 12 }}
-              >
+              <Text className="text-white mr-1 text-5xl font-extralight mt-3">
                 {currencySymbol || '$'}
               </Text>
               <AnimatedRollingNumber
                 value={displayYearly}
                 spinningAnimationConfig={{ duration: 3000 }}
-                textStyle={{ fontSize: 88, fontWeight: '200', color: '#FFFFFF', letterSpacing: -2 }}
+                textStyle={{ fontSize: 88, fontWeight: '200', color: '#FFFFFF', letterSpacing: -2 }} // Third-party component prop
                 toFixed={0}
               />
             </View>

@@ -46,7 +46,7 @@ export const TransactionFormFields = ({
       {/* Date Picker */}
       <View className="mb-6">
         <Text
-          className={`text-sm mb-2 ${isDarkMode ? "text-slate-400" : "text-gray-600"}`}
+          className={`text-sm mb-2 ${isDarkMode ? "text-slate300" : "text-secondaryLight"}`}
         >
           Date
         </Text>
@@ -54,11 +54,11 @@ export const TransactionFormFields = ({
           onPress={() => setShowDatePicker(true)}
           className={`w-full px-4 py-3 rounded-xl flex-row items-center justify-between border ${
             isDarkMode
-              ? "bg-slate-800 border-slate-700"
-              : "bg-white border-gray-300"
+              ? "bg-slate700 border-slate600"
+              : "bg-background border-borderLight"
           }`}
         >
-          <Text className={isDarkMode ? "text-white" : "text-gray-900"}>
+          <Text className={isDarkMode ? "text-textDark" : "text-textLight"}>
             {selectedDate.toLocaleDateString()}
           </Text>
           <Calendar size={20} color={isDarkMode ? "#94a3b8" : "#6b7280"} />
@@ -73,19 +73,19 @@ export const TransactionFormFields = ({
                 className="flex-1 bg-black/50 justify-end"
               >
                 <View
-                  className={`${isDarkMode ? "bg-slate-900" : "bg-white"} rounded-t-3xl`}
+                  className={`${isDarkMode ? "bg-backgroundDark" : "bg-background"} rounded-t-3xl`}
                 >
-                  <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200">
+                  <View className="flex-row justify-between items-center px-4 py-3 border-b border-borderLight">
                     <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                      <Text className="text-blue-500">Cancel</Text>
+                      <Text className="text-accentSkyBlue">Cancel</Text>
                     </TouchableOpacity>
                     <Text
-                      className={`font-semibold ${isDarkMode ? "text-white" : "text-gray-900"}`}
+                      className={`font-semibold ${isDarkMode ? "text-textDark" : "text-textLight"}`}
                     >
                       Select Date
                     </Text>
                     <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                      <Text className="text-blue-500 font-semibold">Done</Text>
+                      <Text className="text-accentSkyBlue font-semibold">Done</Text>
                     </TouchableOpacity>
                   </View>
                   <DateTimePicker
@@ -147,7 +147,7 @@ export const DateSelector = ({
   return (
   <View className="mb-6">
     <Text
-      className={`text-sm mb-2 ${isDarkMode ? "text-slate-400" : "text-gray-600"}`}
+      className={`text-sm mb-2 ${isDarkMode ? "text-slate300" : "text-secondaryLight"}`}
     >
       Date
     </Text>
@@ -155,11 +155,11 @@ export const DateSelector = ({
       onPress={() => setShowDatePicker(true)}
       className={`w-full px-4 py-3 rounded-xl flex-row items-center justify-between border ${
         isDarkMode
-          ? "bg-slate-800 border-slate-700"
-          : "bg-white border-gray-300"
+          ? "bg-slate700 border-slate600"
+          : "bg-background border-borderLight"
       }`}
     >
-      <Text className={isDarkMode ? "text-white" : "text-gray-900"}>
+      <Text className={isDarkMode ? "text-textDark" : "text-textLight"}>
         {selectedDate.toLocaleDateString()}
       </Text>
       <Calendar size={20} color={isDarkMode ? "#94a3b8" : "#6b7280"} />
@@ -174,19 +174,19 @@ export const DateSelector = ({
             className="flex-1 bg-black/50 justify-end"
           >
             <View
-              className={`${isDarkMode ? "bg-slate-900" : "bg-white"} rounded-t-3xl`}
+              className={`${isDarkMode ? "bg-backgroundDark" : "bg-background"} rounded-t-3xl`}
             >
-              <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200">
+              <View className="flex-row justify-between items-center px-4 py-3 border-b border-borderLight">
                 <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text className="text-blue-500">Cancel</Text>
+                  <Text className="text-accentSkyBlue">Cancel</Text>
                 </TouchableOpacity>
                 <Text
-                  className={`font-semibold ${isDarkMode ? "text-white" : "text-gray-900"}`}
+                  className={`font-semibold ${isDarkMode ? "text-textDark" : "text-textLight"}`}
                 >
                   Select Date
                 </Text>
                 <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text className="text-blue-500 font-semibold">Done</Text>
+                  <Text className="text-accentSkyBlue font-semibold">Done</Text>
                 </TouchableOpacity>
               </View>
               <DateTimePicker

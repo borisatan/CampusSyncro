@@ -33,6 +33,7 @@ export default function EmotionalHookScreen() {
         title="Money is more than just math."
         subtitle="How does your current financial situation make you feel?"
         showBack={false}
+        onSkip={handleSkip}
       />
 
       {/* Emotion Buttons */}
@@ -50,7 +51,7 @@ export default function EmotionalHookScreen() {
       </View>
 
       {/* Footer */}
-      <View style={{ paddingBottom: insets.bottom + 16 }} className="px-2">
+      <View className="px-2 pb-4" style={{ paddingBottom: insets.bottom + 16 }}> {/* Dynamic safe area inset */}
         <Text className="text-secondaryDark text-sm text-center mb-4">
           Your answer helps us tailor your experience.
         </Text>
@@ -66,12 +67,6 @@ export default function EmotionalHookScreen() {
         >
           <Text className={`text-base font-semibold ${selectedEmotion ? 'text-white' : 'text-secondaryDark'}`}>
             Continue
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={handleSkip} activeOpacity={0.7} className="mt-4">
-          <Text className="text-secondaryDark text-sm text-center underline">
-            Skip onboarding
           </Text>
         </TouchableOpacity>
       </View>
