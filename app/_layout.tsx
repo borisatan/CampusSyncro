@@ -11,6 +11,7 @@ import DataPreloader from './components/Shared/DataPreloader';
 import { AuthProvider } from './context/AuthContext';
 import { DataRefreshProvider } from './context/DataRefreshContext';
 import { LockProvider } from './context/LockContext';
+import { PostHogProvider } from './context/PostHogContext';
 import { AppThemeProvider } from './context/ThemeContext';
 
 configureReanimatedLogger({
@@ -33,34 +34,36 @@ export default function RootLayout() {
     <GestureHandlerRootView className="flex-1">
       <SafeAreaProvider>
         <AuthProvider>
-          <LockProvider>
-            <CurrencyInitializer />
-            <DataPreloader />
-            <DataRefreshProvider>
-              <ThemeProvider value={MyTheme}>
-                <AppThemeProvider>
-                  <KeyboardProvider preload={false}>
-                    <Stack
-                      screenOptions={{
-                        headerShown: false,
-                        animation: 'fade_from_bottom',
-                        animationDuration: 400,
-                        contentStyle: { backgroundColor: "#20283A", flex: 1 }, // Using hex for React Navigation compatibility
-                      }}
-                    >
-                      <Stack.Screen name="index" />
-                      <Stack.Screen name="(auth)" />
-                      <Stack.Screen name="(onboarding)" />
-                      <Stack.Screen name="(tabs)" />
-                      <Stack.Screen name="budgets" />
-                      <Stack.Screen name="budget-help" />
-                    </Stack>
-                    <AppLockScreen />
-                  </KeyboardProvider>
-                </AppThemeProvider>
-              </ThemeProvider>
-            </DataRefreshProvider>
-          </LockProvider>
+          <PostHogProvider>
+            <LockProvider>
+              <CurrencyInitializer />
+              <DataPreloader />
+              <DataRefreshProvider>
+                <ThemeProvider value={MyTheme}>
+                  <AppThemeProvider>
+                    <KeyboardProvider preload={false}>
+                      <Stack
+                        screenOptions={{
+                          headerShown: false,
+                          animation: 'fade_from_bottom',
+                          animationDuration: 400,
+                          contentStyle: { backgroundColor: "#20283A", flex: 1 }, // Using hex for React Navigation compatibility
+                        }}
+                      >
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="(auth)" />
+                        <Stack.Screen name="(onboarding)" />
+                        <Stack.Screen name="(tabs)" />
+                        <Stack.Screen name="budgets" />
+                        <Stack.Screen name="budget-help" />
+                      </Stack>
+                      <AppLockScreen />
+                    </KeyboardProvider>
+                  </AppThemeProvider>
+                </ThemeProvider>
+              </DataRefreshProvider>
+            </LockProvider>
+          </PostHogProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -101,6 +101,7 @@ export default function BudgetsScreen() {
 
   // Quick savings modal state
   const [showQuickSavingsModal, setShowQuickSavingsModal] = useState(false);
+  const [savingsModalMode, setSavingsModalMode] = useState<'add' | 'withdraw'>('add');
 
   const handleQuickSave = useCallback(async (accountId: number, accountName: string, amount: number) => {
     if (!userId) return;
@@ -483,7 +484,14 @@ export default function BudgetsScreen() {
                       monthlyIncome={monthlyIncome}
                       showOnDashboard={showSavingsOnDashboard}
                       onToggleDashboard={toggleShowSavingsOnDashboard}
-                      onAddPress={() => setShowQuickSavingsModal(true)}
+                      onAddPress={() => {
+                        setSavingsModalMode('add');
+                        setShowQuickSavingsModal(true);
+                      }}
+                      onWithdrawPress={() => {
+                        setSavingsModalMode('withdraw');
+                        setShowQuickSavingsModal(true);
+                      }}
                     />
                   </MotiView>
                 )}
@@ -748,9 +756,11 @@ export default function BudgetsScreen() {
       {/* Quick Savings Modal */}
       <QuickSavingsModal
         visible={showQuickSavingsModal}
+        mode={savingsModalMode}
         accounts={accounts}
         currencySymbol={currencySymbol}
         targetRemaining={Math.max(0, savingsTarget - savingsSaved)}
+        currentlySaved={savingsSaved}
         onSave={handleQuickSave}
         onClose={() => setShowQuickSavingsModal(false)}
       />

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react'; // Added useEffect and useRef
-import { Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native'; // Added Animated
+import { Animated, Keyboard, ScrollView, Text, TouchableOpacity, View } from 'react-native'; // Added Animated and Keyboard
 import { Account } from '../../types/types';
 
 interface AccountSelectorProps {
@@ -39,10 +39,13 @@ export const AccountSelector = ({
       </Text>
       
       <TouchableOpacity
-        onPress={() => setShowAccountDropdown(!showAccountDropdown)}
+        onPress={() => {
+          Keyboard.dismiss();
+          setShowAccountDropdown(!showAccountDropdown);
+        }}
         activeOpacity={0.7}
         className={`w-full px-4 py-3 rounded-xl flex-row justify-between items-center border ${
-          isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
+          isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'
         }`}
       >
         <Text className={isDarkMode ? 'text-textDark' : 'text-textLight'}>
@@ -57,7 +60,7 @@ export const AccountSelector = ({
 
       {showAccountDropdown && (
         <View className={`mt-2 rounded-xl overflow-hidden border ${
-          isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-background border-borderLight'
+          isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'
         }`}>
           <ScrollView className="max-h-60" nestedScrollEnabled={true}>
             {currentOptions.map((account, index) => (

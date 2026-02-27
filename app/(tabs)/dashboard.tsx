@@ -123,7 +123,7 @@ export default function Dashboard() {
         initialCategory: category_name,
         initialTimeFrame: timeFrame,
         initialOffset: offset.toString(),
-        t: Date.now().toString()
+        t: Date.now().toString(),
       },
     });
   };

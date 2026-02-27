@@ -795,6 +795,41 @@ export const contributeToGoal = async (payload: {
   if (updateError) throw updateError;
 };
 
+export const withdrawFromGoal = async (payload: {
+  goal_id: number;
+  user_id: string;
+  amount: number;
+  destination_account_id: number;
+  destination_account_name: string;
+  source_account_name: string;
+}): Promise<void> => {
+  // 1. Create the transfer (updates account balances) - from savings to destination
+  await createTransfer({
+    from_account: payload.source_account_name,
+    to_account: payload.destination_account_name,
+    amount: payload.amount,
+    user_id: payload.user_id,
+  });
+
+  // 2. Record the withdrawal (negative contribution)
+  const { error: contribError } = await supabase
+    .from('GoalContributions')
+    .insert([{
+      goal_id: payload.goal_id,
+      user_id: payload.user_id,
+      amount: -payload.amount, // Negative to indicate withdrawal
+      source_account_id: payload.destination_account_id,
+    }]);
+  if (contribError) throw contribError;
+
+  // 3. Update goal's current_amount (decrement)
+  const { error: updateError } = await supabase.rpc('increment_goal_amount', {
+    p_goal_id: payload.goal_id,
+    p_amount: -payload.amount, // Negative to decrement
+  });
+  if (updateError) throw updateError;
+};
+
 export const fetchGoalContributions = async (goalId: number): Promise<GoalContribution[]> => {
   const { data, error } = await supabase
     .from('GoalContributions')

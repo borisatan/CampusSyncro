@@ -8,18 +8,42 @@ export type ChartDataPoint = {
   x: number;
 };
 
-export type SupportedCurrency = 'USD' | 'EUR' | 'JPY' | 'GBP';
+export type SupportedCurrency =
+  | 'USD'
+  | 'EUR'
+  | 'GBP'
+  | 'JPY'
+  | 'CAD'
+  | 'AUD'
+  | 'CHF'
+  | 'CNY'
+  | 'INR'
+  | 'MXN'
+  | 'BRL'
+  | 'ZAR'
+  | 'SEK'
+  | 'NZD';
 
 export const isValidCurrency = (currency: string): currency is SupportedCurrency => {
-  return ['USD', 'EUR', 'JPY', 'GBP'].includes(currency);
+  return ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'BRL', 'ZAR', 'SEK', 'NZD'].includes(currency);
 };
 
 export const getCurrencySymbol = (currency: SupportedCurrency | '?' | string): string => {
   const symbols: Record<string, string> = {
     USD: '$',
     EUR: '€',
-    JPY: '¥',
     GBP: '£',
+    JPY: '¥',
+    CAD: 'C$',
+    AUD: 'A$',
+    CHF: 'CHF',
+    CNY: '¥',
+    INR: '₹',
+    MXN: '$',
+    BRL: 'R$',
+    ZAR: 'R',
+    SEK: 'kr',
+    NZD: 'NZ$',
   };
 
   return symbols[currency] ?? ' ';

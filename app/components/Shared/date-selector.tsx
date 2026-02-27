@@ -155,15 +155,17 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
         <TouchableOpacity
           key={view}
           onPress={() => handleViewSelect(view)}
-          className={`flex-1 mx-1 py-2 rounded-xl border-1 border-borderLight dark:border-borderDark ${
-            currentView === view ? 'bg-[surfaceDark]' : 'bg-[#E5E7EB] dark:bg-[#374151]'
+          className={`flex-1 mx-1 py-2 rounded-xl border ${
+            isDarkMode
+              ? currentView === view ? 'bg-surfaceDark border-borderDark' : 'bg-inputDark border-borderDark'
+              : currentView === view ? 'bg-accentSkyBlue border-accentSkyBlue' : 'bg-backgroundMuted border-borderLight'
           }`}
         >
           <Text
             className={`text-center text-sm font-medium ${
               currentView === view
                 ? 'text-white'
-                : 'text-[#212121] dark:text-[#FFFFFF]'
+                : isDarkMode ? 'text-textDark' : 'text-textLight'
             }`}
           >
             {view.charAt(0).toUpperCase() + view.slice(1)}
@@ -178,7 +180,9 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setIsVisible(true)}
-        className="w-full flex-row items-center justify-between px-4 py-4 rounded-2xl"
+        className={`w-full flex-row items-center justify-between px-4 py-4 rounded-2xl border ${
+          isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'
+        }`}
       >
         <View className="flex-row items-center">
           <View className="bg-indigo p-2 rounded-xl mr-3">
@@ -209,21 +213,21 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({ onDateRangeSelect
         onRequestClose={handleClose}
       >
         <View className="flex-1 justify-center items-center bg-black/50">
-          <View className={`w-[90%] p-4 rounded-2xl border border-slate-700 ${isDarkMode ? 'bg-backgroundDark' : 'bg-white'}`}>
+          <View className={`w-[90%] p-4 rounded-2xl border ${isDarkMode ? 'bg-backgroundDark border-borderDark' : 'bg-white border-borderLight'}`}>
             <ViewSelector />
             <Calendar
               onDayPress={handleDayPress}
               markedDates={getMarkedDates()}
               markingType="period"
               theme={{
-                backgroundColor: isDarkMode ? 'bg-bacgkroundDark' : '#FFFFFF',
-                calendarBackground: isDarkMode ? 'bg-surfaceDark' : '#FFFFFF',
-                textSectionTitleColor: isDarkMode ? '#FFFFFF' : '#212121',
-                selectedDayBackgroundColor: 'accentPurple',
-                selectedDayTextColor: 'accentPurple',
-                todayTextColor: 'accentPurple',
-                dayTextColor: isDarkMode ? '#FFFFFF' : '#212121',
-                textDisabledColor: isDarkMode ? '#666666' : '#D1D1D1',
+                backgroundColor: isDarkMode ? '#08090F' : '#FFFFFF',
+                calendarBackground: isDarkMode ? '#161B2E' : '#FFFFFF',
+                textSectionTitleColor: isDarkMode ? '#EDF0FA' : '#000000',
+                selectedDayBackgroundColor: '#8A00C2',
+                selectedDayTextColor: '#FFFFFF',
+                todayTextColor: '#3B82F6',
+                dayTextColor: isDarkMode ? '#EDF0FA' : '#000000',
+                textDisabledColor: isDarkMode ? '#475569' : '#D1D1D1',
               }}
             />
             <TouchableOpacity

@@ -15,28 +15,36 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTheme } from '../../context/ThemeContext';
 import { Account } from '../../types/types';
+import { AccountSelector } from '../AddTransactionPage/AccountSelector';
 import { SuccessModal } from '../Shared/SuccessModal';
 
 interface QuickSavingsModalProps {
   visible: boolean;
+  mode: 'add' | 'withdraw';
   accounts: Account[];
   currencySymbol: string;
   targetRemaining: number;
+  currentlySaved: number;
   onSave: (accountId: number, accountName: string, amount: number) => Promise<void>;
   onClose: () => void;
 }
 
 export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
   visible,
+  mode,
   accounts,
   currencySymbol,
   targetRemaining,
+  currentlySaved,
   onSave,
   onClose,
 }) => {
+  const { isDarkMode } = useTheme();
   const [amountText, setAmountText] = useState('');
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [selectedAccountName, setSelectedAccountName] = useState('');
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
@@ -47,8 +55,8 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
 
   // Auto-select first account and focus input when modal opens
   useEffect(() => {
-    if (visible && sourceAccounts.length > 0 && !selectedAccount) {
-      setSelectedAccount(sourceAccounts[0]);
+    if (visible && sourceAccounts.length > 0 && !selectedAccountName) {
+      setSelectedAccountName(sourceAccounts[0].account_name);
     }
     if (visible) {
       // Delay focus to allow modal animation to complete
@@ -62,16 +70,24 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
   useEffect(() => {
     if (!visible) {
       setAmountText('');
-      setSelectedAccount(null);
+      setSelectedAccountName('');
+      setShowAccountDropdown(false);
       setIsSubmitting(false);
     }
   }, [visible]);
 
   const handleSave = async () => {
+    const selectedAccount = sourceAccounts.find(acc => acc.account_name === selectedAccountName);
     if (!selectedAccount) return;
     const amount = parseFloat(amountText);
     if (isNaN(amount) || amount <= 0) return;
-    if (amount > selectedAccount.balance) return;
+
+    // Validation based on mode
+    if (mode === 'add') {
+      if (amount > selectedAccount.balance) return;
+    } else {
+      if (amount > currentlySaved) return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -85,7 +101,10 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
   };
 
   const amount = parseFloat(amountText) || 0;
-  const isValid = amount > 0 && selectedAccount && amount <= selectedAccount.balance;
+  const selectedAccount = sourceAccounts.find(acc => acc.account_name === selectedAccountName);
+  const isValid = mode === 'add'
+    ? amount > 0 && selectedAccount && amount <= selectedAccount.balance
+    : amount > 0 && selectedAccount && amount <= currentlySaved;
 
   const formatCurrency = (value: number) =>
     `${currencySymbol}${value.toLocaleString('en-US', {
@@ -109,15 +128,17 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
             <View className="flex-row items-center px-4 py-2">
               <TouchableOpacity
                 onPress={onClose}
-                className="w-10 h-10 items-center justify-center mr-2"
+                className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"
               >
-                <ArrowLeft color="#94A3B8" size={24} />
+                <ArrowLeft color="#94A3B8" size={20} />
               </TouchableOpacity>
-              <Text className="text-xl font-semibold text-textDark">Add to Savings</Text>
+              <Text className="text-xl font-semibold text-textDark">
+                {mode === 'add' ? 'Add to Savings' : 'Withdraw from Savings'}
+              </Text>
             </View>
 
             {/* Content */}
-            <View className="px-4 mt-4">
+            <View className="px-2 mt-4">
               <View className="bg-surfaceDark rounded-3xl p-4 border border-borderDark">
                 {/* Target info */}
                 <View className="flex-row items-center gap-3 mb-5">
@@ -126,13 +147,19 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
                   </View>
                   <View className="flex-1">
                     <Text className="text-textDark text-lg font-semibold">
-                      Contribute to your savings goal
+                      {mode === 'add'
+                        ? 'Contribute to your savings goal'
+                        : 'Take from your savings'}
                     </Text>
-                    {targetRemaining > 0 && (
+                    {mode === 'add' && targetRemaining > 0 ? (
                       <Text className="text-secondaryDark text-sm">
                         {formatCurrency(targetRemaining)} left to reach your goal
                       </Text>
-                    )}
+                    ) : mode === 'withdraw' && currentlySaved > 0 ? (
+                      <Text className="text-secondaryDark text-sm">
+                        {formatCurrency(currentlySaved)} available to withdraw
+                      </Text>
+                    ) : null}
                   </View>
                 </View>
 
@@ -152,7 +179,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
                 </View>
 
                 {/* Quick amount buttons */}
-                {targetRemaining > 0 && (
+                {mode === 'add' && targetRemaining > 0 && (
                   <View className="flex-row gap-2 mt-4">
                     {[25, 50, 100].map((preset) => (
                       <TouchableOpacity
@@ -175,49 +202,59 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
                     </TouchableOpacity>
                   </View>
                 )}
-
-                {/* Account selector */}
-                <Text className="text-sm text-secondaryDark mt-4 mb-2">Deduct from</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  keyboardShouldPersistTaps="always"
-                  contentContainerStyle={{ gap: 8 }}
-                >
-                  {sourceAccounts.map((account) => {
-                    const isSelected = selectedAccount?.id === account.id;
-                    return (
+                {mode === 'withdraw' && currentlySaved > 0 && (
+                  <View className="flex-row gap-2 mt-4">
+                    {[25, 50, 100].map((preset) => (
                       <TouchableOpacity
-                        key={account.id}
-                        onPress={() => setSelectedAccount(account)}
-                        className={`px-4 py-3 rounded-xl border ${
-                          isSelected
-                            ? 'bg-accentBlue/20 border-accentBlue'
-                            : 'bg-backgroundDark border-borderDark'
-                        }`}
+                        key={preset}
+                        onPress={() => setAmountText(preset.toString())}
+                        className="flex-1 py-2 rounded-lg bg-backgroundDark border border-borderDark items-center"
                         activeOpacity={0.7}
                       >
-                        <Text
-                          className={`text-sm font-medium ${
-                            isSelected ? 'text-accentBlue' : 'text-textDark'
-                          }`}
-                        >
-                          {account.account_name}
-                        </Text>
-                        <Text className="text-secondaryDark text-xs mt-0.5">
-                          {formatCurrency(account.balance)}
+                        <Text className="text-secondaryDark text-sm">
+                          {currencySymbol}{preset}
                         </Text>
                       </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+                    ))}
+                    <TouchableOpacity
+                      onPress={() => setAmountText(Math.floor(currentlySaved).toString())}
+                      className="flex-1 py-2 rounded-lg bg-backgroundDark border border-accentBlue/30 items-center"
+                      activeOpacity={0.7}
+                    >
+                      <Text className="text-accentBlue text-sm">All</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
 
-                {/* Insufficient balance warning */}
-                {selectedAccount && amount > selectedAccount.balance && (
+                {/* Account selector */}
+                <View className="mt-4">
+                  <AccountSelector
+                    isDarkMode={isDarkMode}
+                    showAccountDropdown={showAccountDropdown}
+                    setShowAccountDropdown={setShowAccountDropdown}
+                    isLoadingAccounts={false}
+                    selectedAccount={selectedAccountName || 'Select account'}
+                    setSelectedAccount={setSelectedAccountName}
+                    accountOptions={sourceAccounts}
+                    expenseAccountOptions={sourceAccounts}
+                    transactionType="expense"
+                  />
+                </View>
+
+                {/* Validation warnings */}
+                {mode === 'add' && selectedAccount && amount > selectedAccount.balance && (
                   <View className="flex-row items-center gap-2 mt-4 p-3 rounded-xl bg-accentRed/10 border border-accentRed/30">
                     <Ionicons name="warning" size={16} color="#F2514A" />
                     <Text className="text-accentRed text-sm flex-1">
                       Insufficient balance in {selectedAccount.account_name}
+                    </Text>
+                  </View>
+                )}
+                {mode === 'withdraw' && amount > currentlySaved && (
+                  <View className="flex-row items-center gap-2 mt-4 p-3 rounded-xl bg-accentRed/10 border border-accentRed/30">
+                    <Ionicons name="warning" size={16} color="#F2514A" />
+                    <Text className="text-accentRed text-sm flex-1">
+                      Amount exceeds available savings ({formatCurrency(currentlySaved)})
                     </Text>
                   </View>
                 )}
@@ -227,7 +264,9 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
                   onPress={handleSave}
                   disabled={!isValid || isSubmitting}
                   className={`mt-4 py-4 rounded-xl items-center ${
-                    isValid && !isSubmitting ? 'bg-accentTeal' : 'bg-gray-600'
+                    isValid && !isSubmitting
+                      ? mode === 'add' ? 'bg-accentTeal' : 'bg-accentBlue'
+                      : 'bg-gray-600'
                   }`}
                   activeOpacity={0.7}
                 >
@@ -239,7 +278,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
                         isValid && !isSubmitting ? 'text-white' : 'text-gray-400'
                       }`}
                     >
-                      Add to Savings
+                      {mode === 'add' ? 'Add to Savings' : 'Withdraw'}
                     </Text>
                   )}
                 </TouchableOpacity>

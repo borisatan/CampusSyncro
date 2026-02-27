@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useRef } from "react";
 import { Animated, Pressable, SectionList, Text } from "react-native";
 import { CategoryIconInfo, TransactionSection } from "../../types/types";
@@ -69,7 +70,6 @@ const AnimatedTransactionItem = React.memo(function AnimatedTransactionItem({
   onLongPress?: (id: string) => void;
 }) {
   // 1. Initialize Animation Values
-  const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(0)).current; // Start invisible
   const translateY = useRef(new Animated.Value(10)).current; // Optional: slight slide up
 
@@ -89,39 +89,23 @@ const AnimatedTransactionItem = React.memo(function AnimatedTransactionItem({
     ]).start();
   }, []);
 
-  // Press Interactions (Scale)
-  const handlePressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.96,
-      useNativeDriver: true,
-      friction: 8,
-      tension: 100,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      friction: 8,
-      tension: 100,
-    }).start();
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onLongPress?.(transaction.id);
   };
 
   return (
     <Pressable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={() => onLongPress?.(transaction.id)}
+      onPress={handlePress}
       delayLongPress={200}
+      style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
     >
-      <Animated.View 
-        style={{ 
+      <Animated.View
+        style={{
           opacity, // Apply the fade
           transform: [
-            { scale }, 
             { translateY } // Apply the slide
-          ] 
+          ]
         }}
       >
         <TransactionItem transaction={transaction} categoryIcons={categoryIcons} />

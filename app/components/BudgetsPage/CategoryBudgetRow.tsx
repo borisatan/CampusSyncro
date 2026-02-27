@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, Text, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
 
@@ -170,8 +171,13 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
   const progressColor = isOver ? '#F2514A' : isWarning ? '#F4A623' : '#22D97A';
   const statusColor = isOver ? '#FCA5A5' : isWarning ? '#FCD34D' : '#22D97A';
 
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onToggleExpand();
+  };
+
   return (
-    <Pressable onPress={onToggleExpand}>
+    <Pressable onPress={handlePress}>
       <View
         className="rounded-2xl overflow-hidden border bg-surfaceDark"
         style={{ borderColor: expanded ? `${category.color}40` : '#2A3250' }}
@@ -247,7 +253,7 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                       bottom: 0,
                       width: '50%',
                       borderRadius: 11,
-                      backgroundColor: '#1DB8A3',
+                      backgroundColor: '#3B7EFF',
                     },
                     sliderStyle,
                   ]}

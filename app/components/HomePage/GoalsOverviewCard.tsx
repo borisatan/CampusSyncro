@@ -1,13 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, Text, TouchableOpacity, View } from 'react-native';
 import { useDataRefresh } from '../../context/DataRefreshContext';
 import { useGoalsStore } from '../../store/useGoalsStore';
 import { Account, Goal } from '../../types/types';
 import { CreateGoalModal } from '../GoalsPage/CreateGoalModal';
 import { EditGoalModal } from '../GoalsPage/EditGoalModal';
 import { GoalProgressCard } from '../GoalsPage/GoalProgressCard';
+import { GoalTransactionModal } from '../GoalsPage/GoalTransactionModal';
 
 interface GoalsOverviewCardProps {
   currencySymbol: string;
@@ -20,11 +22,25 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionMode, setTransactionMode] = useState<'add' | 'withdraw'>('add');
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
 
   const handleGoalPress = (goal: Goal) => {
     setSelectedGoal(goal);
     setShowEditModal(true);
+  };
+
+  const handleAddPress = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setTransactionMode('add');
+    setShowTransactionModal(true);
+  };
+
+  const handleWithdrawPress = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setTransactionMode('withdraw');
+    setShowTransactionModal(true);
   };
 
   useEffect(() => {
@@ -46,12 +62,17 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
   const completedGoals = goals.filter((g) => g.current_amount >= g.target_amount);
 
   if (goals.length === 0) {
+    const handleEmptyPress = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setShowCreateModal(true);
+    };
+
     return (
       <>
-        <TouchableOpacity
-          onPress={() => setShowCreateModal(true)}
+        <Pressable
+          onPress={handleEmptyPress}
           className="bg-surfaceDark rounded-2xl p-4 mb-4 border border-slate-700/50"
-          activeOpacity={0.7}
+          style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
         >
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
@@ -65,7 +86,7 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
             </View>
             <Ionicons name="add-circle-outline" size={24} color="#a78bfa" />
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
         <CreateGoalModal
           visible={showCreateModal}
@@ -78,6 +99,11 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
     );
   }
 
+  const handleHeaderPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <>
       <MotiView
@@ -87,10 +113,10 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
         className="bg-surfaceDark rounded-2xl p-4 mb-4 border border-slate-700/50"
       >
         {/* Header */}
-        <TouchableOpacity
-          onPress={() => setIsExpanded(!isExpanded)}
+        <Pressable
+          onPress={handleHeaderPress}
           className="flex-row items-center justify-between mb-3"
-          activeOpacity={0.7}
+          style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
         >
           <View className="flex-row items-center">
             <View className="w-10 h-10 rounded-full bg-purple-500/20 items-center justify-center mr-3">
@@ -113,7 +139,7 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
               color="#64748B"
             />
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
         {/* Overall progress bar */}
         <View className="h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
@@ -142,6 +168,8 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
                     goal={goal}
                     currencySymbol={currencySymbol}
                     onPress={() => handleGoalPress(goal)}
+                    onAddPress={() => handleAddPress(goal)}
+                    onWithdrawPress={() => handleWithdrawPress(goal)}
                     compact
                   />
                 ))}
@@ -160,6 +188,8 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
                     goal={goal}
                     currencySymbol={currencySymbol}
                     onPress={() => handleGoalPress(goal)}
+                    onAddPress={() => handleAddPress(goal)}
+                    onWithdrawPress={() => handleWithdrawPress(goal)}
                     compact
                   />
                 ))}
@@ -167,14 +197,17 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
             )}
 
             {/* Add Goal Button */}
-            <TouchableOpacity
-              onPress={() => setShowCreateModal(true)}
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setShowCreateModal(true);
+              }}
               className="flex-row items-center justify-center py-3 mt-3 border border-dashed border-purple-500/30 rounded-xl"
-              activeOpacity={0.7}
+              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
             >
               <Ionicons name="add" size={18} color="#a78bfa" />
               <Text className="text-purple-400 ml-2">Add New Goal</Text>
-            </TouchableOpacity>
+            </Pressable>
           </MotiView>
         )}
       </MotiView>
@@ -196,6 +229,19 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
           setSelectedGoal(null);
         }}
         onGoalUpdated={loadGoals}
+      />
+
+      <GoalTransactionModal
+        visible={showTransactionModal}
+        goal={selectedGoal}
+        mode={transactionMode}
+        accounts={accounts}
+        currencySymbol={currencySymbol}
+        onClose={() => {
+          setShowTransactionModal(false);
+          setSelectedGoal(null);
+        }}
+        onTransactionComplete={loadGoals}
       />
     </>
   );

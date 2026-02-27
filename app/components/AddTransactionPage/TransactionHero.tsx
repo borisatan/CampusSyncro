@@ -86,7 +86,7 @@ export const TransactionHero = ({
 
       {/* Transaction Type Toggle */}
       <View
-        className={`${isDarkMode ? 'bg-slate700 border-slate600' : 'bg-backgroundMuted border-borderLight'} rounded-2xl flex-row mb-6 border`}
+        className={`${isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-backgroundMuted border-borderLight'} rounded-2xl flex-row mb-6 border`}
         style={{ overflow: 'hidden' }}
       >
         {/* Animated sliding indicator */}
@@ -146,7 +146,7 @@ export const TransactionHero = ({
             placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
             className={`w-full pl-10 pr-4 py-4 rounded-xl text-2xl ${
               isDarkMode
-                ? 'bg-slate700 border-slate600 text-textDark'
+                ? 'bg-inputDark border-borderDark text-textDark'
                 : 'bg-background border-borderLight text-textLight'
             } border`}
           />

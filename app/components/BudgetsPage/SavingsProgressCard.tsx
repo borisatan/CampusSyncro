@@ -28,6 +28,7 @@ interface SavingsProgressCardProps {
   showOnDashboard: boolean;
   onToggleDashboard: () => void;
   onAddPress?: () => void;
+  onWithdrawPress?: () => void;
 }
 
 const formatAmount = (amount: number, symbol: string): string => {
@@ -46,6 +47,7 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
   showOnDashboard,
   onToggleDashboard,
   onAddPress,
+  onWithdrawPress,
 }) => {
   const { isDarkMode } = useTheme();
   const { setSavingsTarget } = useIncomeStore();
@@ -141,6 +143,7 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
   };
 
   const handleToggleExpand = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (!expanded && hasTarget) {
       setAmountText(target.toString());
       if (monthlyIncome > 0) {
@@ -159,83 +162,98 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
           expanded ? 'border-overlayGreen' : isDarkMode ? 'border-borderDark' : 'border-slate100'
         }`}
       >
-        <View className="px-4 py-4">
-          {/* Header */}
-          <View className="flex-row items-center">
-            <View className="w-11 h-11 rounded-xl items-center justify-center mr-3 bg-accentPurple">
-              <PiggyBank size={22} color="#FFFFFF" />
-            </View>
-            <View className="flex-1">
-              <Text className={`text-base font-semibold ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}>
-                Monthly Savings
+        {/* Header */}
+        <View className="p-4 flex-row items-center">
+          <View className="w-11 h-11 rounded-xl items-center justify-center mr-3 bg-accentPurple">
+            <PiggyBank size={22} color="#FFFFFF" />
+          </View>
+          <View className="flex-1">
+            <Text className={`text-[15px] font-semibold ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}>
+              Monthly Savings
+            </Text>
+            {hasTarget ? (
+              <Text className="text-xs mt-0.5 text-accentGreen">
+                {saved >= target ? "Goal Reached!" : `${formatAmount(target - saved, currencySymbol)} to go`}
               </Text>
-              {hasTarget ? (
-                <Text className="text-xs mt-0.5 text-accentGreen">
-                  {saved >= target ? "Goal Reached!" : `${formatAmount(target - saved, currencySymbol)} to go`}
-                </Text>
-              ) : (
-                <Text className={`text-xs mt-0.5 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
-                  Goal contributions this month
-                </Text>
-              )}
-            </View>
-
-            <View className="flex-row items-center gap-2.5">
-              {/* Add button */}
-              {onAddPress && (
-                <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    onAddPress();
-                  }}
-                  className="w-9 h-9 rounded-full items-center justify-center border border-borderDark"
-                  style={({ pressed }: any) => ({
-                    backgroundColor: pressed ? "#16A34A" : "#22D97A",
-                  })}
-                >
-                  <Ionicons name="add" size={20} color="#FFFFFF" />
-                </Pressable>
-              )}
-
-              <View className="items-end">
-                {hasTarget ? (
-                  <>
-                    <Text className="text-lg font-bold text-accentGreen">
-                      {formatAmount(saved, currencySymbol)}
-                    </Text>
-                    <Text className={`text-xs mt-0.5 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
-                      / {formatAmount(target, currencySymbol)}
-                    </Text>
-                  </>
-                ) : (
-                  <View className={`px-3 py-1 rounded-full ${isDarkMode ? 'bg-gray600' : 'bg-slate100'}`}>
-                    <Text className={`text-xs ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
-                      No target
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
+            ) : (
+              <Text className={`text-xs mt-0.5 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
+                Goal contributions this month
+              </Text>
+            )}
           </View>
 
-          {/* Progress bar */}
-          {hasTarget && (
-            <View className="mt-3">
-              <View className="h-1.5 rounded-full overflow-hidden bg-gray600">
-                <Animated.View
-                  className="h-full rounded-full bg-accentGreen"
-                  style={progressBarStyle}
-                />
-              </View>
-              <View className="flex-row justify-end mt-1">
-                <Text className="text-[11px] text-accentGreen font-semibold">
-                  {Math.round(percentage)}%
-                </Text>
-              </View>
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            {/* Add button */}
+            {onAddPress && (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  onAddPress();
+                }}
+                className="w-9 h-9 rounded-full items-center justify-center border border-borderDark"
+                style={({ pressed }: any) => ({
+                  backgroundColor: pressed ? "#16A34A" : "#22D97A",
+                })}
+              >
+                <Ionicons name="add" size={20} color="#FFFFFF" />
+              </Pressable>
+            )}
+
+            {/* Withdraw button */}
+            {onWithdrawPress && saved > 0 && (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  onWithdrawPress();
+                }}
+                className="w-9 h-9 rounded-full items-center justify-center border border-borderDark"
+                style={({ pressed }: any) => ({
+                  backgroundColor: pressed ? "#2563EB" : "#3B7EFF",
+                })}
+              >
+                <Ionicons name="remove" size={20} color="#FFFFFF" />
+              </Pressable>
+            )}
+
+            <View className="items-end">
+              {hasTarget ? (
+                <>
+                  <Text className="text-slate50 text-base font-bold">
+                    {formatAmount(saved, currencySymbol)}
+                  </Text>
+                  <Text className="text-slateMuted text-xs mt-0.5">
+                    / {formatAmount(target, currencySymbol)}
+                  </Text>
+                </>
+              ) : (
+                <View className={`px-3 py-1 rounded-full ${isDarkMode ? 'bg-gray600' : 'bg-slate100'}`}>
+                  <Text className={`text-xs ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
+                    No target
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
+          </View>
         </View>
+
+        {/* Progress bar */}
+        {hasTarget && (
+          <View className="px-4 pb-3">
+            <View className="h-1.5 rounded-full overflow-hidden bg-gray600">
+              <Animated.View
+                className="h-full rounded-full bg-accentGreen"
+                style={progressBarStyle}
+              />
+            </View>
+            <View className="flex-row justify-end mt-1">
+              <Text className="text-[11px] text-accentGreen font-semibold">
+                {Math.round(percentage)}%
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Expanded Edit Section */}
         {expanded && (
@@ -251,7 +269,7 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
                       bottom: 0,
                       width: '50%',
                       borderRadius: 11,
-                      backgroundColor: '#1DB8A3',
+                      backgroundColor: '#3B7EFF',
                     },
                     sliderStyle,
                   ]}

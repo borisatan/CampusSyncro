@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -182,39 +183,42 @@ export default function CategoryEditor() {
   };
 
   return (
-    <SafeAreaView className={isDarkMode ? "flex-1 bg-backgroundDark" : "flex-1 bg-background"}>
+    <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
-      
-      {/* Header */}
-      <View className={`px-4 py-3 flex-row items-center justify-between border-b ${isDarkMode ? 'border-borderDark' : 'border-borderLight'}`}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          className={`w-11 h-11 rounded-xl items-center justify-center border ${isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-white border-borderLight'}`}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={24} color={isDarkMode ? "#FFFFFF" : "#000000"} />
-        </TouchableOpacity>
-        
-        <View className="flex-1 items-center">
-          <Text className={`text-xl font-bold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
-            {categoryId ? 'Edit Category' : 'Create Category'}
-          </Text>
-          <Text className={`text-xs mt-0.5 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
-            Customize your category
-          </Text>
+
+      {/* Header with Back and Delete */}
+      <View className="flex-row items-center justify-between px-4 mb-4">
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"
+          >
+            <ArrowLeft color="#94A3B8" size={20} />
+          </TouchableOpacity>
+          <View>
+            <Text className={`text-2xl font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
+              {categoryId ? 'Edit Category' : 'Create Category'}
+            </Text>
+            <Text className="text-secondaryDark">
+              {categoryId ? 'Update category details' : 'Customize your category'}
+            </Text>
+          </View>
         </View>
-        
-        <View className="w-11" />
+        {categoryId && (
+          <TouchableOpacity onPress={handleDelete} className="p-2">
+            <Trash2 color="#ef4444" size={24} />
+          </TouchableOpacity>
+        )}
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
       >
         <ScrollView
+          contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
           className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 32 }}
+          keyboardShouldPersistTaps="handled"
         >
         {/* Live Preview Card - Always at top */}
         <Animated.View

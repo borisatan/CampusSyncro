@@ -192,7 +192,7 @@ const TransactionAdder = () => {
               placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
               className={`w-full px-4 py-3 rounded-xl border ${
                 isDarkMode
-                  ? "bg-slate700 border-slate600 text-textDark"
+                  ? "bg-inputDark border-borderDark text-textDark"
                   : "bg-background border-borderLight text-textLight"
               }`}
             />

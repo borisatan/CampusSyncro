@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useRef } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 interface ExpenseCategoryCardProps {
   name: string;
@@ -9,30 +10,22 @@ interface ExpenseCategoryCardProps {
   amount: number;
   percent: number;
   currency: string;
-  onPress?: (category_name: string) => void; 
+  onPress?: (category_name: string) => void;
 }
 
 const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, color, amount, percent, currency, onPress }) => {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    Animated.spring(scale, { toValue: 0.96, friction: 3, useNativeDriver: true }).start();
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onPress && onPress(name);
   };
 
-  const handlePressOut = () => {
-    Animated.spring(scale, { toValue: 1, friction: 3, useNativeDriver: true }).start();
-  };
-  
-  
   return (
     <Pressable
-      onPress={() => onPress && onPress(name)}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onPress={handlePress}
       className="mb-2 "
+      style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
     >
-      <Animated.View style={{ transform: [{ scale }] }}>
-        <View className="flex-row items-center rounded-2xl p-4 shadow-lg bg-surfaceDark border border-borderDark">
+      <View className="flex-row items-center rounded-2xl p-4 shadow-lg bg-surfaceDark border border-borderDark">
           <View
             className="w-12 h-12 rounded-xl items-center justify-center mr-3"
             style={{ backgroundColor: color }}
@@ -51,7 +44,6 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
             <Text className="text-white text-lg mt-1 font-medium">{percent}%</Text>
           </View>
         </View>
-      </Animated.View>
     </Pressable>
   );
 };

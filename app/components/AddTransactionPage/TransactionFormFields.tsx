@@ -54,7 +54,7 @@ export const TransactionFormFields = ({
           onPress={() => setShowDatePicker(true)}
           className={`w-full px-4 py-3 rounded-xl flex-row items-center justify-between border ${
             isDarkMode
-              ? "bg-slate700 border-slate600"
+              ? "bg-inputDark border-borderDark"
               : "bg-background border-borderLight"
           }`}
         >
@@ -75,7 +75,7 @@ export const TransactionFormFields = ({
                 <View
                   className={`${isDarkMode ? "bg-backgroundDark" : "bg-background"} rounded-t-3xl`}
                 >
-                  <View className="flex-row justify-between items-center px-4 py-3 border-b border-borderLight">
+                  <View className={`flex-row justify-between items-center px-4 py-3 border-b ${isDarkMode ? 'border-borderDark' : 'border-borderLight'}`}>
                     <TouchableOpacity onPress={() => setShowDatePicker(false)}>
                       <Text className="text-accentSkyBlue">Cancel</Text>
                     </TouchableOpacity>
@@ -155,7 +155,7 @@ export const DateSelector = ({
       onPress={() => setShowDatePicker(true)}
       className={`w-full px-4 py-3 rounded-xl flex-row items-center justify-between border ${
         isDarkMode
-          ? "bg-slate700 border-slate600"
+          ? "bg-inputDark border-borderDark"
           : "bg-background border-borderLight"
       }`}
     >
@@ -176,7 +176,7 @@ export const DateSelector = ({
             <View
               className={`${isDarkMode ? "bg-backgroundDark" : "bg-background"} rounded-t-3xl`}
             >
-              <View className="flex-row justify-between items-center px-4 py-3 border-b border-borderLight">
+              <View className={`flex-row justify-between items-center px-4 py-3 border-b ${isDarkMode ? 'border-borderDark' : 'border-borderLight'}`}>
                 <TouchableOpacity onPress={() => setShowDatePicker(false)}>
                   <Text className="text-accentSkyBlue">Cancel</Text>
                 </TouchableOpacity>
