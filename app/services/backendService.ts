@@ -903,3 +903,205 @@ export const quickSaveFromAccount = async (payload: {
 
   if (contributionError) throw contributionError;
 };
+
+// ============ Notification Settings ============
+
+export async function getNotificationFrequency(): Promise<number> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return 0;
+
+  const { data, error } = await supabase
+    .from('Profiles')
+    .select('daily_notification_frequency')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching notification frequency:', error.message);
+    return 0;
+  }
+
+  return data.daily_notification_frequency ?? 0;
+}
+
+export async function updateNotificationFrequency(frequency: number): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
+  const { error } = await supabase
+    .from('Profiles')
+    .update({
+      daily_notification_frequency: frequency,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', user.id);
+
+  if (error) throw new Error(error.message);
+}
+
+// ============ Notification Messages ============
+
+export async function fetchNotificationMessages(): Promise<any[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('NotificationMessages')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching notification messages:', error);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function createNotificationMessage(messageText: string): Promise<any> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
+  const { data, error } = await supabase
+    .from('NotificationMessages')
+    .insert([{ user_id: user.id, message_text: messageText }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateNotificationMessage(
+  id: number,
+  messageText: string
+): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
+  const { error } = await supabase
+    .from('NotificationMessages')
+    .update({
+      message_text: messageText,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
+}
+
+export async function deleteNotificationMessage(id: number): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
+  const { error } = await supabase
+    .from('NotificationMessages')
+    .update({ is_active: false })
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
+}
+
+// ============ Notification Logs ============
+
+export async function logNotification(payload: {
+  notification_message_id: number | null;
+  message_text: string;
+  scheduled_time: Date;
+  had_transaction_today: boolean;
+}): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { error } = await supabase
+    .from('NotificationLogs')
+    .insert([{
+      user_id: user.id,
+      ...payload,
+      scheduled_time: payload.scheduled_time.toISOString()
+    }]);
+
+  if (error) console.error('Error logging notification:', error);
+}
+
+export async function fetchNotificationLogs(
+  startDate: Date,
+  endDate: Date
+): Promise<any[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('NotificationLogs')
+    .select('*')
+    .eq('user_id', user.id)
+    .gte('sent_time', startDate.toISOString())
+    .lte('sent_time', endDate.toISOString())
+    .order('sent_time', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching notification logs:', error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+// ============ Transaction Check for Smart Logic ============
+
+export async function checkHasTransactionsToday(): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('Transactions')
+    .select('id')
+    .eq('user_id', user.id)
+    .gte('created_at', todayStart.toISOString())
+    .limit(1);
+
+  if (error) {
+    console.error('Error checking transactions:', error);
+    return false;
+  }
+
+  return (data?.length ?? 0) > 0;
+}
+
+// ============ Seed Default Notification Messages ============
+
+export async function seedDefaultNotificationMessages(): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  // Check if user already has messages
+  const { data: existing } = await supabase
+    .from('NotificationMessages')
+    .select('id')
+    .eq('user_id', user.id)
+    .limit(1);
+
+  if (existing && existing.length > 0) return;
+
+  // Seed default messages
+  const defaultMessages = [
+    "Don't forget to log your transactions today! 💰",
+    "Keep your budget on track - log your spending! 📊",
+    "A few minutes now saves hours later. Track your expenses! ⏰",
+    "Remember: every transaction counts! 💸",
+    "Stay financially aware - update your transactions! 🎯"
+  ];
+
+  await supabase
+    .from('NotificationMessages')
+    .insert(defaultMessages.map(text => ({
+      user_id: user.id,
+      message_text: text
+    })));
+}

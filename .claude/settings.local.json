@@ -19,7 +19,9 @@
       "Bash(del \"c:\\\\Program Files\\\\Code\\\\Personal Finance App\\\\Perfin\\\\app\\\\components\\\\HomePage\\\\SavingsCard.tsx\")",
       "Bash(ls:*)",
       "Skill(frontend-design)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git log:*)",
+      "Bash(npx expo prebuild:*)"
     ]
   }
 }

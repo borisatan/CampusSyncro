@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { seedDefaultNotificationMessages } from '../../services/backendService';
 import { useAccountsStore } from '../../store/useAccountsStore';
 import { useCategoriesStore } from '../../store/useCategoriesStore';
 
@@ -16,6 +17,7 @@ export default function DataPreloader() {
         await Promise.all([
           loadAccounts(),
           loadCategories(),
+          seedDefaultNotificationMessages(),
         ]);
       } catch (error) {
         console.error('Error preloading app data:', error);

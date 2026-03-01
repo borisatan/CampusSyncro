@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppLockScreen from './components/Shared/AppLockScreen';
 import CurrencyInitializer from './components/Shared/CurrencyInitializer';
 import DataPreloader from './components/Shared/DataPreloader';
+import NotificationInitializer from './components/Shared/NotificationInitializer';
 import { AuthProvider } from './context/AuthContext';
 import { DataRefreshProvider } from './context/DataRefreshContext';
 import { LockProvider } from './context/LockContext';
@@ -38,6 +39,7 @@ export default function RootLayout() {
             <LockProvider>
               <CurrencyInitializer />
               <DataPreloader />
+              <NotificationInitializer />
               <DataRefreshProvider>
                 <ThemeProvider value={MyTheme}>
                   <AppThemeProvider>

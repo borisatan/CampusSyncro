@@ -173,7 +173,7 @@ export default function Dashboard() {
                 savingsData={savingsData}
               />
               <CategoryDonut
-                aggregates={categoriesAggregated}
+                aggregates={categoriesAggregated}                                                 
                 categories={categories}
                 timeFrame={timeFrame}
                 isUnlocked={isUnlocked}

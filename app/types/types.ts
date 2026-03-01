@@ -177,3 +177,33 @@ export interface GoalContribution {
   source_account_id: number | null;
   created_at: string;
 }
+
+// Notification Types
+export interface NotificationMessage {
+  id: number;
+  user_id: string;
+  message_text: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationLog {
+  id: number;
+  user_id: string;
+  notification_message_id: number | null;
+  message_text: string;
+  scheduled_time: string;
+  sent_time: string;
+  was_dismissed: boolean;
+  had_transaction_today: boolean;
+  created_at: string;
+}
+
+export interface NotificationSettings {
+  frequency: number;
+  isEnabled: boolean;
+  hasPermission: boolean;
+}
+
+export type NotificationFrequency = 0 | 1 | 2 | 3 | 5 | 8 | 10;

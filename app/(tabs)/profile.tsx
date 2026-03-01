@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
+  Bell,
   ChevronRight,
   Fingerprint,
   Globe,
@@ -27,8 +28,10 @@ import { AnimatedToggle } from "../components/Shared/AnimatedToggle";
 import { useLock } from "../context/LockContext";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrencyStore } from "../store/useCurrencyStore";
+import { useNotificationStore } from "../store/useNotificationStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { supabase } from "../utils/supabase";
+import { NotificationFrequency } from "../types/types";
 
 const currencies = [
   { code: "USD", symbol: "$", name: "US Dollar" },
@@ -47,6 +50,16 @@ const currencies = [
   { code: "NZD", symbol: "NZ$", name: "New Zealand Dollar" },
 ];
 
+const frequencyOptions = [
+  { value: 0, label: 'Off', description: 'No reminders' },
+  { value: 1, label: 'Once', description: '1 time per day' },
+  { value: 2, label: 'Twice', description: '2 times per day' },
+  { value: 3, label: 'Frequent', description: '3 times per day' },
+  { value: 5, label: 'Regular', description: '5 times per day' },
+  { value: 8, label: 'Active', description: '8 times per day' },
+  { value: 10, label: 'Maximum', description: '10 times per day' },
+];
+
 export default function ProfileScreen() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
@@ -59,9 +72,11 @@ export default function ProfileScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+  const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
   const { resetOnboarding } = useOnboardingStore();
+  const { frequency, hasPermission, updateFrequency, requestPermissions, loadNotificationSettings } = useNotificationStore();
 
   // Fetch User Data and Currency preference on Mount
   useEffect(() => {
@@ -83,6 +98,11 @@ export default function ProfileScreen() {
       setSelectedCurrency(currencyCode);
     }
   }, [currencyCode]);
+
+  // Load notification settings on mount
+  useEffect(() => {
+    loadNotificationSettings();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -113,6 +133,29 @@ export default function ProfileScreen() {
       console.error(error);
       // Revert UI state on error
       setSelectedCurrency(currencyCode || "USD");
+    }
+  };
+
+  const handleFrequencyChange = async (value: number) => {
+    try {
+      // If enabling notifications and no permission, request it
+      if (value > 0 && !hasPermission) {
+        const granted = await requestPermissions();
+        if (!granted) {
+          Alert.alert(
+            'Permission Required',
+            'Please enable notifications in your device settings to receive transaction reminders.'
+          );
+          setShowFrequencyPicker(false);
+          return;
+        }
+      }
+
+      setShowFrequencyPicker(false);
+      await updateFrequency(value as NotificationFrequency);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update notification settings');
+      console.error(error);
     }
   };
 
@@ -226,6 +269,46 @@ export default function ProfileScreen() {
                   isSelected={selectedCurrency === currency.code}
                   onSelect={() => handleCurrencyChange(currency.code)}
                   isLast={index === currencies.length - 1}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Daily Reminders Selector */}
+          <TouchableOpacity
+            onPress={() => setShowFrequencyPicker(!showFrequencyPicker)}
+            activeOpacity={0.7}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-blue-600 rounded-xl items-center justify-center mr-3">
+              <Bell color="white" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>Daily Reminders</Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                {isLoading
+                  ? "Loading..."
+                  : frequencyOptions.find((o) => o.value === frequency)?.label || 'Off'}
+              </Text>
+            </View>
+            <Ionicons
+              name={showFrequencyPicker ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+            />
+          </TouchableOpacity>
+
+          {showFrequencyPicker && (
+            <View className={`mb-3 rounded-xl overflow-hidden border ${cardBg}`}>
+              {frequencyOptions.map((option, index) => (
+                <AnimatedFrequencyRow
+                  key={option.value}
+                  option={option}
+                  index={index}
+                  isDarkMode={isDarkMode}
+                  isSelected={frequency === option.value}
+                  onSelect={() => handleFrequencyChange(option.value)}
+                  isLast={index === frequencyOptions.length - 1}
                 />
               ))}
             </View>
@@ -404,6 +487,79 @@ const AnimatedCurrencyRow = ({
               {currency.code}
             </Text>
           </View>
+        </View>
+        {isSelected && (
+          <Ionicons
+            name="checkmark-circle"
+            size={20}
+            color={isDarkMode ? "#B2A4FF" : "#2563EB"}
+          />
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const AnimatedFrequencyRow = ({
+  option,
+  index,
+  isDarkMode,
+  isSelected,
+  onSelect,
+  isLast,
+}: {
+  option: { value: number; label: string; description: string };
+  index: number;
+  isDarkMode: boolean;
+  isSelected: boolean;
+  onSelect: () => void;
+  isLast: boolean;
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+    >
+      <TouchableOpacity
+        onPress={onSelect}
+        className={`px-4 py-4 flex-row items-center justify-between ${
+          !isLast
+            ? isDarkMode
+              ? "border-b border-borderDark"
+              : "border-b border-borderLight"
+            : ""
+        } ${isSelected ? (isDarkMode ? "bg-backgroundDark" : "bg-backgroundMuted") : ""}`}
+      >
+        <View>
+          <Text
+            className={`font-medium ${isDarkMode ? "text-textDark" : "text-textLight"}`}
+          >
+            {option.label}
+          </Text>
+          <Text
+            className={`text-xs ${isDarkMode ? "text-secondaryDark" : "text-secondaryLight"}`}
+          >
+            {option.description}
+          </Text>
         </View>
         {isSelected && (
           <Ionicons
