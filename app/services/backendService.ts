@@ -1089,13 +1089,22 @@ export async function seedDefaultNotificationMessages(): Promise<void> {
 
   if (existing && existing.length > 0) return;
 
-  // Seed default messages
+  // Seed default messages with time-contextual themes
   const defaultMessages = [
-    "Don't forget to log your transactions today! 💰",
-    "Keep your budget on track - log your spending! 📊",
-    "A few minutes now saves hours later. Track your expenses! ⏰",
-    "Remember: every transaction counts! 💸",
-    "Stay financially aware - update your transactions! 🎯"
+    // Morning messages
+    "Good morning! Start your day with financial clarity ☀️",
+    "Morning check-in: Did you log yesterday's transactions?",
+    // Midday messages
+    "Lunchtime reminder: Don't forget to log that meal! 🍽️",
+    "Midday money check - stay on top of your budget! 📊",
+    // Afternoon messages
+    "Afternoon reminder: Log those coffee runs and snacks! ☕",
+    "Quick financial refresh before the evening rush! ⚡",
+    // Evening messages
+    "Daily review: Time to reconcile today's spending! 🌙",
+    "Wind down with a quick financial check-in 📊",
+    "End-of-day wrap-up - keep your budget on track! ✨",
+    "Evening reflection: Update your expenses before tomorrow! 🎯"
   ];
 
   await supabase

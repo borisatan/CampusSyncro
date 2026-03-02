@@ -36,7 +36,7 @@ const TransactionAdder = () => {
   const { isDarkMode } = useTheme();
   const { userId, isLoading } = useAuth();
   const router = useRouter();
-  const { refreshAll } = useDataRefresh();
+  const { refreshDashboard, refreshAccounts, refreshTransactionList } = useDataRefresh();
 
   // Use global stores
   const categories = useCategoriesStore((state) => state.categories);
@@ -140,8 +140,8 @@ const TransactionAdder = () => {
         await updateAccountBalance(selectedAccount, newBalance);
       }
 
-      // Refresh all related screens (dashboard, accounts, transaction-list)
-      await refreshAll();
+      // Refresh related screens (dashboard, accounts, transaction-list) - categories don't change
+      await Promise.all([refreshDashboard(), refreshAccounts(), refreshTransactionList()]);
     } catch (err) {
       console.error("Submission error:", err);
       Alert.alert(
@@ -149,7 +149,7 @@ const TransactionAdder = () => {
         "Failed to add transaction. Check your database constraints.",
       );
       // Reload accounts to revert optimistic update
-      await refreshAll();
+      await Promise.all([refreshDashboard(), refreshAccounts(), refreshTransactionList()]);
     }
   };
 

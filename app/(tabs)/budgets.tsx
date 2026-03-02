@@ -164,7 +164,6 @@ export default function BudgetsScreen() {
     updateCategoryBudgetAmount(categoryId, amount, percentage)
       .then(() => {
         refresh();
-        refreshDashboard();
       })
       .catch((error) => {
         console.error("Error saving budget amount:", error);

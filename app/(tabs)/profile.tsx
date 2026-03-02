@@ -6,6 +6,7 @@ import {
   Fingerprint,
   Globe,
   LogOut,
+  MessageSquare,
   RotateCcw,
   User,
   Wallet,
@@ -30,34 +31,22 @@ import { useTheme } from "../context/ThemeContext";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useNotificationStore } from "../store/useNotificationStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
-import { supabase } from "../utils/supabase";
 import { NotificationFrequency } from "../types/types";
+import { supabase } from "../utils/supabase";
 
 const currencies = [
   { code: "USD", symbol: "$", name: "US Dollar" },
   { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
   { code: "JPY", symbol: "¥", name: "Japanese Yen" },
-  { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
-  { code: "AUD", symbol: "A$", name: "Australian Dollar" },
-  { code: "CHF", symbol: "CHF", name: "Swiss Franc" },
   { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
   { code: "INR", symbol: "₹", name: "Indian Rupee" },
-  { code: "MXN", symbol: "$", name: "Mexican Peso" },
-  { code: "BRL", symbol: "R$", name: "Brazilian Real" },
-  { code: "ZAR", symbol: "R", name: "South African Rand" },
-  { code: "SEK", symbol: "kr", name: "Swedish Krona" },
-  { code: "NZD", symbol: "NZ$", name: "New Zealand Dollar" },
 ];
 
 const frequencyOptions = [
-  { value: 0, label: 'Off', description: 'No reminders' },
-  { value: 1, label: 'Once', description: '1 time per day' },
-  { value: 2, label: 'Twice', description: '2 times per day' },
-  { value: 3, label: 'Frequent', description: '3 times per day' },
-  { value: 5, label: 'Regular', description: '5 times per day' },
-  { value: 8, label: 'Active', description: '8 times per day' },
-  { value: 10, label: 'Maximum', description: '10 times per day' },
+  { value: 1, label: "Once", description: "1 time per day" },
+  { value: 2, label: "Twice", description: "2 times per day" },
+  { value: 3, label: "Frequent", description: "3 times per day" },
+  { value: 5, label: "Maximum", description: "5 times per day" },
 ];
 
 export default function ProfileScreen() {
@@ -76,7 +65,13 @@ export default function ProfileScreen() {
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
   const { resetOnboarding } = useOnboardingStore();
-  const { frequency, hasPermission, updateFrequency, requestPermissions, loadNotificationSettings } = useNotificationStore();
+  const {
+    frequency,
+    hasPermission,
+    updateFrequency,
+    requestPermissions,
+    loadNotificationSettings,
+  } = useNotificationStore();
 
   // Fetch User Data and Currency preference on Mount
   useEffect(() => {
@@ -143,8 +138,8 @@ export default function ProfileScreen() {
         const granted = await requestPermissions();
         if (!granted) {
           Alert.alert(
-            'Permission Required',
-            'Please enable notifications in your device settings to receive transaction reminders.'
+            "Permission Required",
+            "Please enable notifications in your device settings to receive transaction reminders.",
           );
           setShowFrequencyPicker(false);
           return;
@@ -154,7 +149,7 @@ export default function ProfileScreen() {
       setShowFrequencyPicker(false);
       await updateFrequency(value as NotificationFrequency);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update notification settings');
+      Alert.alert("Error", "Failed to update notification settings");
       console.error(error);
     }
   };
@@ -166,6 +161,15 @@ export default function ProfileScreen() {
   const handleTestOnboarding = () => {
     resetOnboarding();
     router.replace("/(onboarding)/outcome-preview");
+  };
+
+  const handleFeedback = () => {
+    // TODO: Implement feedback form or link to feedback URL
+    Alert.alert(
+      "Feedback",
+      "We'd love to hear from you! Feature coming soon.",
+      [{ text: "OK" }],
+    );
   };
 
   // Styling Variables
@@ -210,17 +214,21 @@ export default function ProfileScreen() {
         {isLoading ? (
           <ProfileCardSkeleton />
         ) : (
-          <View className="bg-indigo-700 rounded-2xl p-6 flex-row items-center mb-8">
+          <Pressable
+            onPress={() => router.push("/user-settings" as any)}
+            className="bg-indigo-700 rounded-2xl p-6 flex-row items-center mb-8 active:bg-indigo-800"
+          >
             <View className="w-16 h-16 bg-white/20 rounded-full items-center justify-center mr-4">
               <User color="white" size={32} />
             </View>
-            <View>
+            <View className="flex-1">
               <Text className="text-xl font-bold text-white">Current User</Text>
               <Text className="text-indigo-200 text-sm">
                 {email ?? "Loading..."}
               </Text>
             </View>
-          </View>
+            <ChevronRight color="white" size={24} />
+          </Pressable>
         )}
 
         {/* Settings Section */}
@@ -274,46 +282,6 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          {/* Daily Reminders Selector */}
-          <TouchableOpacity
-            onPress={() => setShowFrequencyPicker(!showFrequencyPicker)}
-            activeOpacity={0.7}
-            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
-          >
-            <View className="w-10 h-10 bg-blue-600 rounded-xl items-center justify-center mr-3">
-              <Bell color="white" size={20} />
-            </View>
-            <View className="flex-1">
-              <Text className={`font-medium ${textPrimary}`}>Daily Reminders</Text>
-              <Text className={`text-sm ${textSecondary}`}>
-                {isLoading
-                  ? "Loading..."
-                  : frequencyOptions.find((o) => o.value === frequency)?.label || 'Off'}
-              </Text>
-            </View>
-            <Ionicons
-              name={showFrequencyPicker ? "chevron-up" : "chevron-down"}
-              size={20}
-              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
-            />
-          </TouchableOpacity>
-
-          {showFrequencyPicker && (
-            <View className={`mb-3 rounded-xl overflow-hidden border ${cardBg}`}>
-              {frequencyOptions.map((option, index) => (
-                <AnimatedFrequencyRow
-                  key={option.value}
-                  option={option}
-                  index={index}
-                  isDarkMode={isDarkMode}
-                  isSelected={frequency === option.value}
-                  onSelect={() => handleFrequencyChange(option.value)}
-                  isLast={index === frequencyOptions.length - 1}
-                />
-              ))}
-            </View>
-          )}
-
           {/* Accounts Button */}
           <Pressable
             onPress={() => router.push("/accounts" as any)}
@@ -328,11 +296,52 @@ export default function ProfileScreen() {
                 Manage your accounts
               </Text>
             </View>
-            <ChevronRight
-              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
-              size={20}
-            />
           </Pressable>
+
+          {/* Daily Reminders Selector */}
+          <TouchableOpacity
+            onPress={() => setShowFrequencyPicker(!showFrequencyPicker)}
+            activeOpacity={0.7}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-blue-600 rounded-xl items-center justify-center mr-3">
+              <Bell color="white" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>
+                Daily Reminders
+              </Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                {isLoading
+                  ? "Loading..."
+                  : frequencyOptions.find((o) => o.value === frequency)
+                      ?.label || "Off"}
+              </Text>
+            </View>
+            <Ionicons
+              name={showFrequencyPicker ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+            />
+          </TouchableOpacity>
+
+          {showFrequencyPicker && (
+            <View
+              className={`mb-3 rounded-xl overflow-hidden border ${cardBg}`}
+            >
+              {frequencyOptions.map((option, index) => (
+                <AnimatedFrequencyRow
+                  key={option.value}
+                  option={option}
+                  index={index}
+                  isDarkMode={isDarkMode}
+                  isSelected={frequency === option.value}
+                  onSelect={() => handleFrequencyChange(option.value)}
+                  isLast={index === frequencyOptions.length - 1}
+                />
+              ))}
+            </View>
+          )}
 
           {/* App Lock Toggle */}
           <View
@@ -356,6 +365,35 @@ export default function ProfileScreen() {
               inactiveColor="#3f3f46"
             />
           </View>
+        </View>
+
+        {/* Feedback Section */}
+        <View className="mb-8">
+          <Text
+            className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}
+          >
+            Feedback
+          </Text>
+          <Pressable
+            onPress={handleFeedback}
+            className={`flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-teal-600 rounded-xl items-center justify-center mr-3">
+              <MessageSquare color="white" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>
+                Give Feedback
+              </Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                Give feature requests and feedback
+              </Text>
+            </View>
+            <ChevronRight
+              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+              size={20}
+            />
+          </Pressable>
         </View>
 
         {/* Developer Section */}

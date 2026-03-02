@@ -187,7 +187,7 @@ export default function CategoryEditor() {
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
       {/* Header with Back and Delete */}
-      <View className="flex-row items-center justify-between px-4 mb-4">
+      <View className="flex-row items-center justify-between px-2 mt-4 mb-4">
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -223,7 +223,7 @@ export default function CategoryEditor() {
         {/* Live Preview Card - Always at top */}
         <Animated.View
           style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
-          className="mx-4 mt-4"
+          className="mx-2 mt-4"
         >
           <View 
             className={`rounded-3xl p-8 items-center justify-center border ${isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-white border-borderLight'}`}
@@ -247,7 +247,7 @@ export default function CategoryEditor() {
         </Animated.View>
 
         {/* Category Name Input */}
-        <View className="mx-4 mt-5">
+        <View className="mx-2 mt-5">
           <View className="flex-row items-center justify-between mb-3">
             <Text className={`text-sm font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>
               Category Name
@@ -277,8 +277,8 @@ export default function CategoryEditor() {
         </View>
 {/* --- FIXED ICON PICKER: No more lag --- */}
 <View className="mt-5">
-          <Text className={`px-4 mb-3 text-sm font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>Choose Icon</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+          <Text className={`px-2 mb-3 text-sm font-semibold ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}>Choose Icon</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8 }}>
             {Array.from({ length: Math.ceil(availableIcons.length / 2) }).map((_, colIndex) => (
               <View key={`icon-col-${colIndex}`} className="flex-col mr-3">
                 {availableIcons.slice(colIndex * 2, colIndex * 2 + 2).map((icon) => (
@@ -302,7 +302,7 @@ export default function CategoryEditor() {
         </View>
 
         {/* Color Picker */}
-        <View className="mt-5 px-4">
+        <View className="mt-5 px-2">
           <ColorPicker
             selectedColor={selectedColor}
             onColorSelect={handleColorSelect}
@@ -311,7 +311,7 @@ export default function CategoryEditor() {
         </View>
 
         {/* Action Buttons */}
-        <View className="px-4 mt-6 flex-row" style={{ gap: 8 }}>
+        <View className="px-2 mt-6 flex-row" style={{ gap: 8 }}>
           {categoryId && (
             <TouchableOpacity
               onPress={handleDelete}

@@ -4,6 +4,7 @@ import {
   Rect,
   rect as skRect,
 } from "@shopify/react-native-skia";
+// import * as Haptics from "expo-haptics";
 import { MotiView } from "moti";
 import React, { useMemo, useState } from "react";
 import { Text, View } from "react-native";
@@ -425,6 +426,10 @@ export const SpendingTrendChart = React.memo(
       state.isActive.value ? 0 : 1,
     );
 
+    // const triggerHaptic = () => {
+    //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // };
+
     const handleTooltipUpdate = (rawIndex: number) => {
       const index = Math.min(
         Math.max(Math.round(rawIndex), 0),
@@ -513,6 +518,8 @@ export const SpendingTrendChart = React.memo(
         if (lastIndex.value === originalIndex) return;
         lastIndex.value = originalIndex;
 
+        // Trigger haptic feedback when snapping to a new data point
+        // runOnJS(triggerHaptic)();
         runOnJS(handleTooltipUpdate)(current.x);
       },
     );

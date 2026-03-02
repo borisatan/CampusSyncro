@@ -134,7 +134,7 @@ export default function Accounts() {
     <SafeAreaProvider>
       <SafeAreaView className={`flex-1 ${isDark ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
         <ScrollView className="flex-1">
-          <View className="px-2 pb-5" style={{ paddingBottom: insets.bottom + 20 }}> 
+          <View className="px-2 pb-5" style={{ paddingBottom: insets.bottom + 100 }}> 
             {/* Header */}
             <View className="flex-row items-center justify-between pt-4 pb-3 px-2">
               <View>
