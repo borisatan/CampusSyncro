@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+
+import { RipplePressable } from '../Shared/RipplePressable';
 
 interface ExpenseCategoryCardProps {
   name: string;
@@ -20,12 +22,12 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
   };
 
   return (
-    <Pressable
+    <RipplePressable
       onPress={handlePress}
-      className="mb-2 "
-      style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+      className="mb-2 rounded-2xl overflow-hidden"
+      rippleColor="rgba(255, 255, 255, 0.2)"
     >
-      <View className="flex-row items-center rounded-2xl p-4 shadow-lg bg-surfaceDark border border-borderDark">
+      <View className="flex-row items-center p-4 shadow-lg bg-surfaceDark border border-borderDark">
           <View
             className="w-12 h-12 rounded-xl items-center justify-center mr-3"
             style={{ backgroundColor: color }}
@@ -39,12 +41,12 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
 
           <View className="items-end">
             <Text className="text-white text-lg font-bold">
-              {currency}{amount.toLocaleString(undefined, { minimumFractionDigits: 0 })} 
+              {currency}{amount.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </Text>
             <Text className="text-white text-lg mt-1 font-medium">{percent}%</Text>
           </View>
         </View>
-    </Pressable>
+    </RipplePressable>
   );
 };
 

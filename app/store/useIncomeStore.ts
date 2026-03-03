@@ -60,7 +60,7 @@ export const useIncomeStore = create<IncomeState>((set, get) => ({
   savingsSortOrder: 0,
   showSavingsOnDashboard: true,
   totalBudgeted: 0,
-  isLoading: true,
+  isLoading: false,  // DataPreloader loads before user can navigate
 
   loadIncomeSettings: async () => {
     try {

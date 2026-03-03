@@ -147,7 +147,7 @@ export const ScrollableSpendingChart = React.memo(
         />
 
         {/* Navigation below chart: chevron arrows with dot indicators in the middle */}
-        <View className="flex-row items-center justify-center -mt-4 mb-2">
+        {/* <View className="flex-row items-center justify-center -mt-4 mb-2">
           <ArrowButton
             enabled={canGoLeft}
             onPress={goLeft}
@@ -170,7 +170,7 @@ export const ScrollableSpendingChart = React.memo(
             onPress={goRight}
             icon="chevron-forward"
           />
-        </View>
+        </View> */}
       </View>
     );
   },

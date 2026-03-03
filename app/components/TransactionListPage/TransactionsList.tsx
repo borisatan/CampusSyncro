@@ -1,8 +1,9 @@
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useRef } from "react";
-import { Animated, Pressable, SectionList, Text } from "react-native";
+import { Animated, SectionList, Text } from "react-native";
 import { CategoryIconInfo, TransactionSection } from "../../types/types";
 import TransactionItem from "./TransactionItem";
+import { RipplePressable } from "../Shared/RipplePressable";
 
 type TransactionsListProps = {
   sections: TransactionSection[];
@@ -95,21 +96,22 @@ const AnimatedTransactionItem = React.memo(function AnimatedTransactionItem({
   };
 
   return (
-    <Pressable
-      onPress={handlePress}
-      delayLongPress={200}
-      style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+    <Animated.View
+      style={{
+        opacity, // Apply the fade
+        transform: [
+          { translateY } // Apply the slide
+        ]
+      }}
     >
-      <Animated.View
-        style={{
-          opacity, // Apply the fade
-          transform: [
-            { translateY } // Apply the slide
-          ]
-        }}
+      <RipplePressable
+        onPress={handlePress}
+        delayLongPress={200}
+        className="rounded-2xl overflow-hidden mb-2"
+        rippleColor="rgba(255, 255, 255, 0.15)"
       >
         <TransactionItem transaction={transaction} categoryIcons={categoryIcons} />
-      </Animated.View>
-    </Pressable>
+      </RipplePressable>
+    </Animated.View>
   );
 });

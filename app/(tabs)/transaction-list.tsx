@@ -1,7 +1,7 @@
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import FilterModal from "../components/TransactionListPage/FilterModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
@@ -74,6 +74,7 @@ const TransactionsScreen: React.FC = () => {
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const LIMIT = 50;
   const [page, setPage] = useState(0);
@@ -86,6 +87,7 @@ const TransactionsScreen: React.FC = () => {
   // --- Load initial transactions (first page / refresh)
   const loadInitialTransactions = async () => {
     setIsRefreshing(true);
+    setLoadError(null);
     try {
       const [transactionsData, iconsData] = await Promise.all([
         fetchTransactions(LIMIT, 0),
@@ -96,8 +98,13 @@ const TransactionsScreen: React.FC = () => {
       setCategoryIcons(iconsData);
       setPage(1);
       setHasMore(transactionsData.length === LIMIT);
+
+      if (transactionsData.length === 0) {
+        console.log("No transactions found");
+      }
     } catch (err) {
       console.error("Failed to load transactions:", err);
+      setLoadError("Failed to load transactions. Please try again.");
     } finally {
       setIsRefreshing(false);
       setIsInitialLoading(false);
@@ -106,9 +113,15 @@ const TransactionsScreen: React.FC = () => {
 
   // --- Load filtered transactions (for category + time period from dashboard)
   const loadFilteredTransactionsAsync = async (category: string, timeFrame: string, periodOffset: number = 0) => {
+    console.log('Loading filtered transactions:', { category, timeFrame, periodOffset });
     setIsRefreshing(true);
+    setLoadError(null);
+    setIsInitialLoading(true);
+
     try {
       const { startDate, endDate } = getDateRange(timeFrame as TimeFrame, periodOffset);
+      console.log('Date range:', { startDate, endDate });
+
       const [transactionsData, iconsData] = await Promise.all([
         fetchFilteredTransactions({
           category,
@@ -120,12 +133,19 @@ const TransactionsScreen: React.FC = () => {
         fetchCategoryIcons(),
       ]);
 
+      console.log('Fetched transactions count:', transactionsData.length);
       setTransactions(transactionsData);
       setCategoryIcons(iconsData);
       setPage(1);
       setHasMore(transactionsData.length === LIMIT);
+
+      if (transactionsData.length === 0) {
+        console.warn('No transactions found for category:', category);
+      }
     } catch (err) {
       console.error("Failed to load filtered transactions:", err);
+      setLoadError("Failed to load transactions. Please try again.");
+      setTransactions([]);
     } finally {
       setIsRefreshing(false);
       setIsInitialLoading(false);
@@ -159,10 +179,21 @@ const TransactionsScreen: React.FC = () => {
 
   // Load transactions - either filtered or all
   useEffect(() => {
-    if (initialCategory) {
+    console.log('Navigation params received:', { initialCategory, initialTimeFrame, initialOffset, t });
+
+    if (initialCategory && initialCategory.trim() !== '') {
       const periodOffset = initialOffset ? parseInt(initialOffset, 10) : 0;
-      loadFilteredTransactionsAsync(initialCategory, initialTimeFrame || 'year', periodOffset);
+      const timeFrameToUse = initialTimeFrame && initialTimeFrame.trim() !== '' ? initialTimeFrame : 'year';
+
+      console.log('Loading filtered transactions with:', {
+        category: initialCategory,
+        timeFrame: timeFrameToUse,
+        offset: periodOffset
+      });
+
+      loadFilteredTransactionsAsync(initialCategory, timeFrameToUse, periodOffset);
     } else {
+      console.log('Loading all transactions');
       loadInitialTransactions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -231,10 +262,20 @@ const TransactionsScreen: React.FC = () => {
       tx.account_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.category_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.amount.toString().includes(searchQuery);
+
     const matchesDate = dateRange
-      ? new Date(tx.created_at) >= new Date(dateRange.start) &&
-        new Date(tx.created_at) <= new Date(dateRange.end)
+      ? (() => {
+          const txDate = new Date(tx.created_at);
+          const startDate = new Date(dateRange.start);
+          startDate.setHours(0, 0, 0, 0);
+
+          const endDate = new Date(dateRange.end);
+          endDate.setHours(23, 59, 59, 999);
+
+          return txDate >= startDate && txDate <= endDate;
+        })()
       : true;
+
     const matchesType = transactionType === 'all'
       ? true
       : transactionType === 'income'
@@ -304,6 +345,18 @@ const TransactionsScreen: React.FC = () => {
         {/* Transactions list */}
         {isInitialLoading ? (
           <TransactionListSkeleton isDarkMode={isDarkMode} />
+        ) : loadError ? (
+          <View className="flex-1 items-center justify-center p-4">
+            <Text className={`text-center text-base ${isDarkMode ? 'text-textDark' : 'text-text'}`}>
+              {loadError}
+            </Text>
+          </View>
+        ) : sections.length === 0 ? (
+          <View className="flex-1 items-center justify-center p-4">
+            <Text className={`text-center text-base ${isDarkMode ? 'text-textDark' : 'text-text'}`}>
+              No transactions found
+            </Text>
+          </View>
         ) : (
           <TransactionsList
             sections={sections}

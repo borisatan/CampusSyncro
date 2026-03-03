@@ -58,6 +58,7 @@ export interface Category {
   sort_order?: number;
   budget_amount?: number | null;
   budget_percentage?: number | null;
+  show_on_dashboard?: boolean;
 }
 
 export interface Profile {

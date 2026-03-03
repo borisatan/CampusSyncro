@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { Pressable, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Goal } from '../../types/types';
+import { RipplePressable } from '../Shared/RipplePressable';
 
 interface GoalProgressCardProps {
   goal: Goal;
@@ -73,22 +74,22 @@ export function GoalProgressCard({
           <View className="flex-row mt-2" style={{ marginLeft: 44 }}>
             {onAddPress && (
               <View style={{ flex: 1, marginRight: 4 }}>
-                <Pressable
+                <RipplePressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                     onAddPress();
                   }}
-                  className="flex-row items-center justify-center py-1.5 rounded-lg bg-green-600/20 border border-green-600/30"
-                  style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+                  className="flex-row items-center justify-center py-1.5 rounded-lg bg-green-600/20 border border-green-600/30 overflow-hidden"
+                  rippleColor="rgba(16, 185, 129, 0.3)"
                 >
                   <Ionicons name="add-circle" size={14} color="#10B981" />
                   <Text className="text-green-500 font-medium ml-1 text-xs">Add</Text>
-                </Pressable>
+                </RipplePressable>
               </View>
             )}
             {onWithdrawPress && (
               <View style={{ flex: 1, marginLeft: 4 }}>
-                <Pressable
+                <RipplePressable
                   onPress={() => {
                     if (goal.current_amount > 0) {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -96,12 +97,12 @@ export function GoalProgressCard({
                     }
                   }}
                   disabled={goal.current_amount === 0}
-                  className={`flex-row items-center justify-center py-1.5 rounded-lg ${
+                  className={`flex-row items-center justify-center py-1.5 rounded-lg overflow-hidden ${
                     goal.current_amount > 0
                       ? 'bg-orange-600/20 border border-orange-600/30'
                       : 'bg-gray-600/20 border border-gray-600/30'
                   }`}
-                  style={({ pressed }) => [{ opacity: pressed && goal.current_amount > 0 ? 0.6 : 1 }]}
+                  rippleColor={goal.current_amount > 0 ? "rgba(245, 158, 11, 0.3)" : "rgba(107, 114, 128, 0.2)"}
                 >
                   <Ionicons
                     name="remove-circle"
@@ -113,7 +114,7 @@ export function GoalProgressCard({
                   }`}>
                     Withdraw
                   </Text>
-                </Pressable>
+                </RipplePressable>
               </View>
             )}
           </View>
@@ -177,22 +178,22 @@ export function GoalProgressCard({
         <View className="flex-row mt-3 pt-3 border-t border-borderDark">
           {onAddPress && (
             <View style={{ flex: 1, marginRight: 4 }}>
-              <Pressable
+              <RipplePressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   onAddPress();
                 }}
-                className="flex-row items-center justify-center py-2 rounded-lg bg-green-600/20 border border-green-600/30"
-                style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+                className="flex-row items-center justify-center py-2 rounded-lg bg-green-600/20 border border-green-600/30 overflow-hidden"
+                rippleColor="rgba(16, 185, 129, 0.3)"
               >
                 <Ionicons name="add-circle" size={16} color="#10B981" />
                 <Text className="text-green-500 font-medium ml-2">Add</Text>
-              </Pressable>
+              </RipplePressable>
             </View>
           )}
           {onWithdrawPress && (
             <View style={{ flex: 1, marginLeft: 4 }}>
-              <Pressable
+              <RipplePressable
                 onPress={() => {
                   if (goal.current_amount > 0) {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -200,12 +201,12 @@ export function GoalProgressCard({
                   }
                 }}
                 disabled={goal.current_amount === 0}
-                className={`flex-row items-center justify-center py-2 rounded-lg ${
+                className={`flex-row items-center justify-center py-2 rounded-lg overflow-hidden ${
                   goal.current_amount > 0
                     ? 'bg-orange-600/20 border border-orange-600/30'
                     : 'bg-gray-600/20 border border-gray-600/30'
                 }`}
-                style={({ pressed }) => [{ opacity: pressed && goal.current_amount > 0 ? 0.6 : 1 }]}
+                rippleColor={goal.current_amount > 0 ? "rgba(245, 158, 11, 0.3)" : "rgba(107, 114, 128, 0.2)"}
               >
                 <Ionicons
                   name="remove-circle"
@@ -217,7 +218,7 @@ export function GoalProgressCard({
                 }`}>
                   Withdraw
                 </Text>
-              </Pressable>
+              </RipplePressable>
             </View>
           )}
         </View>

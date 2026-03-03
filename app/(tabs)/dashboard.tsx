@@ -1,6 +1,6 @@
 import { useFont } from "@shopify/react-native-skia";
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -21,7 +21,6 @@ import { useBudgetsData } from "../hooks/useBudgetsData";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { useSavingsProgress } from "../hooks/useSavingsProgress";
 import { useCurrencyStore } from "../store/useCurrencyStore";
-import { useDashboardCategoriesStore } from "../store/useDashboardCategoriesStore";
 import { useIncomeStore } from "../store/useIncomeStore";
 
 export default function Dashboard() {
@@ -55,8 +54,6 @@ export default function Dashboard() {
     isLoading: budgetsLoading,
     refresh: refreshBudgets,
   } = useBudgetsData();
-  const { pinnedCategoryIds, loadPinnedCategories } =
-    useDashboardCategoriesStore();
   const { showSavingsOnDashboard } = useIncomeStore();
   const {
     target: savingsTarget,
@@ -66,11 +63,10 @@ export default function Dashboard() {
   } = useSavingsProgress();
 
   const filteredCategoryBudgets = useMemo(() => {
-    if (pinnedCategoryIds.length === 0) return categoryBudgets;
     return categoryBudgets.filter((cb) =>
-      pinnedCategoryIds.includes(cb.category.id),
+      cb.category.show_on_dashboard ?? true
     );
-  }, [categoryBudgets, pinnedCategoryIds]);
+  }, [categoryBudgets]);
 
   const savingsData = useMemo(() => {
     if (!showSavingsOnDashboard || savingsTarget <= 0) return null;
@@ -91,25 +87,13 @@ export default function Dashboard() {
   }, [loadCurrency, refreshData, refreshBudgets, refreshSavings]);
 
   useEffect(() => {
-    loadPinnedCategories();
-  }, []);
-
-  useEffect(() => {
     registerDashboardRefresh(refreshAll);
   }, [refreshAll, registerDashboardRefresh]);
 
-  // Refresh budget data when the dashboard tab gains focus (e.g. after editing budgets)
-  const hasMountedRef = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      if (hasMountedRef.current) {
-        refreshBudgets();
-        refreshSavings();
-      } else {
-        hasMountedRef.current = true;
-      }
-    }, [refreshBudgets, refreshSavings]),
-  );
+  // Budget data refreshes automatically via:
+  // 1. refreshDashboard() after adding/editing transactions
+  // 2. Optimistic updates when editing budgets
+  // 3. Pull-to-refresh if needed
 
   const interFont = useFont(
     require("../../assets/fonts/InterVariable.ttf"),
@@ -128,7 +112,7 @@ export default function Dashboard() {
     });
   };
 
-  const isLoading = dataLoading || isCurrencyLoading;
+  const isLoading = dataLoading || isCurrencyLoading || budgetsLoading;
 
   return (
     <SafeAreaView

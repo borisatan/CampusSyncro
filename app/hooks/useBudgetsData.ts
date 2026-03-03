@@ -25,14 +25,14 @@ export const getPeriodDates = (): { startDate: Date; endDate: Date } => {
 };
 
 export const useBudgetsData = (): BudgetsDataResult => {
-  const { useDynamicIncome, manualIncome, loadIncomeSettings, isLoading: isIncomeLoading } = useIncomeStore();
+  const { useDynamicIncome, manualIncome, loadIncomeSettings } = useIncomeStore();
 
   // Subscribe to state values (will trigger re-render when these change)
   const categoryBudgets = useBudgetStore((state) => state.categoryBudgets);
   const isBudgetLoading = useBudgetStore((state) => state.isLoading);
 
-  // Combined loading state - show skeleton until both budget and income data are loaded
-  const isLoading = isBudgetLoading || isIncomeLoading;
+  // Only check budget loading - income is preloaded globally by DataPreloader
+  const isLoading = isBudgetLoading;
 
   // Get actions (stable references, won't trigger re-renders)
   const { setCategoryBudgets, upsertCategoryBudget, removeCategoryBudget, setLoading } = useBudgetStore.getState();
@@ -78,15 +78,21 @@ export const useBudgetsData = (): BudgetsDataResult => {
     setCategoryBudgets(results);
   }, [loadIncomeSettings]);
 
-  // Initial load — shows loading state
+  // Initial load — only fetch if store is empty or still loading
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
-      fetchAndBuild()
-        .catch((error) => console.error('Error loading budgets data:', error))
-        .finally(() => setLoading(false));
+      // Skip fetch if data already loaded (e.g., by DataPreloader)
+      if (categoryBudgets.length === 0 && isBudgetLoading) {
+        fetchAndBuild()
+          .catch((error) => console.error('Error loading budgets data:', error))
+          .finally(() => setLoading(false));
+      } else {
+        // Data already loaded, just ensure loading state is false
+        setLoading(false);
+      }
     }
-  }, [fetchAndBuild, setLoading]);
+  }, [fetchAndBuild, setLoading, categoryBudgets.length, isBudgetLoading]);
 
   // Background refresh — no loading flash, no list clearing
   const refresh = useCallback(async () => {

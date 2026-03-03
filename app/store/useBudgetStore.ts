@@ -19,7 +19,7 @@ interface BudgetState {
 
 export const useBudgetStore = create<BudgetState>((set, get) => ({
   categoryBudgets: [],
-  isLoading: true,
+  isLoading: true,  // Start as loading until DataPreloader finishes
 
   setCategoryBudgets: (budgets) => {
     set({ categoryBudgets: budgets });

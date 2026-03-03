@@ -33,7 +33,7 @@ import {
 } from "../services/budgetAIService";
 import { useCategoriesStore } from "../store/useCategoriesStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
-import { useDashboardCategoriesStore } from "../store/useDashboardCategoriesStore";
+import { toggleCategoryDashboardVisibility } from "../store/useDashboardCategoriesStore";
 import { useIncomeStore } from "../store/useIncomeStore";
 import { Category, CategoryBudgetStatus } from "../types/types";
 
@@ -69,8 +69,6 @@ export default function BudgetsScreen() {
     useSavingsProgress();
   const { categories, updateCategoryOptimistic, reorderCategories } =
     useCategoriesStore();
-  const { pinnedCategoryIds, togglePinnedCategory } =
-    useDashboardCategoriesStore();
   const { accounts, updateAccountBalance } = useAccountsStore();
   const { userId } = useAuth();
   const {
@@ -152,6 +150,15 @@ export default function BudgetsScreen() {
   };
 
   const handleInlineSave = (categoryId: number, amount: number | null, percentage?: number | null) => {
+    // Get current values to detect actual changes
+    const currentCategory = categories.find(c => c.id === categoryId);
+    const hasChanged =
+      currentCategory?.budget_amount !== amount ||
+      currentCategory?.budget_percentage !== percentage;
+
+    // Skip if nothing changed
+    if (!hasChanged) return;
+
     // Optimistic updates — immediate UI feedback
     updateCategoryOptimistic(categoryId, { budget_amount: amount, budget_percentage: percentage });
     if (amount === null) {
@@ -160,13 +167,11 @@ export default function BudgetsScreen() {
       upsertCategoryBudget(categoryId, amount);
     }
 
-    // Persist in background, refresh on completion
+    // Persist in background — only refresh on error to revert to server state
     updateCategoryBudgetAmount(categoryId, amount, percentage)
-      .then(() => {
-        refresh();
-      })
       .catch((error) => {
         console.error("Error saving budget amount:", error);
+        // Revert optimistic updates by refreshing from server
         refresh();
       });
   };
@@ -563,11 +568,8 @@ export default function BudgetsScreen() {
                       currencySymbol={currencySymbol}
                       monthlyIncome={monthlyIncome}
                       onSave={handleInlineSave}
-                      showOnDashboard={
-                        pinnedCategoryIds.length === 0 ||
-                        pinnedCategoryIds.includes(item.category.id)
-                      }
-                      onToggleDashboard={togglePinnedCategory}
+                      showOnDashboard={item.category.show_on_dashboard ?? true}
+                      onToggleDashboard={toggleCategoryDashboardVisibility}
                       expanded={expandedCategoryId === item.category.id}
                       onToggleExpand={() =>
                         handleToggleExpand(item.category.id)

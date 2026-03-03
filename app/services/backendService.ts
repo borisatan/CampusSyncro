@@ -667,6 +667,20 @@ export const updateCategoryBudgetAmount = async (
   if (error) throw error;
 };
 
+export const updateCategoryDashboardVisibility = async (
+  categoryId: number,
+  showOnDashboard: boolean
+): Promise<void> => {
+  const { error } = await supabase
+    .from('Categories')
+    .update({
+      show_on_dashboard: showOnDashboard,
+    })
+    .eq('id', categoryId);
+
+  if (error) throw error;
+};
+
 export const updateCategoryBudgetPercentages = async (
   allocations: { categoryId: number; percentage: number; amount: number }[]
 ): Promise<void> => {
