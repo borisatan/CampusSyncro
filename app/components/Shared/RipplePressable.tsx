@@ -1,8 +1,15 @@
-import React, { useRef, useState } from 'react';
-import { Pressable, View, Animated, StyleSheet, PressableProps, ViewStyle, LayoutChangeEvent } from 'react-native';
-import { Platform } from 'react-native';
+import React, { useRef, useState } from "react";
+import {
+  Animated,
+  LayoutChangeEvent,
+  Pressable,
+  PressableProps,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from "react-native";
 
-interface RipplePressableProps extends Omit<PressableProps, 'style'> {
+interface RipplePressableProps extends Omit<PressableProps, "style"> {
   children: React.ReactNode;
   rippleColor?: string;
   rippleDuration?: number;
@@ -12,8 +19,8 @@ interface RipplePressableProps extends Omit<PressableProps, 'style'> {
 
 export const RipplePressable: React.FC<RipplePressableProps> = ({
   children,
-  rippleColor = 'rgba(255, 255, 255, 0.2)',
-  rippleDuration = 300,
+  rippleColor = "rgba(255, 255, 255, 0.2)",
+  rippleDuration = 1000,
   style,
   className,
   onPressIn,
@@ -48,29 +55,18 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
     rippleScale.setValue(0);
     rippleOpacity.setValue(1);
 
-    Animated.parallel([
-      Animated.timing(rippleScale, {
-        toValue: 1,
-        duration: rippleDuration,
-        useNativeDriver: true,
-      }),
-      Animated.timing(rippleOpacity, {
-        toValue: 0,
-        duration: rippleDuration,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(rippleScale, {
+      toValue: 1,
+      duration: rippleDuration,
+      useNativeDriver: true,
+    }).start();
 
     onPressIn?.(event);
   };
 
   const handlePressOut = (event: any) => {
-    // Fade out any remaining ripple
-    Animated.timing(rippleOpacity, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
+    // Instantly hide the ripple when released
+    rippleOpacity.setValue(0);
 
     onPressOut?.(event);
   };
@@ -78,12 +74,17 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
   // Note: Disabled Android native ripple because it draws behind children with opaque backgrounds
   // Using custom ripple for all platforms ensures consistent behavior
 
-  // Calculate ripple size to cover entire component
-  const rippleSize = Math.max(dimensions.width, dimensions.height) * 2.5;
+  // Calculate ripple width to cover entire component horizontally
+  const rippleWidth = dimensions.width * 50;
+  const rippleHeight = dimensions.height;
 
   // For iOS and older Android, use custom ripple animation
   return (
-    <View style={[styles.container, style]} className={className} onLayout={handleLayout}>
+    <View
+      style={[styles.container, style]}
+      className={className}
+      onLayout={handleLayout}
+    >
       <Pressable
         ref={containerRef}
         style={styles.pressable}
@@ -100,7 +101,7 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
                 style={[
                   StyleSheet.absoluteFill,
                   {
-                    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+                    backgroundColor: "rgba(128, 128, 128, 0.1)",
                   },
                 ]}
                 pointerEvents="none"
@@ -111,15 +112,15 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
               style={[
                 styles.ripple,
                 {
-                  width: rippleSize,
-                  height: rippleSize,
-                  borderRadius: rippleSize / 2,
+                  width: rippleWidth,
+                  height: rippleHeight,
+                  borderRadius: 16,
                   backgroundColor: rippleColor,
                   opacity: rippleOpacity,
                   transform: [
-                    { translateX: Animated.subtract(rippleX, rippleSize / 2) },
-                    { translateY: Animated.subtract(rippleY, rippleSize / 2) },
-                    { scale: rippleScale },
+                    { translateX: Animated.subtract(rippleX, rippleWidth / 2) },
+                    { translateY: 0 },
+                    { scaleX: rippleScale },
                   ],
                 },
               ]}
@@ -134,12 +135,12 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   pressable: {
-    position: 'relative',
+    position: "relative",
   },
   ripple: {
-    position: 'absolute',
+    position: "absolute",
   },
 });

@@ -27,7 +27,7 @@ const ExpenseCategoryCard: React.FC<ExpenseCategoryCardProps> = ({ name, icon, c
       className="mb-2 rounded-2xl overflow-hidden"
       rippleColor="rgba(255, 255, 255, 0.2)"
     >
-      <View className="flex-row items-center p-4 shadow-lg bg-surfaceDark border border-borderDark">
+      <View className="flex-row items-center p-4 shadow-lg bg-surfaceDark border border-borderDark rounded-2xl">
           <View
             className="w-12 h-12 rounded-xl items-center justify-center mr-3"
             style={{ backgroundColor: color }}
