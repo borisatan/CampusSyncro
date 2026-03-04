@@ -15,15 +15,14 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
-  Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ProfileCardSkeleton } from "../components/ProfilePage/ProfileSkeleton";
 import { AnimatedToggle } from "../components/Shared/AnimatedToggle";
+import { RipplePressable } from "../components/Shared/RipplePressable";
 
 // Custom Hooks & Utils
 import { useLock } from "../context/LockContext";
@@ -214,9 +213,10 @@ export default function ProfileScreen() {
         {isLoading ? (
           <ProfileCardSkeleton />
         ) : (
-          <Pressable
+          <RipplePressable
             onPress={() => router.push("/user-settings" as any)}
-            className="bg-indigo-700 rounded-2xl p-6 flex-row items-center mb-8 active:bg-indigo-800"
+            className="bg-indigo-700 rounded-2xl p-6 flex-row items-center mb-8"
+            rippleColor="rgba(255, 255, 255, 0.3)"
           >
             <View className="w-16 h-16 bg-white/20 rounded-full items-center justify-center mr-4">
               <User color="white" size={32} />
@@ -228,7 +228,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <ChevronRight color="white" size={24} />
-          </Pressable>
+          </RipplePressable>
         )}
 
         {/* Settings Section */}
@@ -240,9 +240,8 @@ export default function ProfileScreen() {
           </Text>
 
           {/* Currency Selector */}
-          <TouchableOpacity
+          <RipplePressable
             onPress={() => setShowCurrencyPicker(!showCurrencyPicker)}
-            activeOpacity={0.7}
             className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-indigo-600 rounded-xl items-center justify-center mr-3">
@@ -262,7 +261,7 @@ export default function ProfileScreen() {
               size={20}
               color={isDarkMode ? "#9CA3AF" : "#4B5563"}
             />
-          </TouchableOpacity>
+          </RipplePressable>
 
           {showCurrencyPicker && (
             <View
@@ -283,9 +282,9 @@ export default function ProfileScreen() {
           )}
 
           {/* Accounts Button */}
-          <Pressable
+          <RipplePressable
             onPress={() => router.push("/accounts" as any)}
-            className={`flex-row items-center border rounded-2xl p-4 mb-3 active:bg-slate-800/10 ${cardBg}`}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-violet-600 rounded-xl items-center justify-center mr-3">
               <Wallet color="white" size={20} />
@@ -296,12 +295,11 @@ export default function ProfileScreen() {
                 Manage your accounts
               </Text>
             </View>
-          </Pressable>
+          </RipplePressable>
 
           {/* Daily Reminders Selector */}
-          <TouchableOpacity
+          <RipplePressable
             onPress={() => setShowFrequencyPicker(!showFrequencyPicker)}
-            activeOpacity={0.7}
             className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-blue-600 rounded-xl items-center justify-center mr-3">
@@ -323,7 +321,7 @@ export default function ProfileScreen() {
               size={20}
               color={isDarkMode ? "#9CA3AF" : "#4B5563"}
             />
-          </TouchableOpacity>
+          </RipplePressable>
 
           {showFrequencyPicker && (
             <View
@@ -374,9 +372,9 @@ export default function ProfileScreen() {
           >
             Feedback
           </Text>
-          <Pressable
+          <RipplePressable
             onPress={handleFeedback}
-            className={`flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
+            className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-teal-600 rounded-xl items-center justify-center mr-3">
               <MessageSquare color="white" size={20} />
@@ -393,7 +391,7 @@ export default function ProfileScreen() {
               color={isDarkMode ? "#9CA3AF" : "#4B5563"}
               size={20}
             />
-          </Pressable>
+          </RipplePressable>
         </View>
 
         {/* Developer Section */}
@@ -403,9 +401,9 @@ export default function ProfileScreen() {
           >
             Developer
           </Text>
-          <Pressable
+          <RipplePressable
             onPress={handleTestOnboarding}
-            className={`flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg}`}
+            className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-amber-600 rounded-xl items-center justify-center mr-3">
               <RotateCcw color="white" size={20} />
@@ -422,7 +420,7 @@ export default function ProfileScreen() {
               color={isDarkMode ? "#9CA3AF" : "#4B5563"}
               size={20}
             />
-          </Pressable>
+          </RipplePressable>
         </View>
 
         {/* Account Section */}
@@ -432,16 +430,17 @@ export default function ProfileScreen() {
           >
             Account
           </Text>
-          <Pressable
+          <RipplePressable
             onPress={handleSignOut}
             disabled={isSigningOut}
             className="bg-accentRed rounded-xl py-4 items-center  flex-row justify-center"
+            rippleColor="rgba(255, 255, 255, 0.3)"
           >
             <LogOut color="white" size={20} style={{ marginRight: 8 }} />
             <Text className="text-white font-semibold">
               {isSigningOut ? "Signing out…" : "Sign Out"}
             </Text>
-          </Pressable>
+          </RipplePressable>
         </View>
 
         {/* Footer Info */}
@@ -497,7 +496,7 @@ const AnimatedCurrencyRow = ({
     <Animated.View
       style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
     >
-      <TouchableOpacity
+      <RipplePressable
         onPress={onSelect}
         className={`px-4 py-4 flex-row items-center justify-between ${
           !isLast
@@ -533,7 +532,7 @@ const AnimatedCurrencyRow = ({
             color={isDarkMode ? "#B2A4FF" : "#2563EB"}
           />
         )}
-      </TouchableOpacity>
+      </RipplePressable>
     </Animated.View>
   );
 };
@@ -577,7 +576,7 @@ const AnimatedFrequencyRow = ({
     <Animated.View
       style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
     >
-      <TouchableOpacity
+      <RipplePressable
         onPress={onSelect}
         className={`px-4 py-4 flex-row items-center justify-between ${
           !isLast
@@ -606,7 +605,7 @@ const AnimatedFrequencyRow = ({
             color={isDarkMode ? "#B2A4FF" : "#2563EB"}
           />
         )}
-      </TouchableOpacity>
+      </RipplePressable>
     </Animated.View>
   );
 };

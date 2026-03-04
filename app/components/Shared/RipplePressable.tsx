@@ -80,65 +80,58 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
 
   // For iOS and older Android, use custom ripple animation
   return (
-    <View
+    <Pressable
+      ref={containerRef}
       style={[styles.container, style]}
       className={className}
       onLayout={handleLayout}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      {...pressableProps}
     >
-      <Pressable
-        ref={containerRef}
-        style={styles.pressable}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        {...pressableProps}
-      >
-        {({ pressed }) => (
-          <>
-            {children}
-            {/* Base gray overlay on press - rendered after children so it's on top */}
-            {pressed && (
-              <View
-                style={[
-                  StyleSheet.absoluteFill,
-                  {
-                    backgroundColor: "rgba(128, 128, 128, 0.1)",
-                  },
-                ]}
-                pointerEvents="none"
-              />
-            )}
-            {/* Ripple overlay - rendered last so it's on top of everything */}
-            <Animated.View
+      {({ pressed }) => (
+        <>
+          {children}
+          {/* Base gray overlay on press - rendered after children so it's on top */}
+          {pressed && (
+            <View
               style={[
-                styles.ripple,
+                StyleSheet.absoluteFill,
                 {
-                  width: rippleWidth,
-                  height: rippleHeight,
-                  borderRadius: 16,
-                  backgroundColor: rippleColor,
-                  opacity: rippleOpacity,
-                  transform: [
-                    { translateX: Animated.subtract(rippleX, rippleWidth / 2) },
-                    { translateY: 0 },
-                    { scaleX: rippleScale },
-                  ],
+                  backgroundColor: "rgba(128, 128, 128, 0.1)",
                 },
               ]}
               pointerEvents="none"
             />
-          </>
-        )}
-      </Pressable>
-    </View>
+          )}
+          {/* Ripple overlay - rendered last so it's on top of everything */}
+          <Animated.View
+            style={[
+              styles.ripple,
+              {
+                width: rippleWidth,
+                height: rippleHeight,
+                borderRadius: 16,
+                backgroundColor: rippleColor,
+                opacity: rippleOpacity,
+                transform: [
+                  { translateX: Animated.subtract(rippleX, rippleWidth / 2) },
+                  { translateY: 0 },
+                  { scaleX: rippleScale },
+                ],
+              },
+            ]}
+            pointerEvents="none"
+          />
+        </>
+      )}
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
-  },
-  pressable: {
-    position: "relative",
   },
   ripple: {
     position: "absolute",
