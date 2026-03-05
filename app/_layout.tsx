@@ -1,5 +1,9 @@
+import './globals.css';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -15,6 +19,9 @@ import { LockProvider } from './context/LockContext';
 import { PostHogProvider } from './context/PostHogContext';
 import { AppThemeProvider } from './context/ThemeContext';
 
+// Prevent splash screen from auto-hiding
+SplashScreen.preventAutoHideAsync();
+
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
@@ -22,6 +29,20 @@ configureReanimatedLogger({
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  const [fontsLoaded, fontError] = useFonts({
+    'Inter': require('../assets/fonts/InterVariable.ttf'),
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   const MyTheme = {
     ...(colorScheme === 'dark' ? DarkTheme : DefaultTheme),

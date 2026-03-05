@@ -78,7 +78,7 @@ export const deleteTransfer = async (transfer_id: string, user_id: string) => {
     if (account) {
       // Reverse: if transaction was -100 (outgoing), add 100 back; if +100 (incoming), subtract 100
       const newBalance = account.balance - transaction.amount;
-      await updateAccountBalance(account.account_name, newBalance);
+      await updateAccountBalance(account.account_name, newBalance, user_id);
     }
   }
 
@@ -422,34 +422,38 @@ export const updateTransaction = async (id: number, newAmount: number, newDescri
   return data;
 }
 
-export const updateAccountName = async (accountName: string, newName: string) => {
-  const { data, error } = await supabase
-  .from('Accounts')
-  .update({ account_name: newName })
-  .eq('account_name', accountName)
-  .select();
-  
-  if (error) throw error;
-  return data;
-}
-
-
-export const updateAccountType = async (accountName: string, newType: string) => {
+export const updateAccountName = async (accountName: string, newName: string, userId: string) => {
+  // Update the account name - transactions will automatically update via ON UPDATE CASCADE
   const { data, error } = await supabase
     .from('Accounts')
-    .update({ type: newType })
+    .update({ account_name: newName })
     .eq('account_name', accountName)
+    .eq('user_id', userId)
     .select();
 
   if (error) throw error;
   return data;
 }
 
-export const updateAccountBalance = async (accountName: string, newBalance: number) => {
+
+export const updateAccountType = async (accountName: string, newType: string, userId: string) => {
+  const { data, error } = await supabase
+    .from('Accounts')
+    .update({ type: newType })
+    .eq('account_name', accountName)
+    .eq('user_id', userId)
+    .select();
+
+  if (error) throw error;
+  return data;
+}
+
+export const updateAccountBalance = async (accountName: string, newBalance: number, userId: string) => {
     const { data, error } = await supabase
     .from('Accounts')
       .update({ balance: newBalance })
       .eq('account_name', accountName)
+      .eq('user_id', userId)
       .select();
 
       if (error) throw error;

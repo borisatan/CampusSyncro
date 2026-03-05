@@ -15,6 +15,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
+  Pressable,
   ScrollView,
   Text,
   View,
@@ -496,7 +497,7 @@ const AnimatedCurrencyRow = ({
     <Animated.View
       style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
     >
-      <RipplePressable
+      <Pressable
         onPress={onSelect}
         className={`px-4 py-4 flex-row items-center justify-between ${
           !isLast
@@ -532,7 +533,7 @@ const AnimatedCurrencyRow = ({
             color={isDarkMode ? "#B2A4FF" : "#2563EB"}
           />
         )}
-      </RipplePressable>
+      </Pressable>
     </Animated.View>
   );
 };
@@ -576,7 +577,7 @@ const AnimatedFrequencyRow = ({
     <Animated.View
       style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
     >
-      <RipplePressable
+      <Pressable
         onPress={onSelect}
         className={`px-4 py-4 flex-row items-center justify-between ${
           !isLast
@@ -605,7 +606,7 @@ const AnimatedFrequencyRow = ({
             color={isDarkMode ? "#B2A4FF" : "#2563EB"}
           />
         )}
-      </RipplePressable>
+      </Pressable>
     </Animated.View>
   );
 };

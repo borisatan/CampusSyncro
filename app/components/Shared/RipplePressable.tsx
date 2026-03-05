@@ -20,7 +20,7 @@ interface RipplePressableProps extends Omit<PressableProps, "style"> {
 export const RipplePressable: React.FC<RipplePressableProps> = ({
   children,
   rippleColor = "rgba(255, 255, 255, 0.2)",
-  rippleDuration = 1000,
+  rippleDuration = 1500,
   style,
   className,
   onPressIn,
@@ -32,27 +32,39 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
   const rippleX = useRef(new Animated.Value(0)).current;
   const rippleY = useRef(new Animated.Value(0)).current;
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [layoutPosition, setLayoutPosition] = useState({ x: 0, y: 0 });
   const containerRef = useRef<View>(null);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     setDimensions({ width, height });
+
+    // Measure the container's position on screen
+    containerRef.current?.measureInWindow((x, y) => {
+      setLayoutPosition({ x, y });
+    });
   };
 
   const handlePressIn = (event: any) => {
-    // Get touch position relative to the component
-    const locationX = event.nativeEvent.locationX;
-    const locationY = event.nativeEvent.locationY;
+    // Use pageX/pageY (absolute screen coordinates) for more reliable positioning
+    const pageX = event.nativeEvent.pageX;
+    const pageY = event.nativeEvent.pageY;
 
-    const finalX = locationX !== undefined ? locationX : dimensions.width / 2;
-    const finalY = locationY !== undefined ? locationY : dimensions.height / 2;
+    // Calculate relative position by subtracting container's position
+    let finalX = dimensions.width / 2; // default to center
+    let finalY = dimensions.height / 2;
+
+    if (pageX !== undefined && pageY !== undefined) {
+      finalX = pageX - layoutPosition.x;
+      finalY = pageY - layoutPosition.y;
+    }
 
     // Set position synchronously using Animated.Value
     rippleX.setValue(finalX);
     rippleY.setValue(finalY);
 
     // Reset and start ripple animation
-    rippleScale.setValue(0);
+    rippleScale.setValue(0.005);
     rippleOpacity.setValue(1);
 
     Animated.timing(rippleScale, {
@@ -75,7 +87,7 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
   // Using custom ripple for all platforms ensures consistent behavior
 
   // Calculate ripple width to cover entire component horizontally
-  const rippleWidth = dimensions.width * 50;
+  const rippleWidth = dimensions.width * 40;
   const rippleHeight = dimensions.height;
 
   // For iOS and older Android, use custom ripple animation

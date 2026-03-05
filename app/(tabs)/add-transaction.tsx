@@ -137,7 +137,7 @@ const TransactionAdder = () => {
             ? currentAccount.balance - numericAmount
             : currentAccount.balance + numericAmount;
 
-        await updateAccountBalance(selectedAccount, newBalance);
+        await updateAccountBalance(selectedAccount, newBalance, userId);
       }
 
       // Refresh related screens (dashboard, accounts, transaction-list) - categories don't change

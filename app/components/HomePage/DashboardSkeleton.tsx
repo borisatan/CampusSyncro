@@ -11,15 +11,28 @@ const SummarySkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => (
   <View className="flex-col mb-2">
     {/* Total Balance Header */}
     <View className="flex-1 rounded-2xl p-2 mb-1">
-      <SkeletonText width={140} size="xl" isDarkMode={isDarkMode} style={{ marginBottom: 12 }} />
-      <SkeletonBox width={220} height={48} isDarkMode={isDarkMode} borderRadius={8} />
+      <SkeletonText
+        width={140}
+        size="xl"
+        isDarkMode={isDarkMode}
+        style={{ marginBottom: 12 }}
+      />
+      <SkeletonBox
+        width={220}
+        height={48}
+        isDarkMode={isDarkMode}
+        borderRadius={8}
+      />
     </View>
 
     {/* Income & Expenses Cards */}
     <View className="flex-row gap-4 mb-3">
       <View
         className="flex-1 rounded-2xl p-4"
-        style={{ backgroundColor: isDarkMode ? "#0D9488" : "#14B8A6", opacity: 0.6 }}
+        style={{
+          backgroundColor: isDarkMode ? "#0D9488" : "#14B8A6",
+          opacity: 0.6,
+        }}
       >
         <View className="flex-row items-center gap-2 mb-2">
           <SkeletonCircle size={16} isDarkMode={isDarkMode} />
@@ -30,7 +43,10 @@ const SummarySkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => (
 
       <View
         className="flex-1 rounded-2xl p-4"
-        style={{ backgroundColor: isDarkMode ? "#DC2626" : "#EF4444", opacity: 0.6 }}
+        style={{
+          backgroundColor: isDarkMode ? "#DC2626" : "#EF4444",
+          opacity: 0.6,
+        }}
       >
         <View className="flex-row items-center gap-2 mb-2">
           <SkeletonCircle size={16} isDarkMode={isDarkMode} />
@@ -73,16 +89,29 @@ const ChartSkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => (
     </View>
 
     {/* Chart area placeholder */}
-    <SkeletonBox width="100%" height={180} borderRadius={12} isDarkMode={isDarkMode} />
+    <SkeletonBox
+      width="100%"
+      height={180}
+      borderRadius={12}
+      isDarkMode={isDarkMode}
+    />
 
     {/* Legend items */}
     <View className="flex-row justify-center gap-4 mt-4">
       <View className="flex-row items-center">
-        <SkeletonCircle size={12} isDarkMode={isDarkMode} style={{ marginRight: 6 }} />
+        <SkeletonCircle
+          size={12}
+          isDarkMode={isDarkMode}
+          style={{ marginRight: 6 }}
+        />
         <SkeletonText width={50} size="sm" isDarkMode={isDarkMode} />
       </View>
       <View className="flex-row items-center">
-        <SkeletonCircle size={12} isDarkMode={isDarkMode} style={{ marginRight: 6 }} />
+        <SkeletonCircle
+          size={12}
+          isDarkMode={isDarkMode}
+          style={{ marginRight: 6 }}
+        />
         <SkeletonText width={50} size="sm" isDarkMode={isDarkMode} />
       </View>
     </View>
@@ -100,19 +129,43 @@ const BudgetHealthSkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => (
   >
     <View className="flex-row items-center">
       {/* Circular progress placeholder */}
-      <SkeletonCircle size={80} isDarkMode={isDarkMode} style={{ marginRight: 16 }} />
+      <SkeletonCircle
+        size={80}
+        isDarkMode={isDarkMode}
+        style={{ marginRight: 16 }}
+      />
 
       {/* Stats */}
       <View className="flex-1">
-        <SkeletonText width={100} size="sm" isDarkMode={isDarkMode} style={{ marginBottom: 8 }} />
-        <SkeletonText width={140} size="xl" isDarkMode={isDarkMode} style={{ marginBottom: 12 }} />
+        <SkeletonText
+          width={100}
+          size="sm"
+          isDarkMode={isDarkMode}
+          style={{ marginBottom: 8 }}
+        />
+        <SkeletonText
+          width={140}
+          size="xl"
+          isDarkMode={isDarkMode}
+          style={{ marginBottom: 12 }}
+        />
         <View className="flex-row gap-4">
           <View>
-            <SkeletonText width={50} size="sm" isDarkMode={isDarkMode} style={{ marginBottom: 4 }} />
+            <SkeletonText
+              width={50}
+              size="sm"
+              isDarkMode={isDarkMode}
+              style={{ marginBottom: 4 }}
+            />
             <SkeletonText width={70} size="md" isDarkMode={isDarkMode} />
           </View>
           <View>
-            <SkeletonText width={60} size="sm" isDarkMode={isDarkMode} style={{ marginBottom: 4 }} />
+            <SkeletonText
+              width={60}
+              size="sm"
+              isDarkMode={isDarkMode}
+              style={{ marginBottom: 4 }}
+            />
             <SkeletonText width={70} size="md" isDarkMode={isDarkMode} />
           </View>
         </View>
@@ -130,7 +183,12 @@ const CategoryDonutSkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => (
       borderColor: isDarkMode ? "#4B5563" : "#E2E8F0",
     }}
   >
-    <SkeletonText width={140} size="lg" isDarkMode={isDarkMode} style={{ marginBottom: 16 }} />
+    <SkeletonText
+      width={140}
+      size="lg"
+      isDarkMode={isDarkMode}
+      style={{ marginBottom: 16 }}
+    />
     <View className="items-center">
       <SkeletonCircle size={160} isDarkMode={isDarkMode} />
     </View>
@@ -174,14 +232,21 @@ const CategoryCardSkeleton = ({
 
       {/* Amount & Percent */}
       <View className="items-end">
-        <SkeletonText width={80} size="lg" isDarkMode={isDarkMode} style={{ marginBottom: 4 }} />
+        <SkeletonText
+          width={80}
+          size="lg"
+          isDarkMode={isDarkMode}
+          style={{ marginBottom: 4 }}
+        />
         <SkeletonText width={40} size="md" isDarkMode={isDarkMode} />
       </View>
     </View>
   </MotiView>
 );
 
-export const DashboardSkeleton: React.FC<DashboardSkeletonProps> = ({ isDarkMode }) => {
+export const DashboardSkeleton: React.FC<DashboardSkeletonProps> = ({
+  isDarkMode,
+}) => {
   return (
     <MotiView
       from={{ opacity: 0 }}
@@ -197,7 +262,11 @@ export const DashboardSkeleton: React.FC<DashboardSkeletonProps> = ({ isDarkMode
       {/* Category breakdown skeleton - 3 items */}
       <View className="mt-1 mb-10">
         {[0, 1, 2].map((index) => (
-          <CategoryCardSkeleton key={index} isDarkMode={isDarkMode} delay={index * 50} />
+          <CategoryCardSkeleton
+            key={index}
+            isDarkMode={isDarkMode}
+            delay={index * 50}
+          />
         ))}
       </View>
     </MotiView>

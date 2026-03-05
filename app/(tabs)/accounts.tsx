@@ -88,9 +88,9 @@ export default function Accounts() {
     setSelectedAccount(null);
 
     try {
-      if (originalName !== newName) await AccountService.updateAccountName(originalName, newName);
-      await AccountService.updateAccountBalance(newName, newBalance);
-      await AccountService.updateAccountType(newName, newType);
+      if (originalName !== newName) await AccountService.updateAccountName(originalName, newName, userId);
+      await AccountService.updateAccountBalance(newName, newBalance, userId);
+      await AccountService.updateAccountType(newName, newType, userId);
 
       // Update savings goal if it changed
       if (newGoal !== selectedAccount.monthly_savings_goal) {
@@ -103,8 +103,9 @@ export default function Accounts() {
       }
 
       await Promise.all([loadAccounts(), refreshDashboard(), refreshTransactionList()]);
-    } catch (err) {
-      Alert.alert('Error', 'Failed to update account');
+    } catch (err: any) {
+      console.error('Account update error:', err);
+      Alert.alert('Error', `Failed to update account: ${err?.message || 'Unknown error'}`);
       await loadAccounts();
     }
   };

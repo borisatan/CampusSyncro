@@ -142,13 +142,13 @@ const EditTransactionScreen = () => {
       if (selectedAccount === transaction.account_name) {
         const diff = finalAmount - transaction.amount;
         const acc = accountOptions.find(a => a.account_name === selectedAccount);
-        if (acc) await updateAccountBalance(selectedAccount, acc.balance + diff);
+        if (acc) await updateAccountBalance(selectedAccount, acc.balance + diff, userId);
       } else {
         const oldAcc = accountOptions.find(a => a.account_name === transaction.account_name);
-        if (oldAcc) await updateAccountBalance(transaction.account_name, oldAcc.balance - transaction.amount);
+        if (oldAcc) await updateAccountBalance(transaction.account_name, oldAcc.balance - transaction.amount, userId);
 
         const newAcc = accountOptions.find(a => a.account_name === selectedAccount);
-        if (newAcc) await updateAccountBalance(selectedAccount, newAcc.balance + finalAmount);
+        if (newAcc) await updateAccountBalance(selectedAccount, newAcc.balance + finalAmount, userId);
       }
 
       await refreshAll();
@@ -183,7 +183,7 @@ const EditTransactionScreen = () => {
             await deleteTransaction(transaction.id, userId);
 
             if (acc) {
-              await updateAccountBalance(transaction.account_name, acc.balance - transaction.amount);
+              await updateAccountBalance(transaction.account_name, acc.balance - transaction.amount, userId);
             }
 
             await refreshAll();
