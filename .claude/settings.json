@@ -1,8 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(find:*)"
-    ]
+    "allow": ["Bash(find:*)"]
   },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true

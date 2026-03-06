@@ -1,37 +1,73 @@
-import { ChevronLeft } from 'lucide-react-native';
-import { MotiView } from 'moti';
-import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { SafeAreaView, ScrollView, Text, View, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useOnboardingStore } from '../store/useOnboardingStore';
-import { OnboardingTransactionHero } from '../components/OnboardingPage/OnboardingTransactionHero';
-import { OnboardingCategoryGrid } from '../components/OnboardingPage/OnboardingCategoryGrid';
-import { SuccessModal } from '../components/Shared/SuccessModal';
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
+import { MotiView } from "moti";
+import { useEffect, useRef, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { AUTOPILOT_CATEGORIES } from "./category-autopilot";
+import { OnboardingCategoryGrid } from "../components/OnboardingPage/OnboardingCategoryGrid";
+import { OnboardingTransactionHero } from "../components/OnboardingPage/OnboardingTransactionHero";
+import { SuccessModal } from "../components/Shared/SuccessModal";
+import { useOnboardingStore } from "../store/useOnboardingStore";
+
+// Category-specific prompts and amounts
+const CATEGORY_PROMPTS: Record<
+  string,
+  { prefix: string; suffix: string; amount: number }
+> = {
+  Subscriptions: {
+    prefix: "Log your",
+    suffix: "Netflix subscription",
+    amount: 17.99,
+  },
+  "Impulse Buys": { prefix: "Log a", suffix: "impulse purchase", amount: 25 },
+  "Dining Out": { prefix: "Log your", suffix: "lunch order", amount: 30 },
+  Nightlife: { prefix: "Log your", suffix: "bar tab", amount: 35 },
+};
 
 export default function PracticeEntryScreen() {
-  const { setOnboardingStep, newOnboardingData, setNewOnboardingData } = useOnboardingStore();
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
+  const { setOnboardingStep, newOnboardingData, setNewOnboardingData } =
+    useOnboardingStore();
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const amountInputRef = useRef<TextInput>(null);
 
-  // Get autopilot categories from Screen 2
-  const autopilotCategories = newOnboardingData.selectedAutopilotCategories || [];
-  const [selectedCategory, setSelectedCategory] = useState<string>(autopilotCategories[0] || '');
+  // Get autopilot categories from Screen 2 for preselection
+  const autopilotCategories =
+    newOnboardingData.selectedAutopilotCategories || [];
+
+  // Show all categories, but preselect the first autopilot one
+  const allCategories = AUTOPILOT_CATEGORIES.map(cat => cat.name);
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    autopilotCategories[0] || allCategories[0] || "",
+  );
 
   useEffect(() => {
     setOnboardingStep(6);
-    // Auto-focus on amount input
-    setTimeout(() => {
-      amountInputRef.current?.focus();
-    }, 500);
   }, []);
+
+  // Get the current category's expected amount and text
+  const currentPrompt = CATEGORY_PROMPTS[selectedCategory] || {
+    prefix: "Log a",
+    suffix: "Coffee",
+    amount: 5,
+  };
+  const expectedAmount = currentPrompt.amount;
 
   const handleSubmit = () => {
     const numAmount = parseFloat(amount);
-    if (numAmount === 5 || numAmount === 5.0) {
+    if (numAmount === expectedAmount) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowSuccess(true);
       setNewOnboardingData({ practiceEntryCompleted: true });
@@ -41,21 +77,21 @@ export default function PracticeEntryScreen() {
   const handleSuccessModalDismiss = () => {
     setShowSuccess(false);
     setOnboardingStep(7);
-    router.push('/(onboarding)/subscription-trial');
+    router.push("/(onboarding)/subscription-trial");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(5);
-    router.push('/(onboarding)/why-manual');
+    router.push("/(onboarding)/why-manual");
   };
 
-  const isComplete = amount === '5' || amount === '5.00' || amount === '5.0';
+  const isComplete = parseFloat(amount) === expectedAmount;
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
         <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
@@ -73,18 +109,20 @@ export default function PracticeEntryScreen() {
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.replace('/(tabs)/dashboard');
+                  router.replace("/(tabs)/dashboard");
                 }}
                 className="active:opacity-60"
               >
-                <Text className="text-accentBlue text-sm font-medium">Skip</Text>
+                <Text className="text-accentBlue text-sm font-medium">
+                  Skip
+                </Text>
               </Pressable>
             </View>
             <View className="h-1 bg-surfaceDark rounded-full overflow-hidden">
               <MotiView
-                from={{ width: '71.4%' }}
-                animate={{ width: '85.7%' }}
-                transition={{ type: 'timing', duration: 500 }}
+                from={{ width: "71.4%" }}
+                animate={{ width: "85.7%" }}
+                transition={{ type: "timing", duration: 500 }}
                 className="h-full overflow-hidden relative"
               >
                 <LinearGradient
@@ -133,17 +171,18 @@ export default function PracticeEntryScreen() {
               transition={{ duration: 600 }}
             >
               {/* Task heading */}
-              <View className="text-center mb-6">
+              <View className="text-center mb-8">
                 <MotiView
                   from={{ opacity: 0, translateY: 20 }}
                   animate={{ opacity: 1, translateY: 0 }}
                   transition={{ delay: 200, duration: 600 }}
                 >
-                  <Text className="text-secondaryDark text-sm mb-2 text-center">
-                    Practice Entry
-                  </Text>
-                  <Text className="text-2xl text-white text-center">
-                    Log a <Text className="text-accentGreen">$5.00 Coffee</Text>
+                  <Text className="text-4xl font-semibold text-white text-center">
+                    {currentPrompt.prefix}{" "}
+                    <Text className="text-accentGreen">
+                      ${currentPrompt.amount}
+                    </Text>{" "}
+                    {currentPrompt.suffix}
                   </Text>
                 </MotiView>
               </View>
@@ -184,55 +223,71 @@ export default function PracticeEntryScreen() {
               )}
 
               {/* Category Grid */}
-              {!showSuccess && autopilotCategories.length > 0 && (
+              {!showSuccess && allCategories.length > 0 && (
                 <MotiView
                   from={{ opacity: 0, translateY: 20 }}
                   animate={{ opacity: 1, translateY: 0 }}
                   transition={{ delay: 500, duration: 600 }}
                 >
                   <OnboardingCategoryGrid
-                    categories={autopilotCategories}
+                    categories={allCategories}
                     selectedCategory={selectedCategory}
                     setSelectedCategory={setSelectedCategory}
                     isDarkMode={true}
                   />
                 </MotiView>
               )}
-
-              {/* Submit button */}
-              {!showSuccess && (
-                <MotiView
-                  from={{ opacity: 0, translateY: 20 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ delay: 600, duration: 500 }}
-                >
-                  <Pressable
-                    onPress={handleSubmit}
-                    disabled={!isComplete}
-                    className={`w-full py-4 rounded-xl ${
-                      isComplete
-                        ? 'bg-accentRed active:opacity-80'
-                        : 'bg-surfaceDark border border-borderDark'
-                    }`}
-                    android_ripple={
-                      isComplete
-                        ? { color: 'rgba(255, 255, 255, 0.1)' }
-                        : undefined
-                    }
-                  >
-                    <Text
-                      className={`text-lg text-center font-medium ${
-                        isComplete ? 'text-white' : 'text-secondaryDark'
-                      }`}
-                    >
-                      Add Transaction
-                    </Text>
-                  </Pressable>
-                </MotiView>
-              )}
             </MotiView>
           </View>
         </ScrollView>
+
+        {/* Submit button - Fixed at bottom */}
+        {!showSuccess && (
+          <View className="px-2 mb-10 py-2">
+            {isComplete ? (
+              <MotiView
+                animate={{
+                  scale: [1, 1.02, 1],
+                }}
+                transition={{
+                  type: "timing",
+                  duration: 1500,
+                  loop: true,
+                }}
+              >
+                <Pressable
+                  onPress={handleSubmit}
+                  className="w-full rounded-xl overflow-hidden active:opacity-80"
+                  android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+                  style={{
+                    shadowColor: "#EF4444",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 20,
+                    elevation: 8,
+                  }}
+                >
+                  <LinearGradient
+                    colors={["#DC2626", "#EF4444", "#F87171"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    className="w-full py-4"
+                  >
+                    <Text className="text-lg text-center font-medium text-white">
+                      Add Transaction
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
+              </MotiView>
+            ) : (
+              <View className="w-full py-4 rounded-xl bg-surfaceDark border border-borderDark">
+                <Text className="text-lg text-center font-medium text-secondaryDark">
+                  Add Transaction
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </KeyboardAvoidingView>
 
       <SuccessModal

@@ -2,15 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
+import { AUTOPILOT_CATEGORIES } from "../../(onboarding)/category-autopilot";
 
-// Map autopilot category names to their icons and colors
-const CATEGORY_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
-  "Dining Out": { icon: "cafe-outline", color: "#FF6B6B" },
-  "Impulse Buys": { icon: "cart-outline", color: "#F06292" },
-  "Subscriptions": { icon: "card-outline", color: "#8A00C2" },
-  "Grocery Runs": { icon: "bag-handle-outline", color: "#22D97A" },
-  "Digital Entertainment": { icon: "tv-outline", color: "#3B7EFF" },
-};
+// Build category map from AUTOPILOT_CATEGORIES
+const CATEGORY_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> =
+  AUTOPILOT_CATEGORIES.reduce((acc, cat) => {
+    acc[cat.name] = { icon: cat.icon, color: cat.color };
+    return acc;
+  }, {} as Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }>);
 
 interface OnboardingCategoryGridProps {
   categories: string[]; // Just category names from Screen 2

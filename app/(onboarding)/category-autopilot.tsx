@@ -6,9 +6,10 @@ import { ChevronLeft } from "lucide-react-native";
 import { MotiView } from "moti";
 import { useEffect, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import MaskedView from "@react-native-masked-view/masked-view";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
-const AUTOPILOT_CATEGORIES = [
+export const AUTOPILOT_CATEGORIES = [
   {
     id: "dining-out",
     name: "Dining Out",
@@ -26,12 +27,6 @@ const AUTOPILOT_CATEGORIES = [
     name: "Subscriptions",
     icon: "card-outline" as const,
     color: "#8A00C2",
-  },
-  {
-    id: "grocery-runs",
-    name: "Grocery Runs",
-    icon: "cart-outline" as const,
-    color: "#009933",
   },
   {
     id: "digital-entertainment",
@@ -156,9 +151,9 @@ export default function CategoryAutopilotScreen() {
               transition={{ delay: 200, duration: 600 }}
               className="mb-8"
             >
-              <Text className="text-3xl text-white text-center leading-tight mb-2">
+              <Text className="text-3xl text-white text-center leading-tight mb-2 px-4">
                 Where does your spending feel on{" "}
-                <Text className="text-accentBlue">autopilot</Text>?
+                <Text className="text-accentBlue font-bold">autopilot</Text>?
               </Text>
               <Text className="text-secondaryDark text-sm text-center mt-2">
                 Select all that apply
@@ -180,37 +175,52 @@ export default function CategoryAutopilotScreen() {
                   >
                     <Pressable
                       onPress={() => toggleCategory(category.name)}
-                      className={`p-5 rounded-xl border-2 ${
-                        isSelected
-                          ? "bg-accentBlue/10 border-accentBlue"
-                          : "bg-surfaceDark border-borderDark"
-                      }`}
-                      android_ripple={{ color: "rgba(59, 126, 255, 0.1)" }}
+                      className="rounded-xl overflow-hidden"
+                      android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
                     >
-                      <View className="flex-row items-center gap-4">
-                        <View
-                          className="w-14 h-14 rounded-xl items-center justify-center"
-                          style={{ backgroundColor: category.color }}
-                        >
-                          <Ionicons
-                            name={category.icon}
-                            size={28}
-                            color="#ffffff"
-                          />
+                      <LinearGradient
+                        colors={
+                          isSelected
+                            ? [category.color + "CC", category.color + "40"]
+                            : [category.color + "20", category.color + "05"]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          borderWidth: 2,
+                          borderColor: isSelected
+                            ? category.color
+                            : "rgba(255, 255, 255, 0.1)",
+                          borderRadius: 12,
+                        }}
+                      >
+                        <View className="p-5">
+                          <View className="flex-row items-center gap-4">
+                            <View
+                              className="w-14 h-14 rounded-xl items-center justify-center"
+                              style={{ backgroundColor: category.color }}
+                            >
+                              <Ionicons
+                                name={category.icon}
+                                size={28}
+                                color="#ffffff"
+                              />
+                            </View>
+                            <View className="flex-1">
+                              <Text className="text-white text-lg font-medium">
+                                {category.name}
+                              </Text>
+                            </View>
+                            {isSelected && (
+                              <Ionicons
+                                name="checkmark-circle"
+                                size={28}
+                                color="#ffffff"
+                              />
+                            )}
+                          </View>
                         </View>
-                        <View className="flex-1">
-                          <Text className="text-white text-lg font-medium">
-                            {category.name}
-                          </Text>
-                        </View>
-                        {isSelected && (
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={28}
-                            color="#3B7EFF"
-                          />
-                        )}
-                      </View>
+                      </LinearGradient>
                     </Pressable>
                   </MotiView>
                 );
@@ -223,28 +233,65 @@ export default function CategoryAutopilotScreen() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 900, duration: 500 }}
             >
-              <Pressable
-                onPress={handleNext}
-                disabled={isNextDisabled}
-                className={`w-full py-4 rounded-xl ${
-                  isNextDisabled
-                    ? "bg-surfaceDark border border-borderDark"
-                    : "bg-accentBlue active:opacity-80"
-                }`}
-                android_ripple={
-                  !isNextDisabled
-                    ? { color: "rgba(255, 255, 255, 0.1)" }
-                    : undefined
-                }
-              >
-                <Text
-                  className={`text-lg text-center font-medium ${
-                    isNextDisabled ? "text-secondaryDark" : "text-white"
-                  }`}
+              {isNextDisabled ? (
+                <View className="w-full py-4 rounded-xl bg-surfaceDark border border-borderDark">
+                  <Text className="text-lg text-center font-medium text-secondaryDark">
+                    Continue
+                  </Text>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={handleNext}
+                  className="w-full rounded-xl overflow-hidden active:opacity-80"
+                  android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
                 >
-                  Continue
-                </Text>
-              </Pressable>
+                  <View className="relative overflow-hidden">
+                    <LinearGradient
+                      colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={{ width: "100%" }}
+                    >
+                      <View className="py-4">
+                        <Text className="text-white text-lg text-center font-medium">
+                          Continue
+                        </Text>
+                      </View>
+                    </LinearGradient>
+
+                    {/* Shimmer effect */}
+                    <MotiView
+                      from={{ translateX: -400 }}
+                      animate={{ translateX: 400 }}
+                      transition={{
+                        type: "timing",
+                        duration: 3000,
+                        loop: true,
+                        repeatDelay: 1500,
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        width: 200,
+                      }}
+                    >
+                      <LinearGradient
+                        colors={[
+                          "rgba(255, 255, 255, 0)",
+                          "rgba(255, 255, 255, 0.3)",
+                          "rgba(255, 255, 255, 0)",
+                        ]}
+                        start={{ x: 0, y: 0.5 }}
+                        end={{ x: 1, y: 0.5 }}
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    </MotiView>
+                  </View>
+                </Pressable>
+              )}
             </MotiView>
           </MotiView>
         </View>
