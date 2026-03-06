@@ -160,7 +160,7 @@ export default function ProfileScreen() {
 
   const handleTestOnboarding = () => {
     resetOnboarding();
-    router.replace("/(onboarding)/outcome-preview");
+    router.push("/(onboarding)/welcome");
   };
 
   const handleFeedback = () => {

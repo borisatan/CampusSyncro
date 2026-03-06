@@ -8,37 +8,23 @@ export default function OnboardingLayout() {
         headerShown: false,
         animation: 'slide_from_right',
         animationDuration: 250,
-        contentStyle: { backgroundColor: '#0A0F1F', flex: 1 },
+        contentStyle: { backgroundColor: '#08090F', flex: 1 },
       }}
     >
-      {/* V3 Onboarding Screens */}
+      {/* New 7-step onboarding flow */}
       <Stack.Screen
-        name="outcome-preview"
+        name="welcome"
         options={{ animation: 'fade' }}
       />
-      <Stack.Screen name="monthly-target" />
+      <Stack.Screen name="category-autopilot" />
+      <Stack.Screen name="monthly-income" />
+      <Stack.Screen name="cost-of-inattention" />
+      <Stack.Screen name="why-manual" />
+      <Stack.Screen name="practice-entry" />
       <Stack.Screen
-        name="dashboard-generation"
-        options={{
-          animation: 'fade',
-          gestureEnabled: false
-        }}
-      />
-      <Stack.Screen name="category-confirmation" />
-      <Stack.Screen name="account-name" />
-      <Stack.Screen name="first-transaction" />
-      <Stack.Screen
-        name="transformation-moment"
+        name="subscription-trial"
         options={{ gestureEnabled: false }}
       />
-
-      {/* Old V2 Screens (archived, kept for backwards compatibility) */}
-      <Stack.Screen name="emotional-hook" />
-      <Stack.Screen name="value-alignment" />
-      <Stack.Screen name="category-selection" />
-      <Stack.Screen name="budget-setting" />
-      <Stack.Screen name="savings-potential" />
-      <Stack.Screen name="intentionality-map" />
     </Stack>
   );
 }

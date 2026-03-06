@@ -33,20 +33,19 @@ export default function RootIndex() {
   if (session?.user) {
     // Check if user has completed onboarding
     if (!hasCompletedOnboarding) {
-      // Route to appropriate V3 onboarding screen based on saved progress
-      if (onboardingStep === 0 || onboardingStep === 1) {
-        return <Redirect href="/(onboarding)/outcome-preview" />;
-      } else if (onboardingStep === 2) {
-        return <Redirect href="/(onboarding)/monthly-target" />;
-      } else if (onboardingStep === 3) {
-        return <Redirect href="/(onboarding)/category-confirmation" />;
-      } else if (onboardingStep === 4) {
-        return <Redirect href="/(onboarding)/account-name" />;
-      } else if (onboardingStep === 5) {
-        return <Redirect href="/(onboarding)/first-transaction" />;
-      } else if (onboardingStep === 6) {
-        return <Redirect href="/(onboarding)/transformation-moment" />;
-      }
+      // Route to appropriate onboarding screen based on saved progress
+      const routes = [
+        '/(onboarding)/welcome',              // Step 1
+        '/(onboarding)/category-autopilot',   // Step 2
+        '/(onboarding)/monthly-income',       // Step 3
+        '/(onboarding)/cost-of-inattention',  // Step 4
+        '/(onboarding)/why-manual',           // Step 5
+        '/(onboarding)/practice-entry',       // Step 6
+        '/(onboarding)/subscription-trial',   // Step 7
+      ];
+
+      const targetRoute = routes[onboardingStep - 1] || routes[0];
+      return <Redirect href={targetRoute} />;
     }
     return <Redirect href="/(tabs)/dashboard" />;
   }

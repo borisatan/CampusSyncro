@@ -10,13 +10,20 @@ interface PendingTransaction {
   category: string;
 }
 
+interface NewOnboardingData {
+  selectedAutopilotCategories: string[];  // Screen 2
+  estimatedIncome: number;                 // Screen 3
+  practiceEntryCompleted: boolean;        // Screen 6
+  selectedBillingPeriod: 'monthly' | 'annual' | null; // Screen 7
+}
+
 interface OnboardingStoreState {
   // Progress tracking
   onboardingStep: number; // 0 = not started, 1-7 = current screen, 8 = completed
   hasCompletedOnboarding: boolean;
   isHydrated: boolean;
 
-  // V3 Data (NEW)
+  // V3 Data (keep for backward compatibility)
   pendingMonthlyTarget: number;
   pendingCategoryNames: string[]; // Just category names for v3
   pendingAccountName: string;
@@ -27,6 +34,9 @@ interface OnboardingStoreState {
   pendingBudgets: Record<string, number>; // categoryName -> amount
   pendingIncome: number;
 
+  // New onboarding flow data
+  newOnboardingData: NewOnboardingData;
+
   // Actions
   setOnboardingStep: (step: number) => void;
   setPendingCategories: (categories: OnboardingCategory[]) => void;
@@ -36,6 +46,7 @@ interface OnboardingStoreState {
   setPendingCategoryNames: (categories: string[]) => void;
   setPendingAccountName: (name: string) => void;
   setPendingTransactions: (transactions: PendingTransaction[]) => void;
+  setNewOnboardingData: (data: Partial<NewOnboardingData>) => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
   setHydrated: (hydrated: boolean) => void;
@@ -57,6 +68,14 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       pendingAccountName: '',
       pendingTransactions: [],
 
+      // New onboarding flow defaults
+      newOnboardingData: {
+        selectedAutopilotCategories: [],
+        estimatedIncome: 0,
+        practiceEntryCompleted: false,
+        selectedBillingPeriod: null,
+      },
+
       setOnboardingStep: (step) => set({ onboardingStep: step }),
 
       setPendingCategories: (categories) => set({ pendingCategories: categories }),
@@ -72,6 +91,10 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       setPendingAccountName: (name) => set({ pendingAccountName: name }),
 
       setPendingTransactions: (transactions) => set({ pendingTransactions: transactions }),
+
+      setNewOnboardingData: (data) => set((state) => ({
+        newOnboardingData: { ...state.newOnboardingData, ...data }
+      })),
 
       completeOnboarding: () => {
         set({
@@ -91,6 +114,12 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
           pendingCategoryNames: [],
           pendingAccountName: '',
           pendingTransactions: [],
+          newOnboardingData: {
+            selectedAutopilotCategories: [],
+            estimatedIncome: 0,
+            practiceEntryCompleted: false,
+            selectedBillingPeriod: null,
+          },
         });
       },
 
