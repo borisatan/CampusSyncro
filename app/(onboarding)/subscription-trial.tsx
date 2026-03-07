@@ -1,49 +1,52 @@
-import { Calendar, Mail, CreditCard, ChevronLeft } from 'lucide-react-native';
-import { MotiView } from 'moti';
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, Text, View, Pressable } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useOnboardingStore } from '../store/useOnboardingStore';
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import { Calendar, ChevronLeft, CreditCard, Mail } from "lucide-react-native";
+import { MotiView } from "moti";
+import { useEffect, useState } from "react";
+import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { useOnboardingStore } from "../store/useOnboardingStore";
 
 const TIMELINE_ITEMS = [
   {
     icon: Calendar,
-    label: 'Today',
-    description: 'Your conscious journey begins',
+    label: "Today",
+    description: "Your conscious journey begins",
   },
   {
     icon: Mail,
-    label: 'Day 12',
-    description: 'Reminder email',
+    label: "Day 12",
+    description: "Reminder email",
   },
   {
     icon: CreditCard,
-    label: 'Day 14',
-    description: 'Trial ends, subscription begins',
+    label: "Day 14",
+    description: "Trial ends, subscription begins",
   },
 ];
 
 export default function SubscriptionTrialScreen() {
-  const { setOnboardingStep, setNewOnboardingData, completeOnboarding } = useOnboardingStore();
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual');
+  const { setOnboardingStep, setNewOnboardingData, completeOnboarding } =
+    useOnboardingStore();
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">(
+    "annual",
+  );
 
   useEffect(() => {
     setOnboardingStep(7);
-  }, []);
+  }, [setOnboardingStep]);
 
   const handleComplete = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setNewOnboardingData({ selectedBillingPeriod: billingPeriod });
     completeOnboarding();
-    router.replace('/(tabs)/dashboard');
+    router.replace("/(tabs)/dashboard");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(6);
-    router.push('/(onboarding)/practice-entry');
+    router.push("/(onboarding)/practice-entry");
   };
 
   const monthlyPrice = 9.99;
@@ -67,7 +70,7 @@ export default function SubscriptionTrialScreen() {
             <Pressable
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.replace('/(tabs)/dashboard');
+                router.replace("/(tabs)/dashboard");
               }}
               className="active:opacity-60"
             >
@@ -76,9 +79,9 @@ export default function SubscriptionTrialScreen() {
           </View>
           <View className="h-1 bg-surfaceDark rounded-full overflow-hidden">
             <MotiView
-              from={{ width: '85.7%' }}
-              animate={{ width: '100%' }}
-              transition={{ type: 'timing', duration: 500 }}
+              from={{ width: "85.7%" }}
+              animate={{ width: "100%" }}
+              transition={{ type: "timing", duration: 500 }}
               className="h-full overflow-hidden relative"
             >
               <LinearGradient
@@ -94,7 +97,7 @@ export default function SubscriptionTrialScreen() {
                   type: "timing",
                   duration: 3000,
                   loop: true,
-                  repeatDelay: 1500,
+                  delay: 1500,
                 }}
                 style={{
                   position: "absolute",
@@ -184,17 +187,19 @@ export default function SubscriptionTrialScreen() {
                 <Pressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setBillingPeriod('monthly');
+                    setBillingPeriod("monthly");
                   }}
                   className={`flex-1 py-3 rounded-xl ${
-                    billingPeriod === 'monthly'
-                      ? 'bg-accentBlue'
-                      : 'bg-transparent'
+                    billingPeriod === "monthly"
+                      ? "bg-accentBlue"
+                      : "bg-transparent"
                   }`}
                 >
                   <Text
                     className={`text-center font-medium ${
-                      billingPeriod === 'monthly' ? 'text-white' : 'text-secondaryDark'
+                      billingPeriod === "monthly"
+                        ? "text-white"
+                        : "text-secondaryDark"
                     }`}
                   >
                     Monthly
@@ -203,17 +208,19 @@ export default function SubscriptionTrialScreen() {
                 <Pressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setBillingPeriod('annual');
+                    setBillingPeriod("annual");
                   }}
                   className={`flex-1 py-3 rounded-xl ${
-                    billingPeriod === 'annual'
-                      ? 'bg-accentBlue'
-                      : 'bg-transparent'
+                    billingPeriod === "annual"
+                      ? "bg-accentBlue"
+                      : "bg-transparent"
                   }`}
                 >
                   <Text
                     className={`text-center font-medium ${
-                      billingPeriod === 'annual' ? 'text-white' : 'text-secondaryDark'
+                      billingPeriod === "annual"
+                        ? "text-white"
+                        : "text-secondaryDark"
                     }`}
                   >
                     Annual
@@ -232,19 +239,20 @@ export default function SubscriptionTrialScreen() {
               <View className="bg-surfaceDark border border-borderDark rounded-xl p-6">
                 <View className="items-center">
                   <Text className="text-5xl text-white font-bold mb-2">
-                    ${billingPeriod === 'monthly' ? monthlyPrice : annualMonthlyPrice}
+                    $
+                    {billingPeriod === "monthly"
+                      ? monthlyPrice
+                      : annualMonthlyPrice}
                   </Text>
-                  <Text className="text-secondaryDark text-lg">
-                    per month
-                  </Text>
-                  {billingPeriod === 'annual' && (
+                  <Text className="text-secondaryDark text-lg">per month</Text>
+                  {billingPeriod === "annual" && (
                     <View className="mt-4 px-4 py-2 rounded-full bg-accentGreen/20">
                       <Text className="text-accentGreen text-sm font-medium">
                         Save 33% • ${annualPrice}/year
                       </Text>
                     </View>
                   )}
-                  {billingPeriod === 'monthly' && (
+                  {billingPeriod === "monthly" && (
                     <Text className="text-secondaryDark text-sm mt-4">
                       Billed monthly
                     </Text>
@@ -263,7 +271,7 @@ export default function SubscriptionTrialScreen() {
               <Pressable
                 onPress={handleComplete}
                 className="w-full py-5 rounded-xl bg-accentBlue active:opacity-80"
-                android_ripple={{ color: 'rgba(255, 255, 255, 0.1)' }}
+                android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
               >
                 <Text className="text-white text-lg text-center font-semibold">
                   Begin 14-Day Free Trial

@@ -26,7 +26,7 @@ export default function EmotionButton({ emoji, label, isSelected, onPress, index
 
   useEffect(() => {
     opacity.value = withDelay(400 + index * 100, withTiming(1, { duration: 400 }));
-  }, []);
+  }, [index, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

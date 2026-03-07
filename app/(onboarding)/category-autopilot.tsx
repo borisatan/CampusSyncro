@@ -6,7 +6,7 @@ import { ChevronLeft } from "lucide-react-native";
 import { MotiView } from "moti";
 import { useEffect, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
-import MaskedView from "@react-native-masked-view/masked-view";
+import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
 export const AUTOPILOT_CATEGORIES = [
@@ -34,6 +34,18 @@ export const AUTOPILOT_CATEGORIES = [
     icon: "beer-outline" as const,
     color: "#3B7EFF",
   },
+  {
+    id: "coffee",
+    name: "Coffee & Cafes",
+    icon: "cafe-outline" as const,
+    color: "#A0522D",
+  },
+  {
+    id: "online-shopping",
+    name: "Shopping",
+    icon: "cart-outline" as const,
+    color: "#009933",
+  },
 ];
 
 export default function CategoryAutopilotScreen() {
@@ -42,7 +54,7 @@ export default function CategoryAutopilotScreen() {
 
   useEffect(() => {
     setOnboardingStep(2);
-  }, []);
+  }, [setOnboardingStep]);
 
   const toggleCategory = (categoryName: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -112,7 +124,7 @@ export default function CategoryAutopilotScreen() {
                   type: "timing",
                   duration: 3000,
                   loop: true,
-                  repeatDelay: 1500,
+                  delay: 1500,
                 }}
                 style={{
                   position: "absolute",
@@ -171,7 +183,7 @@ export default function CategoryAutopilotScreen() {
                     from={{ opacity: 0, translateY: 20 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ delay: 400 + index * 100, duration: 500 }}
-                    className="mb-3"
+                    className="mb-2"
                   >
                     <Pressable
                       onPress={() => toggleCategory(category.name)}
@@ -194,27 +206,27 @@ export default function CategoryAutopilotScreen() {
                           borderRadius: 12,
                         }}
                       >
-                        <View className="p-5">
-                          <View className="flex-row items-center gap-4">
+                        <View className="p-3">
+                          <View className="flex-row items-center gap-3">
                             <View
-                              className="w-14 h-14 rounded-xl items-center justify-center"
+                              className="w-10 h-10 rounded-lg items-center justify-center"
                               style={{ backgroundColor: category.color }}
                             >
                               <Ionicons
                                 name={category.icon}
-                                size={28}
+                                size={20}
                                 color="#ffffff"
                               />
                             </View>
                             <View className="flex-1">
-                              <Text className="text-white text-lg font-medium">
+                              <Text className="text-white text-base font-medium">
                                 {category.name}
                               </Text>
                             </View>
                             {isSelected && (
                               <Ionicons
                                 name="checkmark-circle"
-                                size={28}
+                                size={22}
                                 color="#ffffff"
                               />
                             )}
@@ -228,71 +240,26 @@ export default function CategoryAutopilotScreen() {
             </View>
 
             {/* Continue Button */}
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 900, duration: 500 }}
-            >
-              {isNextDisabled ? (
+            {isNextDisabled ? (
+              <MotiView
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ delay: 900, duration: 500 }}
+              >
                 <View className="w-full py-4 rounded-xl bg-surfaceDark border border-borderDark">
                   <Text className="text-lg text-center font-medium text-secondaryDark">
                     Continue
                   </Text>
                 </View>
-              ) : (
-                <Pressable
-                  onPress={handleNext}
-                  className="w-full rounded-xl overflow-hidden active:opacity-80"
-                  android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
-                >
-                  <View className="relative overflow-hidden">
-                    <LinearGradient
-                      colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={{ width: "100%" }}
-                    >
-                      <View className="py-4">
-                        <Text className="text-white text-lg text-center font-medium">
-                          Continue
-                        </Text>
-                      </View>
-                    </LinearGradient>
-
-                    {/* Shimmer effect */}
-                    <MotiView
-                      from={{ translateX: -400 }}
-                      animate={{ translateX: 400 }}
-                      transition={{
-                        type: "timing",
-                        duration: 3000,
-                        loop: true,
-                        repeatDelay: 1500,
-                      }}
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        width: 200,
-                      }}
-                    >
-                      <LinearGradient
-                        colors={[
-                          "rgba(255, 255, 255, 0)",
-                          "rgba(255, 255, 255, 0.3)",
-                          "rgba(255, 255, 255, 0)",
-                        ]}
-                        start={{ x: 0, y: 0.5 }}
-                        end={{ x: 1, y: 0.5 }}
-                        style={{ width: "100%", height: "100%" }}
-                      />
-                    </MotiView>
-                  </View>
-                </Pressable>
-              )}
-            </MotiView>
+              </MotiView>
+            ) : (
+              <AnimatedGradientButton
+                onPress={handleNext}
+                text="Continue"
+                delay={900}
+                rounded="xl"
+              />
+            )}
           </MotiView>
         </View>
       </ScrollView>

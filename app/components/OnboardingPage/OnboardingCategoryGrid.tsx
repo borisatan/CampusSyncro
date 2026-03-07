@@ -95,7 +95,7 @@ const AnimatedCategoryItem = ({
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, index, scaleAnim]);
 
   return (
     <Animated.View

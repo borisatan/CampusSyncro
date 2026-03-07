@@ -1,55 +1,71 @@
-import { ChevronLeft, CloudRain, Sun, TrendingUp, TrendingDown } from 'lucide-react-native';
-import { MotiView } from 'moti';
-import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { SafeAreaView, ScrollView, Text, View, Pressable } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import {
+  ChevronLeft,
+  CloudRain,
+  Eye,
+  EyeOff,
+  Sun,
+  TrendingUp,
+} from "lucide-react-native";
+import { MotiView } from "moti";
+import { useEffect } from "react";
+import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
-  withTiming,
+  useSharedValue,
   withRepeat,
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useOnboardingStore } from '../store/useOnboardingStore';
-import { useCurrencyStore } from '../store/useCurrencyStore';
+  withTiming,
+} from "react-native-reanimated";
+import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { useCurrencyStore } from "../store/useCurrencyStore";
+import { useOnboardingStore } from "../store/useOnboardingStore";
 
 export default function CostOfInattentionScreen() {
   const { setOnboardingStep, newOnboardingData } = useOnboardingStore();
   const { currencySymbol } = useCurrencyStore();
 
-  // Calculate 15% retention
   const monthlyIncome = newOnboardingData.estimatedIncome || 0;
   const retentionAmount = Math.round(monthlyIncome * 0.15);
 
-  // Pulsing glow animation
   const glowOpacity = useSharedValue(0.3);
+  const arrowY = useSharedValue(0);
 
   useEffect(() => {
     setOnboardingStep(4);
 
-    // Start pulsing animation
     glowOpacity.value = withRepeat(
-      withTiming(0.6, { duration: 3000 }),
+      withTiming(0.55, { duration: 3000 }),
       -1,
-      true
+      true,
     );
-  }, []);
+
+    arrowY.value = withRepeat(
+      withTiming(-5, { duration: 600 }),
+      -1,
+      true,
+    );
+  }, [setOnboardingStep, glowOpacity, arrowY]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
   }));
 
+  const arrowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: arrowY.value }],
+  }));
+
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(5);
-    router.push('/(onboarding)/why-manual');
+    router.push("/(onboarding)/why-manual");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(3);
-    router.push('/(onboarding)/monthly-income');
+    router.push("/(onboarding)/monthly-income");
   };
 
   return (
@@ -69,7 +85,7 @@ export default function CostOfInattentionScreen() {
             <Pressable
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.replace('/(tabs)/dashboard');
+                router.replace("/(tabs)/dashboard");
               }}
               className="active:opacity-60"
             >
@@ -78,9 +94,9 @@ export default function CostOfInattentionScreen() {
           </View>
           <View className="h-1 bg-surfaceDark rounded-full overflow-hidden">
             <MotiView
-              from={{ width: '42.9%' }}
-              animate={{ width: '57.1%' }}
-              transition={{ type: 'timing', duration: 500 }}
+              from={{ width: "42.9%" }}
+              animate={{ width: "57.1%" }}
+              transition={{ type: "timing", duration: 500 }}
               className="h-full overflow-hidden relative"
             >
               <LinearGradient
@@ -96,7 +112,7 @@ export default function CostOfInattentionScreen() {
                   type: "timing",
                   duration: 3000,
                   loop: true,
-                  repeatDelay: 1500,
+                  delay: 1500,
                 }}
                 style={{
                   position: "absolute",
@@ -142,105 +158,163 @@ export default function CostOfInattentionScreen() {
             </MotiView>
 
             {/* Comparison Cards */}
-            <View className="mb-6">
+            <View className="mb-4">
               {/* Without App Card */}
               <MotiView
                 from={{ opacity: 0, translateX: -30 }}
                 animate={{ opacity: 1, translateX: 0 }}
                 transition={{ delay: 400, duration: 600 }}
-                className="mb-6"
+                className="mb-4"
               >
-                <View className="bg-surfaceDark border border-borderDark rounded-xl p-6">
+                <View className="bg-surfaceDark border border-borderDark rounded-2xl p-5">
                   <View className="flex-row items-center gap-3 mb-4">
                     <View className="w-12 h-12 rounded-xl bg-inputDark items-center justify-center">
-                      <CloudRain size={24} color="#8A96B4" />
+                      <EyeOff size={22} color="#8A96B4" />
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-secondaryDark text-sm">
-                        Without Monelo
-                      </Text>
-                      <Text className="text-white text-xl font-semibold">
-                        {currencySymbol}0
-                      </Text>
-                    </View>
-                    <View className="items-center">
-                      <TrendingDown size={20} color="#F2514A" />
-                    </View>
+                    <Text className="text-white text-lg font-semibold">
+                      Without Monelo
+                    </Text>
+                  </View>
+                  <View className="mb-3">
+                    <Text className="text-secondaryDark text-xs font-semibold tracking-widest mb-1">
+                      MONTHLY RETENTION
+                    </Text>
+                    <Text className="text-white text-3xl font-bold">
+                      {currencySymbol}0
+                    </Text>
                   </View>
                   <View className="pt-3 border-t border-borderDark">
-                    <Text className="text-secondaryDark text-xs">
-                      Status: <Text className="text-slate400">Foggy</Text>
+                    <Text className="text-secondaryDark text-xs font-semibold tracking-widest mb-1">
+                      STATUS
                     </Text>
+                    <View className="flex-row items-center gap-2">
+                      <CloudRain size={16} color="#8A96B4" />
+                      <Text className="text-secondaryDark text-sm">Foggy</Text>
+                    </View>
                   </View>
                 </View>
               </MotiView>
 
-              {/* With App Card (Pulsing) */}
+              {/* With App Card — blue gradient + pulsing glow */}
               <MotiView
                 from={{ opacity: 0, translateX: 30 }}
                 animate={{ opacity: 1, translateX: 0 }}
                 transition={{ delay: 600, duration: 600 }}
               >
-                <View className="relative rounded-xl overflow-hidden">
-                  {/* Pulsing glow background */}
+                <View style={{ borderRadius: 16, overflow: "hidden" }}>
+                  {/* Pulsing blue glow layer */}
                   <Animated.View
                     style={[
                       {
-                        position: 'absolute',
-                        inset: 0,
-                        backgroundColor: '#3B7EFF',
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "#1D4ED8",
                       },
                       glowStyle,
                     ]}
                   />
-
-                  <View className="bg-surfaceDark border border-accentBlue rounded-xl p-6 relative">
+                  {/* Blue gradient background */}
+                  <LinearGradient
+                    colors={["#0D1B3E", "#0F2D6B", "#1A4CB0"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                  />
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: "#3B7EFF",
+                      borderRadius: 16,
+                      padding: 20,
+                    }}
+                  >
                     <View className="flex-row items-center gap-3 mb-4">
-                      <View className="w-12 h-12 rounded-xl bg-accentBlue items-center justify-center">
-                        <Sun size={24} color="#ffffff" />
+                      <View
+                        style={{ backgroundColor: "#3B7EFF" }}
+                        className="w-12 h-12 rounded-xl items-center justify-center"
+                      >
+                        <Eye size={22} color="#ffffff" />
                       </View>
-                      <View className="flex-1">
-                        <Text className="text-accentBlue text-sm font-medium">
-                          With Monelo
-                        </Text>
-                        <Text className="text-white text-xl font-semibold">
+                      <Text className="text-white text-lg font-semibold">
+                        With Monelo
+                      </Text>
+                    </View>
+                    <View className="mb-3">
+                      <Text
+                        style={{ color: "#93C5FD" }}
+                        className="text-xs font-semibold tracking-widest mb-1"
+                      >
+                        MONTHLY RETENTION
+                      </Text>
+                      <View className="flex-row items-center gap-2">
+                        <Text className="text-white text-3xl font-bold">
                           {currencySymbol}{retentionAmount.toLocaleString()}
                         </Text>
-                      </View>
-                      <View className="items-center">
-                        <TrendingUp size={20} color="#22D97A" />
+                        <Animated.View style={arrowStyle}>
+                          <TrendingUp size={22} color="#22D97A" />
+                        </Animated.View>
                       </View>
                     </View>
-                    <View className="pt-3 border-t border-borderDark">
-                      <Text className="text-textDark text-xs">
-                        Status: <Text className="text-accentGreen">Intentional</Text>
+                    <View
+                      style={{ borderTopWidth: 1, borderTopColor: "#1E3A6B", paddingTop: 12 }}
+                    >
+                      <Text
+                        style={{ color: "#93C5FD" }}
+                        className="text-xs font-semibold tracking-widest mb-1"
+                      >
+                        STATUS
                       </Text>
+                      <View className="flex-row items-center gap-2">
+                        <Sun size={16} color="#F59E0B" />
+                        <Text className="text-accentGreen text-sm">
+                          Intentional
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
               </MotiView>
             </View>
 
+            {/* Footnote */}
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 800, duration: 600 }}
+              className="mb-6"
+            >
+              <View className="bg-surfaceDark border border-borderDark rounded-xl px-4 py-3">
+                <Text className="text-secondaryDark text-xs text-center">
+                  Based on the{" "}
+                  <Text className="text-accentBlue font-semibold">
+                    15% Mindfulness Margin
+                  </Text>{" "}
+                  regained through manual tracking
+                </Text>
+              </View>
+            </MotiView>
+
             {/* Spacer to push button to bottom */}
             <View className="flex-1" />
 
             {/* Continue Button */}
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 800, duration: 500 }}
-              className="mb-2"
-            >
-              <Pressable
+            <View className="mb-2">
+              <AnimatedGradientButton
                 onPress={handleNext}
-                className="w-full py-4 rounded-xl bg-accentBlue active:opacity-80"
-                android_ripple={{ color: 'rgba(255, 255, 255, 0.1)' }}
-              >
-                <Text className="text-white text-lg text-center font-medium">
-                  Secure my clarity
-                </Text>
-              </Pressable>
-            </MotiView>
+                text="Secure my clarity ✦"
+                delay={1500}
+                rounded="xl"
+              />
+            </View>
           </MotiView>
         </View>
       </ScrollView>

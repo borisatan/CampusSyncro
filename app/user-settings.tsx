@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
   AlertCircle,
@@ -73,10 +72,10 @@ export default function UserSettingsScreen() {
       // Sign out after successful deletion
       await supabase.auth.signOut();
       router.replace("/(auth)/sign-in");
-    } catch (error: any) {
+    } catch {
       Alert.alert(
         "Error",
-        "Failed to delete account: " + (error?.message ?? "Unknown error"),
+        "Failed to delete account",
       );
     } finally {
       setIsDeletingAccount(false);
@@ -91,7 +90,7 @@ export default function UserSettingsScreen() {
       } else {
         Alert.alert("Error", `Cannot open ${name}`);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", `Failed to open ${name}`);
     }
   };

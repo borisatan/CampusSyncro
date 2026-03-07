@@ -51,7 +51,7 @@ export default function OnboardingHeader({
 
     titleOpacity.value = withDelay(150, withTiming(1, { duration: 500 }));
     subtitleOpacity.value = withDelay(350, withTiming(1, { duration: 500 }));
-  }, [currentStep]);
+  }, [currentStep, subtitleOpacity, titleOpacity]);
 
   const titleAnimatedStyle = useAnimatedStyle(() => ({
     opacity: titleOpacity.value,

@@ -22,7 +22,7 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({
   useEffect(() => {
     opacity.value = withDelay(600, withTiming(1, { duration: 400 }));
     translateY.value = withDelay(600, withTiming(0, { duration: 400 }));
-  }, []);
+  }, [opacity, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

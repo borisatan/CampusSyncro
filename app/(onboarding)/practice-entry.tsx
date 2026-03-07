@@ -14,11 +14,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { AUTOPILOT_CATEGORIES } from "./category-autopilot";
+import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 import { OnboardingCategoryGrid } from "../components/OnboardingPage/OnboardingCategoryGrid";
 import { OnboardingTransactionHero } from "../components/OnboardingPage/OnboardingTransactionHero";
 import { SuccessModal } from "../components/Shared/SuccessModal";
+import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
+import { AUTOPILOT_CATEGORIES } from "./category-autopilot";
 
 // Category-specific prompts and amounts
 const CATEGORY_PROMPTS: Record<
@@ -30,14 +32,25 @@ const CATEGORY_PROMPTS: Record<
     suffix: "Netflix subscription",
     amount: 17.99,
   },
-  "Impulse Buys": { prefix: "Log a", suffix: "impulse purchase", amount: 25 },
+  "Impulse Buys": {
+    prefix: "Log your",
+    suffix: "impulse purchase",
+    amount: 25,
+  },
   "Dining Out": { prefix: "Log your", suffix: "lunch order", amount: 30 },
-  Nightlife: { prefix: "Log your", suffix: "bar tab", amount: 35 },
+  Nightlife: { prefix: "Log your", suffix: "bar tab last night", amount: 35 },
+  "Coffee & Cafes": {
+    prefix: "Log your",
+    suffix: "morning coffee run",
+    amount: 6.5,
+  },
+  Shopping: { prefix: "Log your", suffix: "amazon order", amount: 47 },
 };
 
 export default function PracticeEntryScreen() {
   const { setOnboardingStep, newOnboardingData, setNewOnboardingData } =
     useOnboardingStore();
+  const { currencySymbol } = useCurrencyStore();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -48,14 +61,14 @@ export default function PracticeEntryScreen() {
     newOnboardingData.selectedAutopilotCategories || [];
 
   // Show all categories, but preselect the first autopilot one
-  const allCategories = AUTOPILOT_CATEGORIES.map(cat => cat.name);
+  const allCategories = AUTOPILOT_CATEGORIES.map((cat) => cat.name);
   const [selectedCategory, setSelectedCategory] = useState<string>(
     autopilotCategories[0] || allCategories[0] || "",
   );
 
   useEffect(() => {
     setOnboardingStep(6);
-  }, []);
+  }, [setOnboardingStep]);
 
   // Get the current category's expected amount and text
   const currentPrompt = CATEGORY_PROMPTS[selectedCategory] || {
@@ -64,6 +77,10 @@ export default function PracticeEntryScreen() {
     amount: 5,
   };
   const expectedAmount = currentPrompt.amount;
+
+  const categoryColor =
+    AUTOPILOT_CATEGORIES.find((cat) => cat.name === selectedCategory)?.color ||
+    "#22D97A";
 
   const handleSubmit = () => {
     const numAmount = parseFloat(amount);
@@ -138,7 +155,7 @@ export default function PracticeEntryScreen() {
                     type: "timing",
                     duration: 3000,
                     loop: true,
-                    repeatDelay: 1500,
+                    delay: 1500,
                   }}
                   style={{
                     position: "absolute",
@@ -177,11 +194,34 @@ export default function PracticeEntryScreen() {
                   animate={{ opacity: 1, translateY: 0 }}
                   transition={{ delay: 200, duration: 600 }}
                 >
-                  <Text className="text-4xl font-semibold text-white text-center">
-                    {currentPrompt.prefix}{" "}
-                    <Text className="text-accentGreen">
-                      ${currentPrompt.amount}
-                    </Text>{" "}
+                  <View className="flex-row justify-center items-baseline">
+                    <Text className="text-4xl font-semibold text-white">
+                      {currentPrompt.prefix}{" "}
+                    </Text>
+                    <Text
+                      style={{
+                        color: categoryColor,
+                        fontSize: 36,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {currencySymbol}
+                    </Text>
+                    <AnimatedRollingNumber
+                      value={expectedAmount}
+                      spinningAnimationConfig={{ duration: 600 }}
+                      toFixed={expectedAmount % 1 !== 0 ? 2 : 0}
+                      textStyle={{
+                        color: categoryColor,
+                        fontSize: 36,
+                        fontWeight: "600",
+                      }}
+                    />
+                  </View>
+                  <Text
+                    style={{ color: categoryColor }}
+                    className="text-4xl font-semibold text-center"
+                  >
                     {currentPrompt.suffix}
                   </Text>
                 </MotiView>
@@ -255,29 +295,39 @@ export default function PracticeEntryScreen() {
                   loop: true,
                 }}
               >
-                <Pressable
-                  onPress={handleSubmit}
-                  className="w-full rounded-xl overflow-hidden active:opacity-80"
-                  android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+                <MotiView
+                  animate={{
+                    shadowOpacity: [0.3, 0.6, 0.3],
+                  }}
+                  transition={{
+                    type: "timing",
+                    duration: 2000,
+                    loop: true,
+                  }}
                   style={{
                     shadowColor: "#EF4444",
                     shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 20,
+                    shadowRadius: 24,
                     elevation: 8,
                   }}
                 >
-                  <LinearGradient
-                    colors={["#DC2626", "#EF4444", "#F87171"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    className="w-full py-4"
+                  <Pressable
+                    onPress={handleSubmit}
+                    className="w-full rounded-xl overflow-hidden active:opacity-80"
+                    android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
                   >
-                    <Text className="text-lg text-center font-medium text-white">
-                      Add Transaction
-                    </Text>
-                  </LinearGradient>
-                </Pressable>
+                    <LinearGradient
+                      colors={["#DC2626", "#EF4444", "#F87171"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      className="w-full py-4"
+                    >
+                      <Text className="text-lg text-center font-medium text-white">
+                        Add Transaction
+                      </Text>
+                    </LinearGradient>
+                  </Pressable>
+                </MotiView>
               </MotiView>
             ) : (
               <View className="w-full py-4 rounded-xl bg-surfaceDark border border-borderDark">

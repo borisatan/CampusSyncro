@@ -11,6 +11,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
 export default function WhyManualScreen() {
@@ -92,7 +93,7 @@ export default function WhyManualScreen() {
                   type: "timing",
                   duration: 3000,
                   loop: true,
-                  repeatDelay: 1500,
+                  delay: 1500,
                 }}
                 style={{
                   position: "absolute",
@@ -155,7 +156,8 @@ export default function WhyManualScreen() {
                     </View>
                     <View className="flex-1">
                       <Text className="text-white mb-2 text-lg font-medium">
-                        Automation is <Text style={{ color: '#8B5CF6' }}>forgettable</Text>
+                        Automation is{" "}
+                        <Text style={{ color: "#8B5CF6" }}>forgettable</Text>
                       </Text>
                       <Text className="text-secondaryDark text-sm leading-relaxed">
                         Automated apps turn your financial life into a
@@ -213,7 +215,8 @@ export default function WhyManualScreen() {
                       </View>
                       <View className="flex-1">
                         <Text className="text-white mb-2 text-lg font-medium">
-                          The Act of <Text style={{ color: '#60A5FA' }}>Intent</Text>
+                          The Act of{" "}
+                          <Text style={{ color: "#60A5FA" }}>Intent</Text>
                         </Text>
                         <Text className="text-textDark text-sm leading-relaxed">
                           Every time you manually log a transaction, you force
@@ -246,76 +249,12 @@ export default function WhyManualScreen() {
             </View>
 
             {/* Continue Button */}
-            <MotiView
-              from={{ opacity: 0, translateY: 20, scale: 0.95 }}
-              animate={{
-                opacity: 1,
-                translateY: 0,
-                scale: [1, 1.02, 1]
-              }}
-              transition={{
-                delay: 1000,
-                duration: 500,
-                scale: {
-                  type: "timing",
-                  duration: 2000,
-                  loop: true,
-                  repeatDelay: 500,
-                }
-              }}
-            >
-              <Pressable
-                onPress={handleNext}
-                className="w-full rounded-xl overflow-hidden active:opacity-80"
-                android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
-              >
-                <View className="relative overflow-hidden">
-                  <LinearGradient
-                    colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={{ width: "100%" }}
-                  >
-                    <View className="py-4">
-                      <Text className="text-white text-lg text-center font-medium">
-                        Try a practice entry
-                      </Text>
-                    </View>
-                  </LinearGradient>
-
-                  {/* Shimmer effect */}
-                  <MotiView
-                    from={{ translateX: -400 }}
-                    animate={{ translateX: 400 }}
-                    transition={{
-                      type: "timing",
-                      duration: 3000,
-                      loop: true,
-                      repeatDelay: 1500,
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      width: 200,
-                    }}
-                  >
-                    <LinearGradient
-                      colors={[
-                        "rgba(255, 255, 255, 0)",
-                        "rgba(255, 255, 255, 0.3)",
-                        "rgba(255, 255, 255, 0)",
-                      ]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={{ width: "100%", height: "100%" }}
-                    />
-                  </MotiView>
-                </View>
-              </Pressable>
-            </MotiView>
+            <AnimatedGradientButton
+              onPress={handleNext}
+              text="Try a practice entry"
+              delay={1000}
+              rounded="xl"
+            />
           </MotiView>
         </View>
       </ScrollView>

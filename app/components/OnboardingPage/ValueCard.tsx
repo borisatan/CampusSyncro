@@ -37,7 +37,7 @@ export default function ValueCard({
       400 + index * 80,
       withTiming(1, { duration: 400 }),
     );
-  }, []);
+  }, [index, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

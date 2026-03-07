@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -15,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
@@ -30,7 +30,7 @@ export default function MonthlyIncomeScreen() {
     setTimeout(() => {
       inputRef.current?.focus();
     }, 600);
-  }, []);
+  }, [setOnboardingStep]);
 
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -98,7 +98,7 @@ export default function MonthlyIncomeScreen() {
                     type: "timing",
                     duration: 3000,
                     loop: true,
-                    repeatDelay: 1500,
+                    delay: 1500,
                   }}
                   style={{
                     position: "absolute",
@@ -138,9 +138,32 @@ export default function MonthlyIncomeScreen() {
                 transition={{ delay: 200, duration: 600 }}
                 className="items-center mb-6"
               >
-                <View className="w-16 h-16 rounded-xl bg-accentGreen items-center justify-center">
-                  <Ionicons name="cash-outline" size={32} color="#ffffff" />
-                </View>
+                {/* Coin shadow/ring behind */}
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 12,
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                    backgroundColor: "#065F46",
+                  }}
+                />
+                {/* Main coin circle */}
+                <LinearGradient
+                  colors={["#34D399", "#10B981", "#059669"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 34, fontWeight: "800" }}>$</Text>
+                </LinearGradient>
               </MotiView>
 
               {/* Headline */}
@@ -151,7 +174,8 @@ export default function MonthlyIncomeScreen() {
                 className="mb-2 px-4"
               >
                 <Text className="text-3xl text-white text-center leading-tight">
-                  What's your rough monthly take-home pay?
+                  What&apos;s your rough monthly{" "}
+                  <Text className="text-accentGreen">take-home pay?</Text>
                 </Text>
               </MotiView>
 
@@ -162,8 +186,8 @@ export default function MonthlyIncomeScreen() {
                 transition={{ delay: 350, duration: 600 }}
                 className="mb-6 px-4"
               >
-                <Text className="text-secondaryDark text-base text-center">
-                  A rough estimate is enough
+                <Text className="text-secondaryDark text-sm text-center">
+                  This helps us calculate your potential savings. Just a rough estimate is fine.
                 </Text>
               </MotiView>
 
@@ -175,17 +199,27 @@ export default function MonthlyIncomeScreen() {
                 className="mb-6"
               >
                 <View
-                  className={`rounded-xl p-2 border-2 ${
-                    isValid
-                      ? "bg-accentGreen/10 border-accentGreen"
-                      : "bg-surfaceDark border-borderDark"
-                  }`}
+                  style={{
+                    borderWidth: 2,
+                    borderColor: isValid ? "#10B981" : "#2A3352",
+                    borderRadius: 16,
+                    backgroundColor: isValid ? "rgba(16,185,129,0.08)" : "#141B2D",
+                    paddingVertical: 16,
+                    paddingHorizontal: 20,
+                    overflow: "hidden",
+                  }}
                 >
-                  <View className="flex-row items-center justify-center">
+
+                  <Text className="text-secondaryDark text-sm text-center mb-2">
+                    Monthly Take-Home
+                  </Text>
+                  <View className="flex-row items-center justify-center gap-3">
                     <Text
-                      className={`text-4xl ${
-                        isValid ? "text-accentGreen" : "text-secondaryDark"
-                      }`}
+                      style={{
+                        color: isValid ? "#10B981" : "#4B5A7A",
+                        fontSize: 32,
+                        fontWeight: "300",
+                      }}
                     >
                       {currencySymbol}
                     </Text>
@@ -195,48 +229,32 @@ export default function MonthlyIncomeScreen() {
                       onChangeText={setAmount}
                       keyboardType="numeric"
                       placeholder="0"
-                      placeholderTextColor="#ffffff"
+                      placeholderTextColor={isValid ? "#10B981" : "#ffffff"}
                       maxLength={8}
                       style={{
                         includeFontPadding: false,
                         paddingVertical: 0,
                         lineHeight: 60,
+                        color: "#ffffff",
+                        fontSize: 48,
+                        fontWeight: "300",
+                        minWidth: 20,
+                        textAlign: "center",
                       }}
-                      className={`text-5xl font-light min-w-[20px] text-center ${
-                        isValid ? "text-accentGreen" : "text-white"
-                      }`}
                     />
                   </View>
                 </View>
               </MotiView>
 
               {/* Continue Button */}
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: 500, duration: 500 }}
-              >
-                <Pressable
-                  onPress={handleNext}
-                  disabled={!isValid}
-                  className={`w-full py-4 rounded-xl ${
-                    !isValid
-                      ? "bg-surfaceDark border border-borderDark"
-                      : "bg-accentBlue active:opacity-80"
-                  }`}
-                  android_ripple={
-                    isValid ? { color: "rgba(255, 255, 255, 0.1)" } : undefined
-                  }
-                >
-                  <Text
-                    className={`text-lg text-center font-medium ${
-                      !isValid ? "text-secondaryDark" : "text-white"
-                    }`}
-                  >
-                    Calculate my margin
-                  </Text>
-                </Pressable>
-              </MotiView>
+              <AnimatedGradientButton
+                onPress={handleNext}
+                text="Calculate my margin"
+                disabled={!isValid}
+                delay={500}
+                rounded="xl"
+                gradientColors={["#059669", "#10B981", "#34D399"]}
+              />
             </MotiView>
           </View>
         </ScrollView>
