@@ -18,6 +18,7 @@ import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 import { OnboardingCategoryGrid } from "../components/OnboardingPage/OnboardingCategoryGrid";
 import { OnboardingTransactionHero } from "../components/OnboardingPage/OnboardingTransactionHero";
 import { SuccessModal } from "../components/Shared/SuccessModal";
+import { useAnalytics } from "../hooks/useAnalytics";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { AUTOPILOT_CATEGORIES } from "./category-autopilot";
@@ -48,26 +49,30 @@ const CATEGORY_PROMPTS: Record<
 };
 
 export default function PracticeEntryScreen() {
-  const { setOnboardingStep, newOnboardingData, setNewOnboardingData } =
+  const { setOnboardingStep, newOnboardingData, setNewOnboardingData, completeOnboarding } =
     useOnboardingStore();
   const { currencySymbol } = useCurrencyStore();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const amountInputRef = useRef<TextInput>(null);
+  const screenEnteredAt = useRef(Date.now());
+  const { trackEvent } = useAnalytics();
 
   // Get autopilot categories from Screen 2 for preselection
   const autopilotCategories =
     newOnboardingData.selectedAutopilotCategories || [];
 
-  // Show all categories, but preselect the first autopilot one
+  // Show all categories but only enable the ones selected in category-autopilot
   const allCategories = AUTOPILOT_CATEGORIES.map((cat) => cat.name);
+  const enabledCategories = autopilotCategories.length > 0 ? autopilotCategories : undefined;
   const [selectedCategory, setSelectedCategory] = useState<string>(
     autopilotCategories[0] || allCategories[0] || "",
   );
 
   useEffect(() => {
     setOnboardingStep(6);
+    trackEvent("onboarding_practice_entry_viewed");
   }, [setOnboardingStep]);
 
   // Get the current category's expected amount and text
@@ -86,6 +91,12 @@ export default function PracticeEntryScreen() {
     const numAmount = parseFloat(amount);
     if (numAmount === expectedAmount) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      trackEvent("onboarding_screen_completed", {
+        screen: "practice_entry",
+        step: 6,
+        category: selectedCategory,
+        time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+      });
       setShowSuccess(true);
       setNewOnboardingData({ practiceEntryCompleted: true });
     }
@@ -101,6 +112,17 @@ export default function PracticeEntryScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(5);
     router.push("/(onboarding)/why-manual");
+  };
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_skipped", {
+      screen: "practice_entry",
+      step: 6,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
+    completeOnboarding();
+    router.replace("/(auth)/sign-up");
   };
 
   const isComplete = parseFloat(amount) === expectedAmount;
@@ -124,10 +146,7 @@ export default function PracticeEntryScreen() {
               </Pressable>
               <Text className="text-secondaryDark text-sm">Step 6 of 7</Text>
               <Pressable
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.replace("/(tabs)/dashboard");
-                }}
+                onPress={handleSkip}
                 className="active:opacity-60"
               >
                 <Text className="text-accentBlue text-sm font-medium">
@@ -274,6 +293,7 @@ export default function PracticeEntryScreen() {
                     selectedCategory={selectedCategory}
                     setSelectedCategory={setSelectedCategory}
                     isDarkMode={true}
+                    enabledCategories={enabledCategories}
                   />
                 </MotiView>
               )}

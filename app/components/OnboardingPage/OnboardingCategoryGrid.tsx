@@ -16,6 +16,7 @@ interface OnboardingCategoryGridProps {
   selectedCategory: string | null;
   setSelectedCategory: (category: string) => void;
   isDarkMode: boolean;
+  enabledCategories?: string[]; // If provided, only these are selectable
 }
 
 export const OnboardingCategoryGrid = ({
@@ -23,6 +24,7 @@ export const OnboardingCategoryGrid = ({
   selectedCategory,
   setSelectedCategory,
   isDarkMode,
+  enabledCategories,
 }: OnboardingCategoryGridProps) => {
   return (
     <View className="mb-6">
@@ -37,6 +39,8 @@ export const OnboardingCategoryGrid = ({
           const categoryInfo = CATEGORY_MAP[categoryName];
           if (!categoryInfo) return null;
 
+          const isDisabled = enabledCategories !== undefined && !enabledCategories.includes(categoryName);
+
           return (
             <AnimatedCategoryItem
               key={categoryName}
@@ -46,6 +50,7 @@ export const OnboardingCategoryGrid = ({
               index={index}
               isDarkMode={isDarkMode}
               isSelected={selectedCategory === categoryName}
+              isDisabled={isDisabled}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 setSelectedCategory(categoryName);
@@ -66,6 +71,7 @@ const AnimatedCategoryItem = ({
   index,
   isDarkMode,
   isSelected,
+  isDisabled,
   onPress,
 }: {
   categoryName: string;
@@ -74,6 +80,7 @@ const AnimatedCategoryItem = ({
   index: number;
   isDarkMode: boolean;
   isSelected: boolean;
+  isDisabled: boolean;
   onPress: () => void;
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -100,10 +107,11 @@ const AnimatedCategoryItem = ({
   return (
     <Animated.View
       className="w-1/3 px-1.5 mb-3"
-      style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
+      style={{ opacity: isDisabled ? 0.4 : fadeAnim, transform: [{ scale: scaleAnim }] }}
     >
       <TouchableOpacity
         onPress={onPress}
+        disabled={isDisabled}
         className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
           isSelected
             ? isDarkMode

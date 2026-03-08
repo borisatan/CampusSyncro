@@ -1,15 +1,14 @@
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient } from '@supabase/supabase-js';
-import { Platform } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createClient } from "@supabase/supabase-js";
+import { Platform } from "react-native";
 
 const supabaseUrl = "https://rrttwewkekyvwgjilrzo.supabase.co";
 const supabaseAnonKey = "sb_publishable_RLCVhk8FEp51JwAopY2QdQ_q89rPqJ_";
 
 const ExpoSqliteStorage = {
   getItem: (key: string) => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined") {
         return localStorage.getItem(key);
       }
       return null;
@@ -17,8 +16,8 @@ const ExpoSqliteStorage = {
     return AsyncStorage.getItem(key);
   },
   setItem: (key: string, value: string) => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined") {
         localStorage.setItem(key, value);
       }
     } else {
@@ -26,8 +25,8 @@ const ExpoSqliteStorage = {
     }
   },
   removeItem: (key: string) => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined") {
         localStorage.removeItem(key);
       }
     } else {
@@ -42,5 +41,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    flowType: "pkce",
   },
 });

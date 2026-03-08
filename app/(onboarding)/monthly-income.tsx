@@ -15,18 +15,21 @@ import {
   View,
 } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { useAnalytics } from "../hooks/useAnalytics";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
 export default function MonthlyIncomeScreen() {
-  const { setOnboardingStep, setNewOnboardingData } = useOnboardingStore();
+  const { setOnboardingStep, setNewOnboardingData, completeOnboarding } = useOnboardingStore();
   const { currencySymbol } = useCurrencyStore();
   const [amount, setAmount] = useState("");
   const inputRef = useRef<TextInput>(null);
+  const screenEnteredAt = useRef(Date.now());
+  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     setOnboardingStep(3);
-    // Auto-focus on input after a short delay
+    trackEvent("onboarding_monthly_income_viewed");
     setTimeout(() => {
       inputRef.current?.focus();
     }, 600);
@@ -34,6 +37,11 @@ export default function MonthlyIncomeScreen() {
 
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_screen_completed", {
+      screen: "monthly_income",
+      step: 3,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
     const incomeValue = parseFloat(amount) || 0;
     setNewOnboardingData({ estimatedIncome: incomeValue });
     setOnboardingStep(4);
@@ -44,6 +52,17 @@ export default function MonthlyIncomeScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(2);
     router.push("/(onboarding)/category-autopilot");
+  };
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_skipped", {
+      screen: "monthly_income",
+      step: 3,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
+    completeOnboarding();
+    router.replace("/(auth)/sign-up");
   };
 
   const isValid = amount && parseFloat(amount) > 0;
@@ -67,10 +86,7 @@ export default function MonthlyIncomeScreen() {
               </Pressable>
               <Text className="text-secondaryDark text-sm">Step 3 of 7</Text>
               <Pressable
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.replace("/(tabs)/dashboard");
-                }}
+                onPress={handleSkip}
                 className="active:opacity-60"
               >
                 <Text className="text-accentBlue text-sm font-medium">

@@ -15,7 +15,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.borisatanassov.Perfin",
+      "bundleIdentifier": "com.borisatanassov.Monelo",
       "runtimeVersion": {
         "policy": "appVersion"
       }
@@ -29,7 +29,7 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.borisatanassov.Perfin",
+      "package": "com.borisatanassov.Monelo",
       "runtimeVersion": "1.0.0"
     },
     "web": {
@@ -51,7 +51,8 @@
       "expo-font",
       "expo-web-browser",
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true

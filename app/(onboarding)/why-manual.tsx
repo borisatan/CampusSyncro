@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Brain, ChevronLeft, Hand, Zap } from "lucide-react-native";
 import { MotiView } from "moti";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -12,18 +12,20 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
 export default function WhyManualScreen() {
-  const setOnboardingStep = useOnboardingStore(
-    (state) => state.setOnboardingStep,
-  );
+  const { setOnboardingStep, completeOnboarding } = useOnboardingStore();
+  const { trackEvent } = useAnalytics();
+  const screenEnteredAt = useRef(Date.now());
 
   // Pulsing glow animation for "Choice Point" card
   const glowOpacity = useSharedValue(0.3);
 
   useEffect(() => {
     setOnboardingStep(5);
+    trackEvent("onboarding_why_manual_viewed");
 
     // Start pulsing animation
     glowOpacity.value = withRepeat(
@@ -39,6 +41,11 @@ export default function WhyManualScreen() {
 
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_screen_completed", {
+      screen: "why_manual",
+      step: 5,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
     setOnboardingStep(6);
     router.push("/(onboarding)/practice-entry");
   };
@@ -47,6 +54,17 @@ export default function WhyManualScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(4);
     router.push("/(onboarding)/cost-of-inattention");
+  };
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_skipped", {
+      screen: "why_manual",
+      step: 5,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
+    completeOnboarding();
+    router.replace("/(auth)/sign-up");
   };
 
   return (
@@ -64,10 +82,7 @@ export default function WhyManualScreen() {
             </Pressable>
             <Text className="text-secondaryDark text-sm">Step 5 of 7</Text>
             <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.replace("/(tabs)/dashboard");
-              }}
+              onPress={handleSkip}
               className="active:opacity-60"
             >
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>

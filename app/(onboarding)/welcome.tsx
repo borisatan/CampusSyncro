@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { MotiView } from "moti";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Image,
   Pressable,
@@ -12,21 +12,39 @@ import {
   View,
 } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
 export default function WelcomeScreen() {
-  const setOnboardingStep = useOnboardingStore(
-    (state) => state.setOnboardingStep,
-  );
+  const { setOnboardingStep, completeOnboarding } = useOnboardingStore();
+  const { trackEvent } = useAnalytics();
+  const screenEnteredAt = useRef(Date.now());
 
   useEffect(() => {
     setOnboardingStep(1);
+    trackEvent("onboarding_welcome_viewed");
   }, [setOnboardingStep]);
 
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_screen_completed", {
+      screen: "welcome",
+      step: 1,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
     setOnboardingStep(2);
     router.push("/(onboarding)/category-autopilot");
+  };
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_skipped", {
+      screen: "welcome",
+      step: 1,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
+    completeOnboarding();
+    router.replace("/(auth)/sign-up");
   };
 
   return (
@@ -38,10 +56,7 @@ export default function WelcomeScreen() {
             <View className="w-12" />
             <Text className="text-secondaryDark text-sm">Step 1 of 7</Text>
             <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.replace("/(tabs)/dashboard");
-              }}
+              onPress={handleSkip}
               className="active:opacity-60"
             >
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>

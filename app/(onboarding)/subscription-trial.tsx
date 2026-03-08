@@ -3,8 +3,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Calendar, ChevronLeft, CreditCard, Mail } from "lucide-react-native";
 import { MotiView } from "moti";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
 const TIMELINE_ITEMS = [
@@ -31,22 +32,45 @@ export default function SubscriptionTrialScreen() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">(
     "annual",
   );
+  const { trackEvent } = useAnalytics();
+  const screenEnteredAt = useRef(Date.now());
 
   useEffect(() => {
     setOnboardingStep(7);
-  }, [setOnboardingStep]);
+    trackEvent("onboarding_subscription_trial_viewed");
+  }, [setOnboardingStep, trackEvent]);
 
   const handleComplete = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const timeOnScreen = Math.round((Date.now() - screenEnteredAt.current) / 1000);
+    trackEvent("onboarding_screen_completed", {
+      screen: "subscription_trial",
+      step: 7,
+      billing_period: billingPeriod,
+      time_on_screen_seconds: timeOnScreen,
+    });
+    trackEvent("onboarding_completed", { billing_period: billingPeriod });
+    trackEvent("trial_started", { billing_period: billingPeriod });
     setNewOnboardingData({ selectedBillingPeriod: billingPeriod });
     completeOnboarding();
-    router.replace("/(tabs)/dashboard");
+    router.replace("/(auth)/sign-up");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(6);
     router.push("/(onboarding)/practice-entry");
+  };
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_skipped", {
+      screen: "subscription_trial",
+      step: 7,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
+    completeOnboarding();
+    router.replace("/(auth)/sign-up");
   };
 
   const monthlyPrice = 9.99;
@@ -68,10 +92,7 @@ export default function SubscriptionTrialScreen() {
             </Pressable>
             <Text className="text-secondaryDark text-sm">Step 7 of 7</Text>
             <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.replace("/(tabs)/dashboard");
-              }}
+              onPress={handleSkip}
               className="active:opacity-60"
             >
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>

@@ -24,6 +24,7 @@ import { SuccessModal } from "../components/Shared/SuccessModal";
 import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
+import { useAnalytics } from "../hooks/useAnalytics";
 import {
   createTransaction,
   updateAccountBalance,
@@ -37,6 +38,7 @@ const TransactionAdder = () => {
   const { userId, isLoading } = useAuth();
   const router = useRouter();
   const { refreshDashboard, refreshAccounts, refreshTransactionList } = useDataRefresh();
+  const { trackEvent } = useAnalytics();
 
   // Use global stores
   const categories = useCategoriesStore((state) => state.categories);
@@ -120,6 +122,12 @@ const TransactionAdder = () => {
 
       // Show success immediately
       setShowSuccess(true);
+      trackEvent('transaction_added', {
+        transaction_type: transactionType,
+        category: categoryName,
+        amount: numericAmount,
+        account: selectedAccount,
+      });
 
       // Make API calls in background
       await createTransaction({
@@ -144,6 +152,10 @@ const TransactionAdder = () => {
       await Promise.all([refreshDashboard(), refreshAccounts(), refreshTransactionList()]);
     } catch (err) {
       console.error("Submission error:", err);
+      trackEvent('transaction_add_failed', {
+        transaction_type: transactionType,
+        error_message: err instanceof Error ? err.message : 'Unknown error',
+      });
       Alert.alert(
         "Error",
         "Failed to add transaction. Check your database constraints.",

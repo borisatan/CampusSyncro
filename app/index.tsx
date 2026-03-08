@@ -31,23 +31,22 @@ export default function RootIndex() {
   if (isLoading || !isHydrated) return <LoadingSpinner />;
 
   if (session?.user) {
-    // Check if user has completed onboarding
-    if (!hasCompletedOnboarding) {
-      // Route to appropriate onboarding screen based on saved progress
-      const routes = [
-        '/(onboarding)/welcome',              // Step 1
-        '/(onboarding)/category-autopilot',   // Step 2
-        '/(onboarding)/monthly-income',       // Step 3
-        '/(onboarding)/cost-of-inattention',  // Step 4
-        '/(onboarding)/why-manual',           // Step 5
-        '/(onboarding)/practice-entry',       // Step 6
-        '/(onboarding)/subscription-trial',   // Step 7
-      ];
-
-      const targetRoute = routes[onboardingStep - 1] || routes[0];
-      return <Redirect href={targetRoute} />;
-    }
     return <Redirect href="/(tabs)/dashboard" />;
+  }
+
+  if (!hasCompletedOnboarding) {
+    // Resume mid-onboarding if user closed the app partway through
+    const routes = [
+      '/(onboarding)/welcome',              // Step 1
+      '/(onboarding)/category-autopilot',   // Step 2
+      '/(onboarding)/monthly-income',       // Step 3
+      '/(onboarding)/cost-of-inattention',  // Step 4
+      '/(onboarding)/why-manual',           // Step 5
+      '/(onboarding)/practice-entry',       // Step 6
+      '/(onboarding)/subscription-trial',   // Step 7
+    ];
+    const targetRoute = routes[onboardingStep - 1] || routes[0];
+    return <Redirect href={targetRoute} />;
   }
 
   return <Redirect href="/(auth)/sign-in" />;

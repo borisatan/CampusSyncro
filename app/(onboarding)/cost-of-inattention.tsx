@@ -10,7 +10,7 @@ import {
   TrendingUp,
 } from "lucide-react-native";
 import { MotiView } from "moti";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -19,12 +19,15 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { useAnalytics } from "../hooks/useAnalytics";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
 export default function CostOfInattentionScreen() {
-  const { setOnboardingStep, newOnboardingData } = useOnboardingStore();
+  const { setOnboardingStep, newOnboardingData, completeOnboarding } = useOnboardingStore();
   const { currencySymbol } = useCurrencyStore();
+  const { trackEvent } = useAnalytics();
+  const screenEnteredAt = useRef(Date.now());
 
   const monthlyIncome = newOnboardingData.estimatedIncome || 0;
   const retentionAmount = Math.round(monthlyIncome * 0.15);
@@ -34,6 +37,7 @@ export default function CostOfInattentionScreen() {
 
   useEffect(() => {
     setOnboardingStep(4);
+    trackEvent("onboarding_cost_of_inattention_viewed");
 
     glowOpacity.value = withRepeat(
       withTiming(0.55, { duration: 3000 }),
@@ -58,6 +62,11 @@ export default function CostOfInattentionScreen() {
 
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_screen_completed", {
+      screen: "cost_of_inattention",
+      step: 4,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
     setOnboardingStep(5);
     router.push("/(onboarding)/why-manual");
   };
@@ -66,6 +75,17 @@ export default function CostOfInattentionScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(3);
     router.push("/(onboarding)/monthly-income");
+  };
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    trackEvent("onboarding_skipped", {
+      screen: "cost_of_inattention",
+      step: 4,
+      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
+    });
+    completeOnboarding();
+    router.replace("/(auth)/sign-up");
   };
 
   return (
@@ -83,10 +103,7 @@ export default function CostOfInattentionScreen() {
             </Pressable>
             <Text className="text-secondaryDark text-sm">Step 4 of 7</Text>
             <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.replace("/(tabs)/dashboard");
-              }}
+              onPress={handleSkip}
               className="active:opacity-60"
             >
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>

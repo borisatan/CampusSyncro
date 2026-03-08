@@ -1,13 +1,24 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePostHog } from '../context/PostHogContext';
 
 export const useAnalytics = () => {
   const { posthog, isReady } = usePostHog();
+  const queue = useRef<Array<{ eventName: string; properties?: Record<string, any> }>>([]);
+
+  // Flush queued events once PostHog is ready
+  useEffect(() => {
+    if (isReady && posthog && queue.current.length > 0) {
+      queue.current.forEach(({ eventName, properties }) => {
+        posthog.capture(eventName, properties);
+      });
+      queue.current = [];
+    }
+  }, [isReady, posthog]);
 
   const trackEvent = useCallback(
     (eventName: string, properties?: Record<string, any>) => {
       if (!isReady || !posthog) {
-        console.warn('PostHog is not ready yet');
+        queue.current.push({ eventName, properties });
         return;
       }
       posthog.capture(eventName, properties);
