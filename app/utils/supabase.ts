@@ -1,36 +1,79 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
+import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
+
+// Polyfill WebCrypto for React Native
+if (!globalThis.crypto) {
+  globalThis.crypto = {
+    // @ts-ignore
+    getRandomValues: (array: Uint8Array) => {
+      return Crypto.getRandomValues(array);
+    },
+    // @ts-ignore
+    subtle: {
+      digest: async (algorithm: string, data: Uint8Array) => {
+        const hash = await Crypto.digest(
+          Crypto.CryptoDigestAlgorithm.SHA256,
+          data
+        );
+        return hash;
+      },
+    },
+    randomUUID: () => {
+      return Crypto.randomUUID();
+    },
+  };
+}
 
 const supabaseUrl = "https://rrttwewkekyvwgjilrzo.supabase.co";
 const supabaseAnonKey = "sb_publishable_RLCVhk8FEp51JwAopY2QdQ_q89rPqJ_";
 
 const ExpoSqliteStorage = {
-  getItem: (key: string) => {
-    if (Platform.OS === "web") {
-      if (typeof window !== "undefined") {
-        return localStorage.getItem(key);
+  getItem: async (key: string) => {
+    try {
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined") {
+          const value = localStorage.getItem(key);
+          console.log('[Storage] getItem web:', key, value ? 'found' : 'not found');
+          return value;
+        }
+        return null;
       }
+      const value = await AsyncStorage.getItem(key);
+      console.log('[Storage] getItem native:', key, value ? 'found' : 'not found');
+      return value;
+    } catch (error) {
+      console.error('[Storage] getItem error:', key, error);
       return null;
     }
-    return AsyncStorage.getItem(key);
   },
-  setItem: (key: string, value: string) => {
-    if (Platform.OS === "web") {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(key, value);
+  setItem: async (key: string, value: string) => {
+    try {
+      console.log('[Storage] setItem:', key, value.substring(0, 50) + '...');
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(key, value);
+        }
+      } else {
+        await AsyncStorage.setItem(key, value);
       }
-    } else {
-      AsyncStorage.setItem(key, value);
+    } catch (error) {
+      console.error('[Storage] setItem error:', key, error);
     }
   },
-  removeItem: (key: string) => {
-    if (Platform.OS === "web") {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(key);
+  removeItem: async (key: string) => {
+    try {
+      console.log('[Storage] removeItem:', key);
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(key);
+        }
+      } else {
+        await AsyncStorage.removeItem(key);
       }
-    } else {
-      AsyncStorage.removeItem(key);
+    } catch (error) {
+      console.error('[Storage] removeItem error:', key, error);
     }
   },
 };

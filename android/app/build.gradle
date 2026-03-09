@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.borisatanassov.Perfin'
+    namespace 'com.borisatanassov.Monelo'
     defaultConfig {
-        applicationId 'com.borisatanassov.Perfin'
+        applicationId 'com.borisatanassov.Monelo'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -94,7 +94,58 @@ export const deleteTransfer = async (transfer_id: string, user_id: string) => {
   return data;
 };
 
+// ============ Profile Management ============
 
+/**
+ * Creates a profile for a user if one doesn't exist.
+ * Called after OAuth sign-up to ensure profile exists.
+ */
+export async function ensureUserProfile(userId?: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  const targetUserId = userId || user?.id;
+
+  if (!targetUserId) {
+    console.error('[ensureUserProfile] No user ID available');
+    return;
+  }
+
+  // Check if profile exists
+  const { data: existingProfile, error: fetchError } = await supabase
+    .from('Profiles')
+    .select('id')
+    .eq('id', targetUserId)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error('[ensureUserProfile] Error checking profile:', fetchError.message);
+    return;
+  }
+
+  // If profile already exists, we're done
+  if (existingProfile) {
+    console.log('[ensureUserProfile] Profile already exists');
+    return;
+  }
+
+  // Create new profile with default values
+  const { error: insertError } = await supabase
+    .from('Profiles')
+    .insert({
+      id: targetUserId,
+      currency: 'USD',
+      use_dynamic_income: false,
+      manual_income: 0,
+      monthly_savings_target: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+  if (insertError) {
+    console.error('[ensureUserProfile] Error creating profile:', insertError.message);
+  } else {
+    console.log('[ensureUserProfile] Profile created successfully');
+  }
+}
 
 export async function getUserCurrency() {
   const { data: { user } } = await supabase.auth.getUser();

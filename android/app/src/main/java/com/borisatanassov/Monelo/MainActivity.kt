@@ -1,4 +1,4 @@
-package com.borisatanassov.Perfin
+package com.borisatanassov.Monelo
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

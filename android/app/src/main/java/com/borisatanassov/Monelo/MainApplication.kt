@@ -1,4 +1,4 @@
-package com.borisatanassov.Perfin
+package com.borisatanassov.Monelo
 
 import android.app.Application
 import android.content.res.Configuration

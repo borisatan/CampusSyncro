@@ -1,7 +1,7 @@
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
+import * as AuthSession from "expo-auth-session";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Linking from "expo-linking";
 import { Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useState } from "react";
@@ -17,7 +17,11 @@ import {
   View,
 } from "react-native";
 import { useAnalytics } from "../hooks/useAnalytics";
+import { ensureUserProfile } from "../services/backendService";
 import { supabase } from "../utils/supabase";
+
+// Configure WebBrowser to properly complete auth sessions
+WebBrowser.maybeCompleteAuthSession();
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -42,7 +46,7 @@ export default function SignUpScreen() {
 
     try {
       setIsSubmitting(true);
-      const redirectTo = Linking.createURL("/");
+      const redirectTo = AuthSession.makeRedirectUri({ path: "/" });
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -56,6 +60,9 @@ export default function SignUpScreen() {
       }
 
       if (data.user) {
+        // Ensure user profile exists (creates if needed)
+        await ensureUserProfile(data.user.id);
+
         identifyUser(data.user.id, {
           email: data.user.email,
           $set_once: { signup_date: new Date().toISOString() },
@@ -83,7 +90,7 @@ export default function SignUpScreen() {
     if (!email) {
       Alert.alert(
         "Email required",
-        "Enter your email to resend the verification."
+        "Enter your email to resend the verification.",
       );
       return;
     }
@@ -98,7 +105,7 @@ export default function SignUpScreen() {
       }
       Alert.alert(
         "Sent",
-        "If an account exists for this email, a link was sent."
+        "If an account exists for this email, a link was sent.",
       );
     } catch (e: any) {
       Alert.alert("Could not resend", e?.message ?? "Unknown error");
@@ -106,66 +113,66 @@ export default function SignUpScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    console.log("========================================");
+    console.log("[OAuth] GOOGLE SIGN IN STARTED");
+    console.log("========================================");
+
     try {
       setIsSubmitting(true);
-      const redirectTo = Linking.createURL("/");
-      console.log("OAuth redirect URL:", redirectTo);
+
+      // Create proper redirect URI using AuthSession
+      const redirectTo = AuthSession.makeRedirectUri({
+        path: "auth/callback",
+      });
+      console.log("[OAuth] Step 1: OAuth redirect URL:", redirectTo);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo, skipBrowserRedirect: true },
+        options: {
+          redirectTo,
+          skipBrowserRedirect: false, // Let WebBrowser handle the redirect
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        },
       });
-      if (error) throw error;
+
+      if (error) {
+        console.error('[OAuth] signInWithOAuth error:', error);
+        throw error;
+      }
       if (!data.url) throw new Error("No OAuth URL returned");
 
-      // On Android, the browser closes (result.type === "dismiss") when the deep
-      // link is intercepted by the OS. We listen for the Linking event as a
-      // fallback so we still get the callback URL in that case.
-      let resolveDeepLink!: (url: string) => void;
-      const deepLinkPromise = new Promise<string>((resolve) => {
-        resolveDeepLink = resolve;
-      });
-      const linkingSub = Linking.addEventListener("url", ({ url }) => {
-        resolveDeepLink(url);
-      });
+      console.log('[OAuth] Step 2: Opening browser for authentication');
 
+      // Open the OAuth provider's sign-in page
       const result = await WebBrowser.openAuthSessionAsync(
         data.url,
         redirectTo
       );
 
-      console.log("WebBrowser result:", result);
+      console.log('[OAuth] Step 3: Browser result:', result.type);
 
-      let callbackUrl: string | null = null;
-
-      if (result.type === "success") {
-        callbackUrl = result.url;
-      } else if (result.type === "dismiss" || result.type === "cancel") {
-        // Android often returns "dismiss" even on success — wait briefly for the
-        // Linking event which carries the actual callback URL.
-        try {
-          callbackUrl = await Promise.race([
-            deepLinkPromise,
-            new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error("timeout")), 2000)
-            ),
-          ]);
-        } catch {
-          console.log("OAuth cancelled or dismissed without callback");
-        }
+      // Check if user cancelled
+      if (result.type === "cancel" || result.type === "dismiss") {
+        console.log("[OAuth] User cancelled authentication");
+        return;
       }
 
-      linkingSub.remove();
+      // Check if we got a successful result with URL
+      if (result.type !== "success" || !result.url) {
+        throw new Error("No callback URL received from authentication");
+      }
 
-      if (!callbackUrl) return;
+      console.log("[OAuth] Step 4: Got callback URL, exchanging for session");
 
-      console.log("OAuth callback URL:", callbackUrl);
-
+      // Exchange the authorization code for a session
       const { data: sessionData, error: sessionError } =
-        await supabase.auth.exchangeCodeForSession(callbackUrl);
+        await supabase.auth.exchangeCodeForSession(result.url);
 
       if (sessionError) {
-        console.error("Session exchange error:", sessionError);
+        console.error("[OAuth] Session exchange error:", sessionError);
         throw sessionError;
       }
 
@@ -173,23 +180,33 @@ export default function SignUpScreen() {
         throw new Error("No session returned after code exchange");
       }
 
-      console.log("Session established:", sessionData.session.user.id);
+      console.log("[OAuth] Session established successfully!");
+      console.log("[OAuth] User ID:", sessionData.session.user.id);
 
-      // Wait a moment for session to be persisted to AsyncStorage
+      // Wait for session to be persisted
       await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Ensure user profile exists
+      await ensureUserProfile(sessionData.user.id);
 
       if (sessionData.user) {
         identifyUser(sessionData.user.id, { email: sessionData.user.email });
       }
-      trackEvent("user_signed_up", { method: "google" });
+
+      trackEvent("user_authenticated", { method: "google" });
       router.replace("/(tabs)/dashboard");
     } catch (e: any) {
-      console.error("Google sign-in error:", e);
-      trackEvent("user_sign_up_failed", {
+      console.error("[OAuth] GOOGLE OAUTH ERROR:", e);
+
+      trackEvent("user_auth_failed", {
         error_message: e?.message ?? "Unknown error",
         method: "google",
       });
-      Alert.alert("Google sign-in failed", e?.message ?? "Unknown error");
+
+      Alert.alert(
+        "Google Sign-In Failed",
+        e?.message ?? "An error occurred during Google sign-in."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -211,14 +228,18 @@ export default function SignUpScreen() {
         token: credential.identityToken,
       });
       if (error) throw error;
+
+      // Ensure user profile exists (creates if needed)
       if (data.user) {
+        await ensureUserProfile(data.user.id);
         identifyUser(data.user.id, { email: data.user.email });
       }
-      trackEvent("user_signed_up", { method: "apple" });
+
+      trackEvent("user_authenticated", { method: "apple" });
       router.replace("/(tabs)/dashboard");
     } catch (e: any) {
       if (e?.code === "ERR_REQUEST_CANCELED") return;
-      trackEvent("user_sign_up_failed", {
+      trackEvent("user_auth_failed", {
         error_message: e?.message ?? "Unknown error",
         method: "apple",
       });
