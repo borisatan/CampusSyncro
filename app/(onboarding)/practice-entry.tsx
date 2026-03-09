@@ -18,10 +18,10 @@ import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 import { OnboardingCategoryGrid } from "../components/OnboardingPage/OnboardingCategoryGrid";
 import { OnboardingTransactionHero } from "../components/OnboardingPage/OnboardingTransactionHero";
 import { SuccessModal } from "../components/Shared/SuccessModal";
+import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
-import { AUTOPILOT_CATEGORIES } from "./category-autopilot";
 
 // Category-specific prompts and amounts
 const CATEGORY_PROMPTS: Record<
@@ -59,21 +59,21 @@ export default function PracticeEntryScreen() {
   const screenEnteredAt = useRef(Date.now());
   const { trackEvent } = useAnalytics();
 
-  // Get autopilot categories from Screen 2 for preselection
-  const autopilotCategories =
-    newOnboardingData.selectedAutopilotCategories || [];
+  // Get selected categories from Screen 2 for preselection
+  const selectedCategoriesFromOnboarding =
+    newOnboardingData.selectedCategories || newOnboardingData.selectedAutopilotCategories || [];
 
-  // Show all categories but only enable the ones selected in category-autopilot
-  const allCategories = AUTOPILOT_CATEGORIES.map((cat) => cat.name);
-  const enabledCategories = autopilotCategories.length > 0 ? autopilotCategories : undefined;
+  // Show all categories but only enable the ones selected earlier
+  const allCategories = V3_DEFAULT_CATEGORIES.map((cat) => cat.name);
+  const enabledCategories = selectedCategoriesFromOnboarding.length > 0 ? selectedCategoriesFromOnboarding : undefined;
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    autopilotCategories[0] || allCategories[0] || "",
+    selectedCategoriesFromOnboarding[0] || allCategories[0] || "",
   );
 
   useEffect(() => {
-    setOnboardingStep(6);
+    setOnboardingStep(9);
     trackEvent("onboarding_practice_entry_viewed");
-  }, [setOnboardingStep]);
+  }, [setOnboardingStep, trackEvent]);
 
   // Get the current category's expected amount and text
   const currentPrompt = CATEGORY_PROMPTS[selectedCategory] || {
@@ -84,7 +84,7 @@ export default function PracticeEntryScreen() {
   const expectedAmount = currentPrompt.amount;
 
   const categoryColor =
-    AUTOPILOT_CATEGORIES.find((cat) => cat.name === selectedCategory)?.color ||
+    V3_DEFAULT_CATEGORIES.find((cat) => cat.name === selectedCategory)?.color ||
     "#22D97A";
 
   const handleSubmit = () => {
@@ -93,7 +93,7 @@ export default function PracticeEntryScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       trackEvent("onboarding_screen_completed", {
         screen: "practice_entry",
-        step: 6,
+        step: 9,
         category: selectedCategory,
         time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
       });
@@ -104,13 +104,13 @@ export default function PracticeEntryScreen() {
 
   const handleSuccessModalDismiss = () => {
     setShowSuccess(false);
-    setOnboardingStep(7);
+    setOnboardingStep(10);
     router.push("/(onboarding)/subscription-trial");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(5);
+    setOnboardingStep(8);
     router.push("/(onboarding)/why-manual");
   };
 
@@ -118,7 +118,7 @@ export default function PracticeEntryScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_skipped", {
       screen: "practice_entry",
-      step: 6,
+      step: 9,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     completeOnboarding();
@@ -144,7 +144,6 @@ export default function PracticeEntryScreen() {
                 <ChevronLeft size={20} color="#8A96B4" />
                 <Text className="text-secondaryDark text-sm">Back</Text>
               </Pressable>
-              <Text className="text-secondaryDark text-sm">Step 6 of 7</Text>
               <Pressable
                 onPress={handleSkip}
                 className="active:opacity-60"
@@ -154,49 +153,51 @@ export default function PracticeEntryScreen() {
                 </Text>
               </Pressable>
             </View>
-            <View className="h-1 bg-surfaceDark rounded-full overflow-hidden">
-              <MotiView
-                from={{ width: "71.4%" }}
-                animate={{ width: "85.7%" }}
-                transition={{ type: "timing", duration: 500 }}
-                className="h-full overflow-hidden relative"
-              >
-                <LinearGradient
-                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={{ width: "100%", height: "100%" }}
-                />
+            <View className="items-center">
+              <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
                 <MotiView
-                  from={{ translateX: -200 }}
-                  animate={{ translateX: 200 }}
-                  transition={{
-                    type: "timing",
-                    duration: 3000,
-                    loop: true,
-                    delay: 1500,
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    width: 100,
-                  }}
+                  from={{ width: "92.9%" }}
+                  animate={{ width: "96.4%" }}
+                  transition={{ type: "timing", duration: 500 }}
+                  className="h-full overflow-hidden relative"
                 >
                   <LinearGradient
-                    colors={[
-                      "rgba(255, 255, 255, 0)",
-                      "rgba(255, 255, 255, 0.3)",
-                      "rgba(255, 255, 255, 0)",
-                    ]}
+                    colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
                     style={{ width: "100%", height: "100%" }}
                   />
+                  <MotiView
+                    from={{ translateX: -200 }}
+                    animate={{ translateX: 200 }}
+                    transition={{
+                      type: "timing",
+                      duration: 3000,
+                      loop: true,
+                      delay: 1500,
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      width: 100,
+                    }}
+                  >
+                    <LinearGradient
+                      colors={[
+                        "rgba(255, 255, 255, 0)",
+                        "rgba(255, 255, 255, 0.3)",
+                        "rgba(255, 255, 255, 0)",
+                      ]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={{ width: "100%", height: "100%" }}
+                    />
+                  </MotiView>
                 </MotiView>
-              </MotiView>
+              </View>
             </View>
           </View>
 

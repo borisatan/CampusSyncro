@@ -33,7 +33,7 @@ export default function WelcomeScreen() {
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setOnboardingStep(2);
-    router.push("/(onboarding)/category-autopilot");
+    router.push("/(onboarding)/category-preselection");
   };
 
   const handleSkip = () => {
@@ -52,9 +52,7 @@ export default function WelcomeScreen() {
       <ScrollView className="flex-1">
         {/* Progress Bar */}
         <View className="px-2 pt-12 pb-4">
-          <View className="flex-row items-center justify-between mb-2">
-            <View className="w-12" />
-            <Text className="text-secondaryDark text-sm">Step 1 of 7</Text>
+          <View className="flex-row items-center justify-end mb-2">
             <Pressable
               onPress={handleSkip}
               className="active:opacity-60"
@@ -62,20 +60,22 @@ export default function WelcomeScreen() {
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>
             </Pressable>
           </View>
-          <View className="h-1 bg-surfaceDark rounded-full overflow-hidden">
-            <MotiView
-              from={{ width: "0%" }}
-              animate={{ width: "14.3%" }}
-              transition={{ type: "timing", duration: 500 }}
-              className="h-full overflow-hidden"
-            >
-              <LinearGradient
-                colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={{ width: "100%", height: "100%" }}
-              />
-            </MotiView>
+          <View className="items-center">
+            <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
+              <MotiView
+                from={{ width: "0%" }}
+                animate={{ width: "14.3%" }}
+                transition={{ type: "timing", duration: 500 }}
+                className="h-full overflow-hidden"
+              >
+                <LinearGradient
+                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </MotiView>
+            </View>
           </View>
         </View>
 

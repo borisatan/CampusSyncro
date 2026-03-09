@@ -1,6 +1,6 @@
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
-import * as AuthSession from "expo-auth-session";
+import * as Linking from "expo-linking";
 import * as LocalAuthentication from "expo-local-authentication";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
@@ -103,10 +103,8 @@ export default function SignInScreen() {
     try {
       setIsSubmitting(true);
 
-      // Create proper redirect URI using AuthSession
-      const redirectTo = AuthSession.makeRedirectUri({
-        path: "auth/callback",
-      });
+      // Create proper redirect URI using Linking
+      const redirectTo = Linking.createURL("auth/callback");
       console.log("[OAuth] Step 1: OAuth redirect URL:", redirectTo);
 
       const { data, error } = await supabase.auth.signInWithOAuth({

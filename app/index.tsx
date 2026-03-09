@@ -37,13 +37,16 @@ export default function RootIndex() {
   if (!hasCompletedOnboarding) {
     // Resume mid-onboarding if user closed the app partway through
     const routes = [
-      '/(onboarding)/welcome',              // Step 1
-      '/(onboarding)/category-autopilot',   // Step 2
-      '/(onboarding)/monthly-income',       // Step 3
-      '/(onboarding)/cost-of-inattention',  // Step 4
-      '/(onboarding)/why-manual',           // Step 5
-      '/(onboarding)/practice-entry',       // Step 6
-      '/(onboarding)/subscription-trial',   // Step 7
+      '/(onboarding)/welcome',                  // Step 1
+      '/(onboarding)/category-preselection',    // Step 2
+      '/(onboarding)/monthly-income',           // Step 3
+      '/(onboarding)/cost-of-inattention',      // Step 4 (MOVED)
+      '/(onboarding)/budget-setup-choice',      // Step 5
+      '/(onboarding)/ai-budget-setup',          // Step 6
+      '/(onboarding)/manual-budget-setup',      // Step 7
+      '/(onboarding)/why-manual',               // Step 8
+      '/(onboarding)/practice-entry',           // Step 9
+      '/(onboarding)/subscription-trial',       // Step 10
     ];
     const targetRoute = routes[onboardingStep - 1] || routes[0];
     return <Redirect href={targetRoute} />;

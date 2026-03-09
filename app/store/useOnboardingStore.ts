@@ -10,11 +10,25 @@ interface PendingTransaction {
   category: string;
 }
 
+interface CategoryBudget {
+  category_name: string;
+  budget_amount?: number;
+  budget_percentage?: number;
+}
+
 interface NewOnboardingData {
-  selectedAutopilotCategories: string[];  // Screen 2
-  estimatedIncome: number;                 // Screen 3
-  practiceEntryCompleted: boolean;        // Screen 6
-  selectedBillingPeriod: 'monthly' | 'annual' | null; // Screen 7
+  // Category selection (NEW)
+  selectedCategories?: string[];          // Screen 2 (NEW)
+  selectedAutopilotCategories: string[];  // Screen 2 (DEPRECATED - keeping for backward compatibility)
+
+  // Budget setup (NEW)
+  budgetSetupChoice?: 'smart' | 'manual' | 'skip' | null;  // Screen 4
+  categoryBudgets?: CategoryBudget[];     // Screen 5 or 6
+
+  // Existing fields
+  estimatedIncome: number;                 // Screen 3 (moved earlier in new flow)
+  practiceEntryCompleted: boolean;        // Screen 9 (was 6)
+  selectedBillingPeriod: 'monthly' | 'annual' | null; // Screen 10 (was 7)
 }
 
 interface OnboardingStoreState {
@@ -70,7 +84,10 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
 
       // New onboarding flow defaults
       newOnboardingData: {
+        selectedCategories: [],
         selectedAutopilotCategories: [],
+        budgetSetupChoice: null,
+        categoryBudgets: [],
         estimatedIncome: 0,
         practiceEntryCompleted: false,
         selectedBillingPeriod: null,
@@ -92,9 +109,16 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
 
       setPendingTransactions: (transactions) => set({ pendingTransactions: transactions }),
 
-      setNewOnboardingData: (data) => set((state) => ({
-        newOnboardingData: { ...state.newOnboardingData, ...data }
-      })),
+      setNewOnboardingData: (data) => set((state) => {
+        const updated = { ...state.newOnboardingData, ...data };
+
+        // Auto-sync: If selectedCategories is set, also set deprecated field for backward compatibility
+        if (data.selectedCategories) {
+          updated.selectedAutopilotCategories = data.selectedCategories;
+        }
+
+        return { newOnboardingData: updated };
+      }),
 
       completeOnboarding: () => {
         set({
@@ -115,7 +139,10 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
           pendingAccountName: '',
           pendingTransactions: [],
           newOnboardingData: {
+            selectedCategories: [],
             selectedAutopilotCategories: [],
+            budgetSetupChoice: null,
+            categoryBudgets: [],
             estimatedIncome: 0,
             practiceEntryCompleted: false,
             selectedBillingPeriod: null,

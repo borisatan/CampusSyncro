@@ -11,13 +11,16 @@ export default function OnboardingLayout() {
         contentStyle: { backgroundColor: '#08090F', flex: 1 },
       }}
     >
-      {/* New 7-step onboarding flow */}
+      {/* New 10-step onboarding flow */}
       <Stack.Screen
         name="welcome"
         options={{ animation: 'fade' }}
       />
-      <Stack.Screen name="category-autopilot" />
+      <Stack.Screen name="category-preselection" />
       <Stack.Screen name="monthly-income" />
+      <Stack.Screen name="budget-setup-choice" />
+      <Stack.Screen name="ai-budget-setup" />
+      <Stack.Screen name="manual-budget-setup" />
       <Stack.Screen name="cost-of-inattention" />
       <Stack.Screen name="why-manual" />
       <Stack.Screen name="practice-entry" />

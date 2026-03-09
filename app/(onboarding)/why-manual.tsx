@@ -24,7 +24,7 @@ export default function WhyManualScreen() {
   const glowOpacity = useSharedValue(0.3);
 
   useEffect(() => {
-    setOnboardingStep(5);
+    setOnboardingStep(8);
     trackEvent("onboarding_why_manual_viewed");
 
     // Start pulsing animation
@@ -43,24 +43,24 @@ export default function WhyManualScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
       screen: "why_manual",
-      step: 5,
+      step: 8,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    setOnboardingStep(6);
+    setOnboardingStep(9);
     router.push("/(onboarding)/practice-entry");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(4);
-    router.push("/(onboarding)/cost-of-inattention");
+    setOnboardingStep(5);
+    router.push("/(onboarding)/budget-setup-choice");
   };
 
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_skipped", {
       screen: "why_manual",
-      step: 5,
+      step: 8,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     completeOnboarding();
@@ -80,7 +80,6 @@ export default function WhyManualScreen() {
               <ChevronLeft size={20} color="#8A96B4" />
               <Text className="text-secondaryDark text-sm">Back</Text>
             </Pressable>
-            <Text className="text-secondaryDark text-sm">Step 5 of 7</Text>
             <Pressable
               onPress={handleSkip}
               className="active:opacity-60"
@@ -88,49 +87,51 @@ export default function WhyManualScreen() {
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>
             </Pressable>
           </View>
-          <View className="h-1 bg-surfaceDark rounded-full overflow-hidden">
-            <MotiView
-              from={{ width: "57.1%" }}
-              animate={{ width: "71.4%" }}
-              transition={{ type: "timing", duration: 500 }}
-              className="h-full overflow-hidden relative"
-            >
-              <LinearGradient
-                colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={{ width: "100%", height: "100%" }}
-              />
+          <View className="items-center">
+            <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
               <MotiView
-                from={{ translateX: -200 }}
-                animate={{ translateX: 200 }}
-                transition={{
-                  type: "timing",
-                  duration: 3000,
-                  loop: true,
-                  delay: 1500,
-                }}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: 100,
-                }}
+                from={{ width: "85.7%" }}
+                animate={{ width: "92.9%" }}
+                transition={{ type: "timing", duration: 500 }}
+                className="h-full overflow-hidden relative"
               >
                 <LinearGradient
-                  colors={[
-                    "rgba(255, 255, 255, 0)",
-                    "rgba(255, 255, 255, 0.3)",
-                    "rgba(255, 255, 255, 0)",
-                  ]}
+                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
                   start={{ x: 0, y: 0.5 }}
                   end={{ x: 1, y: 0.5 }}
                   style={{ width: "100%", height: "100%" }}
                 />
+                <MotiView
+                  from={{ translateX: -200 }}
+                  animate={{ translateX: 200 }}
+                  transition={{
+                    type: "timing",
+                    duration: 3000,
+                    loop: true,
+                    delay: 1500,
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: 100,
+                  }}
+                >
+                  <LinearGradient
+                    colors={[
+                      "rgba(255, 255, 255, 0)",
+                      "rgba(255, 255, 255, 0.3)",
+                      "rgba(255, 255, 255, 0)",
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                </MotiView>
               </MotiView>
-            </MotiView>
+            </View>
           </View>
         </View>
 

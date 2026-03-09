@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
-import { AUTOPILOT_CATEGORIES } from "../../(onboarding)/category-autopilot";
+import { V3_DEFAULT_CATEGORIES } from "../../constants/onboardingCategories";
 
-// Build category map from AUTOPILOT_CATEGORIES
+// Build category map from V3_DEFAULT_CATEGORIES
 const CATEGORY_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> =
-  AUTOPILOT_CATEGORIES.reduce((acc, cat) => {
-    acc[cat.name] = { icon: cat.icon, color: cat.color };
+  V3_DEFAULT_CATEGORIES.reduce((acc, cat) => {
+    acc[cat.name] = { icon: cat.icon as keyof typeof Ionicons.glyphMap, color: cat.color };
     return acc;
   }, {} as Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }>);
 

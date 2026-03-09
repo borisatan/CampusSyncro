@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { PiggyBank } from "lucide-react-native";
+import { ArrowLeft, PiggyBank } from "lucide-react-native";
 import { MotiView } from "moti";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
@@ -597,141 +597,90 @@ export default function BudgetsScreen() {
         }
       />
 
-      {/* Unified AI overlay — always mounted, no native Modal delay */}
-      {aiModalView !== null && (
-        <View className="absolute inset-0 z-[100] justify-center items-center bg-overlayDark">
-          <Pressable
-            className="absolute inset-0"
-            onPress={handleCloseAIModal}
-          />
+      {/* Unified AI modal — fullscreen, no animation */}
+      <Modal
+        visible={aiModalView !== null}
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={aiLoading ? undefined : handleCloseAIModal}
+      >
+        <SafeAreaView className="flex-1 bg-backgroundDark">
+
           {aiModalView === "help" && (
-            <View
-              className={`w-[94%] rounded-2xl p-4 border max-h-[80%] ${
-                isDarkMode ? "bg-backgroundDark border-borderDark" : "bg-background border-borderLight"
-              }`}
-            >
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Sparkle badge */}
-                <View className="items-center mb-4">
-                  <View className="w-14 h-14 rounded-2xl items-center justify-center bg-accentBlue">
-                    <Ionicons name="sparkles" size={28} color="#FFFFFF" />
+            <>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 24, paddingTop: 8 }}
+              >
+                {/* Header row: back button left, icon centered, spacer right */}
+                <View className="flex-row items-center justify-between mb-5 mt-1">
+                  <TouchableOpacity
+                    onPress={handleCloseAIModal}
+                    className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-xl items-center justify-center"
+                  >
+                    <ArrowLeft color="#94A3B8" size={20} />
+                  </TouchableOpacity>
+
+                  <View className="w-[100px] h-[100px] rounded-[24px] bg-accentBlue/10 items-center justify-center">
+                    <View className="w-[82px] h-[82px] rounded-[20px] bg-accentTeal items-center justify-center">
+                      <Ionicons name="pie-chart-outline" size={42} color="#FFF" />
+                    </View>
                   </View>
+
+                  {/* Spacer to keep icon centered */}
+                  <View className="w-10" />
                 </View>
 
-                <Text
-                  className={`text-center mb-2 text-[23px] font-bold ${
-                    isDarkMode ? "text-textDark" : "text-textLight"
-                  }`}
-                >
-                  Smart Budget Setup
+                {/* Title */}
+                <Text className="text-center text-2xl font-extrabold text-textDark mb-1.5 leading-[30px]">
+                  Let us allocate your budget{"\n"}using the proven{" "}
+                  <Text className="text-accentBlue">50/30/20 rule</Text>
                 </Text>
-                <Text
-                  className={`text-center mb-5 text-[15px] leading-[22px] ${
-                    isDarkMode ? "text-secondaryDark" : "text-secondaryLight"
-                  }`}
-                >
-                  Let us allocate your budget using the proven 50/30/20 rule
-                </Text>
+                <View className="h-6" />
 
                 {/* Rule cards */}
                 {[
-                  {
-                    pct: "50%",
-                    label: "Needs",
-                    desc: "Rent, groceries, utilities",
-                    color: "#3B7EFF",
-                  },
-                  {
-                    pct: "30%",
-                    label: "Wants",
-                    desc: "Dining, hobbies, entertainment",
-                    color: "#F2514A",
-                  },
-                  {
-                    pct: "20%",
-                    label: "Savings",
-                    desc: "Emergency fund, investments",
-                    color: "#22D97A",
-                  },
+                  { pct: "50%", label: "Needs",   desc: "Essential expenses like housing, transportation, and utilities", color: "#139B8B" },
+                  { pct: "30%", label: "Wants",   desc: "Lifestyle choices like dining, shopping, and entertainment",     color: "#6D3FD4" },
+                  { pct: "20%", label: "Savings", desc: "Future goals like emergency fund, investments, and debt payoff", color: "#2550D4" },
                 ].map((rule) => (
                   <View
                     key={rule.label}
-                    className={`flex-row items-center mb-2.5 p-3 rounded-xl border ${
-                      isDarkMode ? "bg-surfaceDark border-borderDark" : "bg-background border-borderLight"
-                    }`}
+                    className="flex-row items-center mb-3 p-4 rounded-xl border bg-surfaceDark border-borderDark"
                   >
                     <View
-                      className="w-10 h-10 rounded-lg items-center justify-center mr-3"
-                      style={{ backgroundColor: `${rule.color}60` }}
+                      className="w-[52px] h-[52px] rounded-xl items-center justify-center mr-4 border border-overlayLight"
+                      style={{ backgroundColor: rule.color }}
                     >
-                      <Text className="text-sm font-extrabold text-white">
-                        {rule.pct}
-                      </Text>
+                      <Text className="text-sm font-black text-white">{rule.pct}</Text>
                     </View>
                     <View className="flex-1">
-                      <Text
-                        className={`text-[15px] font-semibold ${
-                          isDarkMode ? "text-textDark" : "text-textLight"
-                        }`}
-                      >
-                        {rule.label}
-                      </Text>
-                      <Text
-                        className={`text-[13px] ${
-                          isDarkMode ? "text-secondaryDark" : "text-secondaryLight"
-                        }`}
-                      >
-                        {rule.desc}
-                      </Text>
+                      <Text className="text-base font-bold text-textDark mb-0.5">{rule.label}</Text>
+                      <Text className="text-[13px] text-secondaryDark leading-[18px]">{rule.desc}</Text>
                     </View>
                   </View>
                 ))}
+              </ScrollView>
 
-                <View
-                  className={`rounded-xl p-3 mt-2 mb-4 border ${
-                    isDarkMode ? "bg-surfaceDark border-borderDark" : "bg-amber-50 border-amber-100"
-                  }`}
+              {/* I'll do it myself + Generate — pinned to bottom */}
+              <View className="flex-row gap-3 px-2 pt-3 pb-6">
+                <TouchableOpacity
+                  onPress={handleCloseAIModal}
+                  className="flex-1 bg-surfaceDark rounded-xl py-4 items-center justify-center border border-borderDark"
+                  activeOpacity={0.7}
                 >
-                  <Text
-                    className={`text-[13px] leading-[18px] ${
-                      isDarkMode ? "text-secondaryDark" : "text-amber-800"
-                    }`}
-                  >
-                    <Text className="font-semibold">Tip:</Text> You can
-                    always tweak the amounts afterwards to match your lifestyle.
-                  </Text>
-                </View>
+                  <Text className="text-textDark font-semibold text-base">I'll do it myself</Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={handleSetBudgetWithAI}
-                  className="rounded-xl py-3.5 items-center bg-accentBlue"
+                  className="flex-1 bg-accentTeal rounded-xl py-4 items-center justify-center"
                   activeOpacity={0.8}
                 >
-                  <View className="flex-row items-center gap-1.5">
-                    <Ionicons name="sparkles" size={16} color="#FFF" />
-                    <Text className="text-white font-bold text-base">
-                      Generate My Budget
-                    </Text>
-                  </View>
+                  <Text className="text-white font-bold text-base">Generate</Text>
                 </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={handleCloseAIModal}
-                  className={`mt-2.5 rounded-xl py-3 items-center border ${
-                    isDarkMode ? "bg-surfaceDark border-borderDark" : "bg-background border-borderLight"
-                  }`}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    className={`text-[15px] font-semibold ${
-                      isDarkMode ? "text-secondaryDark" : "text-secondaryLight"
-                    }`}
-                  >
-                    I'll do it myself
-                  </Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
+              </View>
+            </>
           )}
 
           {aiModalView === "preview" && (
@@ -751,8 +700,9 @@ export default function BudgetsScreen() {
               onRetry={handleRetryAI}
             />
           )}
-        </View>
-      )}
+
+        </SafeAreaView>
+      </Modal>
 
       {/* Quick Savings Modal */}
       <QuickSavingsModal

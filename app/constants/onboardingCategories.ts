@@ -29,6 +29,7 @@ export interface V3Category {
 }
 
 export const V3_DEFAULT_CATEGORIES: V3Category[] = [
+  { name: 'Housing', icon: 'home', color: '#F59E0B' },
   { name: 'Groceries', icon: 'cart', color: '#22C55E' },
   { name: 'Eating Out', icon: 'restaurant', color: '#EF4444' },
   { name: 'Subscriptions', icon: 'tv', color: '#8B5CF6' },

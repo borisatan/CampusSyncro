@@ -1,6 +1,6 @@
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
-import * as AuthSession from "expo-auth-session";
+import * as Linking from "expo-linking";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -16,16 +16,88 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
+import { bulkCreateCategories } from "../services/backendService";
 import { ensureUserProfile } from "../services/backendService";
+import { useOnboardingStore } from "../store/useOnboardingStore";
 import { supabase } from "../utils/supabase";
 
 // Configure WebBrowser to properly complete auth sessions
 WebBrowser.maybeCompleteAuthSession();
 
+/**
+ * Persist onboarding data to Supabase after sign-up
+ * Creates categories with budgets and saves income to profile
+ */
+async function persistOnboardingData(userId: string, onboardingData: any) {
+  console.log('[persistOnboardingData] Starting data persistence for user:', userId);
+
+  try {
+    const { selectedCategories, categoryBudgets, estimatedIncome } = onboardingData;
+
+    // Step 1: Create categories if selected during onboarding
+    if (selectedCategories && selectedCategories.length > 0) {
+      console.log('[persistOnboardingData] Creating categories:', selectedCategories);
+
+      // Map category names to V3_DEFAULT_CATEGORIES to get icon/color
+      const categoriesToCreate = selectedCategories.map((categoryName: string) => {
+        const categoryDef = V3_DEFAULT_CATEGORIES.find((cat) => cat.name === categoryName);
+        if (!categoryDef) {
+          console.warn(`[persistOnboardingData] Category not found in V3_DEFAULT_CATEGORIES: ${categoryName}`);
+          return null;
+        }
+
+        // Find budget for this category
+        const budget = categoryBudgets?.find((b: any) => b.category_name === categoryName);
+
+        return {
+          category_name: categoryDef.name,
+          icon: categoryDef.icon,
+          color: categoryDef.color,
+          budget_amount: budget?.budget_amount || null,
+          budget_percentage: budget?.budget_percentage || null,
+        };
+      }).filter(Boolean); // Remove nulls
+
+      if (categoriesToCreate.length > 0) {
+        await bulkCreateCategories(userId, categoriesToCreate as any);
+        console.log('[persistOnboardingData] Categories created successfully');
+      }
+    }
+
+    // Step 2: Update user profile with income if provided
+    if (estimatedIncome && estimatedIncome > 0) {
+      console.log('[persistOnboardingData] Updating profile with income:', estimatedIncome);
+
+      const { error: profileError } = await supabase
+        .from('Profiles')
+        .update({
+          manual_income: estimatedIncome,
+          use_dynamic_income: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error('[persistOnboardingData] Error updating profile:', profileError.message);
+        // Don't throw - we don't want to block sign-up
+      } else {
+        console.log('[persistOnboardingData] Profile updated successfully');
+      }
+    }
+
+    console.log('[persistOnboardingData] Data persistence completed successfully');
+  } catch (error: any) {
+    console.error('[persistOnboardingData] Error persisting onboarding data:', error.message);
+    // Log but don't throw - we don't want to block the sign-up flow
+  }
+}
+
 export default function SignUpScreen() {
   const router = useRouter();
   const { trackEvent, identifyUser } = useAnalytics();
+  const { newOnboardingData } = useOnboardingStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -46,7 +118,7 @@ export default function SignUpScreen() {
 
     try {
       setIsSubmitting(true);
-      const redirectTo = AuthSession.makeRedirectUri({ path: "/" });
+      const redirectTo = Linking.createURL("/");
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -62,6 +134,9 @@ export default function SignUpScreen() {
       if (data.user) {
         // Ensure user profile exists (creates if needed)
         await ensureUserProfile(data.user.id);
+
+        // Persist onboarding data to database
+        await persistOnboardingData(data.user.id, newOnboardingData);
 
         identifyUser(data.user.id, {
           email: data.user.email,
@@ -120,10 +195,8 @@ export default function SignUpScreen() {
     try {
       setIsSubmitting(true);
 
-      // Create proper redirect URI using AuthSession
-      const redirectTo = AuthSession.makeRedirectUri({
-        path: "auth/callback",
-      });
+      // Create proper redirect URI using Linking
+      const redirectTo = Linking.createURL("auth/callback");
       console.log("[OAuth] Step 1: OAuth redirect URL:", redirectTo);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -189,6 +262,9 @@ export default function SignUpScreen() {
       // Ensure user profile exists
       await ensureUserProfile(sessionData.user.id);
 
+      // Persist onboarding data to database
+      await persistOnboardingData(sessionData.user.id, newOnboardingData);
+
       if (sessionData.user) {
         identifyUser(sessionData.user.id, { email: sessionData.user.email });
       }
@@ -232,6 +308,10 @@ export default function SignUpScreen() {
       // Ensure user profile exists (creates if needed)
       if (data.user) {
         await ensureUserProfile(data.user.id);
+
+        // Persist onboarding data to database
+        await persistOnboardingData(data.user.id, newOnboardingData);
+
         identifyUser(data.user.id, { email: data.user.email });
       }
 

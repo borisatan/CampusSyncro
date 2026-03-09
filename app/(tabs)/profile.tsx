@@ -241,7 +241,7 @@ export default function ProfileScreen() {
           </Text>
 
           {/* Currency Selector */}
-          <RipplePressable
+          <Pressable
             onPress={() => setShowCurrencyPicker(!showCurrencyPicker)}
             className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
           >
@@ -262,7 +262,7 @@ export default function ProfileScreen() {
               size={20}
               color={isDarkMode ? "#9CA3AF" : "#4B5563"}
             />
-          </RipplePressable>
+          </Pressable>
 
           {showCurrencyPicker && (
             <View
@@ -299,7 +299,7 @@ export default function ProfileScreen() {
           </RipplePressable>
 
           {/* Daily Reminders Selector */}
-          <RipplePressable
+          <Pressable
             onPress={() => setShowFrequencyPicker(!showFrequencyPicker)}
             className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
           >
@@ -322,7 +322,7 @@ export default function ProfileScreen() {
               size={20}
               color={isDarkMode ? "#9CA3AF" : "#4B5563"}
             />
-          </RipplePressable>
+          </Pressable>
 
           {showFrequencyPicker && (
             <View

@@ -7,49 +7,11 @@ import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
-export const AUTOPILOT_CATEGORIES = [
-  {
-    id: "dining-out",
-    name: "Dining Out",
-    icon: "restaurant-outline" as const,
-    color: "#F57C00",
-  },
-  {
-    id: "impulse-buys",
-    name: "Impulse Buys",
-    icon: "bag-outline" as const,
-    color: "#FF3333",
-  },
-  {
-    id: "subscriptions",
-    name: "Subscriptions",
-    icon: "card-outline" as const,
-    color: "#8A00C2",
-  },
-  {
-    id: "digital-entertainment",
-    name: "Nightlife",
-    icon: "beer-outline" as const,
-    color: "#3B7EFF",
-  },
-  {
-    id: "coffee",
-    name: "Coffee & Cafes",
-    icon: "cafe-outline" as const,
-    color: "#A0522D",
-  },
-  {
-    id: "online-shopping",
-    name: "Shopping",
-    icon: "cart-outline" as const,
-    color: "#009933",
-  },
-];
-
-export default function CategoryAutopilotScreen() {
+export default function CategoryPreselectionScreen() {
   const { setOnboardingStep, setNewOnboardingData, completeOnboarding } = useOnboardingStore();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { trackEvent } = useAnalytics();
@@ -57,15 +19,15 @@ export default function CategoryAutopilotScreen() {
 
   useEffect(() => {
     setOnboardingStep(2);
-    trackEvent("onboarding_category_autopilot_viewed");
-  }, [setOnboardingStep]);
+    trackEvent("onboarding_category_preselection_viewed");
+  }, [setOnboardingStep, trackEvent]);
 
   const toggleCategory = (categoryName: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedCategories((prev) => {
       const isCurrentlySelected = prev.includes(categoryName);
       trackEvent("onboarding_category_toggled", {
-        screen: "category_autopilot",
+        screen: "category_preselection",
         category: categoryName,
         selected: !isCurrentlySelected,
       });
@@ -78,13 +40,13 @@ export default function CategoryAutopilotScreen() {
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
-      screen: "category_autopilot",
+      screen: "category_preselection",
       step: 2,
       selected_categories: selectedCategories,
       category_count: selectedCategories.length,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    setNewOnboardingData({ selectedAutopilotCategories: selectedCategories });
+    setNewOnboardingData({ selectedCategories: selectedCategories });
     setOnboardingStep(3);
     router.push("/(onboarding)/monthly-income");
   };
@@ -98,7 +60,7 @@ export default function CategoryAutopilotScreen() {
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_skipped", {
-      screen: "category_autopilot",
+      screen: "category_preselection",
       step: 2,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
@@ -121,7 +83,6 @@ export default function CategoryAutopilotScreen() {
               <ChevronLeft size={20} color="#8A96B4" />
               <Text className="text-secondaryDark text-sm">Back</Text>
             </Pressable>
-            <Text className="text-secondaryDark text-sm">Step 2 of 7</Text>
             <Pressable
               onPress={handleSkip}
               className="active:opacity-60"
@@ -129,49 +90,51 @@ export default function CategoryAutopilotScreen() {
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>
             </Pressable>
           </View>
-          <View className="h-1 bg-surfaceDark rounded-full overflow-hidden">
-            <MotiView
-              from={{ width: "14.3%" }}
-              animate={{ width: "28.6%" }}
-              transition={{ type: "timing", duration: 500 }}
-              className="h-full overflow-hidden relative"
-            >
-              <LinearGradient
-                colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={{ width: "100%", height: "100%" }}
-              />
+          <View className="items-center">
+            <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
               <MotiView
-                from={{ translateX: -200 }}
-                animate={{ translateX: 200 }}
-                transition={{
-                  type: "timing",
-                  duration: 3000,
-                  loop: true,
-                  delay: 1500,
-                }}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: 100,
-                }}
+                from={{ width: "14.3%" }}
+                animate={{ width: "28.6%" }}
+                transition={{ type: "timing", duration: 500 }}
+                className="h-full overflow-hidden relative"
               >
                 <LinearGradient
-                  colors={[
-                    "rgba(255, 255, 255, 0)",
-                    "rgba(255, 255, 255, 0.3)",
-                    "rgba(255, 255, 255, 0)",
-                  ]}
+                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
                   start={{ x: 0, y: 0.5 }}
                   end={{ x: 1, y: 0.5 }}
                   style={{ width: "100%", height: "100%" }}
                 />
+                <MotiView
+                  from={{ translateX: -200 }}
+                  animate={{ translateX: 200 }}
+                  transition={{
+                    type: "timing",
+                    duration: 3000,
+                    loop: true,
+                    delay: 1500,
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: 100,
+                  }}
+                >
+                  <LinearGradient
+                    colors={[
+                      "rgba(255, 255, 255, 0)",
+                      "rgba(255, 255, 255, 0.3)",
+                      "rgba(255, 255, 255, 0)",
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                </MotiView>
               </MotiView>
-            </MotiView>
+            </View>
           </View>
         </View>
 
@@ -189,22 +152,22 @@ export default function CategoryAutopilotScreen() {
               className="mb-8"
             >
               <Text className="text-3xl text-white text-center leading-tight mb-2 px-4">
-                Where does your spending feel on{" "}
-                <Text className="text-accentBlue font-bold">autopilot</Text>?
+                Which categories do you want to{" "}
+                <Text className="text-accentBlue font-bold">track</Text>?
               </Text>
               <Text className="text-secondaryDark text-sm text-center mt-2">
-                Select all that apply
+                Select the expenses you want to monitor
               </Text>
             </MotiView>
 
             {/* Category Cards */}
             <View className="mb-8">
-              {AUTOPILOT_CATEGORIES.map((category, index) => {
+              {V3_DEFAULT_CATEGORIES.map((category, index) => {
                 const isSelected = selectedCategories.includes(category.name);
 
                 return (
                   <MotiView
-                    key={category.id}
+                    key={category.name}
                     from={{ opacity: 0, translateY: 20 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ delay: 400 + index * 100, duration: 500 }}
@@ -265,26 +228,13 @@ export default function CategoryAutopilotScreen() {
             </View>
 
             {/* Continue Button */}
-            {isNextDisabled ? (
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: 900, duration: 500 }}
-              >
-                <View className="w-full py-4 rounded-xl bg-surfaceDark border border-borderDark">
-                  <Text className="text-lg text-center font-medium text-secondaryDark">
-                    Continue
-                  </Text>
-                </View>
-              </MotiView>
-            ) : (
-              <AnimatedGradientButton
-                onPress={handleNext}
-                text="Continue"
-                delay={900}
-                rounded="xl"
-              />
-            )}
+            <AnimatedGradientButton
+              onPress={handleNext}
+              text="Continue"
+              delay={900}
+              rounded="xl"
+              disabled={isNextDisabled}
+            />
           </MotiView>
         </View>
       </ScrollView>

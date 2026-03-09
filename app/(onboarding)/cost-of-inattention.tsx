@@ -68,7 +68,7 @@ export default function CostOfInattentionScreen() {
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setOnboardingStep(5);
-    router.push("/(onboarding)/why-manual");
+    router.push("/(onboarding)/budget-setup-choice");
   };
 
   const handleBack = () => {
@@ -101,7 +101,6 @@ export default function CostOfInattentionScreen() {
               <ChevronLeft size={20} color="#8A96B4" />
               <Text className="text-secondaryDark text-sm">Back</Text>
             </Pressable>
-            <Text className="text-secondaryDark text-sm">Step 4 of 7</Text>
             <Pressable
               onPress={handleSkip}
               className="active:opacity-60"
@@ -109,49 +108,51 @@ export default function CostOfInattentionScreen() {
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>
             </Pressable>
           </View>
-          <View className="h-1 bg-surfaceDark rounded-full overflow-hidden">
-            <MotiView
-              from={{ width: "42.9%" }}
-              animate={{ width: "57.1%" }}
-              transition={{ type: "timing", duration: 500 }}
-              className="h-full overflow-hidden relative"
-            >
-              <LinearGradient
-                colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={{ width: "100%", height: "100%" }}
-              />
+          <View className="items-center">
+            <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
               <MotiView
-                from={{ translateX: -200 }}
-                animate={{ translateX: 200 }}
-                transition={{
-                  type: "timing",
-                  duration: 3000,
-                  loop: true,
-                  delay: 1500,
-                }}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: 100,
-                }}
+                from={{ width: "42.9%" }}
+                animate={{ width: "57.1%" }}
+                transition={{ type: "timing", duration: 500 }}
+                className="h-full overflow-hidden relative"
               >
                 <LinearGradient
-                  colors={[
-                    "rgba(255, 255, 255, 0)",
-                    "rgba(255, 255, 255, 0.3)",
-                    "rgba(255, 255, 255, 0)",
-                  ]}
+                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
                   start={{ x: 0, y: 0.5 }}
                   end={{ x: 1, y: 0.5 }}
                   style={{ width: "100%", height: "100%" }}
                 />
+                <MotiView
+                  from={{ translateX: -200 }}
+                  animate={{ translateX: 200 }}
+                  transition={{
+                    type: "timing",
+                    duration: 3000,
+                    loop: true,
+                    delay: 1500,
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: 100,
+                  }}
+                >
+                  <LinearGradient
+                    colors={[
+                      "rgba(255, 255, 255, 0)",
+                      "rgba(255, 255, 255, 0.3)",
+                      "rgba(255, 255, 255, 0)",
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                </MotiView>
               </MotiView>
-            </MotiView>
+            </View>
           </View>
         </View>
 
