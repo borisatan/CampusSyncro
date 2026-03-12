@@ -49,11 +49,10 @@ export default function SubscriptionTrialScreen() {
       billing_period: billingPeriod,
       time_on_screen_seconds: timeOnScreen,
     });
-    trackEvent("onboarding_completed", { billing_period: billingPeriod });
     trackEvent("trial_started", { billing_period: billingPeriod });
     setNewOnboardingData({ selectedBillingPeriod: billingPeriod });
-    completeOnboarding();
-    router.replace("/(auth)/sign-up");
+    setOnboardingStep(11);
+    router.push("/(onboarding)/notification-reminders");
   };
 
   const handleBack = () => {

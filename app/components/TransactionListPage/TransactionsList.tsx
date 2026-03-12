@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import React, { useCallback, useEffect, useRef } from "react";
-import { Animated, SectionList, Text } from "react-native";
+import React, { useCallback } from "react";
+import { SectionList, Text } from "react-native";
 import { CategoryIconInfo, TransactionSection } from "../../types/types";
 import TransactionItem from "./TransactionItem";
 import { RipplePressable } from "../Shared/RipplePressable";
@@ -30,22 +30,29 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
     />
   ), [categoryIcons, onItemLongPress]);
   
+  const renderSectionHeader = useCallback(({ section: { title } }: { section: { title: string } }) => (
+    <Text className="text-md text-secondaryLight dark:text-secondaryDark mb-2 mt-4 px-1">
+      {new Date(title).toDateString()}
+    </Text>
+  ), []);
+
   return (
     <SectionList
       sections={sections}
       keyExtractor={(item) => `${item.id}-${String(item.created_at)}`}
       renderItem={renderItem}
-      renderSectionHeader={({ section: { title } }) => (
-        <Text className="text-md text-secondaryLight dark:text-secondaryDark mb-2 mt-4 px-1">
-          {new Date(title).toDateString()}
-        </Text>
-      )}
+      renderSectionHeader={renderSectionHeader}
       className="px-2"
       contentContainerStyle={{ paddingBottom: 100 }}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.3}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={10}
+      updateCellsBatchingPeriod={50}
+      initialNumToRender={15}
+      windowSize={10}
       maintainVisibleContentPosition={{
         minIndexForVisible: 0,
         autoscrollToTopThreshold: 10,
@@ -70,48 +77,19 @@ const AnimatedTransactionItem = React.memo(function AnimatedTransactionItem({
   categoryIcons: Record<string, CategoryIconInfo>;
   onLongPress?: (id: string) => void;
 }) {
-  // 1. Initialize Animation Values
-  const opacity = useRef(new Animated.Value(0)).current; // Start invisible
-  const translateY = useRef(new Animated.Value(10)).current; // Optional: slight slide up
-
-  // 2. Entrance Animation on Mount
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onLongPress?.(transaction.id);
-  };
+  }, [transaction.id, onLongPress]);
 
   return (
-    <Animated.View
-      style={{
-        opacity, // Apply the fade
-        transform: [
-          { translateY } // Apply the slide
-        ]
-      }}
+    <RipplePressable
+      onPress={handlePress}
+      delayLongPress={200}
+      className="rounded-2xl overflow-hidden mb-2"
+      rippleColor="rgba(255, 255, 255, 0.15)"
     >
-      <RipplePressable
-        onPress={handlePress}
-        delayLongPress={200}
-        className="rounded-2xl overflow-hidden mb-2"
-        rippleColor="rgba(255, 255, 255, 0.15)"
-      >
-        <TransactionItem transaction={transaction} categoryIcons={categoryIcons} />
-      </RipplePressable>
-    </Animated.View>
+      <TransactionItem transaction={transaction} categoryIcons={categoryIcons} />
+    </RipplePressable>
   );
 });

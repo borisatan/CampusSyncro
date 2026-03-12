@@ -112,9 +112,6 @@ export default function BudgetSetupChoiceScreen() {
                 How would you like to set your{" "}
                 <Text className="text-accentGreen">budgets</Text>?
               </Text>
-              <Text className="text-secondaryDark text-sm text-center mt-2 px-4">
-                Choose the approach that works best for you
-              </Text>
             </MotiView>
 
             {/* Option Cards */}
@@ -149,8 +146,7 @@ export default function BudgetSetupChoiceScreen() {
                         <ArrowRight size={20} color="#60A5FA" />
                       </View>
                       <Text className="text-blue-100 text-sm leading-relaxed">
-                        Let AI intelligently allocate your budget using the proven 50/30/20 rule.
-                        Personalized to your selected categories and income.
+                        Let us allocate your budget using the proven 50/30/20 rule.
                       </Text>
                     </View>
                   </LinearGradient>
@@ -184,7 +180,6 @@ export default function BudgetSetupChoiceScreen() {
                     </View>
                     <Text className="text-secondaryDark text-sm leading-relaxed">
                       Set your own budget amounts for each category.
-                      Perfect if you already know your spending patterns.
                     </Text>
                   </View>
                 </Pressable>
@@ -202,7 +197,7 @@ export default function BudgetSetupChoiceScreen() {
                 >
                   <View className="bg-transparent border border-borderDark rounded-xl p-4">
                     <Text className="text-secondaryDark text-base text-center">
-                      Skip for now - I'll set up budgets later
+                      Skip for now
                     </Text>
                   </View>
                 </Pressable>

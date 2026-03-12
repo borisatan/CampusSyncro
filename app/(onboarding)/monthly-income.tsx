@@ -30,9 +30,6 @@ export default function MonthlyIncomeScreen() {
   useEffect(() => {
     setOnboardingStep(3);
     trackEvent("onboarding_monthly_income_viewed");
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 600);
   }, [setOnboardingStep]);
 
   const handleNext = () => {
@@ -141,12 +138,11 @@ export default function MonthlyIncomeScreen() {
             </View>
           </View>
 
-          <View className="flex-1 px-2 py-8 pt-4">
+          <View className="px-2 py-8 pt-4">
             <MotiView
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 600 }}
-              className="flex-1"
             >
               {/* Icon */}
               <MotiView

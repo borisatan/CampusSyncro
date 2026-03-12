@@ -28,24 +28,51 @@ const CATEGORY_PROMPTS: Record<
   string,
   { prefix: string; suffix: string; amount: number }
 > = {
+  Housing: {
+    prefix: "Log your",
+    suffix: "monthly rent",
+    amount: 1200,
+  },
+  Groceries: {
+    prefix: "Log your",
+    suffix: "grocery shopping",
+    amount: 85,
+  },
+  "Eating Out": {
+    prefix: "Log your",
+    suffix: "lunch order",
+    amount: 19,
+  },
   Subscriptions: {
     prefix: "Log your",
     suffix: "Netflix subscription",
-    amount: 17.99,
+    amount: 16,
   },
-  "Impulse Buys": {
+  Transport: {
     prefix: "Log your",
-    suffix: "impulse purchase",
+    suffix: "gas fill-up",
+    amount: 45,
+  },
+  Shopping: {
+    prefix: "Log your",
+    suffix: "Amazon order",
+    amount: 62,
+  },
+  Nightlife: {
+    prefix: "Log your",
+    suffix: "night out",
+    amount: 55,
+  },
+  Healthcare: {
+    prefix: "Log your",
+    suffix: "pharmacy visit",
+    amount: 29,
+  },
+  Other: {
+    prefix: "Log your",
+    suffix: "expense",
     amount: 25,
   },
-  "Dining Out": { prefix: "Log your", suffix: "lunch order", amount: 30 },
-  Nightlife: { prefix: "Log your", suffix: "bar tab last night", amount: 35 },
-  "Coffee & Cafes": {
-    prefix: "Log your",
-    suffix: "morning coffee run",
-    amount: 6.5,
-  },
-  Shopping: { prefix: "Log your", suffix: "amazon order", amount: 47 },
 };
 
 export default function PracticeEntryScreen() {

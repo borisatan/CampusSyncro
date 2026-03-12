@@ -192,12 +192,33 @@ export default function SignUpScreen() {
     console.log("[OAuth] GOOGLE SIGN IN STARTED");
     console.log("========================================");
 
+    let urlListener: any = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+    let fallbackUrl: string | null = null;
+    let isTimedOut = false;
+
     try {
       setIsSubmitting(true);
 
       // Create proper redirect URI using Linking
       const redirectTo = Linking.createURL("auth/callback");
       console.log("[OAuth] Step 1: OAuth redirect URL:", redirectTo);
+
+      // Setup URL listener as fallback mechanism
+      // This catches the callback if user closes browser manually
+      urlListener = Linking.addEventListener('url', (event) => {
+        console.log("[OAuth] URL listener fired:", event.url);
+        if (event.url.includes('auth/callback')) {
+          fallbackUrl = event.url;
+          console.log("[OAuth] Fallback URL captured");
+        }
+      });
+
+      // Setup timeout (30 seconds)
+      timeoutId = setTimeout(() => {
+        isTimedOut = true;
+        console.log("[OAuth] Authentication timed out after 30 seconds");
+      }, 30000);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -227,14 +248,36 @@ export default function SignUpScreen() {
 
       console.log('[OAuth] Step 3: Browser result:', result.type);
 
-      // Check if user cancelled
-      if (result.type === "cancel" || result.type === "dismiss") {
-        console.log("[OAuth] User cancelled authentication");
-        return;
+      // Check for timeout
+      if (isTimedOut) {
+        throw new Error("Authentication timed out. Please try again.");
       }
 
-      // Check if we got a successful result with URL
-      if (result.type !== "success" || !result.url) {
+      // Determine the callback URL source
+      let callbackUrl: string | null = null;
+
+      if (result.type === "success" && result.url) {
+        // Primary path: WebBrowser captured the redirect successfully
+        console.log("[OAuth] Using callback URL from WebBrowser");
+        callbackUrl = result.url;
+      } else if (result.type === "cancel" || result.type === "dismiss") {
+        // Fallback path: Check if URL listener captured the callback
+        console.log("[OAuth] Browser dismissed, checking fallback URL");
+
+        // Wait briefly to allow listener to fire
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (fallbackUrl) {
+          console.log("[OAuth] Using fallback URL from listener");
+          callbackUrl = fallbackUrl;
+        } else {
+          // User actually cancelled without completing auth
+          console.log("[OAuth] User cancelled authentication (no callback received)");
+          return;
+        }
+      }
+
+      if (!callbackUrl) {
         throw new Error("No callback URL received from authentication");
       }
 
@@ -242,7 +285,7 @@ export default function SignUpScreen() {
 
       // Exchange the authorization code for a session
       const { data: sessionData, error: sessionError } =
-        await supabase.auth.exchangeCodeForSession(result.url);
+        await supabase.auth.exchangeCodeForSession(callbackUrl);
 
       if (sessionError) {
         console.error("[OAuth] Session exchange error:", sessionError);
@@ -284,6 +327,14 @@ export default function SignUpScreen() {
         e?.message ?? "An error occurred during Google sign-in."
       );
     } finally {
+      // Cleanup: Remove listener and clear timeout
+      if (urlListener) {
+        urlListener.remove();
+        console.log("[OAuth] URL listener removed");
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       setIsSubmitting(false);
     }
   };

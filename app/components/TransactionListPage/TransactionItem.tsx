@@ -11,11 +11,11 @@ type TransactionItemProps = {
   categoryIcons: Record<string, CategoryIconInfo>;
 };
 
-const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, categoryIcons }) => {
+const TransactionItem: React.FC<TransactionItemProps> = React.memo(({ transaction, categoryIcons }) => {
   const { isDarkMode } = useTheme();
   const { currencySymbol } = useCurrencyStore();
   const iconInfo = categoryIcons[transaction.category_name] || { icon: "help-circle", color: "#999" };
-  // console.log(iconName)
+
   return (
     <View className="bg-backgroundMuted dark:bg-surfaceDark border border-borderLight dark:border-borderDark p-4 rounded-2xl flex-row justify-between items-start">
       {/* Left side */}
@@ -24,7 +24,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, category
           className="w-10 h-10 rounded-xl justify-center items-center mr-3"
           style={{ backgroundColor: iconInfo.color }}
         >
-          <Ionicons name={iconInfo.icon as any} size={20} color="#FFFFFF" /> 
+          <Ionicons name={iconInfo.icon as any} size={20} color="#FFFFFF" />
         </View>
         <View className="flex-1">
           <Text className="text-md font-medium text-textLight dark:text-textDark">
@@ -59,6 +59,6 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, category
     </View>
 
   );
-};
+});
 
 export default TransactionItem;

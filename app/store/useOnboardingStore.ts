@@ -29,6 +29,7 @@ interface NewOnboardingData {
   estimatedIncome: number;                 // Screen 3 (moved earlier in new flow)
   practiceEntryCompleted: boolean;        // Screen 9 (was 6)
   selectedBillingPeriod: 'monthly' | 'annual' | null; // Screen 10 (was 7)
+  notificationFrequency: 'once' | 'three' | 'five' | null; // Screen 11
 }
 
 interface OnboardingStoreState {
@@ -91,6 +92,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         estimatedIncome: 0,
         practiceEntryCompleted: false,
         selectedBillingPeriod: null,
+        notificationFrequency: null,
       },
 
       setOnboardingStep: (step) => set({ onboardingStep: step }),
@@ -146,6 +148,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
             estimatedIncome: 0,
             practiceEntryCompleted: false,
             selectedBillingPeriod: null,
+            notificationFrequency: null,
           },
         });
       },

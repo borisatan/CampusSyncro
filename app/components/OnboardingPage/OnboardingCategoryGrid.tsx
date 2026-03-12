@@ -4,10 +4,29 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
 import { V3_DEFAULT_CATEGORIES } from "../../constants/onboardingCategories";
 
+// Map filled icons to outline variants
+const getOutlineIcon = (icon: string): keyof typeof Ionicons.glyphMap => {
+  // If already an outline icon, return as-is
+  if (icon.endsWith('-outline')) {
+    return icon as keyof typeof Ionicons.glyphMap;
+  }
+
+  const outlineMap: Record<string, string> = {
+    'home': 'home-outline',
+    'cart': 'cart-outline',
+    'restaurant': 'restaurant-outline',
+    'tv': 'tv-outline',
+    'car': 'car-outline',
+    'bag-handle': 'bag-outline',
+    'apps': 'apps-outline',
+  };
+  return (outlineMap[icon] || icon) as keyof typeof Ionicons.glyphMap;
+};
+
 // Build category map from V3_DEFAULT_CATEGORIES
 const CATEGORY_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> =
   V3_DEFAULT_CATEGORIES.reduce((acc, cat) => {
-    acc[cat.name] = { icon: cat.icon as keyof typeof Ionicons.glyphMap, color: cat.color };
+    acc[cat.name] = { icon: getOutlineIcon(cat.icon) as keyof typeof Ionicons.glyphMap, color: cat.color };
     return acc;
   }, {} as Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }>);
 
@@ -112,15 +131,13 @@ const AnimatedCategoryItem = ({
       <TouchableOpacity
         onPress={onPress}
         disabled={isDisabled}
-        className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
-          isSelected
-            ? isDarkMode
-              ? "bg-surfaceDark border-accentBlue"
-              : "bg-blue-50 border-accentBlue"
-            : isDarkMode
-              ? "bg-surfaceDark border-borderDark"
-              : "bg-background border-borderLight"
-        }`}
+        style={{
+          backgroundColor: color + "15",
+          borderWidth: 1.5,
+          borderColor: isSelected ? color + "80" : "transparent",
+          borderRadius: 12,
+        }}
+        className="flex flex-col items-center gap-2 p-3"
       >
         <View
           className="w-12 h-12 rounded-xl items-center justify-center"
@@ -135,7 +152,7 @@ const AnimatedCategoryItem = ({
           />
         </View>
         <Text
-          className={`text-sm text-center ${isDarkMode ? "text-slate200" : "text-gray700"}`}
+          className={`text-sm text-center ${isDarkMode ? "text-white" : "text-gray700"}`}
         >
           {categoryName}
         </Text>

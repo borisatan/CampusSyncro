@@ -28,6 +28,10 @@ export default function OnboardingLayout() {
         name="subscription-trial"
         options={{ gestureEnabled: false }}
       />
+      <Stack.Screen
+        name="notification-reminders"
+        options={{ gestureEnabled: false }}
+      />
     </Stack>
   );
 }

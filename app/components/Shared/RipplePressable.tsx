@@ -75,7 +75,7 @@ export const RipplePressable: React.FC<RipplePressableProps> = ({
     rippleY.setValue(finalY);
 
     // Reset and start ripple animation
-    rippleScale.setValue(0.005);
+    rippleScale.setValue(0.05);
     rippleOpacity.setValue(1);
     overlayOpacity.setValue(1);
 

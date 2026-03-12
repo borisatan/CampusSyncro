@@ -23,7 +23,15 @@
       "Bash(git log:*)",
       "Bash(npx expo prebuild:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(npx expo-router:*)",
+      "WebFetch(domain:supabase.com)",
+      "WebSearch",
+      "Skill(app-store-screenshots)",
+      "Bash(yarn create:*)",
+      "Bash(yarn install)",
+      "Bash(yarn dev)",
+      "Bash(identify:*)"
     ]
   }
 }

@@ -41,7 +41,6 @@ const ExpoSqliteStorage = {
         return null;
       }
       const value = await AsyncStorage.getItem(key);
-      console.log('[Storage] getItem native:', key, value ? 'found' : 'not found');
       return value;
     } catch (error) {
       console.error('[Storage] getItem error:', key, error);
@@ -83,7 +82,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: ExpoSqliteStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true, // Enable automatic session detection from OAuth callback URLs
     flowType: "pkce",
   },
 });

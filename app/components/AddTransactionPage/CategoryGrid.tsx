@@ -51,7 +51,7 @@ export const CategoryGrid = ({
         </Text>
         <TouchableOpacity
           onPress={() => setIsEditMode(!isEditMode)}
-          className={`px-4 py-1 rounded-lg border ${
+          className={`px-4 py-1 rounded-lg border items-center justify-center ${
             isEditMode
               ? "bg-accentBlue border-surfaceDark"
               : isDarkMode

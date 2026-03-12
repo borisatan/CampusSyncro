@@ -11,6 +11,25 @@ import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
+// Map filled icons to outline variants
+const getOutlineIcon = (icon: string): keyof typeof Ionicons.glyphMap => {
+  // If already an outline icon, return as-is
+  if (icon.endsWith('-outline')) {
+    return icon as keyof typeof Ionicons.glyphMap;
+  }
+
+  const outlineMap: Record<string, string> = {
+    'home': 'home-outline',
+    'cart': 'cart-outline',
+    'restaurant': 'restaurant-outline',
+    'tv': 'tv-outline',
+    'car': 'car-outline',
+    'bag-handle': 'bag-outline',
+    'apps': 'apps-outline',
+  };
+  return (outlineMap[icon] || icon) as keyof typeof Ionicons.glyphMap;
+};
+
 export default function CategoryPreselectionScreen() {
   const { setOnboardingStep, setNewOnboardingData, completeOnboarding } = useOnboardingStore();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -138,7 +157,7 @@ export default function CategoryPreselectionScreen() {
           </View>
         </View>
 
-        <View className="flex-1 px-2 py-8 pt-4">
+        <View className="px-2 py-8 pt-4">
           <MotiView
             from={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -178,49 +197,41 @@ export default function CategoryPreselectionScreen() {
                       className="rounded-xl overflow-hidden"
                       android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
                     >
-                      <LinearGradient
-                        colors={
-                          isSelected
-                            ? [category.color + "CC", category.color + "40"]
-                            : [category.color + "20", category.color + "05"]
-                        }
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
+                      <View
                         style={{
-                          borderWidth: 2,
-                          borderColor: isSelected
-                            ? category.color
-                            : "rgba(255, 255, 255, 0.1)",
+                          backgroundColor: "#161B2E",
+                          borderWidth: 1,
+                          borderColor: isSelected ? "#3B7EFF" : "#2A3250",
                           borderRadius: 12,
                         }}
                       >
                         <View className="p-3">
                           <View className="flex-row items-center gap-3">
                             <View
-                              className="w-10 h-10 rounded-lg items-center justify-center"
+                              className="w-12 h-12 rounded-lg items-center justify-center"
                               style={{ backgroundColor: category.color }}
                             >
                               <Ionicons
-                                name={category.icon}
-                                size={20}
+                                name={getOutlineIcon(category.icon)}
+                                size={24}
                                 color="#ffffff"
                               />
                             </View>
                             <View className="flex-1">
-                              <Text className="text-white text-base font-medium">
+                              <Text className="text-white text-lg font-medium">
                                 {category.name}
                               </Text>
                             </View>
                             {isSelected && (
                               <Ionicons
                                 name="checkmark-circle"
-                                size={22}
+                                size={24}
                                 color="#ffffff"
                               />
                             )}
                           </View>
                         </View>
-                      </LinearGradient>
+                      </View>
                     </Pressable>
                   </MotiView>
                 );
