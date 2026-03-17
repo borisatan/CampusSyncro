@@ -1,8 +1,9 @@
 import { useFont } from "@shopify/react-native-skia";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PageTour } from "../components/Shared/AppTour";
 
 // Custom Components
 import { BudgetHealthCard } from "../components/HomePage/BudgetHealthCard";
@@ -26,6 +27,7 @@ import { useIncomeStore } from "../store/useIncomeStore";
 export default function Dashboard() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
+  const summaryRef = useRef<View>(null);
   const { isUnlocked } = useLock();
 
   const {
@@ -128,13 +130,15 @@ export default function Dashboard() {
             <DashboardSkeleton isDarkMode={isDarkMode} />
           ) : (
             <>
-              <DashboardSummary
-                totalBalance={totalBalance}
-                totalIncome={totalIncome}
-                totalExpenses={totalExpenses}
-                currencySymbol={currencySymbol}
-                isUnlocked={isUnlocked}
-              />
+              <View ref={summaryRef}>
+                <DashboardSummary
+                  totalBalance={totalBalance}
+                  totalIncome={totalIncome}
+                  totalExpenses={totalExpenses}
+                  currencySymbol={currencySymbol}
+                  isUnlocked={isUnlocked}
+                />
+              </View>
 
               <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
@@ -173,6 +177,12 @@ export default function Dashboard() {
           )}
         </View>
       </ScrollView>
+      <PageTour
+        pageId="dashboard"
+        title="Your financial overview"
+        description="This is your dashboard. See your total balance, income, and spending for any time period. Add accounts first to start tracking."
+        targetRef={summaryRef}
+      />
     </SafeAreaView>
   );
 }

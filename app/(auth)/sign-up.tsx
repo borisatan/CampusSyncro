@@ -26,31 +26,33 @@ import { supabase } from "../utils/supabase";
 // Configure WebBrowser to properly complete auth sessions
 WebBrowser.maybeCompleteAuthSession();
 
+const NOTIFICATION_FREQUENCY_MAP: Record<string, number> = {
+  once: 1,
+  three: 3,
+  five: 5,
+};
+
 /**
- * Persist onboarding data to Supabase after sign-up
- * Creates categories with budgets and saves income to profile
+ * Persist onboarding data to Supabase after sign-up.
+ * Creates categories with budgets, saves income and notification frequency to profile.
+ * Exported so AuthContext and callback route can also call it.
  */
-async function persistOnboardingData(userId: string, onboardingData: any) {
+export async function persistOnboardingData(userId: string, onboardingData: any) {
   console.log('[persistOnboardingData] Starting data persistence for user:', userId);
 
-  try {
-    const { selectedCategories, categoryBudgets, estimatedIncome } = onboardingData;
+  const { selectedCategories, categoryBudgets, estimatedIncome, notificationFrequency } = onboardingData;
 
-    // Step 1: Create categories if selected during onboarding
-    if (selectedCategories && selectedCategories.length > 0) {
-      console.log('[persistOnboardingData] Creating categories:', selectedCategories);
-
-      // Map category names to V3_DEFAULT_CATEGORIES to get icon/color
+  // Step 1: Create categories (errors are logged but don't block profile update)
+  if (selectedCategories && selectedCategories.length > 0) {
+    console.log('[persistOnboardingData] Creating categories:', selectedCategories);
+    try {
       const categoriesToCreate = selectedCategories.map((categoryName: string) => {
         const categoryDef = V3_DEFAULT_CATEGORIES.find((cat) => cat.name === categoryName);
         if (!categoryDef) {
           console.warn(`[persistOnboardingData] Category not found in V3_DEFAULT_CATEGORIES: ${categoryName}`);
           return null;
         }
-
-        // Find budget for this category
         const budget = categoryBudgets?.find((b: any) => b.category_name === categoryName);
-
         return {
           category_name: categoryDef.name,
           icon: categoryDef.icon,
@@ -58,46 +60,54 @@ async function persistOnboardingData(userId: string, onboardingData: any) {
           budget_amount: budget?.budget_amount || null,
           budget_percentage: budget?.budget_percentage || null,
         };
-      }).filter(Boolean); // Remove nulls
+      }).filter(Boolean);
 
       if (categoriesToCreate.length > 0) {
         await bulkCreateCategories(userId, categoriesToCreate as any);
         console.log('[persistOnboardingData] Categories created successfully');
       }
+    } catch (catError: any) {
+      console.error('[persistOnboardingData] Error creating categories:', catError.message);
+    }
+  }
+
+  // Step 2: Update profile with income and notification frequency (always runs)
+  try {
+    const profileUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
+
+    if (estimatedIncome && estimatedIncome > 0) {
+      profileUpdates.manual_income = estimatedIncome;
+      profileUpdates.use_dynamic_income = false;
     }
 
-    // Step 2: Update user profile with income if provided
-    if (estimatedIncome && estimatedIncome > 0) {
-      console.log('[persistOnboardingData] Updating profile with income:', estimatedIncome);
+    const frequencyValue = notificationFrequency ? (NOTIFICATION_FREQUENCY_MAP[notificationFrequency] ?? 0) : 0;
+    if (frequencyValue > 0) {
+      profileUpdates.daily_notification_frequency = frequencyValue;
+    }
 
+    if (Object.keys(profileUpdates).length > 1) { // more than just updated_at
       const { error: profileError } = await supabase
         .from('Profiles')
-        .update({
-          manual_income: estimatedIncome,
-          use_dynamic_income: false,
-          updated_at: new Date().toISOString(),
-        })
+        .update(profileUpdates)
         .eq('id', userId);
 
       if (profileError) {
         console.error('[persistOnboardingData] Error updating profile:', profileError.message);
-        // Don't throw - we don't want to block sign-up
       } else {
         console.log('[persistOnboardingData] Profile updated successfully');
       }
     }
-
-    console.log('[persistOnboardingData] Data persistence completed successfully');
-  } catch (error: any) {
-    console.error('[persistOnboardingData] Error persisting onboarding data:', error.message);
-    // Log but don't throw - we don't want to block the sign-up flow
+  } catch (profileError: any) {
+    console.error('[persistOnboardingData] Error updating profile:', profileError.message);
   }
+
+  console.log('[persistOnboardingData] Data persistence completed');
 }
 
 export default function SignUpScreen() {
   const router = useRouter();
   const { trackEvent, identifyUser } = useAnalytics();
-  const { newOnboardingData } = useOnboardingStore();
+  const { newOnboardingData, setOnboardingDataPersisted, clearOnboardingDataPersisted } = useOnboardingStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -118,6 +128,13 @@ export default function SignUpScreen() {
 
     try {
       setIsSubmitting(true);
+
+      // Claim the flag BEFORE signUp so that when onAuthStateChange fires
+      // (which supabase calls synchronously during signUp before the promise
+      // returns), AuthContext sees hasPersistedOnboardingData=true and skips.
+      // This makes sign-up.tsx the sole persister for instant-session paths.
+      setOnboardingDataPersisted();
+
       const redirectTo = Linking.createURL("/");
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -126,28 +143,30 @@ export default function SignUpScreen() {
       });
 
       if (error) {
+        clearOnboardingDataPersisted(); // Allow retry
         trackEvent("user_sign_up_failed", { error_message: error.message });
         Alert.alert("Sign up failed", error.message);
         return;
       }
 
+      trackEvent("user_signed_up", { requires_verification: !data.session });
+
+      if (!data.session) {
+        // Email verification required — clear the flag we claimed so that
+        // AuthContext can persist onboarding data after the user verifies and signs in.
+        clearOnboardingDataPersisted();
+        setAwaitingVerification(true);
+        return;
+      }
+
       if (data.user) {
-        // Ensure user profile exists (creates if needed)
+        // Instant session: flag is already claimed above, we're the sole persister.
         await ensureUserProfile(data.user.id);
-
-        // Persist onboarding data to database
         await persistOnboardingData(data.user.id, newOnboardingData);
-
         identifyUser(data.user.id, {
           email: data.user.email,
           $set_once: { signup_date: new Date().toISOString() },
         });
-      }
-      trackEvent("user_signed_up", { requires_verification: !data.session });
-
-      if (!data.session) {
-        setAwaitingVerification(true);
-        return;
       }
 
       router.replace("/(tabs)/dashboard");
@@ -283,6 +302,11 @@ export default function SignUpScreen() {
 
       console.log("[OAuth] Step 4: Got callback URL, exchanging for session");
 
+      // Claim flag BEFORE exchangeCodeForSession so that when onAuthStateChange fires
+      // (which it does synchronously-ish during the exchange), it sees the flag already
+      // set and skips persistence — this component is the sole persister for OAuth flows.
+      setOnboardingDataPersisted();
+
       // Exchange the authorization code for a session
       const { data: sessionData, error: sessionError } =
         await supabase.auth.exchangeCodeForSession(callbackUrl);
@@ -298,9 +322,6 @@ export default function SignUpScreen() {
 
       console.log("[OAuth] Session established successfully!");
       console.log("[OAuth] User ID:", sessionData.session.user.id);
-
-      // Wait for session to be persisted
-      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Ensure user profile exists
       await ensureUserProfile(sessionData.user.id);
@@ -350,6 +371,9 @@ export default function SignUpScreen() {
       });
       if (!credential.identityToken) throw new Error("No identity token");
 
+      // Claim flag BEFORE signInWithIdToken so onAuthStateChange sees it already set
+      setOnboardingDataPersisted();
+
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: credential.identityToken,
@@ -359,10 +383,7 @@ export default function SignUpScreen() {
       // Ensure user profile exists (creates if needed)
       if (data.user) {
         await ensureUserProfile(data.user.id);
-
-        // Persist onboarding data to database
         await persistOnboardingData(data.user.id, newOnboardingData);
-
         identifyUser(data.user.id, { email: data.user.email });
       }
 

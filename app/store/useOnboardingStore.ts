@@ -52,6 +52,9 @@ interface OnboardingStoreState {
   // New onboarding flow data
   newOnboardingData: NewOnboardingData;
 
+  // Whether onboarding data has been persisted to Supabase
+  hasPersistedOnboardingData: boolean;
+
   // Actions
   setOnboardingStep: (step: number) => void;
   setPendingCategories: (categories: OnboardingCategory[]) => void;
@@ -62,6 +65,8 @@ interface OnboardingStoreState {
   setPendingAccountName: (name: string) => void;
   setPendingTransactions: (transactions: PendingTransaction[]) => void;
   setNewOnboardingData: (data: Partial<NewOnboardingData>) => void;
+  setOnboardingDataPersisted: () => void;
+  clearOnboardingDataPersisted: () => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
   setHydrated: (hydrated: boolean) => void;
@@ -72,6 +77,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
     (set, get) => ({
       onboardingStep: 0,
       hasCompletedOnboarding: false,
+      hasPersistedOnboardingData: false,
       isHydrated: false,
       pendingCategories: [],
       pendingBudgets: {},
@@ -122,6 +128,10 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         return { newOnboardingData: updated };
       }),
 
+      setOnboardingDataPersisted: () => set({ hasPersistedOnboardingData: true }),
+
+      clearOnboardingDataPersisted: () => set({ hasPersistedOnboardingData: false }),
+
       completeOnboarding: () => {
         set({
           hasCompletedOnboarding: true,
@@ -133,6 +143,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         set({
           onboardingStep: 0,
           hasCompletedOnboarding: false,
+          hasPersistedOnboardingData: false,
           pendingCategories: [],
           pendingBudgets: {},
           pendingIncome: 0,

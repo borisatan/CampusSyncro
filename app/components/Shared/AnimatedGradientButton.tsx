@@ -1,6 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { ArrowRight } from "lucide-react-native";
 import { MotiView } from "moti";
+import React, { useMemo, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 
 interface AnimatedGradientButtonProps {
@@ -13,7 +14,28 @@ interface AnimatedGradientButtonProps {
   gradientColors?: [string, string, string];
 }
 
-export function AnimatedGradientButton({
+const ENTRANCE_FROM = { opacity: 0, translateY: 20 } as const;
+const ENTRANCE_ANIMATE = { opacity: 1, translateY: 0 } as const;
+
+const SHIMMER_FROM = { translateX: -400 } as const;
+const SHIMMER_ANIMATE = { translateX: 400 } as const;
+const SHIMMER_TRANSITION = {
+  type: "timing",
+  duration: 3000,
+  loop: true,
+  repeatDelay: 1500,
+} as const;
+
+const SHIMMER_STYLE = {
+  position: "absolute" as const,
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  width: 200,
+};
+
+export const AnimatedGradientButton = React.memo(function AnimatedGradientButton({
   onPress,
   text,
   disabled = false,
@@ -23,12 +45,16 @@ export function AnimatedGradientButton({
   gradientColors = ["#1E40AF", "#3B7EFF", "#60A5FA"],
 }: AnimatedGradientButtonProps) {
   const borderRadiusClass = rounded === "3xl" ? "rounded-3xl" : "rounded-xl";
+  const entranceTransition = useMemo(() => ({ delay, duration: 600 }), [delay]);
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  console.log(`[AnimatedGradientButton] render #${renderCount.current} — disabled=${disabled}`);
 
   return (
     <MotiView
-      from={{ opacity: 0, translateY: 20 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ delay, duration: 600 }}
+      from={ENTRANCE_FROM}
+      animate={ENTRANCE_ANIMATE}
+      transition={entranceTransition}
     >
       {disabled ? (
         <View className={`w-full py-4 ${borderRadiusClass} bg-surfaceDark border border-borderDark`}>
@@ -57,22 +83,10 @@ export function AnimatedGradientButton({
 
             {/* Shimmer effect */}
             <MotiView
-              from={{ translateX: -400 }}
-              animate={{ translateX: 400 }}
-              transition={{
-                type: "timing",
-                duration: 3000,
-                loop: true,
-                repeatDelay: 1500,
-              }}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                width: 200,
-              }}
+              from={SHIMMER_FROM}
+              animate={SHIMMER_ANIMATE}
+              transition={SHIMMER_TRANSITION}
+              style={SHIMMER_STYLE}
               pointerEvents="none"
             >
               <LinearGradient
@@ -91,4 +105,4 @@ export function AnimatedGradientButton({
       )}
     </MotiView>
   );
-}
+});

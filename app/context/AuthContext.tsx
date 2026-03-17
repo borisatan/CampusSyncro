@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { persistOnboardingData } from '../(auth)/sign-up';
+import { ensureUserProfile } from '../services/backendService';
+import { useOnboardingStore } from '../store/useOnboardingStore';
 import { supabase } from '../utils/supabase';
 
 type AuthContextValue = {
@@ -32,11 +35,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     loadUser();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
       // Only trust auth state changes AFTER initial server validation completes
       // This prevents flash from stale/cached sessions
       if (initialLoadComplete) {
         setUserId(session?.user?.id ?? null);
+      }
+
+      // Persist onboarding data for new users on first sign-in.
+      // This covers the email-verification path where no session exists at sign-up time.
+      if (event === 'SIGNED_IN' && session?.user) {
+        const store = useOnboardingStore.getState();
+        if (store.hasCompletedOnboarding && !store.hasPersistedOnboardingData) {
+          // Claim the flag immediately (before awaiting) to prevent the sign-up
+          // handler from also running persistOnboardingData concurrently.
+          store.setOnboardingDataPersisted();
+          try {
+            await ensureUserProfile(session.user.id);
+            await persistOnboardingData(session.user.id, store.newOnboardingData);
+          } catch (e: any) {
+            console.error('[AuthContext] Failed to persist onboarding data:', e?.message);
+          }
+        }
       }
     });
 

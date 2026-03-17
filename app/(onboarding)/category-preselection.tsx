@@ -4,47 +4,54 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
 import { MotiView } from "moti";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
 import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
-// Map filled icons to outline variants
-const getOutlineIcon = (icon: string): keyof typeof Ionicons.glyphMap => {
-  // If already an outline icon, return as-is
-  if (icon.endsWith('-outline')) {
-    return icon as keyof typeof Ionicons.glyphMap;
-  }
-
-  const outlineMap: Record<string, string> = {
-    'home': 'home-outline',
-    'cart': 'cart-outline',
-    'restaurant': 'restaurant-outline',
-    'tv': 'tv-outline',
-    'car': 'car-outline',
-    'bag-handle': 'bag-outline',
-    'apps': 'apps-outline',
-  };
-  return (outlineMap[icon] || icon) as keyof typeof Ionicons.glyphMap;
-};
 
 const CATEGORY_MOTI_FROM = { opacity: 0, translateY: 20 } as const;
 const CATEGORY_MOTI_ANIMATE = { opacity: 1, translateY: 0 } as const;
+
+// Module-level constants to prevent MotiView from restarting animations on re-render
+const WRAPPER_FROM = { opacity: 0 } as const;
+const WRAPPER_ANIMATE = { opacity: 1 } as const;
+const WRAPPER_TRANSITION = { duration: 600 } as const;
+
+const HEADLINE_FROM = { opacity: 0, translateY: 20 } as const;
+const HEADLINE_ANIMATE = { opacity: 1, translateY: 0 } as const;
+const HEADLINE_TRANSITION = { delay: 200, duration: 600 } as const;
+
+const PROGRESS_BAR_FROM = { width: "14.3%" } as const;
+const PROGRESS_BAR_ANIMATE = { width: "28.6%" } as const;
+const PROGRESS_BAR_TRANSITION = { type: "timing", duration: 500 } as const;
+
+const SHIMMER_FROM = { translateX: -200 } as const;
+const SHIMMER_ANIMATE = { translateX: 200 } as const;
+const SHIMMER_TRANSITION = { type: "timing", duration: 3000, loop: true, delay: 1500 } as const;
 
 interface CategoryRowProps {
   category: { name: string; color: string; icon: string };
   index: number;
   isSelected: boolean;
-  onPress: () => void;
+  onToggle: (name: string) => void;
 }
 
-const CategoryRow = React.memo(({ category, index, isSelected, onPress }: CategoryRowProps) => {
+const CategoryRow = React.memo(({ category, index, isSelected, onToggle }: CategoryRowProps) => {
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  console.log(`[CategoryRow:${category.name}] render #${renderCount.current} — isSelected=${isSelected}`);
+
   const transition = useMemo(
     () => ({ delay: 400 + index * 100, duration: 500 }),
     [index]
   );
+
+  const handlePress = useCallback(() => {
+    onToggle(category.name);
+  }, [onToggle, category.name]);
 
   return (
     <MotiView
@@ -54,7 +61,7 @@ const CategoryRow = React.memo(({ category, index, isSelected, onPress }: Catego
       className="mb-2"
     >
       <Pressable
-        onPress={onPress}
+        onPress={handlePress}
         className="rounded-xl overflow-hidden"
         android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
       >
@@ -73,7 +80,7 @@ const CategoryRow = React.memo(({ category, index, isSelected, onPress }: Catego
                 style={{ backgroundColor: category.color }}
               >
                 <Ionicons
-                  name={getOutlineIcon(category.icon)}
+                  name={category.icon as keyof typeof Ionicons.glyphMap}
                   size={24}
                   color="#ffffff"
                 />
@@ -101,42 +108,49 @@ const CategoryRow = React.memo(({ category, index, isSelected, onPress }: Catego
 export default function CategoryPreselectionScreen() {
   const { setOnboardingStep, setNewOnboardingData, completeOnboarding } = useOnboardingStore();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  console.log(`[CategoryPreselectionScreen] render #${renderCount.current} — selected=${JSON.stringify(selectedCategories)}`);
   const { trackEvent } = useAnalytics();
   const screenEnteredAt = useRef(Date.now());
+
+  // Ref so handleNext always reads the latest value without being recreated on every toggle
+  const selectedCategoriesRef = useRef(selectedCategories);
+  selectedCategoriesRef.current = selectedCategories;
 
   useEffect(() => {
     setOnboardingStep(2);
     trackEvent("onboarding_category_preselection_viewed");
   }, [setOnboardingStep, trackEvent]);
 
-  const toggleCategory = (categoryName: string) => {
+  const toggleCategory = useCallback((categoryName: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedCategories((prev) => {
-      const isCurrentlySelected = prev.includes(categoryName);
-      trackEvent("onboarding_category_toggled", {
-        screen: "category_preselection",
-        category: categoryName,
-        selected: !isCurrentlySelected,
-      });
-      return isCurrentlySelected
+      return prev.includes(categoryName)
         ? prev.filter((c) => c !== categoryName)
         : [...prev, categoryName];
     });
-  };
+    trackEvent("onboarding_category_toggled", {
+      screen: "category_preselection",
+      category: categoryName,
+    });
+  }, [trackEvent]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
+    console.log(`[handleNext] fired — categories=${JSON.stringify(selectedCategoriesRef.current)}`);
+    const categories = selectedCategoriesRef.current;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
       screen: "category_preselection",
       step: 2,
-      selected_categories: selectedCategories,
-      category_count: selectedCategories.length,
+      selected_categories: categories,
+      category_count: categories.length,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    setNewOnboardingData({ selectedCategories: selectedCategories });
+    setNewOnboardingData({ selectedCategories: categories });
     setOnboardingStep(3);
     router.push("/(onboarding)/monthly-income");
-  };
+  }, [trackEvent, setNewOnboardingData, setOnboardingStep]);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -159,7 +173,7 @@ export default function CategoryPreselectionScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Progress Bar */}
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between mb-2">
@@ -180,9 +194,9 @@ export default function CategoryPreselectionScreen() {
           <View className="items-center">
             <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
               <MotiView
-                from={{ width: "14.3%" }}
-                animate={{ width: "28.6%" }}
-                transition={{ type: "timing", duration: 500 }}
+                from={PROGRESS_BAR_FROM}
+                animate={PROGRESS_BAR_ANIMATE}
+                transition={PROGRESS_BAR_TRANSITION}
                 className="h-full overflow-hidden relative"
               >
                 <LinearGradient
@@ -192,14 +206,9 @@ export default function CategoryPreselectionScreen() {
                   style={{ width: "100%", height: "100%" }}
                 />
                 <MotiView
-                  from={{ translateX: -200 }}
-                  animate={{ translateX: 200 }}
-                  transition={{
-                    type: "timing",
-                    duration: 3000,
-                    loop: true,
-                    delay: 1500,
-                  }}
+                  from={SHIMMER_FROM}
+                  animate={SHIMMER_ANIMATE}
+                  transition={SHIMMER_TRANSITION}
                   style={{
                     position: "absolute",
                     top: 0,
@@ -227,15 +236,15 @@ export default function CategoryPreselectionScreen() {
 
         <View className="px-2 py-8 pt-4">
           <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 600 }}
+            from={WRAPPER_FROM}
+            animate={WRAPPER_ANIMATE}
+            transition={WRAPPER_TRANSITION}
           >
             {/* Headline */}
             <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 200, duration: 600 }}
+              from={HEADLINE_FROM}
+              animate={HEADLINE_ANIMATE}
+              transition={HEADLINE_TRANSITION}
               className="mb-8"
             >
               <Text className="text-3xl text-white text-center leading-tight mb-2 px-4">
@@ -255,7 +264,7 @@ export default function CategoryPreselectionScreen() {
                   category={category}
                   index={index}
                   isSelected={selectedCategories.includes(category.name)}
-                  onPress={() => toggleCategory(category.name)}
+                  onToggle={toggleCategory}
                 />
               ))}
             </View>

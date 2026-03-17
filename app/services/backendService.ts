@@ -129,7 +129,8 @@ export async function ensureUserProfile(userId?: string): Promise<void> {
     return;
   }
 
-  // Create new profile with default values
+  // Create new profile with default values.
+  // created_at/updated_at are omitted — they have DEFAULT NOW() in the schema.
   const { error: insertError } = await supabase
     .from('Profiles')
     .insert({
@@ -138,15 +139,12 @@ export async function ensureUserProfile(userId?: string): Promise<void> {
       use_dynamic_income: false,
       manual_income: 0,
       monthly_savings_target: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     });
 
   if (insertError) {
-    console.error('[ensureUserProfile] Error creating profile:', insertError.message);
-  } else {
-    console.log('[ensureUserProfile] Profile created successfully');
+    throw new Error(`Failed to create user profile: ${insertError.message}`);
   }
+  console.log('[ensureUserProfile] Profile created successfully');
 }
 
 export async function getUserCurrency() {
@@ -158,14 +156,14 @@ export async function getUserCurrency() {
     .from('Profiles')
     .select('currency')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error fetching currency:', error.message);
     return null;
   }
 
-  return data.currency; // Returns e.g., "USD"
+  return data?.currency ?? null;
 }
 
 
@@ -207,12 +205,14 @@ export async function getIncomeSettings(): Promise<IncomeSettings | null> {
     .from('Profiles')
     .select('use_dynamic_income, manual_income, monthly_savings_target')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error fetching income settings:', error.message);
     return null;
   }
+
+  if (!data) return null;
 
   return {
     use_dynamic_income: data.use_dynamic_income ?? true,
@@ -985,14 +985,14 @@ export async function getNotificationFrequency(): Promise<number> {
     .from('Profiles')
     .select('daily_notification_frequency')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error fetching notification frequency:', error.message);
     return 0;
   }
 
-  return data.daily_notification_frequency ?? 0;
+  return data?.daily_notification_frequency ?? 0;
 }
 
 export async function updateNotificationFrequency(frequency: number): Promise<void> {

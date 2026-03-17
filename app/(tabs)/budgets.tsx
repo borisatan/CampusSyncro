@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ArrowLeft, PiggyBank } from "lucide-react-native";
 import { MotiView } from "moti";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PageTour } from "../components/Shared/AppTour";
 import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
@@ -51,6 +52,7 @@ type BudgetListItem = CategoryListItem | SavingsListItem;
 
 export default function BudgetsScreen() {
   const { isDarkMode } = useTheme();
+  const aiButtonRef = useRef<View>(null);
   const {
     categoryBudgets,
     totalBudgeted,
@@ -379,6 +381,7 @@ export default function BudgetsScreen() {
             />
           </TouchableOpacity>
           <TouchableOpacity
+            ref={aiButtonRef}
             onPress={() => setAIModalView("help")}
             className="w-9 h-9 rounded-xl items-center justify-center bg-accentBlue"
           >
@@ -714,6 +717,12 @@ export default function BudgetsScreen() {
         currentlySaved={savingsSaved}
         onSave={handleQuickSave}
         onClose={() => setShowQuickSavingsModal(false)}
+      />
+      <PageTour
+        pageId="budgets"
+        title="Smart budgeting"
+        description="Set spending limits for each category. Tap the blue sparkles button to let Monelo generate a smart budget for you based on your income."
+        targetRef={aiButtonRef}
       />
     </SafeAreaView>
   );

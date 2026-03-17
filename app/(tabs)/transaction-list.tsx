@@ -1,7 +1,8 @@
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text } from "react-native";
+import { PageTour } from "../components/Shared/AppTour";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import FilterModal from "../components/TransactionListPage/FilterModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
@@ -310,6 +311,8 @@ const TransactionsScreen: React.FC = () => {
     }
   };
 
+  const headerRef = useRef<View>(null);
+
   const handleEditTransaction = (transactionId: string) => {
     const tx = transactions.find(t => t.id === Number(transactionId));
     if (tx) {
@@ -334,7 +337,7 @@ const TransactionsScreen: React.FC = () => {
     <SafeAreaProvider>
       <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
 
-        <View className="px-2">
+        <View ref={headerRef} className="px-2">
           <TransactionsHeader
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -384,6 +387,12 @@ const TransactionsScreen: React.FC = () => {
           handleReset={handleResetFilters}
         />
 
+        <PageTour
+          pageId="transactions"
+          title="Your transaction history"
+          description="All your logged transactions appear here. Use the search bar or tap the filter icon to narrow down by category, account, or date."
+          targetRef={headerRef}
+        />
       </SafeAreaView>
     </SafeAreaProvider>
   );

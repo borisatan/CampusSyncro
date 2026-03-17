@@ -50,9 +50,12 @@ CREATE POLICY "Users can insert their own profile"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.Profiles (id, currency, created_at, updated_at)
+  INSERT INTO public."Profiles" (id, currency, created_at, updated_at)
   VALUES (new.id, 'USD', NOW(), NOW())
   ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+EXCEPTION WHEN OTHERS THEN
+  -- Never block user creation; ensureUserProfile() will retry on app side
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

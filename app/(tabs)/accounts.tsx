@@ -1,7 +1,8 @@
 
 import { ArrowLeftRight, Plus } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Modal, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { PageTour } from '../components/Shared/AppTour';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,6 +32,7 @@ export default function Accounts() {
   const deleteAccountOptimistic = useAccountsStore((state) => state.deleteAccountOptimistic);
   const { currencySymbol, loadCurrency } = useCurrencyStore();
 
+  const addButtonRef = useRef<View>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMoveMoneyModal, setShowMoveMoneyModal] = useState(false);
   const [editingAccountId, setEditingAccountId] = useState<number | null>(null);
@@ -154,6 +156,7 @@ export default function Accounts() {
                   <ArrowLeftRight color={isDark ? '#94A3B8' : '#6B7280'} size={20} />
                 </TouchableOpacity>
                 <TouchableOpacity
+                  ref={addButtonRef}
                   onPress={() => setShowAddModal(true)}
                   className="w-10 h-10 bg-accentBlue rounded-full items-center justify-center"
                 >
@@ -200,6 +203,13 @@ export default function Accounts() {
             )}
           </View>
         </ScrollView>
+
+        <PageTour
+          pageId="accounts"
+          title="Add your first account"
+          description="Tap the blue + button to add a bank account, savings, or investment. Monelo tracks your total net worth from here."
+          targetRef={addButtonRef}
+        />
 
         <Modal visible={showAddModal} animationType="slide"><AddAccountPage currencySymbol={currencySymbol} onBack={() => setShowAddModal(false)} onSave={handleAddAccount} accountCount={accounts.length} /></Modal>
 

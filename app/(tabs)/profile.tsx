@@ -12,6 +12,7 @@ import {
   Wallet,
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
+import { PageTour } from "../components/Shared/AppTour";
 import {
   Alert,
   Animated,
@@ -52,6 +53,7 @@ const frequencyOptions = [
 export default function ProfileScreen() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
+  const settingsRef = useRef<View>(null);
   const { isAppLockEnabled, deviceAuthAvailable, setAppLockEnabled } =
     useLock();
 
@@ -233,7 +235,7 @@ export default function ProfileScreen() {
         )}
 
         {/* Settings Section */}
-        <View className="mb-8">
+        <View ref={settingsRef} className="mb-8">
           <Text
             className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}
           >
@@ -454,6 +456,12 @@ export default function ProfileScreen() {
           </Text>
         </View>
       </ScrollView>
+      <PageTour
+        pageId="profile"
+        title="Your settings"
+        description="Set your currency, adjust notification frequency, enable app lock, and access your accounts from here."
+        targetRef={settingsRef}
+      />
     </SafeAreaView>
   );
 }

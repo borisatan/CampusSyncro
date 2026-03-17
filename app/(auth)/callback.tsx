@@ -4,7 +4,9 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { ensureUserProfile } from "../services/backendService";
+import { useOnboardingStore } from "../store/useOnboardingStore";
 import { supabase } from "../utils/supabase";
+import { persistOnboardingData } from "./sign-up";
 
 /**
  * OAuth Callback Route
@@ -85,6 +87,13 @@ export default function OAuthCallbackScreen() {
 
       // Ensure user profile exists
       await ensureUserProfile(sessionData.user.id);
+
+      // Persist onboarding data if not yet saved (fallback for OAuth cold-start)
+      const store = useOnboardingStore.getState();
+      if (store.hasCompletedOnboarding && !store.hasPersistedOnboardingData) {
+        await persistOnboardingData(sessionData.user.id, store.newOnboardingData);
+        store.setOnboardingDataPersisted();
+      }
 
       // Track analytics
       if (sessionData.user) {

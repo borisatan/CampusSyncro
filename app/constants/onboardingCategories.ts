@@ -29,15 +29,15 @@ export interface V3Category {
 }
 
 export const V3_DEFAULT_CATEGORIES: V3Category[] = [
-  { name: 'Housing', icon: 'home', color: '#F59E0B' },
-  { name: 'Groceries', icon: 'cart', color: '#22C55E' },
-  { name: 'Eating Out', icon: 'restaurant', color: '#EF4444' },
-  { name: 'Subscriptions', icon: 'tv', color: '#8B5CF6' },
-  { name: 'Transport', icon: 'car', color: '#3B82F6' },
+  { name: 'Housing', icon: 'home-outline', color: '#F59E0B' },
+  { name: 'Groceries', icon: 'cart-outline', color: '#22C55E' },
+  { name: 'Eating Out', icon: 'restaurant-outline', color: '#EF4444' },
+  { name: 'Subscriptions', icon: 'tv-outline', color: '#8B5CF6' },
+  { name: 'Transport', icon: 'car-outline', color: '#3B82F6' },
   { name: 'Shopping', icon: 'bag-outline', color: '#06B6D4' },
   { name: 'Nightlife', icon: 'beer-outline', color: '#14B8A6' },
   { name: 'Healthcare', icon: 'heart-outline', color: '#EC4899' },
-  { name: 'Other', icon: 'apps', color: '#6B7280' },
+  { name: 'Other', icon: 'apps-outline', color: '#6B7280' },
 ];
 
 export const EMOTION_OPTIONS = [

@@ -185,6 +185,23 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
     initialLoad();
   }, []);
 
+  // Re-apply cached data when categories load into the store after a fresh sign-up.
+  // On first mount, DataPreloader may not have finished yet, so applyData sees an empty
+  // categories array. Once DataPreloader populates the store, this effect fires and
+  // re-applies the cached API result with the correct categories.
+  const storeCategories = useCategoriesStore(state => state.categories);
+  const prevCategoriesLengthRef = useRef(0);
+  useEffect(() => {
+    const prevLen = prevCategoriesLengthRef.current;
+    prevCategoriesLengthRef.current = storeCategories.length;
+    if (storeCategories.length > 0 && prevLen === 0) {
+      const key = cacheKey(timeFrame, offset);
+      if (cacheRef.current[key]) {
+        applyData(cacheRef.current[key]);
+      }
+    }
+  }, [storeCategories, timeFrame, offset, applyData]);
+
   return {
     timeFrame,
     offset,
