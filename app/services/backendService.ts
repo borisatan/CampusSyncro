@@ -1,10 +1,12 @@
 import { CategoryAggregation, CategoryIconInfo, Goal, GoalContribution, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
 
+const r2 = (n: number): number => Math.round(n * 100) / 100;
+
 export const createTransaction = async (payload: any) => {
   const { data, error } = await supabase
     .from('Transactions')
-    .insert([payload])
+    .insert([{ ...payload, amount: r2(payload.amount) }])
     .select();
   if (error) throw error;
   return data;
@@ -35,7 +37,7 @@ export const createTransfer = async (payload: {
   // Update source account balance
   const { error: sourceError } = await supabase
     .from('Accounts')
-    .update({ balance: sourceAccount.balance - Math.abs(payload.amount) })
+    .update({ balance: r2(sourceAccount.balance - Math.abs(payload.amount)) })
     .eq('account_name', payload.from_account);
 
   if (sourceError) throw sourceError;
@@ -43,7 +45,7 @@ export const createTransfer = async (payload: {
   // Update destination account balance
   const { error: destError } = await supabase
     .from('Accounts')
-    .update({ balance: destAccount.balance + Math.abs(payload.amount) })
+    .update({ balance: r2(destAccount.balance + Math.abs(payload.amount)) })
     .eq('account_name', payload.to_account);
 
   if (destError) throw destError;
@@ -77,7 +79,7 @@ export const deleteTransfer = async (transfer_id: string, user_id: string) => {
     const account = accounts?.find(a => a.account_name === transaction.account_name);
     if (account) {
       // Reverse: if transaction was -100 (outgoing), add 100 back; if +100 (incoming), subtract 100
-      const newBalance = account.balance - transaction.amount;
+      const newBalance = r2(account.balance - transaction.amount);
       await updateAccountBalance(account.account_name, newBalance, user_id);
     }
   }
@@ -444,7 +446,7 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
 export const createAccount = async (accountName: string, balance: number, type: string, user_id: string, sort_order?: number) => {
   const { data, error } = await supabase
   .from('Accounts')
-  .insert({ account_name: accountName, balance: balance, user_id: user_id, type: type, sort_order: sort_order ?? 1 })
+  .insert({ account_name: accountName, balance: r2(balance), user_id: user_id, type: type, sort_order: sort_order ?? 1 })
   .select()
   .single();
 
@@ -456,8 +458,8 @@ export const updateTransaction = async (id: number, newAmount: number, newDescri
   newAccount: string,newCategory: string, newDate: string) => {
   const { data, error } = await supabase
     .from('Transactions')
-    .update({ 
-      amount: newAmount, 
+    .update({
+      amount: r2(newAmount),
       description: newDescription, 
       account_name: newAccount,
       category_name: newCategory, // Update the category
@@ -502,7 +504,7 @@ export const updateAccountType = async (accountName: string, newType: string, us
 export const updateAccountBalance = async (accountName: string, newBalance: number, userId: string) => {
     const { data, error } = await supabase
     .from('Accounts')
-      .update({ balance: newBalance })
+      .update({ balance: r2(newBalance) })
       .eq('account_name', accountName)
       .eq('user_id', userId)
       .select();
@@ -851,7 +853,7 @@ export const contributeToGoal = async (payload: {
     .insert([{
       goal_id: payload.goal_id,
       user_id: payload.user_id,
-      amount: payload.amount,
+      amount: r2(payload.amount),
       source_account_id: payload.source_account_id,
     }]);
   if (contribError) throw contribError;
@@ -859,7 +861,7 @@ export const contributeToGoal = async (payload: {
   // 3. Update goal's current_amount
   const { error: updateError } = await supabase.rpc('increment_goal_amount', {
     p_goal_id: payload.goal_id,
-    p_amount: payload.amount,
+    p_amount: r2(payload.amount),
   });
   if (updateError) throw updateError;
 };
@@ -886,7 +888,7 @@ export const withdrawFromGoal = async (payload: {
     .insert([{
       goal_id: payload.goal_id,
       user_id: payload.user_id,
-      amount: -payload.amount, // Negative to indicate withdrawal
+      amount: -r2(payload.amount), // Negative to indicate withdrawal
       source_account_id: payload.destination_account_id,
     }]);
   if (contribError) throw contribError;
@@ -894,7 +896,7 @@ export const withdrawFromGoal = async (payload: {
   // 3. Update goal's current_amount (decrement)
   const { error: updateError } = await supabase.rpc('increment_goal_amount', {
     p_goal_id: payload.goal_id,
-    p_amount: -payload.amount, // Negative to decrement
+    p_amount: -r2(payload.amount), // Negative to decrement
   });
   if (updateError) throw updateError;
 };
@@ -937,7 +939,7 @@ export const recordSavingsTransfer = async (payload: {
     .insert([{
       goal_id: null,
       user_id: payload.user_id,
-      amount: payload.amount,
+      amount: r2(payload.amount),
       source_account_id: payload.source_account_id,
     }]);
   if (error) throw error;
@@ -955,7 +957,7 @@ export const quickSaveFromAccount = async (payload: {
   // Update account balance
   const { error: balanceError } = await supabase
     .from('Accounts')
-    .update({ balance: payload.new_balance })
+    .update({ balance: r2(payload.new_balance) })
     .eq('account_name', payload.account_name);
 
   if (balanceError) throw balanceError;
@@ -966,7 +968,7 @@ export const quickSaveFromAccount = async (payload: {
     .insert([{
       goal_id: null,
       user_id: payload.user_id,
-      amount: payload.amount,
+      amount: r2(payload.amount),
       source_account_id: payload.source_account_id,
     }]);
 

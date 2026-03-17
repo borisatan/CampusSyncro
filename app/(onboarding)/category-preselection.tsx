@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
 import { MotiView } from "moti";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
 import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
@@ -29,6 +29,74 @@ const getOutlineIcon = (icon: string): keyof typeof Ionicons.glyphMap => {
   };
   return (outlineMap[icon] || icon) as keyof typeof Ionicons.glyphMap;
 };
+
+const CATEGORY_MOTI_FROM = { opacity: 0, translateY: 20 } as const;
+const CATEGORY_MOTI_ANIMATE = { opacity: 1, translateY: 0 } as const;
+
+interface CategoryRowProps {
+  category: { name: string; color: string; icon: string };
+  index: number;
+  isSelected: boolean;
+  onPress: () => void;
+}
+
+const CategoryRow = React.memo(({ category, index, isSelected, onPress }: CategoryRowProps) => {
+  const transition = useMemo(
+    () => ({ delay: 400 + index * 100, duration: 500 }),
+    [index]
+  );
+
+  return (
+    <MotiView
+      from={CATEGORY_MOTI_FROM}
+      animate={CATEGORY_MOTI_ANIMATE}
+      transition={transition}
+      className="mb-2"
+    >
+      <Pressable
+        onPress={onPress}
+        className="rounded-xl overflow-hidden"
+        android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+      >
+        <View
+          style={{
+            backgroundColor: "#161B2E",
+            borderWidth: 1,
+            borderColor: isSelected ? "#3B7EFF" : "#2A3250",
+            borderRadius: 12,
+          }}
+        >
+          <View className="p-3">
+            <View className="flex-row items-center gap-3">
+              <View
+                className="w-12 h-12 rounded-lg items-center justify-center"
+                style={{ backgroundColor: category.color }}
+              >
+                <Ionicons
+                  name={getOutlineIcon(category.icon)}
+                  size={24}
+                  color="#ffffff"
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-white text-lg font-medium">
+                  {category.name}
+                </Text>
+              </View>
+              {isSelected && (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={24}
+                  color="#ffffff"
+                />
+              )}
+            </View>
+          </View>
+        </View>
+      </Pressable>
+    </MotiView>
+  );
+});
 
 export default function CategoryPreselectionScreen() {
   const { setOnboardingStep, setNewOnboardingData, completeOnboarding } = useOnboardingStore();
@@ -181,61 +249,15 @@ export default function CategoryPreselectionScreen() {
 
             {/* Category Cards */}
             <View className="mb-8">
-              {V3_DEFAULT_CATEGORIES.map((category, index) => {
-                const isSelected = selectedCategories.includes(category.name);
-
-                return (
-                  <MotiView
-                    key={category.name}
-                    from={{ opacity: 0, translateY: 20 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    transition={{ delay: 400 + index * 100, duration: 500 }}
-                    className="mb-2"
-                  >
-                    <Pressable
-                      onPress={() => toggleCategory(category.name)}
-                      className="rounded-xl overflow-hidden"
-                      android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
-                    >
-                      <View
-                        style={{
-                          backgroundColor: "#161B2E",
-                          borderWidth: 1,
-                          borderColor: isSelected ? "#3B7EFF" : "#2A3250",
-                          borderRadius: 12,
-                        }}
-                      >
-                        <View className="p-3">
-                          <View className="flex-row items-center gap-3">
-                            <View
-                              className="w-12 h-12 rounded-lg items-center justify-center"
-                              style={{ backgroundColor: category.color }}
-                            >
-                              <Ionicons
-                                name={getOutlineIcon(category.icon)}
-                                size={24}
-                                color="#ffffff"
-                              />
-                            </View>
-                            <View className="flex-1">
-                              <Text className="text-white text-lg font-medium">
-                                {category.name}
-                              </Text>
-                            </View>
-                            {isSelected && (
-                              <Ionicons
-                                name="checkmark-circle"
-                                size={24}
-                                color="#ffffff"
-                              />
-                            )}
-                          </View>
-                        </View>
-                      </View>
-                    </Pressable>
-                  </MotiView>
-                );
-              })}
+              {V3_DEFAULT_CATEGORIES.map((category, index) => (
+                <CategoryRow
+                  key={category.name}
+                  category={category}
+                  index={index}
+                  isSelected={selectedCategories.includes(category.name)}
+                  onPress={() => toggleCategory(category.name)}
+                />
+              ))}
             </View>
 
             {/* Continue Button */}
