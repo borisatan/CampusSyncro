@@ -34,6 +34,7 @@ import { useNotificationStore } from "../store/useNotificationStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { NotificationFrequency } from "../types/types";
 import { supabase } from "../utils/supabase";
+import { DEVELOPER_USER_IDS } from "../utils/constants";
 
 const currencies = [
   { code: "USD", symbol: "$", name: "US Dollar" },
@@ -54,11 +55,13 @@ export default function ProfileScreen() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
   const settingsRef = useRef<View>(null);
+  const accountsButtonRef = useRef<View>(null);
   const { isAppLockEnabled, deviceAuthAvailable, setAppLockEnabled } =
     useLock();
 
   // State
   const [email, setEmail] = useState<string | null>(null);
+  const [isDeveloper, setIsDeveloper] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
@@ -83,6 +86,7 @@ export default function ProfileScreen() {
       } = await supabase.auth.getSession();
       if (session?.user) {
         setEmail(session.user.email ?? null);
+        setIsDeveloper(DEVELOPER_USER_IDS.has(session.user.id));
       }
       setIsLoading(false);
     };
@@ -285,6 +289,7 @@ export default function ProfileScreen() {
           )}
 
           {/* Accounts Button */}
+          <View ref={accountsButtonRef}>
           <RipplePressable
             onPress={() => router.push("/accounts" as any)}
             className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
@@ -299,6 +304,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </RipplePressable>
+          </View>
 
           {/* Daily Reminders Selector */}
           <Pressable
@@ -397,34 +403,36 @@ export default function ProfileScreen() {
           </RipplePressable>
         </View>
 
-        {/* Developer Section */}
-        <View className="mb-8">
-          <Text
-            className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}
-          >
-            Developer
-          </Text>
-          <RipplePressable
-            onPress={handleTestOnboarding}
-            className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
-          >
-            <View className="w-10 h-10 bg-amber-600 rounded-xl items-center justify-center mr-3">
-              <RotateCcw color="white" size={20} />
-            </View>
-            <View className="flex-1">
-              <Text className={`font-medium ${textPrimary}`}>
-                Test Onboarding
-              </Text>
-              <Text className={`text-sm ${textSecondary}`}>
-                Reset and restart onboarding flow
-              </Text>
-            </View>
-            <ChevronRight
-              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
-              size={20}
-            />
-          </RipplePressable>
-        </View>
+        {/* Developer Section — only visible to developers */}
+        {isDeveloper && (
+          <View className="mb-8">
+            <Text
+              className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}
+            >
+              Developer
+            </Text>
+            <RipplePressable
+              onPress={handleTestOnboarding}
+              className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
+            >
+              <View className="w-10 h-10 bg-amber-600 rounded-xl items-center justify-center mr-3">
+                <RotateCcw color="white" size={20} />
+              </View>
+              <View className="flex-1">
+                <Text className={`font-medium ${textPrimary}`}>
+                  Test Onboarding
+                </Text>
+                <Text className={`text-sm ${textSecondary}`}>
+                  Reset and restart onboarding flow
+                </Text>
+              </View>
+              <ChevronRight
+                color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+                size={20}
+              />
+            </RipplePressable>
+          </View>
+        )}
 
         {/* Account Section */}
         <View className="mb-10">
@@ -458,9 +466,9 @@ export default function ProfileScreen() {
       </ScrollView>
       <PageTour
         pageId="profile"
-        title="Your settings"
-        description="Set your currency, adjust notification frequency, enable app lock, and access your accounts from here."
-        targetRef={settingsRef}
+        title="Add your accounts"
+        description="Tap here to add your bank accounts, savings, and more. Your total balance is tracked from here."
+        targetRef={accountsButtonRef}
       />
     </SafeAreaView>
   );

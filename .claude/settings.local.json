@@ -31,7 +31,8 @@
       "Bash(yarn create:*)",
       "Bash(yarn install)",
       "Bash(yarn dev)",
-      "Bash(identify:*)"
+      "Bash(identify:*)",
+      "Bash(npx supabase:*)"
     ]
   }
 }

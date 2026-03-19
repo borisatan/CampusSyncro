@@ -6,6 +6,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTourStore } from '../../store/useAppTourStore';
 
 const CARD_MARGIN = 20;
@@ -22,6 +23,7 @@ interface PageTourProps {
 export function PageTour({ pageId, title, description, targetRef }: PageTourProps) {
   const { isPageSeen, markPageSeen } = useAppTourStore();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [layout, setLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const measured = useRef(false);
 
@@ -34,7 +36,9 @@ export function PageTour({ pageId, title, description, targetRef }: PageTourProp
       targetRef.current?.measureInWindow((x, y, w, h) => {
         if (w > 0 && h > 0) {
           measured.current = true;
-          setLayout({ x, y, width: w, height: h });
+          // measureInWindow returns y relative to safe area origin on some devices;
+          // add the top inset so the spotlight aligns with the modal's coordinate system.
+          setLayout({ x, y: y + insets.top, width: w, height: h });
         }
       });
     }, 350);

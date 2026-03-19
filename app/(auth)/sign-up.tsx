@@ -169,7 +169,7 @@ export default function SignUpScreen() {
         });
       }
 
-      router.replace("/(tabs)/dashboard");
+      router.replace("/(tabs)/profile");
     } catch (e: any) {
       trackEvent("user_sign_up_failed", {
         error_message: e?.message ?? "Unknown error",
@@ -334,7 +334,7 @@ export default function SignUpScreen() {
       }
 
       trackEvent("user_authenticated", { method: "google" });
-      router.replace("/(tabs)/dashboard");
+      router.replace("/(tabs)/profile");
     } catch (e: any) {
       console.error("[OAuth] GOOGLE OAUTH ERROR:", e);
 
@@ -388,7 +388,7 @@ export default function SignUpScreen() {
       }
 
       trackEvent("user_authenticated", { method: "apple" });
-      router.replace("/(tabs)/dashboard");
+      router.replace("/(tabs)/profile");
     } catch (e: any) {
       if (e?.code === "ERR_REQUEST_CANCELED") return;
       trackEvent("user_auth_failed", {
