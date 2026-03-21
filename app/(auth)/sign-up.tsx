@@ -20,6 +20,8 @@ import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { bulkCreateCategories } from "../services/backendService";
 import { ensureUserProfile } from "../services/backendService";
+import { useAccountsStore } from "../store/useAccountsStore";
+import { useCategoriesStore } from "../store/useCategoriesStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { supabase } from "../utils/supabase";
 
@@ -163,6 +165,11 @@ export default function SignUpScreen() {
         // Instant session: flag is already claimed above, we're the sole persister.
         await ensureUserProfile(data.user.id);
         await persistOnboardingData(data.user.id, newOnboardingData);
+        // Force reload stores so freshly created data is available immediately
+        await Promise.all([
+          useCategoriesStore.getState().loadCategories(),
+          useAccountsStore.getState().loadAccounts(),
+        ]);
         identifyUser(data.user.id, {
           email: data.user.email,
           $set_once: { signup_date: new Date().toISOString() },
@@ -328,6 +335,11 @@ export default function SignUpScreen() {
 
       // Persist onboarding data to database
       await persistOnboardingData(sessionData.user.id, newOnboardingData);
+      // Force reload stores so freshly created data is available immediately
+      await Promise.all([
+        useCategoriesStore.getState().loadCategories(),
+        useAccountsStore.getState().loadAccounts(),
+      ]);
 
       if (sessionData.user) {
         identifyUser(sessionData.user.id, { email: sessionData.user.email });
@@ -384,6 +396,11 @@ export default function SignUpScreen() {
       if (data.user) {
         await ensureUserProfile(data.user.id);
         await persistOnboardingData(data.user.id, newOnboardingData);
+        // Force reload stores so freshly created data is available immediately
+        await Promise.all([
+          useCategoriesStore.getState().loadCategories(),
+          useAccountsStore.getState().loadAccounts(),
+        ]);
         identifyUser(data.user.id, { email: data.user.email });
       }
 

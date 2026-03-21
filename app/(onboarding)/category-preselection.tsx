@@ -173,7 +173,7 @@ export default function CategoryPreselectionScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Progress Bar */}
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between mb-2">
@@ -257,7 +257,7 @@ export default function CategoryPreselectionScreen() {
             </MotiView>
 
             {/* Category Cards */}
-            <View className="mb-8">
+            <View className="mb-4">
               {V3_DEFAULT_CATEGORIES.map((category, index) => (
                 <CategoryRow
                   key={category.name}
@@ -268,18 +268,20 @@ export default function CategoryPreselectionScreen() {
                 />
               ))}
             </View>
-
-            {/* Continue Button */}
-            <AnimatedGradientButton
-              onPress={handleNext}
-              text="Continue"
-              delay={900}
-              rounded="xl"
-              disabled={isNextDisabled}
-            />
           </MotiView>
         </View>
       </ScrollView>
+
+      {/* Continue Button — fixed footer, outside ScrollView to avoid iOS gesture zone touch issues */}
+      <View className="px-4 pb-4">
+        <AnimatedGradientButton
+          onPress={handleNext}
+          text="Continue"
+          delay={900}
+          rounded="xl"
+          disabled={isNextDisabled}
+        />
+      </View>
     </SafeAreaView>
   );
 }

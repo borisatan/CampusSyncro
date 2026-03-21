@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
-import { PageTour } from "../components/Shared/AppTour";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -38,7 +37,6 @@ const TransactionAdder = () => {
   const { isDarkMode } = useTheme();
   const { userId, isLoading } = useAuth();
   const router = useRouter();
-  const submitRef = useRef<View>(null);
   const { refreshDashboard, refreshAccounts, refreshTransactionList } = useDataRefresh();
   const { trackEvent } = useAnalytics();
 
@@ -264,7 +262,7 @@ const TransactionAdder = () => {
             />
           </MotiView>
 
-          <View ref={submitRef}>
+          <View>
             <MotiView
               key={`submit-${transactionType}`}
               from={{ opacity: 0, translateY: 8 }}
@@ -292,12 +290,6 @@ const TransactionAdder = () => {
           />
         </ScrollView>
       </KeyboardAvoidingView>
-      <PageTour
-        pageId="add-transaction"
-        title="Log a transaction"
-        description="Enter the amount, pick a category and account, then tap the button to save. Income or expense — it only takes a few seconds."
-        targetRef={submitRef}
-      />
     </SafeAreaView>
   );
 };
