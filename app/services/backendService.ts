@@ -255,14 +255,16 @@ export const bulkCreateCategories = async (
   }>
 ) => {
   const payload = categories.map((cat, index) => ({
+    id: crypto.randomUUID(), // ⚠️ Requires Categories.id column to be UUID type in Supabase
     ...cat,
     user_id: userId,
     sort_order: index,
   }));
 
+  // upsert with ignoreDuplicates prevents errors if categories already exist
   const { data, error } = await supabase
     .from('Categories')
-    .insert(payload)
+    .upsert(payload, { onConflict: 'user_id,category_name', ignoreDuplicates: true })
     .select();
 
   if (error) throw error;

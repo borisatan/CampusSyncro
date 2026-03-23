@@ -1,5 +1,5 @@
 import * as Linking from "expo-linking";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useAnalytics } from "../hooks/useAnalytics";
@@ -11,21 +11,21 @@ import { persistOnboardingData } from "./sign-up";
 /**
  * OAuth Callback Route
  *
- * This route handles OAuth redirects when:
- * 1. User closes browser manually before WebBrowser captures the redirect
- * 2. App is killed/closed during OAuth authentication (cold start scenario)
- * 3. Deep link is triggered from external source
+ * Handles the OAuth redirect deep link for two scenarios:
+ * 1. Android warm-start: Chrome Custom Tab fires deep link intent while app is running.
+ *    openAuthSessionAsync returns 'cancel'; this route handles the exchange.
+ * 2. Cold-start: App was killed and opened by the deep link URL.
  *
- * Flow:
- * - Extract code/error from URL parameters
- * - Exchange authorization code for session with Supabase
- * - Create user profile if needed
- * - Navigate to dashboard on success
- * - Show error on failure
+ * On iOS, ASWebAuthenticationSession intercepts the redirect internally so this
+ * route is never reached — sign-up.tsx / sign-in.tsx handle the success result.
+ *
+ * Uses useLocalSearchParams() (Expo Router) instead of Linking.getInitialURL() so
+ * that URL params are available in both warm-start and cold-start scenarios.
  */
 export default function OAuthCallbackScreen() {
   const router = useRouter();
   const { trackEvent, identifyUser } = useAnalytics();
+  const params = useLocalSearchParams<Record<string, string>>();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
@@ -36,39 +36,28 @@ export default function OAuthCallbackScreen() {
   const handleOAuthCallback = async () => {
     try {
       console.log("[OAuth Callback] Processing OAuth callback");
-
-      // Get the current URL
-      const url = await Linking.getInitialURL();
-      console.log("[OAuth Callback] Initial URL:", url);
-
-      if (!url) {
-        throw new Error("No URL found in callback");
-      }
-
-      // Parse the URL to check for errors from OAuth provider
-      const parsedUrl = Linking.parse(url);
-      const params = parsedUrl.queryParams;
-
       console.log("[OAuth Callback] URL params:", params);
 
-      // Check for OAuth errors
-      if (params?.error) {
+      // Check for OAuth errors from the provider
+      if (params.error) {
         const errorDescription = params.error_description || params.error;
         console.error("[OAuth Callback] OAuth error:", errorDescription);
         throw new Error(`Authentication failed: ${errorDescription}`);
       }
 
-      // Check for authorization code
-      if (!params?.code) {
-        console.error("[OAuth Callback] No authorization code in URL");
+      // Ensure we have an authorization code
+      if (!params.code) {
+        console.error("[OAuth Callback] No authorization code in URL params");
         throw new Error("No authorization code received");
       }
 
+      // Reconstruct the full callback URL from router params so that Supabase
+      // can extract the code and any other required query params (e.g. state).
+      const callbackUrl = Linking.createURL("auth/callback", { queryParams: params });
       console.log("[OAuth Callback] Exchanging code for session");
 
-      // Exchange the authorization code for a session
       const { data: sessionData, error: sessionError } =
-        await supabase.auth.exchangeCodeForSession(url);
+        await supabase.auth.exchangeCodeForSession(callbackUrl);
 
       if (sessionError) {
         console.error("[OAuth Callback] Session exchange error:", sessionError);
@@ -82,17 +71,19 @@ export default function OAuthCallbackScreen() {
       console.log("[OAuth Callback] Session established successfully");
       console.log("[OAuth Callback] User ID:", sessionData.session.user.id);
 
-      // Wait for session to be persisted
+      // Wait for session to be persisted to storage
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Ensure user profile exists
       await ensureUserProfile(sessionData.user.id);
 
-      // Persist onboarding data if not yet saved (fallback for OAuth cold-start)
+      // Persist onboarding data for new users (sign-up path).
+      // Claim the flag BEFORE awaiting to prevent a race with AuthContext's
+      // onAuthStateChange handler (both check the same flag synchronously).
       const store = useOnboardingStore.getState();
       if (store.hasCompletedOnboarding && !store.hasPersistedOnboardingData) {
-        await persistOnboardingData(sessionData.user.id, store.newOnboardingData);
         store.setOnboardingDataPersisted();
+        await persistOnboardingData(sessionData.user.id, store.newOnboardingData);
       }
 
       // Track analytics
@@ -105,21 +96,23 @@ export default function OAuthCallbackScreen() {
         source: "callback_route"
       });
 
-      console.log("[OAuth Callback] Redirecting to dashboard");
-
-      // Navigate to dashboard
-      router.replace("/(tabs)/dashboard");
+      // Navigate: profile for new users (completed onboarding), dashboard for returning users
+      if (store.hasCompletedOnboarding) {
+        console.log("[OAuth Callback] New user — redirecting to profile");
+        router.replace("/(tabs)/profile");
+      } else {
+        console.log("[OAuth Callback] Returning user — redirecting to dashboard");
+        router.replace("/(tabs)/dashboard");
+      }
     } catch (e: any) {
       console.error("[OAuth Callback] Error:", e);
 
-      // Track failure
       trackEvent("user_auth_failed", {
         error_message: e?.message ?? "Unknown error",
         method: "google",
         source: "callback_route",
       });
 
-      // Show error to user
       setError(e?.message ?? "An error occurred during authentication");
       setIsProcessing(false);
 

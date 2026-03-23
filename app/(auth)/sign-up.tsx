@@ -1,7 +1,7 @@
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
-import * as Linking from "expo-linking";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Linking from "expo-linking";
 import { Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useState } from "react";
@@ -18,8 +18,7 @@ import {
 } from "react-native";
 import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
-import { bulkCreateCategories } from "../services/backendService";
-import { ensureUserProfile } from "../services/backendService";
+import { bulkCreateCategories, ensureUserProfile } from "../services/backendService";
 import { useAccountsStore } from "../store/useAccountsStore";
 import { useCategoriesStore } from "../store/useCategoriesStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
@@ -218,33 +217,12 @@ export default function SignUpScreen() {
     console.log("[OAuth] GOOGLE SIGN IN STARTED");
     console.log("========================================");
 
-    let urlListener: any = null;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let fallbackUrl: string | null = null;
-    let isTimedOut = false;
-
     try {
       setIsSubmitting(true);
 
       // Create proper redirect URI using Linking
       const redirectTo = Linking.createURL("auth/callback");
       console.log("[OAuth] Step 1: OAuth redirect URL:", redirectTo);
-
-      // Setup URL listener as fallback mechanism
-      // This catches the callback if user closes browser manually
-      urlListener = Linking.addEventListener('url', (event) => {
-        console.log("[OAuth] URL listener fired:", event.url);
-        if (event.url.includes('auth/callback')) {
-          fallbackUrl = event.url;
-          console.log("[OAuth] Fallback URL captured");
-        }
-      });
-
-      // Setup timeout (30 seconds)
-      timeoutId = setTimeout(() => {
-        isTimedOut = true;
-        console.log("[OAuth] Authentication timed out after 30 seconds");
-      }, 30000);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -266,7 +244,10 @@ export default function SignUpScreen() {
 
       console.log('[OAuth] Step 2: Opening browser for authentication');
 
-      // Open the OAuth provider's sign-in page
+      // Open the OAuth provider's sign-in page.
+      // iOS: ASWebAuthenticationSession intercepts the redirect and returns {type:'success'}.
+      // Android: Chrome Custom Tab fires a deep link intent; openAuthSessionAsync returns
+      //   {type:'cancel'} and the callback.tsx route handles the exchange via the deep link.
       const result = await WebBrowser.openAuthSessionAsync(
         data.url,
         redirectTo
@@ -274,79 +255,52 @@ export default function SignUpScreen() {
 
       console.log('[OAuth] Step 3: Browser result:', result.type);
 
-      // Check for timeout
-      if (isTimedOut) {
-        throw new Error("Authentication timed out. Please try again.");
-      }
-
-      // Determine the callback URL source
-      let callbackUrl: string | null = null;
-
       if (result.type === "success" && result.url) {
-        // Primary path: WebBrowser captured the redirect successfully
-        console.log("[OAuth] Using callback URL from WebBrowser");
-        callbackUrl = result.url;
-      } else if (result.type === "cancel" || result.type === "dismiss") {
-        // Fallback path: Check if URL listener captured the callback
-        console.log("[OAuth] Browser dismissed, checking fallback URL");
+        // iOS path: ASWebAuthenticationSession captured the redirect internally.
+        console.log("[OAuth] Step 4: Got callback URL, exchanging for session");
 
-        // Wait briefly to allow listener to fire
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Claim flag BEFORE exchangeCodeForSession so that when onAuthStateChange fires
+        // (synchronously-ish during the exchange), it sees the flag set and skips
+        // persistence — this component is the sole persister for the iOS path.
+        setOnboardingDataPersisted();
 
-        if (fallbackUrl) {
-          console.log("[OAuth] Using fallback URL from listener");
-          callbackUrl = fallbackUrl;
-        } else {
-          // User actually cancelled without completing auth
-          console.log("[OAuth] User cancelled authentication (no callback received)");
-          return;
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.exchangeCodeForSession(result.url);
+
+        if (sessionError) {
+          console.error("[OAuth] Session exchange error:", sessionError);
+          throw sessionError;
         }
+
+        if (!sessionData.session) {
+          throw new Error("No session returned after code exchange");
+        }
+
+        console.log("[OAuth] Session established successfully!");
+        console.log("[OAuth] User ID:", sessionData.session.user.id);
+
+        // Ensure user profile exists
+        await ensureUserProfile(sessionData.user.id);
+
+        // Persist onboarding data to database
+        await persistOnboardingData(sessionData.user.id, newOnboardingData);
+        // Force reload stores so freshly created data is available immediately
+        await Promise.all([
+          useCategoriesStore.getState().loadCategories(),
+          useAccountsStore.getState().loadAccounts(),
+        ]);
+
+        if (sessionData.user) {
+          identifyUser(sessionData.user.id, { email: sessionData.user.email });
+        }
+
+        trackEvent("user_authenticated", { method: "google" });
+        router.replace("/(tabs)/profile");
+      } else {
+        // Android path: Chrome Custom Tab fired a deep link intent and closed.
+        // The callback.tsx route receives the deep link and handles the exchange.
+        console.log("[OAuth] Browser dismissed — Android deep link path, callback.tsx will handle");
       }
-
-      if (!callbackUrl) {
-        throw new Error("No callback URL received from authentication");
-      }
-
-      console.log("[OAuth] Step 4: Got callback URL, exchanging for session");
-
-      // Claim flag BEFORE exchangeCodeForSession so that when onAuthStateChange fires
-      // (which it does synchronously-ish during the exchange), it sees the flag already
-      // set and skips persistence — this component is the sole persister for OAuth flows.
-      setOnboardingDataPersisted();
-
-      // Exchange the authorization code for a session
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.exchangeCodeForSession(callbackUrl);
-
-      if (sessionError) {
-        console.error("[OAuth] Session exchange error:", sessionError);
-        throw sessionError;
-      }
-
-      if (!sessionData.session) {
-        throw new Error("No session returned after code exchange");
-      }
-
-      console.log("[OAuth] Session established successfully!");
-      console.log("[OAuth] User ID:", sessionData.session.user.id);
-
-      // Ensure user profile exists
-      await ensureUserProfile(sessionData.user.id);
-
-      // Persist onboarding data to database
-      await persistOnboardingData(sessionData.user.id, newOnboardingData);
-      // Force reload stores so freshly created data is available immediately
-      await Promise.all([
-        useCategoriesStore.getState().loadCategories(),
-        useAccountsStore.getState().loadAccounts(),
-      ]);
-
-      if (sessionData.user) {
-        identifyUser(sessionData.user.id, { email: sessionData.user.email });
-      }
-
-      trackEvent("user_authenticated", { method: "google" });
-      router.replace("/(tabs)/profile");
     } catch (e: any) {
       console.error("[OAuth] GOOGLE OAUTH ERROR:", e);
 
@@ -360,14 +314,6 @@ export default function SignUpScreen() {
         e?.message ?? "An error occurred during Google sign-in."
       );
     } finally {
-      // Cleanup: Remove listener and clear timeout
-      if (urlListener) {
-        urlListener.remove();
-        console.log("[OAuth] URL listener removed");
-      }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
       setIsSubmitting(false);
     }
   };
@@ -450,7 +396,7 @@ export default function SignUpScreen() {
 
               {/* Social Buttons */}
               <View className="gap-3 mb-8">
-                <Pressable
+                {/* <Pressable
                   className="flex-row items-center justify-center gap-3 bg-white rounded-2xl py-4 active:opacity-80"
                   onPress={handleGoogleSignIn}
                   disabled={isSubmitting}
@@ -459,7 +405,7 @@ export default function SignUpScreen() {
                   <Text className="text-black font-semibold text-base">
                     Continue with Google
                   </Text>
-                </Pressable>
+                </Pressable> */}
 
                 <Pressable
                   className="flex-row items-center justify-center gap-3 rounded-2xl py-4 active:opacity-80"
