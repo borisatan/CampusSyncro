@@ -219,7 +219,7 @@ export default function SignUpScreen() {
     console.log("========================================");
 
     let urlListener: any = null;
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let fallbackUrl: string | null = null;
     let isTimedOut = false;
 
@@ -250,7 +250,7 @@ export default function SignUpScreen() {
         provider: "google",
         options: {
           redirectTo,
-          skipBrowserRedirect: false, // Let WebBrowser handle the redirect
+          skipBrowserRedirect: true, // Required for PKCE in React Native — we call exchangeCodeForSession manually
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

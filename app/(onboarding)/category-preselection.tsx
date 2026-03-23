@@ -54,16 +54,15 @@ const CategoryRow = React.memo(({ category, index, isSelected, onToggle }: Categ
   }, [onToggle, category.name]);
 
   return (
-    <MotiView
-      from={CATEGORY_MOTI_FROM}
-      animate={CATEGORY_MOTI_ANIMATE}
-      transition={transition}
-      className="mb-2"
+    <Pressable
+      onPress={handlePress}
+      className="rounded-xl overflow-hidden mb-2"
+      android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
     >
-      <Pressable
-        onPress={handlePress}
-        className="rounded-xl overflow-hidden"
-        android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+      <MotiView
+        from={CATEGORY_MOTI_FROM}
+        animate={CATEGORY_MOTI_ANIMATE}
+        transition={transition}
       >
         <View
           style={{
@@ -100,8 +99,8 @@ const CategoryRow = React.memo(({ category, index, isSelected, onToggle }: Categ
             </View>
           </View>
         </View>
-      </Pressable>
-    </MotiView>
+      </MotiView>
+    </Pressable>
   );
 });
 

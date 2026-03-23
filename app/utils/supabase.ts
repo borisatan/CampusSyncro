@@ -82,7 +82,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: ExpoSqliteStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true, // Enable automatic session detection from OAuth callback URLs
+    detectSessionInUrl: false, // Disabled in React Native — OAuth callbacks are handled manually via exchangeCodeForSession
     flowType: "pkce",
   },
 });

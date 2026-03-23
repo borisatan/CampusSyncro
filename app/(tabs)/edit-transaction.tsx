@@ -76,20 +76,20 @@ const EditTransactionScreen = () => {
       setSelectedDate(new Date(transaction.created_at));
       setTransactionType(transaction.amount < 0 ? 'expense' : 'income');
 
-      // Find the matching category
+      // Find the matching category; fall back to first category if none found
       if (categories.length > 0) {
         const match = categories.find(c => c.category_name === transaction.category_name);
-        if (match) setSelectedCategory(match);
+        setSelectedCategory(match ?? (transaction.amount < 0 ? categories[0] : null));
       }
     }
   }, [params.transaction, categories]);
 
-  // Auto-select first category when switching from income to expense
+  // Auto-select first category when user switches type to expense (new transaction only)
   useEffect(() => {
-    if (transactionType === 'expense' && !selectedCategory && categories.length > 0) {
+    if (transactionType === 'expense' && !selectedCategory && categories.length > 0 && !transaction?.category_name) {
       setSelectedCategory(categories[0]);
     }
-  }, [transactionType, categories]);
+  }, [transactionType]);
 
   const handleDateChange = (event: any, date?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);

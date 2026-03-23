@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { ChevronLeft, Sparkles, TrendingUp } from "lucide-react-native";
@@ -34,7 +35,7 @@ function generateSimpleBudgetAllocations(categoryNames: string[], monthlyIncome:
       category_name: name,
       classification: rule.classification,
       percentage: rule.percentage,
-      budget_amount: Math.round((rule.percentage / 100) * monthlyIncome),
+      budget_amount: parseFloat(((rule.percentage / 100) * monthlyIncome).toFixed(2)),
     };
   });
 
@@ -44,7 +45,7 @@ function generateSimpleBudgetAllocations(categoryNames: string[], monthlyIncome:
     const scaleFactor = 80 / totalPercentage;
     allocations.forEach((a) => {
       a.percentage = Math.round(a.percentage * scaleFactor * 10) / 10;
-      a.budget_amount = Math.round((a.percentage / 100) * monthlyIncome);
+      a.budget_amount = parseFloat(((a.percentage / 100) * monthlyIncome).toFixed(2));
     });
   }
 
@@ -60,7 +61,7 @@ function generateSimpleBudgetAllocations(categoryNames: string[], monthlyIncome:
     totalNeeds: needsTotal,
     totalWants: wantsTotal,
     savingsPercentage: 20,
-    savingsAmount: Math.round(monthlyIncome * 0.2),
+    savingsAmount: parseFloat((monthlyIncome * 0.2).toFixed(2)),
   };
 }
 
@@ -118,6 +119,10 @@ export default function AIBudgetSetupScreen() {
   // Get category color
   const getCategoryColor = (name: string) => {
     return V3_DEFAULT_CATEGORIES.find((c) => c.name === name)?.color || '#6B7280';
+  };
+
+  const getCategoryIcon = (name: string) => {
+    return V3_DEFAULT_CATEGORIES.find((c) => c.name === name)?.icon || 'apps-outline';
   };
 
   return (
@@ -228,7 +233,7 @@ export default function AIBudgetSetupScreen() {
                   <View className="flex-row justify-between items-center mb-3">
                     <Text className="text-white text-base font-semibold">Spending Budget</Text>
                     <Text className="text-white text-lg font-bold">
-                      {currencySymbol}{Math.round(monthlyIncome * 0.8).toLocaleString()}
+                      {currencySymbol}{(monthlyIncome * 0.8).toFixed(2)}
                     </Text>
                   </View>
                   <View className="flex-row justify-between items-center">
@@ -237,7 +242,7 @@ export default function AIBudgetSetupScreen() {
                       <Text className="text-secondaryDark text-base">Savings Goal</Text>
                     </View>
                     <Text className="text-accentGreen text-lg font-bold">
-                      {currencySymbol}{budgetData.savingsAmount.toLocaleString()}
+                      {currencySymbol}{budgetData.savingsAmount.toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -259,28 +264,25 @@ export default function AIBudgetSetupScreen() {
                     transition={{ delay: 500 + index * 100, duration: 500 }}
                     className="mb-3"
                   >
-                    <View className="bg-surfaceDark border border-borderDark rounded-xl p-4">
-                      <View className="flex-row justify-between items-center mb-2">
-                        <View className="flex-row items-center gap-2">
-                          <View
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: getCategoryColor(allocation.category_name) }}
-                          />
-                          <Text className="text-white text-base font-medium">
-                            {allocation.category_name}
+                    <View className="rounded-2xl overflow-hidden border bg-surfaceDark" style={{ borderColor: '#2A3250' }}>
+                      <View className="p-4 flex-row items-center">
+                        <View
+                          className="w-11 h-11 rounded-xl items-center justify-center mr-3"
+                          style={{ backgroundColor: getCategoryColor(allocation.category_name) }}
+                        >
+                          <Ionicons name={getCategoryIcon(allocation.category_name) as any} size={22} color="#fff" />
+                        </View>
+                        <Text className="text-slate50 text-[15px] font-semibold flex-1">
+                          {allocation.category_name}
+                        </Text>
+                        <View className="items-end">
+                          <Text className="text-slate50 text-base font-bold">
+                            {currencySymbol}{allocation.budget_amount.toFixed(2)}
+                          </Text>
+                          <Text className="text-slateMuted text-xs mt-0.5">
+                            {allocation.percentage}% of income
                           </Text>
                         </View>
-                        <Text className="text-white text-lg font-bold">
-                          {currencySymbol}{allocation.budget_amount.toLocaleString()}
-                        </Text>
-                      </View>
-                      <View className="flex-row justify-between items-center">
-                        <Text className="text-secondaryDark text-xs capitalize">
-                          {allocation.classification}
-                        </Text>
-                        <Text className="text-secondaryDark text-sm">
-                          {allocation.percentage}% of income
-                        </Text>
                       </View>
                     </View>
                   </MotiView>
