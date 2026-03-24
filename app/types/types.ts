@@ -50,7 +50,7 @@ export const getCurrencySymbol = (currency: SupportedCurrency | '?' | string): s
 };
 
 export interface Category {
-  id: number;
+  id: string;
   category_name: CategoryName;
   icon: string;
   color: string;

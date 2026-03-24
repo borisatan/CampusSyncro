@@ -8,8 +8,8 @@ interface CategoriesState {
   loadCategories: () => Promise<void>;
   setCategories: (categories: Category[]) => void;
   addCategoryOptimistic: (category: Category) => void;
-  updateCategoryOptimistic: (id: number, updates: Partial<Category>) => void;
-  deleteCategoryOptimistic: (id: number) => void;
+  updateCategoryOptimistic: (id: string, updates: Partial<Category>) => void;
+  deleteCategoryOptimistic: (id: string) => void;
   reorderCategories: (reorderedCategories: Category[]) => void;
 }
 
@@ -23,7 +23,7 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
       const data = await fetchCategories();
       // Sort by sort_order if available, otherwise by id
       const sorted = [...data].sort((a, b) =>
-        (a.sort_order ?? a.id) - (b.sort_order ?? b.id)
+        (a.sort_order ?? 0) - (b.sort_order ?? 0)
       );
       set({ categories: sorted, isLoading: false });
     } catch (error) {
@@ -37,14 +37,14 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
   addCategoryOptimistic: (category) =>
     set((state) => ({ categories: [...state.categories, category] })),
 
-  updateCategoryOptimistic: (id, updates) =>
+  updateCategoryOptimistic: (id: string, updates) =>
     set((state) => ({
       categories: state.categories.map((cat) =>
         cat.id === id ? { ...cat, ...updates } : cat
       ),
     })),
 
-  deleteCategoryOptimistic: (id) =>
+  deleteCategoryOptimistic: (id: string) =>
     set((state) => ({
       categories: state.categories.filter((cat) => cat.id !== id),
     })),

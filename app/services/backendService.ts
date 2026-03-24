@@ -252,6 +252,7 @@ export const bulkCreateCategories = async (
     icon: string;
     color: string;
     budget_amount?: number | null;
+    budget_percentage?: number | null;
   }>
 ) => {
   const payload = categories.map((cat, index) => ({
@@ -261,13 +262,33 @@ export const bulkCreateCategories = async (
     sort_order: index,
   }));
 
-  // upsert with ignoreDuplicates prevents errors if categories already exist
+  // Insert new categories; skip if already exist (avoids changing the id PK on update)
   const { data, error } = await supabase
     .from('Categories')
     .upsert(payload, { onConflict: 'user_id,category_name', ignoreDuplicates: true })
     .select();
 
   if (error) throw error;
+
+  // Update budget fields for all categories that have budget data.
+  // Done separately so that pre-existing categories (e.g. from a previous onboarding
+  // pass) also get their budgets written — ignoreDuplicates:true above skips them.
+  const budgetUpdates = categories.filter(
+    cat => cat.budget_amount != null || cat.budget_percentage != null
+  );
+  await Promise.all(
+    budgetUpdates.map(cat =>
+      supabase
+        .from('Categories')
+        .update({
+          budget_amount: cat.budget_amount ?? null,
+          budget_percentage: cat.budget_percentage ?? null,
+        })
+        .eq('user_id', userId)
+        .eq('category_name', cat.category_name)
+    )
+  );
+
   return data;
 };
 
@@ -625,7 +646,7 @@ export const upsertCategory = async (payload: {
 export const saveCategory = async (
   userId: string,
   payload: { category_name: string; icon: string; color: string },
-  id?: number
+  id?: string
 ) => {
   if (id) {
     const { data, error } = await supabase
@@ -650,7 +671,7 @@ export  const getUserId = async () => {
   const { data } = await supabase.auth.getUser();
   return data.user?.id;
 };
-export async function deleteCategory(id: number, user_id: string) {
+export async function deleteCategory(id: string, user_id: string) {
   const { data, error } = await supabase
       .from('Categories')
       .delete()
@@ -689,7 +710,7 @@ export const updateAccountsOrder = async (accounts: { id: number; sort_order: nu
   if (error) throw error;
 };
 
-export const updateCategoriesOrder = async (categories: { id: number; sort_order: number }[]) => {
+export const updateCategoriesOrder = async (categories: { id: string; sort_order: number }[]) => {
   const updates = categories.map(({ id, sort_order }) =>
     supabase.from('Categories').update({ sort_order }).eq('id', id)
   );
@@ -711,7 +732,7 @@ export const fetchIncomeForPeriod = async (startDate: Date, endDate: Date): Prom
 };
 
 export const updateCategoryBudgetAmount = async (
-  categoryId: number,
+  categoryId: string,
   budgetAmount: number | null,
   budgetPercentage?: number | null
 ): Promise<void> => {
@@ -727,7 +748,7 @@ export const updateCategoryBudgetAmount = async (
 };
 
 export const updateCategoryDashboardVisibility = async (
-  categoryId: number,
+  categoryId: string,
   showOnDashboard: boolean
 ): Promise<void> => {
   const { error } = await supabase
@@ -741,7 +762,7 @@ export const updateCategoryDashboardVisibility = async (
 };
 
 export const updateCategoryBudgetPercentages = async (
-  allocations: { categoryId: number; percentage: number; amount: number }[]
+  allocations: { categoryId: string; percentage: number; amount: number }[]
 ): Promise<void> => {
   const updates = allocations.map(({ categoryId, percentage, amount }) =>
     supabase

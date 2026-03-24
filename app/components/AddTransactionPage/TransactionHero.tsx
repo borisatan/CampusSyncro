@@ -32,7 +32,7 @@ export const TransactionHero = ({
   subtitle = 'Record your income or expense',
   showHeader = true,
 }: TransactionHeroProps) => {
-  const { currencySymbol } = useCurrencyStore();
+  const { currencySymbol, isLoading: isCurrencyLoading } = useCurrencyStore();
 
   // 0 = expense, 1 = income
   const progress = useSharedValue(transactionType === 'income' ? 1 : 0);
@@ -135,7 +135,7 @@ export const TransactionHero = ({
         </Text>
         <View className="relative">
           <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate400' : 'text-gray400'}`}>
-            {currencySymbol}
+            {isCurrencyLoading ? '' : (currencySymbol || '$')}
           </Text>
           <TextInput
             ref={amountInputRef}

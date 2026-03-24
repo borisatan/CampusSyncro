@@ -9,12 +9,12 @@ interface BudgetState {
 
   // Actions
   setCategoryBudgets: (budgets: CategoryBudgetStatus[]) => void;
-  upsertCategoryBudget: (categoryId: number, amount: number) => void;
-  removeCategoryBudget: (categoryId: number) => void;
+  upsertCategoryBudget: (categoryId: string, amount: number) => void;
+  removeCategoryBudget: (categoryId: string) => void;
   setLoading: (loading: boolean) => void;
 
   // Selectors
-  getBudgetByCategoryId: (categoryId: number) => CategoryBudgetStatus | null;
+  getBudgetByCategoryId: (categoryId: string) => CategoryBudgetStatus | null;
 }
 
 export const useBudgetStore = create<BudgetState>((set, get) => ({

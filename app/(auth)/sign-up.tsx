@@ -72,34 +72,47 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
     }
   }
 
-  // Step 2: Update profile with income and notification frequency (always runs)
-  try {
-    const profileUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
-
-    if (estimatedIncome && estimatedIncome > 0) {
-      profileUpdates.manual_income = estimatedIncome;
-      profileUpdates.use_dynamic_income = false;
-    }
-
-    const frequencyValue = notificationFrequency ? (NOTIFICATION_FREQUENCY_MAP[notificationFrequency] ?? 0) : 0;
-    if (frequencyValue > 0) {
-      profileUpdates.daily_notification_frequency = frequencyValue;
-    }
-
-    if (Object.keys(profileUpdates).length > 1) { // more than just updated_at
-      const { error: profileError } = await supabase
+  // Step 2: Update income — kept separate from notification frequency so one
+  // cannot block the other (e.g. if daily_notification_frequency column is missing).
+  if (estimatedIncome && estimatedIncome > 0) {
+    try {
+      const { error: incomeError } = await supabase
         .from('Profiles')
-        .update(profileUpdates)
+        .update({
+          manual_income: estimatedIncome,
+          use_dynamic_income: false,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', userId);
 
-      if (profileError) {
-        console.error('[persistOnboardingData] Error updating profile:', profileError.message);
+      if (incomeError) {
+        console.error('[persistOnboardingData] Error updating income:', incomeError.message);
       } else {
-        console.log('[persistOnboardingData] Profile updated successfully');
+        console.log('[persistOnboardingData] Income updated successfully');
+      }
+    } catch (incomeError: any) {
+      console.error('[persistOnboardingData] Error updating income:', incomeError.message);
+    }
+  }
+
+  // Step 3: Update notification frequency (separate so a missing column doesn't block income)
+  try {
+    const frequencyValue = notificationFrequency ? (NOTIFICATION_FREQUENCY_MAP[notificationFrequency] ?? 0) : 0;
+    if (frequencyValue > 0) {
+      const { error: freqError } = await supabase
+        .from('Profiles')
+        .update({
+          daily_notification_frequency: frequencyValue,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (freqError) {
+        console.error('[persistOnboardingData] Error updating notification frequency:', freqError.message);
       }
     }
-  } catch (profileError: any) {
-    console.error('[persistOnboardingData] Error updating profile:', profileError.message);
+  } catch (freqError: any) {
+    console.error('[persistOnboardingData] Error updating notification frequency:', freqError.message);
   }
 
   console.log('[persistOnboardingData] Data persistence completed');

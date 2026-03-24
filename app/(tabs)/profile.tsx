@@ -69,7 +69,7 @@ export default function ProfileScreen() {
   const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
-  const { resetOnboarding } = useOnboardingStore();
+  const { resetOnboarding, setTestMode } = useOnboardingStore();
   const {
     frequency,
     hasPermission,
@@ -166,6 +166,7 @@ export default function ProfileScreen() {
 
   const handleTestOnboarding = () => {
     resetOnboarding();
+    setTestMode(true);
     router.replace("/(onboarding)/welcome");
   };
 

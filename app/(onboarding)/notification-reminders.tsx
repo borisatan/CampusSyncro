@@ -5,8 +5,13 @@ import { Bell, ChevronLeft, Clock, Shield, Sun, Sunrise, Zap } from "lucide-reac
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { persistOnboardingData } from "../(auth)/sign-up";
 import { useAnalytics } from "../hooks/useAnalytics";
+import { ensureUserProfile } from "../services/backendService";
+import { useAccountsStore } from "../store/useAccountsStore";
+import { useCategoriesStore } from "../store/useCategoriesStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
+import { supabase } from "../utils/supabase";
 
 type NotificationFrequency = "once" | "three" | "five";
 
@@ -41,9 +46,10 @@ const FREQUENCY_OPTIONS: {
 ];
 
 export default function NotificationRemindersScreen() {
-  const { setOnboardingStep, setNewOnboardingData, completeOnboarding } =
+  const { setOnboardingStep, setNewOnboardingData, completeOnboarding, setOnboardingDataPersisted } =
     useOnboardingStore();
   const [selected, setSelected] = useState<NotificationFrequency | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { trackEvent } = useAnalytics();
   const screenEnteredAt = useRef(Date.now());
 
@@ -52,7 +58,8 @@ export default function NotificationRemindersScreen() {
     trackEvent("onboarding_notification_reminders_viewed");
   }, [setOnboardingStep, trackEvent]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    if (isSubmitting) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     trackEvent("onboarding_screen_completed", {
       screen: "notification_reminders",
@@ -65,7 +72,35 @@ export default function NotificationRemindersScreen() {
     trackEvent("onboarding_completed");
     setNewOnboardingData({ notificationFrequency: selected });
     completeOnboarding();
-    router.replace("/(auth)/sign-up");
+
+    // Check if user is already authenticated (profile-reset flow).
+    // If so, persist the onboarding data directly and go to dashboard.
+    // If not, send them to sign-up where persistence happens after account creation.
+    const { data: { user } } = await supabase.auth.getUser();
+    const store = useOnboardingStore.getState();
+    if (user && !store.isTestMode) {
+      setIsSubmitting(true);
+      try {
+        setOnboardingDataPersisted();
+        await ensureUserProfile(user.id);
+        await persistOnboardingData(user.id, store.newOnboardingData);
+        await Promise.all([
+          useCategoriesStore.getState().loadCategories(),
+          useAccountsStore.getState().loadAccounts(),
+        ]);
+      } catch (e: any) {
+        console.error('[NotificationReminders] Failed to persist onboarding data:', e?.message);
+      } finally {
+        setIsSubmitting(false);
+      }
+      router.replace("/(tabs)/dashboard");
+    } else if (user && store.isTestMode) {
+      // Developer test run — sign out so sign-up treats them as a new user
+      await supabase.auth.signOut();
+      router.replace("/(auth)/sign-up");
+    } else {
+      router.replace("/(auth)/sign-up");
+    }
   };
 
   const handleBack = () => {
@@ -404,8 +439,9 @@ export default function NotificationRemindersScreen() {
         >
           <Pressable
             onPress={handleContinue}
+            disabled={isSubmitting}
             className="w-full py-5 rounded-xl active:opacity-80"
-            style={{ backgroundColor: "#3B7EFF" }}
+            style={{ backgroundColor: "#3B7EFF", opacity: isSubmitting ? 0.7 : 1 }}
             android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
           >
             <Text
@@ -416,7 +452,7 @@ export default function NotificationRemindersScreen() {
                 fontWeight: "600",
               }}
             >
-              {selected ? "Continue" : "Skip for Now"}
+              {isSubmitting ? "Saving…" : selected ? "Continue" : "Skip for Now"}
             </Text>
           </Pressable>
         </MotiView>

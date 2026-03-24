@@ -55,6 +55,9 @@ interface OnboardingStoreState {
   // Whether onboarding data has been persisted to Supabase
   hasPersistedOnboardingData: boolean;
 
+  // Whether this is a developer test run (skip Supabase persistence)
+  isTestMode: boolean;
+
   // Actions
   setOnboardingStep: (step: number) => void;
   setPendingCategories: (categories: OnboardingCategory[]) => void;
@@ -67,6 +70,7 @@ interface OnboardingStoreState {
   setNewOnboardingData: (data: Partial<NewOnboardingData>) => void;
   setOnboardingDataPersisted: () => void;
   clearOnboardingDataPersisted: () => void;
+  setTestMode: (value: boolean) => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
   setHydrated: (hydrated: boolean) => void;
@@ -78,6 +82,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       onboardingStep: 0,
       hasCompletedOnboarding: false,
       hasPersistedOnboardingData: false,
+      isTestMode: false,
       isHydrated: false,
       pendingCategories: [],
       pendingBudgets: {},
@@ -132,6 +137,8 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
 
       clearOnboardingDataPersisted: () => set({ hasPersistedOnboardingData: false }),
 
+      setTestMode: (value) => set({ isTestMode: value }),
+
       completeOnboarding: () => {
         set({
           hasCompletedOnboarding: true,
@@ -144,6 +151,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
           onboardingStep: 0,
           hasCompletedOnboarding: false,
           hasPersistedOnboardingData: false,
+          isTestMode: false,
           pendingCategories: [],
           pendingBudgets: {},
           pendingIncome: 0,

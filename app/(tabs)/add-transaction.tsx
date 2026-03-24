@@ -54,7 +54,7 @@ const TransactionAdder = () => {
   const [transactionType, setTransactionType] = useState<"expense" | "income">(
     "expense",
   );
-  const [selectedAccount, setSelectedAccount] = useState("Main Checking");
+  const [selectedAccount, setSelectedAccount] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
@@ -72,7 +72,7 @@ const TransactionAdder = () => {
     if (categories.length > 0 && !selectedCategory) {
       setSelectedCategory(categories[0]);
     }
-    if (accountOptions.length > 0 && selectedAccount === "Main Checking") {
+    if (accountOptions.length > 0 && !selectedAccount) {
       setSelectedAccount(accountOptions[0].account_name);
     }
   }, [categories, accountOptions]);

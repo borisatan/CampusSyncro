@@ -32,12 +32,29 @@ export const AccountSelector = ({
     : accountOptions;
 
 
+  if (!isLoadingAccounts && currentOptions.length === 0) {
+    return (
+      <View className="mb-6">
+        <Text className={`text-sm mb-2 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
+          Account
+        </Text>
+        <View className={`w-full px-4 py-3 rounded-xl border ${
+          isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'
+        }`}>
+          <Text className={isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}>
+            Add an account from the profile page
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View className="mb-6">
       <Text className={`text-sm mb-2 ${isDarkMode ? 'text-secondaryDark' : 'text-secondaryLight'}`}>
         Account
       </Text>
-      
+
       <TouchableOpacity
         onPress={() => {
           Keyboard.dismiss();
@@ -51,10 +68,10 @@ export const AccountSelector = ({
         <Text className={isDarkMode ? 'text-textDark' : 'text-textLight'}>
           {isLoadingAccounts ? 'Loading accounts...' : selectedAccount}
         </Text>
-        <Ionicons 
-          name={showAccountDropdown ? "chevron-up" : "chevron-down"} 
-          size={20} 
-          color={isDarkMode ? "#9CA3AF" : "#4B5563"} 
+        <Ionicons
+          name={showAccountDropdown ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={isDarkMode ? "#9CA3AF" : "#4B5563"}
         />
       </TouchableOpacity>
 

@@ -132,7 +132,7 @@ export default function CategoryEditor() {
           icon: selectedIcon,
           color: selectedColor,
         },
-        categoryId ? Number(categoryId) : undefined
+        categoryId ? categoryId as string : undefined
       );
 
       // 3. TRIGGER REFRESHES HERE
@@ -163,7 +163,7 @@ export default function CategoryEditor() {
               setIsProcessing(true);
               const userId = await getUserId();
               if (userId && categoryId) {
-                await deleteCategory(Number(categoryId), userId);
+                await deleteCategory(categoryId as string, userId);
                 
                 await loadCategories(); // Update the grid
                 await loadAccounts();   // Balance might change if transactions were deleted

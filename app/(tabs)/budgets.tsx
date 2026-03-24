@@ -78,7 +78,7 @@ export default function BudgetsScreen() {
     registerCategoriesRefresh,
   } = useDataRefresh();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
-  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(
     null,
   );
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -130,7 +130,7 @@ export default function BudgetsScreen() {
     }
   }, [userId, accounts, updateAccountBalance, refreshSavingsProgress, refreshAccounts]);
 
-  const handleToggleExpand = useCallback((categoryId: number) => {
+  const handleToggleExpand = useCallback((categoryId: string) => {
     setExpandedCategoryId((prev) => (prev === categoryId ? null : categoryId));
   }, []);
 
@@ -149,7 +149,7 @@ export default function BudgetsScreen() {
     await refresh();
   };
 
-  const handleInlineSave = (categoryId: number, amount: number | null, percentage?: number | null) => {
+  const handleInlineSave = (categoryId: string, amount: number | null, percentage?: number | null) => {
     // Get current values to detect actual changes
     const currentCategory = categories.find(c => c.id === categoryId);
     const hasChanged =
