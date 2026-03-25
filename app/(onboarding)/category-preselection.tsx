@@ -47,7 +47,7 @@ const CategoryRow = React.memo(({ category, index, isSelected, onToggle }: Categ
   return (
     <Pressable
       onPress={handlePress}
-      className="rounded-xl overflow-hidden mb-2"
+      className="rounded-xl overflow-hidden mb-3"
       android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
     >
       <MotiView
@@ -194,7 +194,7 @@ export default function CategoryPreselectionScreen() {
             </MotiView>
 
             {/* Category Cards */}
-            <View className="mb-4">
+            <View className="mb-3">
               {V3_DEFAULT_CATEGORIES.map((category, index) => (
                 <CategoryRow
                   key={category.name}
@@ -210,7 +210,7 @@ export default function CategoryPreselectionScreen() {
       </ScrollView>
 
       {/* Continue Button — fixed footer, outside ScrollView to avoid iOS gesture zone touch issues */}
-      <View className="px-4 pb-4">
+      <View className="px-4 pb-8">
         <AnimatedGradientButton
           onPress={handleNext}
           text="Continue"

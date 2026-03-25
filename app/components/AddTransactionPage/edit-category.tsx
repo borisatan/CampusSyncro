@@ -162,15 +162,16 @@ export default function CategoryEditor() {
             try {
               setIsProcessing(true);
               const userId = await getUserId();
-              if (userId && categoryId) {
-                await deleteCategory(categoryId as string, userId);
-                
-                await loadCategories(); // Update the grid
-                await loadAccounts();   // Balance might change if transactions were deleted
-                await refreshAll();     // Update dashboard and list
-                
-                router.back();
-              }
+              if (!userId) throw new Error("User not authenticated");
+              if (!categoryId) throw new Error("Category ID not found");
+
+              await deleteCategory(categoryId as string, userId);
+
+              await loadCategories();
+              await loadAccounts();
+              await refreshAll();
+
+              router.back();
             } catch (err: any) {
               Alert.alert("Error", err.message || "Failed to delete category");
             } finally {

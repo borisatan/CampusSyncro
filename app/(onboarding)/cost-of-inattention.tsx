@@ -30,7 +30,7 @@ export default function CostOfInattentionScreen() {
   const screenEnteredAt = useRef(Date.now());
 
   const monthlyIncome = newOnboardingData.estimatedIncome || 0;
-  const retentionAmount = Math.round(monthlyIncome * 0.15);
+  const retentionAmount = Math.round(monthlyIncome * 0.20);
 
   const glowOpacity = useSharedValue(0.3);
   const arrowY = useSharedValue(0);
@@ -256,7 +256,7 @@ export default function CostOfInattentionScreen() {
                 <Text className="text-secondaryDark text-xs text-center">
                   Based on the{" "}
                   <Text className="text-accentBlue font-semibold">
-                    15% Mindfulness Margin
+                    20% Mindfulness Margin
                   </Text>{" "}
                   regained through manual tracking
                 </Text>

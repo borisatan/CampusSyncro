@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Sparkles, PenTool, ArrowRight } from "lucide-react-native";
+import { Sparkles, PenTool, ArrowRight, ChevronLeft } from "lucide-react-native";
 import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";

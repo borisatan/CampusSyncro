@@ -16,9 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.borisatanassov.Monelo",
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "runtimeVersion": "1.0.0"
     },
     "android": {
       "backgroundColor": "#20283A",
@@ -28,7 +26,6 @@
         "monochromeImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#E8E8E8"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.borisatanassov.Monelo",
       "runtimeVersion": "1.0.0"
     },

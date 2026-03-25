@@ -131,13 +131,15 @@ const AnimatedCategoryItem = ({
       <TouchableOpacity
         onPress={onPress}
         disabled={isDisabled}
-        style={{
-          backgroundColor: color + "15",
-          borderWidth: 1.5,
-          borderColor: isSelected ? color + "80" : "transparent",
-          borderRadius: 12,
-        }}
-        className="flex flex-col items-center gap-2 p-3"
+        className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${
+          isSelected
+            ? isDarkMode
+              ? "bg-surfaceDark border-accentBlue"
+              : "bg-blue-50 border-accentBlue"
+            : isDarkMode
+              ? "bg-surfaceDark border-borderDark"
+              : "bg-background border-borderLight"
+        }`}
       >
         <View
           className="w-12 h-12 rounded-xl items-center justify-center"

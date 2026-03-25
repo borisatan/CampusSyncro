@@ -13,8 +13,15 @@ import {
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
 import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
@@ -32,6 +39,20 @@ export default function ManualBudgetSetupScreen() {
 
   // Budget mode: 'fixed' = dollar amounts, 'percentage' = % of income
   const [budgetMode, setBudgetMode] = useState<'fixed' | 'percentage'>('fixed');
+
+  const toggleProgress = useSharedValue(0);
+  useEffect(() => {
+    toggleProgress.value = withTiming(budgetMode === 'percentage' ? 1 : 0, { duration: 200 });
+  }, [budgetMode]);
+  const sliderStyle = useAnimatedStyle(() => ({
+    left: `${toggleProgress.value * 50}%` as any,
+  }));
+  const fixedTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(toggleProgress.value, [0, 1], ['#ffffff', '#64748B']),
+  }));
+  const percentTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(toggleProgress.value, [0, 1], ['#64748B', '#ffffff']),
+  }));
 
   // Store budgets as amounts (convert from percentage when needed)
   const [budgets, setBudgets] = useState<Record<string, number>>({});
@@ -219,47 +240,46 @@ export default function ManualBudgetSetupScreen() {
                 transition={{ delay: 400, duration: 600 }}
                 className="mb-6"
               >
-                <View className="bg-surfaceDark rounded-xl p-1.5 border border-borderDark flex-row">
-                  <Pressable
+                <View className="rounded-xl flex-row bg-inputDark border border-borderDark overflow-hidden">
+                  <Animated.View
+                    style={[
+                      {
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
+                        width: '50%',
+                        borderRadius: 11,
+                        backgroundColor: '#3B7EFF',
+                      },
+                      sliderStyle,
+                    ]}
+                  />
+                  <TouchableOpacity
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (budgetMode !== 'fixed') {
-                        trackEvent("onboarding_budget_mode_toggled", { mode: "fixed" });
-                      }
+                      if (budgetMode !== 'fixed') trackEvent("onboarding_budget_mode_toggled", { mode: "fixed" });
                       setBudgetMode('fixed');
                     }}
-                    className={`flex-1 py-3 rounded-xl ${
-                      budgetMode === 'fixed' ? 'bg-accentBlue' : 'bg-transparent'
-                    }`}
+                    className="flex-1 py-2.5 z-10"
+                    activeOpacity={0.7}
                   >
-                    <Text
-                      className={`text-center font-medium ${
-                        budgetMode === 'fixed' ? 'text-white' : 'text-secondaryDark'
-                      }`}
-                    >
+                    <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 13 }, fixedTextStyle]}>
                       Fixed Amount
-                    </Text>
-                  </Pressable>
-                  <Pressable
+                    </Animated.Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (budgetMode !== 'percentage') {
-                        trackEvent("onboarding_budget_mode_toggled", { mode: "percentage" });
-                      }
+                      if (budgetMode !== 'percentage') trackEvent("onboarding_budget_mode_toggled", { mode: "percentage" });
                       setBudgetMode('percentage');
                     }}
-                    className={`flex-1 py-3 rounded-xl ${
-                      budgetMode === 'percentage' ? 'bg-accentBlue' : 'bg-transparent'
-                    }`}
+                    className="flex-1 py-2.5 z-10"
+                    activeOpacity={0.7}
                   >
-                    <Text
-                      className={`text-center font-medium ${
-                        budgetMode === 'percentage' ? 'text-white' : 'text-secondaryDark'
-                      }`}
-                    >
+                    <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 13 }, percentTextStyle]}>
                       % of Income
-                    </Text>
-                  </Pressable>
+                    </Animated.Text>
+                  </TouchableOpacity>
                 </View>
               </MotiView>
 
