@@ -1,7 +1,9 @@
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Bell, ChevronLeft, Clock, Shield, Sun, Sunrise, Zap } from "lucide-react-native";
+import { Bell, Clock, Shield, Sun, Sunrise, Zap } from "lucide-react-native";
+import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
+import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
@@ -114,65 +116,10 @@ export default function NotificationRemindersScreen() {
       <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
         {/* Progress Bar */}
         <View className="px-2 pt-12 pb-4">
-          <View className="flex-row items-center justify-between mb-2">
-            <Pressable
-              onPress={handleBack}
-              className="flex-row items-center gap-1 active:opacity-60"
-            >
-              <ChevronLeft size={20} color="#8A96B4" />
-              <Text className="text-secondaryDark text-sm">Back</Text>
-            </Pressable>
-            {/* No skip — continue button always available */}
-            <View style={{ width: 40 }} />
-          </View>
-          <View className="items-center">
-            <View
-              className="h-2 bg-surfaceDark rounded-full overflow-hidden"
-              style={{ width: "33%" }}
-            >
-              <MotiView
-                from={{ width: "96.4%" }}
-                animate={{ width: "100%" }}
-                transition={{ type: "timing", duration: 500 }}
-                className="h-full overflow-hidden relative"
-              >
-                <LinearGradient
-                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={{ width: "100%", height: "100%" }}
-                />
-                <MotiView
-                  from={{ translateX: -200 }}
-                  animate={{ translateX: 200 }}
-                  transition={{
-                    type: "timing",
-                    duration: 3000,
-                    loop: true,
-                    delay: 1500,
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    width: 100,
-                  }}
-                >
-                  <LinearGradient
-                    colors={[
-                      "rgba(255, 255, 255, 0)",
-                      "rgba(255, 255, 255, 0.3)",
-                      "rgba(255, 255, 255, 0)",
-                    ]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={{ width: "100%", height: "100%" }}
-                  />
-                </MotiView>
-              </MotiView>
-            </View>
+          <View className="flex-row items-center justify-between">
+            <OnboardingBackButton onPress={handleBack} />
+            <OnboardingProgressDots currentStep={11} totalSteps={11} />
+            <View style={{ width: 36 }} />
           </View>
         </View>
 

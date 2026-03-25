@@ -94,8 +94,8 @@ export default function CostOfInattentionScreen() {
         <OnboardingHeader
           onBack={handleBack}
           onSkip={handleSkip}
-          fromPercent="42.9%"
-          toPercent="57.1%"
+          currentStep={4}
+          totalSteps={11}
         />
 
         <View className="flex-1 px-2 py-8 pt-4">

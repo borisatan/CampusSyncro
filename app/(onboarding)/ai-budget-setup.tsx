@@ -2,7 +2,9 @@ import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ChevronLeft, Sparkles, TrendingUp } from "lucide-react-native";
+import { Sparkles, TrendingUp } from "lucide-react-native";
+import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
+import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
@@ -131,32 +133,10 @@ export default function AIBudgetSetupScreen() {
       <ScrollView className="flex-1">
         {/* Progress Bar */}
         <View className="px-2 pt-12 pb-4">
-          <View className="flex-row items-center justify-between mb-2">
-            <Pressable
-              onPress={handleBack}
-              className="flex-row items-center gap-1 active:opacity-60"
-            >
-              <ChevronLeft size={20} color="#8A96B4" />
-              <Text className="text-secondaryDark text-sm">Back</Text>
-            </Pressable>
-            <View className="w-12" />
-          </View>
-          <View className="items-center">
-            <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
-              <MotiView
-                from={{ width: "71.4%" }}
-                animate={{ width: "85.7%" }}
-                transition={{ type: "timing", duration: 500 }}
-                className="h-full overflow-hidden"
-              >
-                <LinearGradient
-                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={{ width: "100%", height: "100%" }}
-                />
-              </MotiView>
-            </View>
+          <View className="flex-row items-center justify-between">
+            <OnboardingBackButton onPress={handleBack} />
+            <OnboardingProgressDots currentStep={6} totalSteps={11} />
+            <View style={{ width: 36 }} />
           </View>
         </View>
 

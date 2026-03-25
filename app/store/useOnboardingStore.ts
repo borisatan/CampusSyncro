@@ -26,6 +26,9 @@ interface NewOnboardingData {
   categoryBudgets?: CategoryBudget[];     // Screen 5 or 6
   monthlySavingsTarget?: number;          // Derived from budget setup (20% for smart, remaining for manual)
 
+  // Currency selection (Screen 3)
+  selectedCurrency?: string;
+
   // Existing fields
   estimatedIncome: number;                 // Screen 3 (moved earlier in new flow)
   practiceEntryCompleted: boolean;        // Screen 9 (was 6)

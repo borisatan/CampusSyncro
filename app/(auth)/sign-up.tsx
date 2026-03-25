@@ -44,7 +44,7 @@ const NOTIFICATION_FREQUENCY_MAP: Record<string, number> = {
 export async function persistOnboardingData(userId: string, onboardingData: any) {
   console.log('[persistOnboardingData] Starting data persistence for user:', userId);
 
-  const { selectedCategories, categoryBudgets, estimatedIncome, monthlySavingsTarget, notificationFrequency } = onboardingData;
+  const { selectedCategories, categoryBudgets, estimatedIncome, monthlySavingsTarget, notificationFrequency, selectedCurrency } = onboardingData;
 
   // Step 1: Create categories (errors are logged but don't block profile update)
   if (selectedCategories && selectedCategories.length > 0) {
@@ -117,6 +117,27 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
     }
   } catch (freqError: any) {
     console.error('[persistOnboardingData] Error updating notification frequency:', freqError.message);
+  }
+
+  // Step 4: Update currency selection
+  if (selectedCurrency) {
+    try {
+      const { error: currencyError } = await supabase
+        .from('Profiles')
+        .update({
+          currency: selectedCurrency,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (currencyError) {
+        console.error('[persistOnboardingData] Error updating currency:', currencyError.message);
+      } else {
+        console.log('[persistOnboardingData] Currency updated successfully');
+      }
+    } catch (currencyError: any) {
+      console.error('[persistOnboardingData] Error updating currency:', currencyError.message);
+    }
   }
 
   console.log('[persistOnboardingData] Data persistence completed');

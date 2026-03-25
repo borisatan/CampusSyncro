@@ -167,8 +167,8 @@ export default function CategoryPreselectionScreen() {
         <OnboardingHeader
           onBack={handleBack}
           onSkip={handleSkip}
-          fromPercent="14.3%"
-          toPercent="28.6%"
+          currentStep={2}
+          totalSteps={11}
         />
 
         <View className="px-2 py-8 pt-4">

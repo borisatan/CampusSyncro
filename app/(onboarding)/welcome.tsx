@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
+import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import {
   Image,
   Pressable,
@@ -52,30 +53,12 @@ export default function WelcomeScreen() {
       <ScrollView className="flex-1">
         {/* Progress Bar */}
         <View className="px-2 pt-12 pb-4">
-          <View className="flex-row items-center justify-end mb-2">
-            <Pressable
-              onPress={handleSkip}
-              className="active:opacity-60"
-            >
+          <View className="flex-row items-center justify-between">
+            <View style={{ width: 36 }} />
+            <OnboardingProgressDots currentStep={1} totalSteps={11} />
+            <Pressable onPress={handleSkip} className="active:opacity-60">
               <Text className="text-accentBlue text-sm font-medium">Skip</Text>
             </Pressable>
-          </View>
-          <View className="items-center">
-            <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
-              <MotiView
-                from={{ width: "0%" }}
-                animate={{ width: "14.3%" }}
-                transition={{ type: "timing", duration: 500 }}
-                className="h-full overflow-hidden"
-              >
-                <LinearGradient
-                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={{ width: "100%", height: "100%" }}
-                />
-              </MotiView>
-            </View>
           </View>
         </View>
 

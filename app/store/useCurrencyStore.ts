@@ -8,6 +8,7 @@ interface CurrencyState {
   isLoading: boolean;
   loadCurrency: () => Promise<void>;
   updateCurrency: (newCurrency: string) => Promise<void>;
+  setLocalCurrency: (newCurrency: string) => void;
 }
 
 export const useCurrencyStore = create<CurrencyState>((set, get) => ({
@@ -42,6 +43,12 @@ export const useCurrencyStore = create<CurrencyState>((set, get) => ({
         isLoading: false 
       });
     }
+  },
+
+  setLocalCurrency: (newCurrency: string) => {
+    if (!isValidCurrency(newCurrency)) return;
+    const symbol = getCurrencySymbol(newCurrency as SupportedCurrency);
+    set({ currencyCode: newCurrency, currencySymbol: symbol });
   },
 
   updateCurrency: async (newCurrency: string) => {
