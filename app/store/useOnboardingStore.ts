@@ -24,6 +24,7 @@ interface NewOnboardingData {
   // Budget setup (NEW)
   budgetSetupChoice?: 'smart' | 'manual' | 'skip' | null;  // Screen 4
   categoryBudgets?: CategoryBudget[];     // Screen 5 or 6
+  monthlySavingsTarget?: number;          // Derived from budget setup (20% for smart, remaining for manual)
 
   // Existing fields
   estimatedIncome: number;                 // Screen 3 (moved earlier in new flow)
@@ -100,6 +101,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         selectedAutopilotCategories: [],
         budgetSetupChoice: null,
         categoryBudgets: [],
+        monthlySavingsTarget: 0,
         estimatedIncome: 0,
         practiceEntryCompleted: false,
         selectedBillingPeriod: null,
@@ -164,6 +166,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
             selectedAutopilotCategories: [],
             budgetSetupChoice: null,
             categoryBudgets: [],
+            monthlySavingsTarget: 0,
             estimatedIncome: 0,
             practiceEntryCompleted: false,
             selectedBillingPeriod: null,

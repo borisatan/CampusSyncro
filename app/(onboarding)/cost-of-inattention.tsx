@@ -2,7 +2,6 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
-  ChevronLeft,
   CloudRain,
   Eye,
   EyeOff,
@@ -11,7 +10,7 @@ import {
 } from "lucide-react-native";
 import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
-import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { SafeAreaView, ScrollView, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -19,6 +18,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { OnboardingHeader } from "../components/Shared/OnboardingHeader";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
@@ -91,70 +91,12 @@ export default function CostOfInattentionScreen() {
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
       <ScrollView className="flex-1">
-        {/* Progress Bar */}
-        <View className="px-2 pt-12 pb-4">
-          <View className="flex-row items-center justify-between mb-2">
-            <Pressable
-              onPress={handleBack}
-              className="flex-row items-center gap-1 active:opacity-60"
-            >
-              <ChevronLeft size={20} color="#8A96B4" />
-              <Text className="text-secondaryDark text-sm">Back</Text>
-            </Pressable>
-            <Pressable
-              onPress={handleSkip}
-              className="active:opacity-60"
-            >
-              <Text className="text-accentBlue text-sm font-medium">Skip</Text>
-            </Pressable>
-          </View>
-          <View className="items-center">
-            <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
-              <MotiView
-                from={{ width: "42.9%" }}
-                animate={{ width: "57.1%" }}
-                transition={{ type: "timing", duration: 500 }}
-                className="h-full overflow-hidden relative"
-              >
-                <LinearGradient
-                  colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={{ width: "100%", height: "100%" }}
-                />
-                <MotiView
-                  from={{ translateX: -200 }}
-                  animate={{ translateX: 200 }}
-                  transition={{
-                    type: "timing",
-                    duration: 3000,
-                    loop: true,
-                    delay: 1500,
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    width: 100,
-                  }}
-                >
-                  <LinearGradient
-                    colors={[
-                      "rgba(255, 255, 255, 0)",
-                      "rgba(255, 255, 255, 0.3)",
-                      "rgba(255, 255, 255, 0)",
-                    ]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={{ width: "100%", height: "100%" }}
-                  />
-                </MotiView>
-              </MotiView>
-            </View>
-          </View>
-        </View>
+        <OnboardingHeader
+          onBack={handleBack}
+          onSkip={handleSkip}
+          fromPercent="42.9%"
+          toPercent="57.1%"
+        />
 
         <View className="flex-1 px-2 py-8 pt-4">
           <MotiView

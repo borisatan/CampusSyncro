@@ -604,7 +604,7 @@ export const SpendingTrendChart = React.memo(
               ) : (
                 <>
                   <Text className="text-slate-500 text-3xl font-bold">
-                    No data
+                    No Data: Add a transaction
                   </Text>
                   <View style={{ minHeight: 18 }} />
                 </>

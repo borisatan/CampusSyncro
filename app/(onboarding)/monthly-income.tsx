@@ -1,13 +1,11 @@
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
 import { MotiView } from "moti";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   SafeAreaView,
   ScrollView,
   Text,
@@ -15,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { OnboardingHeader } from "../components/Shared/OnboardingHeader";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
@@ -32,7 +31,7 @@ export default function MonthlyIncomeScreen() {
     trackEvent("onboarding_monthly_income_viewed");
   }, [setOnboardingStep]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
       screen: "monthly_income",
@@ -43,15 +42,15 @@ export default function MonthlyIncomeScreen() {
     setNewOnboardingData({ estimatedIncome: incomeValue });
     setOnboardingStep(4);
     router.push("/(onboarding)/cost-of-inattention");
-  };
+  }, [amount, trackEvent, setNewOnboardingData, setOnboardingStep]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(2);
     router.push("/(onboarding)/category-preselection");
-  };
+  }, [setOnboardingStep]);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_skipped", {
       screen: "monthly_income",
@@ -60,7 +59,7 @@ export default function MonthlyIncomeScreen() {
     });
     completeOnboarding();
     router.replace("/(auth)/sign-up");
-  };
+  }, [trackEvent, completeOnboarding]);
 
   const isValid = amount && parseFloat(amount) > 0;
 
@@ -71,72 +70,12 @@ export default function MonthlyIncomeScreen() {
         className="flex-1"
       >
         <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
-          {/* Progress Bar */}
-          <View className="px-2 pt-12 pb-4">
-            <View className="flex-row items-center justify-between mb-2">
-              <Pressable
-                onPress={handleBack}
-                className="flex-row items-center gap-1 active:opacity-60"
-              >
-                <ChevronLeft size={20} color="#8A96B4" />
-                <Text className="text-secondaryDark text-sm">Back</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleSkip}
-                className="active:opacity-60"
-              >
-                <Text className="text-accentBlue text-sm font-medium">
-                  Skip
-                </Text>
-              </Pressable>
-            </View>
-            <View className="items-center">
-              <View className="h-2 bg-surfaceDark rounded-full overflow-hidden" style={{ width: '33%' }}>
-                <MotiView
-                  from={{ width: "28.6%" }}
-                  animate={{ width: "42.9%" }}
-                  transition={{ type: "timing", duration: 500 }}
-                  className="h-full overflow-hidden relative"
-                >
-                  <LinearGradient
-                    colors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={{ width: "100%", height: "100%" }}
-                  />
-                  <MotiView
-                    from={{ translateX: -200 }}
-                    animate={{ translateX: 200 }}
-                    transition={{
-                      type: "timing",
-                      duration: 3000,
-                      loop: true,
-                      delay: 1500,
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      width: 100,
-                    }}
-                  >
-                    <LinearGradient
-                      colors={[
-                        "rgba(255, 255, 255, 0)",
-                        "rgba(255, 255, 255, 0.3)",
-                        "rgba(255, 255, 255, 0)",
-                      ]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={{ width: "100%", height: "100%" }}
-                    />
-                  </MotiView>
-                </MotiView>
-              </View>
-            </View>
-          </View>
+          <OnboardingHeader
+            onBack={handleBack}
+            onSkip={handleSkip}
+            fromPercent="28.6%"
+            toPercent="42.9%"
+          />
 
           <View className="px-2 py-8 pt-4">
             <MotiView

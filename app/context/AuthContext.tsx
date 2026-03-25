@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { persistOnboardingData } from '../(auth)/sign-up';
 import { ensureUserProfile } from '../services/backendService';
+import { useAccountsStore } from '../store/useAccountsStore';
+import { useAppTourStore } from '../store/useAppTourStore';
+import { useCategoriesStore } from '../store/useCategoriesStore';
+import { useCurrencyStore } from '../store/useCurrencyStore';
+import { useIncomeStore } from '../store/useIncomeStore';
 import { useOnboardingStore } from '../store/useOnboardingStore';
 import { supabase } from '../utils/supabase';
 
@@ -25,6 +30,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data } = await supabase.auth.getUser();
         if (!isMounted) return;
         setUserId(data.user?.id ?? null);
+      } catch (error: any) {
+        // Stale/revoked refresh token — clear the session and treat as signed out
+        if (error?.message?.includes('Refresh Token')) {
+          await supabase.auth.signOut();
+        }
+        if (isMounted) setUserId(null);
       } finally {
         if (isMounted) {
           initialLoadComplete = true;
@@ -53,6 +64,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           try {
             await ensureUserProfile(session.user.id);
             await persistOnboardingData(session.user.id, store.newOnboardingData);
+            await Promise.all([
+              useCategoriesStore.getState().loadCategories(),
+              useAccountsStore.getState().loadAccounts(),
+              useIncomeStore.getState().loadIncomeSettings(),
+              useCurrencyStore.getState().loadCurrency(),
+            ]);
+            useAppTourStore.getState().resetSeenPages();
           } catch (e: any) {
             console.error('[AuthContext] Failed to persist onboarding data:', e?.message);
           }

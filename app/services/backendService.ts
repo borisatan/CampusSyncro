@@ -1,5 +1,6 @@
 import { CategoryAggregation, CategoryIconInfo, Goal, GoalContribution, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
+import * as Crypto from 'expo-crypto';
 
 const r2 = (n: number): number => Math.round(n * 100) / 100;
 
@@ -276,7 +277,7 @@ export const bulkCreateCategories = async (
   const budgetUpdates = categories.filter(
     cat => cat.budget_amount != null || cat.budget_percentage != null
   );
-  await Promise.all(
+  const budgetResults = await Promise.all(
     budgetUpdates.map(cat =>
       supabase
         .from('Categories')
@@ -288,6 +289,11 @@ export const bulkCreateCategories = async (
         .eq('category_name', cat.category_name)
     )
   );
+  for (const result of budgetResults) {
+    if (result.error) {
+      console.error('[bulkCreateCategories] Error updating budget fields:', result.error.message);
+    }
+  }
 
   return data;
 };
@@ -536,6 +542,15 @@ export const updateAccountBalance = async (accountName: string, newBalance: numb
       return data;
     }
 
+export const updateAccountSavingsGoal = async (accountId: number, savingsGoal: number | null): Promise<void> => {
+  const { error } = await supabase
+    .from('Accounts')
+    .update({ monthly_savings_goal: savingsGoal })
+    .eq('id', accountId);
+
+  if (error) throw new Error(error.message);
+};
+
 export const updateAccountSortOrder = async (accountId: number, newSortOrder: number) => {
   const { data, error } = await supabase
     .from('Accounts')
@@ -626,12 +641,12 @@ export const deleteAccount = async (id: number) => {
   return data;
 } 
 
-export const upsertCategory = async (payload: { 
-  id?: number, 
-  category_name: string, 
-  icon: string, 
-  color: string, 
-  user_id: string 
+export const upsertCategory = async (payload: {
+  id?: string,
+  category_name: string,
+  icon: string,
+  color: string,
+  user_id: string
 }) => {
   const { data, error } = await supabase
     .from('Categories')
@@ -658,9 +673,10 @@ export const saveCategory = async (
     if (error) throw error;
     return data;
   } else {
+    const newId = Crypto.randomUUID();
     const { data, error } = await supabase
       .from('Categories')
-      .insert([{ ...payload, user_id: userId }])
+      .insert([{ ...payload, user_id: userId, id: newId }])
       .select();
     if (error) throw error;
     return data;

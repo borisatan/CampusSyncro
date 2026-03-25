@@ -237,11 +237,14 @@ export const SubmitButton = ({
         handleSubmit();
       }}
       disabled={isSubmitting}
+      activeOpacity={0.7}
       className={`w-full py-4 rounded-xl items-center mb-6 ${
         transactionType === "expense" ? "bg-accentRed" : "bg-accentTeal"
-      }`}
+      } ${isSubmitting ? "opacity-60" : ""}`}
     >
-      <Text className="text-white font-semibold">{displayButtonText}</Text>
+      <Text className="text-white font-semibold">
+        {isSubmitting ? "Adding..." : displayButtonText}
+      </Text>
     </TouchableOpacity>
   );
 };

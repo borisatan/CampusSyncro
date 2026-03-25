@@ -6,6 +6,7 @@ interface AppTourStoreState {
   seenPages: Record<string, boolean>;
   markPageSeen: (pageId: string) => void;
   isPageSeen: (pageId: string) => boolean;
+  resetSeenPages: () => void;
 }
 
 export const useAppTourStore = create<AppTourStoreState>()(
@@ -17,6 +18,7 @@ export const useAppTourStore = create<AppTourStoreState>()(
         set((state) => ({ seenPages: { ...state.seenPages, [pageId]: true } })),
 
       isPageSeen: (pageId) => get().seenPages[pageId] === true,
+      resetSeenPages: () => set({ seenPages: {} }),
     }),
     {
       name: 'app-tour-store',

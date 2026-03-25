@@ -82,13 +82,14 @@ export const useBudgetsData = (): BudgetsDataResult => {
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
-      // Skip fetch if data already loaded (e.g., by DataPreloader)
-      if (categoryBudgets.length === 0 && isBudgetLoading) {
+      // Fetch if no data yet — covers the race condition where DataPreloader
+      // ran before persistOnboardingData created categories with budgets.
+      if (categoryBudgets.length === 0) {
         fetchAndBuild()
           .catch((error) => console.error('Error loading budgets data:', error))
           .finally(() => setLoading(false));
       } else {
-        // Data already loaded, just ensure loading state is false
+        // Data already loaded by DataPreloader, just ensure loading state is false
         setLoading(false);
       }
     }

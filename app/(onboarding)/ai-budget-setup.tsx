@@ -104,6 +104,7 @@ export default function AIBudgetSetupScreen() {
         budget_percentage: a.percentage,
         budget_amount: a.budget_amount,
       })),
+      monthlySavingsTarget: budgetData.savingsAmount,
     });
 
     setOnboardingStep(8);

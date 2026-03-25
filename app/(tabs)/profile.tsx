@@ -31,6 +31,7 @@ import { useLock } from "../context/LockContext";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useNotificationStore } from "../store/useNotificationStore";
+import { useAppTourStore } from "../store/useAppTourStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { NotificationFrequency } from "../types/types";
 import { supabase } from "../utils/supabase";
@@ -45,6 +46,7 @@ const currencies = [
 ];
 
 const frequencyOptions = [
+  { value: 0, label: "Off", description: "0 times per day" },
   { value: 1, label: "Once", description: "1 time per day" },
   { value: 2, label: "Twice", description: "2 times per day" },
   { value: 3, label: "Frequent", description: "3 times per day" },
@@ -70,6 +72,7 @@ export default function ProfileScreen() {
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
   const { resetOnboarding, setTestMode } = useOnboardingStore();
+  const { resetSeenPages } = useAppTourStore();
   const {
     frequency,
     hasPermission,
@@ -166,8 +169,9 @@ export default function ProfileScreen() {
 
   const handleTestOnboarding = () => {
     resetOnboarding();
+    resetSeenPages();
     setTestMode(true);
-    router.replace("/(onboarding)/welcome");
+    router.push("/(onboarding)/welcome");
   };
 
   const handleFeedback = () => {

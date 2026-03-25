@@ -60,7 +60,7 @@ export const CategoryDonut = React.memo(({ aggregates, categories, timeFrame, is
 
       {!hasData ? (
         <View className="h-[140px] items-center justify-center">
-          <Text className="text-secondaryDark text-2xl font-bold tracking-widest ">No Data</Text>
+          <Text className="text-secondaryDark text-2xl font-bold tracking-widest ">No Data: Add a transaction</Text>
         </View>
       ) : (
         <View className="flex-row items-start justify-between">

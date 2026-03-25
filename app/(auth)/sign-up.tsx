@@ -20,8 +20,11 @@ import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { bulkCreateCategories, ensureUserProfile } from "../services/backendService";
 import { useAccountsStore } from "../store/useAccountsStore";
+import { useAppTourStore } from "../store/useAppTourStore";
 import { useCategoriesStore } from "../store/useCategoriesStore";
+import { useIncomeStore } from "../store/useIncomeStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
+import { useCurrencyStore } from "../store/useCurrencyStore";
 import { supabase } from "../utils/supabase";
 
 // Configure WebBrowser to properly complete auth sessions
@@ -41,7 +44,7 @@ const NOTIFICATION_FREQUENCY_MAP: Record<string, number> = {
 export async function persistOnboardingData(userId: string, onboardingData: any) {
   console.log('[persistOnboardingData] Starting data persistence for user:', userId);
 
-  const { selectedCategories, categoryBudgets, estimatedIncome, notificationFrequency } = onboardingData;
+  const { selectedCategories, categoryBudgets, estimatedIncome, monthlySavingsTarget, notificationFrequency } = onboardingData;
 
   // Step 1: Create categories (errors are logged but don't block profile update)
   if (selectedCategories && selectedCategories.length > 0) {
@@ -58,8 +61,8 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
           category_name: categoryDef.name,
           icon: categoryDef.icon,
           color: categoryDef.color,
-          budget_amount: budget?.budget_amount || null,
-          budget_percentage: budget?.budget_percentage || null,
+          budget_amount: budget?.budget_amount ?? null,
+          budget_percentage: budget?.budget_percentage ?? null,
         };
       }).filter(Boolean);
 
@@ -81,6 +84,7 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
         .update({
           manual_income: estimatedIncome,
           use_dynamic_income: false,
+          monthly_savings_target: monthlySavingsTarget ?? 0,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
@@ -181,7 +185,10 @@ export default function SignUpScreen() {
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
           useAccountsStore.getState().loadAccounts(),
+          useIncomeStore.getState().loadIncomeSettings(),
+          useCurrencyStore.getState().loadCurrency(),
         ]);
+        useAppTourStore.getState().resetSeenPages();
         identifyUser(data.user.id, {
           email: data.user.email,
           $set_once: { signup_date: new Date().toISOString() },
@@ -301,7 +308,10 @@ export default function SignUpScreen() {
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
           useAccountsStore.getState().loadAccounts(),
+          useIncomeStore.getState().loadIncomeSettings(),
+          useCurrencyStore.getState().loadCurrency(),
         ]);
+        useAppTourStore.getState().resetSeenPages();
 
         if (sessionData.user) {
           identifyUser(sessionData.user.id, { email: sessionData.user.email });
@@ -359,7 +369,10 @@ export default function SignUpScreen() {
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
           useAccountsStore.getState().loadAccounts(),
+          useIncomeStore.getState().loadIncomeSettings(),
+          useCurrencyStore.getState().loadCurrency(),
         ]);
+        useAppTourStore.getState().resetSeenPages();
         identifyUser(data.user.id, { email: data.user.email });
       }
 

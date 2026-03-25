@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -65,6 +66,7 @@ export default function ManualBudgetSetupScreen() {
     setNewOnboardingData({
       budgetSetupChoice: 'manual',
       categoryBudgets,
+      monthlySavingsTarget: Math.max(0, remaining),
     });
 
     setOnboardingStep(8);
@@ -106,6 +108,11 @@ export default function ManualBudgetSetupScreen() {
   // Get category color
   const getCategoryColor = (name: string) => {
     return V3_DEFAULT_CATEGORIES.find((c) => c.name === name)?.color || '#6B7280';
+  };
+
+  // Get category icon
+  const getCategoryIcon = (name: string) => {
+    return (V3_DEFAULT_CATEGORIES.find((c) => c.name === name)?.icon || 'apps-outline') as keyof typeof Ionicons.glyphMap;
   };
 
   const totalBudgeted = Object.values(budgets).reduce((sum, amount) => sum + amount, 0);
@@ -272,7 +279,7 @@ export default function ManualBudgetSetupScreen() {
                           className="w-10 h-10 rounded-lg items-center justify-center"
                           style={{ backgroundColor: getCategoryColor(categoryName) }}
                         >
-                          <View className="w-3 h-3 rounded-full bg-white" />
+                          <Ionicons name={getCategoryIcon(categoryName)} size={20} color="white" />
                         </View>
                         <Text className="flex-1 text-white text-base font-medium">
                           {categoryName}

@@ -4,7 +4,12 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { ensureUserProfile } from "../services/backendService";
+import { useAccountsStore } from "../store/useAccountsStore";
+import { useAppTourStore } from "../store/useAppTourStore";
+import { useCategoriesStore } from "../store/useCategoriesStore";
+import { useIncomeStore } from "../store/useIncomeStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
+import { useCurrencyStore } from "../store/useCurrencyStore";
 import { supabase } from "../utils/supabase";
 import { persistOnboardingData } from "./sign-up";
 
@@ -84,6 +89,13 @@ export default function OAuthCallbackScreen() {
       if (store.hasCompletedOnboarding && !store.hasPersistedOnboardingData) {
         store.setOnboardingDataPersisted();
         await persistOnboardingData(sessionData.user.id, store.newOnboardingData);
+        await Promise.all([
+          useCategoriesStore.getState().loadCategories(),
+          useAccountsStore.getState().loadAccounts(),
+          useIncomeStore.getState().loadIncomeSettings(),
+          useCurrencyStore.getState().loadCurrency(),
+        ]);
+        useAppTourStore.getState().resetSeenPages();
       }
 
       // Track analytics

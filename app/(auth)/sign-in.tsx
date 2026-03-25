@@ -376,7 +376,7 @@ export default function SignInScreen() {
                 <Text className="text-secondaryDark">
                   Don't have an account?{" "}
                 </Text>
-                <Link href="/(auth)/sign-up" asChild>
+                <Link href="/(onboarding)/welcome" asChild>
                   <Pressable className="active:opacity-60">
                     <Text className="text-accentBlue font-semibold">
                       Sign up

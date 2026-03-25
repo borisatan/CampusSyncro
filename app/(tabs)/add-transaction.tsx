@@ -61,6 +61,7 @@ const TransactionAdder = () => {
   );
   const [description, setDescription] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -83,6 +84,7 @@ const TransactionAdder = () => {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
     // 1. Basic validation
     if (!amount || !userId) {
       Alert.alert("Error", "Please enter an amount");
@@ -101,6 +103,7 @@ const TransactionAdder = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const categoryName =
         transactionType === "expense"
@@ -151,6 +154,7 @@ const TransactionAdder = () => {
       // Refresh related screens (dashboard, accounts, transaction-list) - categories don't change
       await Promise.all([refreshDashboard(), refreshAccounts(), refreshTransactionList()]);
     } catch (err) {
+      setIsSubmitting(false);
       console.error("Submission error:", err);
       trackEvent('transaction_add_failed', {
         transaction_type: transactionType,
@@ -273,6 +277,7 @@ const TransactionAdder = () => {
                 isDarkMode={isDarkMode}
                 handleSubmit={handleSubmit}
                 transactionType={transactionType}
+                isSubmitting={isSubmitting}
               />
             </MotiView>
           </View>
@@ -283,6 +288,7 @@ const TransactionAdder = () => {
             text="Transaction Added!"
             onDismiss={() => {
               setShowSuccess(false);
+              setIsSubmitting(false);
               setAmount("");
               setDescription("");
               setSelectedDate(new Date());
