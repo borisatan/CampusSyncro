@@ -70,6 +70,8 @@
     "react-native-keyboard-controller": "1.18.5",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-modal": "^14.0.0-rc.1",
+    "react-native-purchases": "^9.14.0",
+    "react-native-purchases-ui": "^9.14.0",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",

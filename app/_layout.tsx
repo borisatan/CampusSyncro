@@ -17,6 +17,7 @@ import { AuthProvider } from './context/AuthContext';
 import { DataRefreshProvider } from './context/DataRefreshContext';
 import { LockProvider } from './context/LockContext';
 import { PostHogProvider } from './context/PostHogContext';
+import { SubscriptionProvider } from './context/SubscriptionContext';
 import { AppThemeProvider } from './context/ThemeContext';
 
 // Prevent splash screen from auto-hiding
@@ -56,6 +57,7 @@ export default function RootLayout() {
     <GestureHandlerRootView className="flex-1">
       <SafeAreaProvider>
         <AuthProvider>
+          <SubscriptionProvider>
           <PostHogProvider>
             <LockProvider>
               <CurrencyInitializer />
@@ -87,6 +89,7 @@ export default function RootLayout() {
               </DataRefreshProvider>
             </LockProvider>
           </PostHogProvider>
+          </SubscriptionProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

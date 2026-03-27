@@ -8,6 +8,7 @@ import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -35,6 +36,10 @@ export default function WhyManualScreen() {
       -1,
       true,
     );
+
+    return () => {
+      cancelAnimation(glowOpacity);
+    };
   }, [glowOpacity, setOnboardingStep]);
 
   const glowStyle = useAnimatedStyle(() => ({
@@ -113,9 +118,9 @@ export default function WhyManualScreen() {
                 transition={{ delay: 400, duration: 600 }}
                 className="mb-6"
               >
-                <View className="bg-surfaceDark border border-borderDark rounded-xl p-6">
+                <View className="bg-surfaceDark border border-borderDark rounded-3xl p-6">
                   <View className="flex-row gap-4">
-                    <View className="w-12 h-12 rounded-xl bg-inputDark items-center justify-center">
+                    <View className="w-12 h-12 rounded-3xl bg-inputDark items-center justify-center">
                       <Zap size={24} color="#8A96B4" />
                     </View>
                     <View className="flex-1">
@@ -141,7 +146,7 @@ export default function WhyManualScreen() {
                 transition={{ delay: 600, duration: 600 }}
                 className="mb-6"
               >
-                <View className="relative rounded-xl overflow-hidden">
+                <View className="relative rounded-3xl overflow-hidden">
                   {/* Gradient background with pulsing glow */}
                   <LinearGradient
                     colors={["#0F172A", "#1E3A8A", "#0C1E3D"]}
@@ -160,9 +165,9 @@ export default function WhyManualScreen() {
                     ]}
                   />
 
-                  <View className="border border-accentBlue rounded-xl p-6 relative">
+                  <View className="border border-accentBlue rounded-3xl p-6 relative">
                     <View className="flex-row gap-4">
-                      <View className="w-12 h-12 rounded-xl overflow-hidden items-center justify-center">
+                      <View className="w-12 h-12 rounded-3xl overflow-hidden items-center justify-center">
                         <LinearGradient
                           colors={["#60A5FA", "#3B82F6", "#2563EB"]}
                           start={{ x: 0, y: 0 }}
@@ -199,7 +204,7 @@ export default function WhyManualScreen() {
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{ delay: 800, duration: 600 }}
               >
-                <View className="bg-surfaceDark/50 border border-borderDark rounded-xl p-5">
+                <View className="bg-surfaceDark/50 border border-borderDark rounded-3xl p-5">
                   <View className="flex-row items-start gap-3">
                     <Brain size={20} color="#3B7EFF" style={{ marginTop: 2 }} />
                     <Text className="text-secondaryDark text-xs leading-relaxed flex-1">
@@ -216,8 +221,7 @@ export default function WhyManualScreen() {
             <AnimatedGradientButton
               onPress={handleNext}
               text="Try a practice entry"
-              delay={1000}
-              rounded="xl"
+              rounded="3xl"
             />
           </MotiView>
         </View>

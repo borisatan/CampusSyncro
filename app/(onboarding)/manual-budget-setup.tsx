@@ -184,7 +184,7 @@ export default function ManualBudgetSetupScreen() {
                 transition={{ delay: 300, duration: 600 }}
                 className="mb-6"
               >
-                <View className="bg-surfaceDark border border-borderDark rounded-xl p-4">
+                <View className="bg-surfaceDark border border-borderDark rounded-3xl p-4">
                   <View className="flex-row justify-between items-center mb-2">
                     <Text className="text-secondaryDark text-sm">Total Budgeted</Text>
                     <Text className="text-white text-lg font-bold">
@@ -217,7 +217,7 @@ export default function ManualBudgetSetupScreen() {
                 transition={{ delay: 400, duration: 600 }}
                 className="mb-6"
               >
-                <View className="rounded-xl flex-row bg-inputDark border border-borderDark overflow-hidden">
+                <View className="rounded-3xl flex-row bg-inputDark border border-borderDark overflow-hidden">
                   <Animated.View
                     style={[
                       {
@@ -270,10 +270,10 @@ export default function ManualBudgetSetupScreen() {
                     transition={{ delay: 500 + index * 100, duration: 500 }}
                     className="mb-3"
                   >
-                    <View className="bg-surfaceDark border border-borderDark rounded-xl p-4">
+                    <View className="bg-surfaceDark border border-borderDark rounded-3xl p-4">
                       <View className="flex-row items-center gap-3 mb-3">
                         <View
-                          className="w-10 h-10 rounded-lg items-center justify-center"
+                          className="w-10 h-10 rounded-xl items-center justify-center"
                           style={{ backgroundColor: getCategoryColor(categoryName) }}
                         >
                           <Ionicons name={getCategoryIcon(categoryName)} size={20} color="white" />
@@ -292,7 +292,7 @@ export default function ManualBudgetSetupScreen() {
                           keyboardType="numeric"
                           placeholder="0"
                           placeholderTextColor="#4B5A7A"
-                          className="flex-1 text-white text-xl font-semibold bg-inputDark border border-borderDark rounded-lg px-4 py-3"
+                          className="flex-1 text-white text-xl font-semibold bg-inputDark border border-borderDark rounded-3xl px-4 py-3"
                         />
                         {budgetMode === 'percentage' ? (
                           <Text className="text-secondaryDark text-lg">%</Text>
@@ -312,8 +312,7 @@ export default function ManualBudgetSetupScreen() {
               <AnimatedGradientButton
                 onPress={handleContinue}
                 text="Continue"
-                delay={800}
-                rounded="xl"
+                rounded="3xl"
                 disabled={!isValid}
               />
 

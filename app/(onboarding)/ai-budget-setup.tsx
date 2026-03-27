@@ -210,7 +210,7 @@ export default function AIBudgetSetupScreen() {
                 transition={{ delay: 300, duration: 600 }}
                 className="mb-6"
               >
-                <View className="bg-surfaceDark border border-borderDark rounded-xl p-4">
+                <View className="bg-surfaceDark border border-borderDark rounded-3xl p-4">
                   <View className="flex-row justify-between items-center mb-3">
                     <Text className="text-white text-base font-semibold">Spending Budget</Text>
                     <Text className="text-white text-lg font-bold">
@@ -245,7 +245,7 @@ export default function AIBudgetSetupScreen() {
                     transition={{ delay: 500 + index * 100, duration: 500 }}
                     className="mb-3"
                   >
-                    <View className="rounded-2xl overflow-hidden border bg-surfaceDark" style={{ borderColor: '#2A3250' }}>
+                    <View className="rounded-3xl overflow-hidden border bg-surfaceDark" style={{ borderColor: '#2A3250' }}>
                       <View className="p-4 flex-row items-center">
                         <View
                           className="w-11 h-11 rounded-xl items-center justify-center mr-3"
@@ -274,8 +274,7 @@ export default function AIBudgetSetupScreen() {
               <AnimatedGradientButton
                 onPress={handleApply}
                 text="Apply Smart Budget"
-                delay={800}
-                rounded="xl"
+                rounded="3xl"
                 gradientColors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
               />
             </MotiView>

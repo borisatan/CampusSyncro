@@ -214,8 +214,7 @@ export default function CategoryPreselectionScreen() {
         <AnimatedGradientButton
           onPress={handleNext}
           text="Continue"
-          delay={900}
-          rounded="xl"
+          rounded="3xl"
           disabled={isNextDisabled}
         />
       </View>

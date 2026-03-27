@@ -153,7 +153,6 @@ export default function WelcomeScreen() {
                 onPress={handleNext}
                 text="Begin your journey"
                 showIcon
-                delay={1000}
                 rounded="3xl"
               />
             </View>

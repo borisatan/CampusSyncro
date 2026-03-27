@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ArrowLeft, CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -202,7 +201,6 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
                     <AnimatedSortOrderRow
                       key={option}
                       option={option}
-                      index={index}
                       isSelected={sortOrder === option}
                       onSelect={(val) => {
                         setSortOrder(val);
@@ -260,52 +258,28 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
 
 const AnimatedSortOrderRow = ({
   option,
-  index,
   isSelected,
   onSelect,
   isLast,
 }: {
   option: number;
-  index: number;
   isSelected: boolean;
   onSelect: (val: number) => void;
   isLast: boolean;
 }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(10)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
   return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-      <TouchableOpacity
-        onPress={() => onSelect(option)}
-        className={`px-4 py-4 flex-row items-center justify-between ${
-          !isLast ? 'border-b border-borderDark' : ''
-        } ${isSelected ? 'bg-backgroundDark' : ''}`}
-      >
-        <Text className={`font-medium ${isSelected ? 'text-textDark' : 'text-secondaryDark'}`}>
-          Position {option}
-        </Text>
-        {isSelected && (
-          <Ionicons name="checkmark-circle" size={20} color="#B2A4FF" />
-        )}
-      </TouchableOpacity>
-    </Animated.View>
+    <TouchableOpacity
+      onPress={() => onSelect(option)}
+      className={`px-4 py-4 flex-row items-center justify-between ${
+        !isLast ? 'border-b border-borderDark' : ''
+      } ${isSelected ? 'bg-backgroundDark' : ''}`}
+    >
+      <Text className={`font-medium ${isSelected ? 'text-textDark' : 'text-secondaryDark'}`}>
+        Position {option}
+      </Text>
+      {isSelected && (
+        <Ionicons name="checkmark-circle" size={20} color="#B2A4FF" />
+      )}
+    </TouchableOpacity>
   );
 };

@@ -1,7 +1,7 @@
 
 import { ArrowLeftRight, Plus } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Modal, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Alert, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,7 +19,6 @@ import { useAccountsStore } from '../store/useAccountsStore';
 import { useCurrencyStore } from '../store/useCurrencyStore';
 
 export default function Accounts() {
-  const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
   const { userId } = useAuth();
   const { registerAccountsRefresh, refreshDashboard, refreshTransactionList } = useDataRefresh();
@@ -135,25 +134,25 @@ export default function Accounts() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView className={`flex-1 ${isDark ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
+      <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
         <ScrollView className="flex-1">
           <View className="px-2 pb-5" style={{ paddingBottom: insets.bottom + 100 }}> 
             {/* Header */}
             <View className="flex-row items-center justify-between pt-4 pb-3 px-2">
               <View>
-                <Text className={`text-3xl font-extrabold -tracking-tight ${isDark ? 'text-slate50' : 'text-slate800'}`}>
+                <Text className="text-3xl font-extrabold -tracking-tight text-slate50">
                   My Accounts
                 </Text>
-                <Text className={`text-xs mt-0.5 ${isDark ? 'text-slateMuted' : 'text-slate300'}`}>
+                <Text className="text-xs mt-0.5 text-slateMuted">
                   Manage your financial accounts
                 </Text>
               </View>
               <View className="flex-row items-center">
                 <TouchableOpacity
                   onPress={() => setShowMoveMoneyModal(true)}
-                  className={`w-10 h-10 rounded-full items-center justify-center mr-2 ${isDark ? 'bg-surfaceDark' : 'bg-gray-100'}`}
+                  className="w-10 h-10 rounded-full items-center justify-center mr-2 bg-surfaceDark"
                 >
-                  <ArrowLeftRight color={isDark ? '#94A3B8' : '#6B7280'} size={20} />
+                  <ArrowLeftRight color="#94A3B8" size={20} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   ref={addButtonRef}
@@ -166,7 +165,7 @@ export default function Accounts() {
             </View>
 
             {isLoading && accounts.length === 0 ? (
-              <AccountsSkeleton isDarkMode={isDark} />
+              <AccountsSkeleton isDarkMode={true} />
             ) : (
               <>
                 {/* Total Balance Card */}
@@ -185,13 +184,12 @@ export default function Accounts() {
                 </View>
 
                 {/* List */}
-                <Text className={`text-base font-medium mb-3 ${isDark ? 'text-textDark' : 'text-textLight'}`}>All Accounts</Text>
+                <Text className="text-base font-medium mb-3 text-textDark">All Accounts</Text>
                 {accounts.map((account, index) => (
                   <AccountListItem
                     key={account.id}
                     account={account}
                     index={index}
-                    isDark={isDark}
                     currencySymbol={currencySymbol}
                     isMenuOpen={editingAccountId === account.id}
                     onToggleMenu={() => setEditingAccountId(editingAccountId === account.id ? null : account.id)}

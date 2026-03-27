@@ -1,0 +1,92 @@
+{
+  "identifier" : "primary",
+  "nonConsumableIAP" : [
+    {
+      "displayPrice" : "79.99",
+      "familyShareable" : false,
+      "internalID" : "lifetime_001",
+      "localizations" : [
+        {
+          "description" : "Lifetime access to premium features",
+          "displayName" : "Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "lifetime",
+      "referenceName" : "Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "consumableIAP" : [],
+  "autoRenewableSubscriptions" : [
+    {
+      "adHocOfferCodeRedemption" : false,
+      "debugGracePeriodSeconds" : 0,
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "groupNumber" : 1,
+      "introductoryOffer" : {
+        "offerIdentifier" : "14_day_trial",
+        "offerMode" : "FreeTrial",
+        "periodCount" : 14,
+        "periodUnit" : "Day",
+        "type" : "IntroductoryOffer"
+      },
+      "localizations" : [
+        {
+          "description" : "Full access, billed monthly",
+          "displayName" : "Monthly",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "monthly",
+      "recurringSubscriptionPeriod" : "P1M",
+      "referenceName" : "Monthly",
+      "subscriptionGroupID" : "premium_group",
+      "type" : "RecurringSubscription"
+    },
+    {
+      "adHocOfferCodeRedemption" : false,
+      "debugGracePeriodSeconds" : 0,
+      "displayPrice" : "79.99",
+      "familyShareable" : false,
+      "groupNumber" : 1,
+      "introductoryOffer" : {
+        "offerIdentifier" : "14_day_trial",
+        "offerMode" : "FreeTrial",
+        "periodCount" : 14,
+        "periodUnit" : "Day",
+        "type" : "IntroductoryOffer"
+      },
+      "localizations" : [
+        {
+          "description" : "Full access, billed yearly",
+          "displayName" : "Yearly",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "yearly",
+      "recurringSubscriptionPeriod" : "P1Y",
+      "referenceName" : "Yearly",
+      "subscriptionGroupID" : "premium_group",
+      "type" : "RecurringSubscription"
+    }
+  ],
+  "nonSubscriptionIAP" : [],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingGracePeriodDays" : 0,
+    "_customerCancellationEnabled" : false,
+    "_failTransactionsEnabled" : false,
+    "_interruptedPurchaseEnabled" : false,
+    "_priceConsentEnabled" : false,
+    "_subscriptionRenewalLeadEnabled" : false,
+    "_subscriptionRenewalLeadDays" : 0,
+    "_timeRate" : "Monthly Renewal Every 30 Minutes"
+  },
+  "version" : {
+    "major" : 2,
+    "minor" : 0
+  }
+}

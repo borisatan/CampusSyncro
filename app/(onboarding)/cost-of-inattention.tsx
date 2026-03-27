@@ -12,6 +12,7 @@ import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
 import { SafeAreaView, ScrollView, Text, View } from "react-native";
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -50,6 +51,11 @@ export default function CostOfInattentionScreen() {
       -1,
       true,
     );
+
+    return () => {
+      cancelAnimation(glowOpacity);
+      cancelAnimation(arrowY);
+    };
   }, [setOnboardingStep, glowOpacity, arrowY]);
 
   const glowStyle = useAnimatedStyle(() => ({
@@ -126,9 +132,9 @@ export default function CostOfInattentionScreen() {
                 transition={{ delay: 400, duration: 600 }}
                 className="mb-4"
               >
-                <View className="bg-surfaceDark border border-borderDark rounded-2xl p-5">
+                <View className="bg-surfaceDark border border-borderDark rounded-3xl p-5">
                   <View className="flex-row items-center gap-3 mb-4">
-                    <View className="w-12 h-12 rounded-xl bg-inputDark items-center justify-center">
+                    <View className="w-12 h-12 rounded-3xl bg-inputDark items-center justify-center">
                       <EyeOff size={22} color="#8A96B4" />
                     </View>
                     <Text className="text-white text-lg font-semibold">
@@ -161,7 +167,7 @@ export default function CostOfInattentionScreen() {
                 animate={{ opacity: 1, translateX: 0 }}
                 transition={{ delay: 600, duration: 600 }}
               >
-                <View style={{ borderRadius: 16, overflow: "hidden" }}>
+                <View style={{ borderRadius: 24, overflow: "hidden" }}>
                   {/* Pulsing blue glow layer */}
                   <Animated.View
                     style={[
@@ -193,14 +199,14 @@ export default function CostOfInattentionScreen() {
                     style={{
                       borderWidth: 1,
                       borderColor: "#3B7EFF",
-                      borderRadius: 16,
+                      borderRadius: 24,
                       padding: 20,
                     }}
                   >
                     <View className="flex-row items-center gap-3 mb-4">
                       <View
                         style={{ backgroundColor: "#3B7EFF" }}
-                        className="w-12 h-12 rounded-xl items-center justify-center"
+                        className="w-12 h-12 rounded-3xl items-center justify-center"
                       >
                         <Eye size={22} color="#ffffff" />
                       </View>
@@ -252,7 +258,7 @@ export default function CostOfInattentionScreen() {
               transition={{ delay: 800, duration: 600 }}
               className="mb-6"
             >
-              <View className="bg-surfaceDark border border-borderDark rounded-xl px-4 py-3">
+              <View className="bg-surfaceDark border border-borderDark rounded-3xl px-4 py-3">
                 <Text className="text-secondaryDark text-xs text-center">
                   Based on the{" "}
                   <Text className="text-accentBlue font-semibold">
@@ -271,8 +277,7 @@ export default function CostOfInattentionScreen() {
               <AnimatedGradientButton
                 onPress={handleNext}
                 text="Secure my clarity ✦"
-                delay={1500}
-                rounded="xl"
+                rounded="3xl"
               />
             </View>
           </MotiView>

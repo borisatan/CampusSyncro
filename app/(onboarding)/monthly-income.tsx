@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   SafeAreaView,
   ScrollView,
   Text,
@@ -14,28 +13,13 @@ import {
   View,
 } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { CurrencySelector } from "../components/Shared/CurrencySelector";
 import { OnboardingHeader } from "../components/Shared/OnboardingHeader";
 import { useAnalytics } from "../hooks/useAnalytics";
-import { getCurrencySymbol, SupportedCurrency } from "../types/types";
+import { SupportedCurrency } from "../types/types";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
-const CURRENCIES: { code: SupportedCurrency; label: string }[] = [
-  { code: "USD", label: "US Dollar" },
-  { code: "EUR", label: "Euro" },
-  { code: "GBP", label: "Pound" },
-  { code: "CAD", label: "CA Dollar" },
-  { code: "AUD", label: "AU Dollar" },
-  { code: "NZD", label: "NZ Dollar" },
-  { code: "CHF", label: "Swiss Franc" },
-  { code: "JPY", label: "Yen" },
-  { code: "CNY", label: "Yuan" },
-  { code: "INR", label: "Rupee" },
-  { code: "BRL", label: "Real" },
-  { code: "MXN", label: "Peso" },
-  { code: "ZAR", label: "Rand" },
-  { code: "SEK", label: "Krona" },
-];
 
 export default function MonthlyIncomeScreen() {
   const { setOnboardingStep, setNewOnboardingData, completeOnboarding, newOnboardingData } = useOnboardingStore();
@@ -181,52 +165,11 @@ export default function MonthlyIncomeScreen() {
                 transition={{ delay: 380, duration: 600 }}
                 className="mb-4"
               >
-                <Text className="text-secondaryDark text-xs text-center mb-2 uppercase tracking-widest">
-                  Currency
-                </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}
-                >
-                  {CURRENCIES.map((c) => {
-                    const isSelected = selectedCurrency === c.code;
-                    return (
-                      <Pressable
-                        key={c.code}
-                        onPress={() => handleCurrencySelect(c.code)}
-                        style={{
-                          paddingHorizontal: 14,
-                          paddingVertical: 8,
-                          borderRadius: 20,
-                          borderWidth: 1.5,
-                          borderColor: isSelected ? "#10B981" : "#2A3352",
-                          backgroundColor: isSelected ? "rgba(16,185,129,0.12)" : "#141B2D",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: isSelected ? "#10B981" : "#8A96B4",
-                            fontWeight: isSelected ? "700" : "400",
-                            fontSize: 13,
-                          }}
-                        >
-                          {getCurrencySymbol(c.code)} {c.code}
-                        </Text>
-                        <Text
-                          style={{
-                            color: isSelected ? "#10B981" : "#4B5A7A",
-                            fontSize: 10,
-                            marginTop: 1,
-                          }}
-                        >
-                          {c.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
+                <CurrencySelector
+                  selectedCurrency={selectedCurrency}
+                  onSelect={handleCurrencySelect}
+                  isDarkMode={true}
+                />
               </MotiView>
 
               {/* Amount Input */}
@@ -240,7 +183,7 @@ export default function MonthlyIncomeScreen() {
                   style={{
                     borderWidth: 2,
                     borderColor: isValid ? "#10B981" : "#2A3352",
-                    borderRadius: 16,
+                    borderRadius: 24,
                     backgroundColor: isValid ? "rgba(16,185,129,0.08)" : "#141B2D",
                     paddingVertical: 16,
                     paddingHorizontal: 20,
@@ -289,8 +232,7 @@ export default function MonthlyIncomeScreen() {
                 onPress={handleNext}
                 text="Calculate my margin"
                 disabled={!isValid}
-                delay={500}
-                rounded="xl"
+                rounded="3xl"
                 gradientColors={["#059669", "#10B981", "#34D399"]}
               />
             </MotiView>

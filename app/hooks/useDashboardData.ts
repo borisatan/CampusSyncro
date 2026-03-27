@@ -99,6 +99,10 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
 
   // Initial load: only fetch offset 0 for the initial timeframe, then lazy-load the rest
   const initialLoad = async (force = false) => {
+    if (force) {
+      cacheRef.current = {};
+    }
+
     try {
       setLoading(true);
 
@@ -115,7 +119,7 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
       setLoading(false);
     }
 
-    // 2. Background: fetch remaining offsets for current timeframe
+    // 2. Background: fetch remaining offsets for current timeframe only
     try {
       await Promise.all(
         OFFSETS.filter(o => o !== 0).map(o => fetchAndCache(timeFrame, o, force))
@@ -123,18 +127,6 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
       updateChartDataByOffset(timeFrame);
     } catch (err) {
       console.error('Error loading background offsets:', err);
-    }
-
-    // 3. Background: fetch other timeframes (all offsets) so switching is fast
-    const otherPeriods: TimeFrame[] = (['week', 'month', 'year'] as TimeFrame[]).filter(p => p !== timeFrame);
-    try {
-      await Promise.all(
-        otherPeriods.flatMap(period =>
-          OFFSETS.map(o => fetchAndCache(period, o, force))
-        )
-      );
-    } catch (err) {
-      console.error('Error preloading other periods:', err);
     }
   };
 

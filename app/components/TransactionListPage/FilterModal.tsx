@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { SkeletonBox } from "../Shared/Skeleton";
 import { fetchCategories } from "../../services/backendService";
 import { Category } from "../../types/types";
 
@@ -49,6 +50,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   handleReset,
 }) => {
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
@@ -57,8 +59,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   useEffect(() => {
     const loadCategories = async () => {
-      const cats = await fetchCategories();
-      setCategoriesList(cats);
+      setIsLoadingCategories(true);
+      try {
+        const cats = await fetchCategories();
+        setCategoriesList(cats);
+      } finally {
+        setIsLoadingCategories(false);
+      }
     };
     loadCategories();
   }, []);
@@ -301,43 +308,57 @@ const FilterModal: React.FC<FilterModalProps> = ({
                   Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
                 </Text>
                 <View className="flex-row flex-wrap justify-between gap-y-2.5">
-                  {/* Show unloaded selected categories first */}
-                  {unloadedSelectedCategories.map((catName) => (
-                    <TouchableOpacity
-                      key={catName}
-                      onPress={() => toggleCategory(catName)}
-                      className="flex-row items-center gap-2.5 px-3 py-3 rounded-xl border border-accentBlue bg-accentBlue/10 w-[48%]"
-                    >
-                      <View className="w-9 h-9 rounded-lg items-center justify-center bg-gray-500">
-                        <Ionicons name="pricetag" size={18} color="white" />
-                      </View>
-                      <Text numberOfLines={1} className="flex-1 text-sm text-textDark font-bold">
-                        {catName}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                  {filteredCategories.map((cat) => {
-                    const isSelected = selectedCategories.includes(cat.category_name);
-                    return (
-                      <TouchableOpacity
-                        key={cat.id}
-                        onPress={() => toggleCategory(cat.category_name)}
-                        className={`flex-row items-center gap-2.5 px-3 py-3 rounded-xl border ${
-                          isSelected ? "border-accentBlue bg-accentBlue/10" : "border-borderDark bg-inputDark"
-                        } w-[48%]`}
+                  {isLoadingCategories ? (
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <View
+                        key={i}
+                        className="flex-row items-center gap-2.5 px-3 py-3 rounded-xl border border-borderDark bg-inputDark w-[48%]"
                       >
-                        <View
-                          className="w-9 h-9 rounded-lg items-center justify-center"
-                          style={{ backgroundColor: cat.color }}
+                        <SkeletonBox width={36} height={36} borderRadius={8} isDarkMode={true} />
+                        <SkeletonBox width={70} height={14} borderRadius={4} isDarkMode={true} />
+                      </View>
+                    ))
+                  ) : (
+                    <>
+                      {/* Show unloaded selected categories first */}
+                      {unloadedSelectedCategories.map((catName) => (
+                        <TouchableOpacity
+                          key={catName}
+                          onPress={() => toggleCategory(catName)}
+                          className="flex-row items-center gap-2.5 px-3 py-3 rounded-xl border border-accentBlue bg-accentBlue/10 w-[48%]"
                         >
-                          <Ionicons name={cat.icon as any} size={18} color="white" />
-                        </View>
-                        <Text numberOfLines={1} className={`flex-1 text-sm ${isSelected ? "text-textDark font-bold" : "text-textDark"}`}>
-                          {cat.category_name}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                          <View className="w-9 h-9 rounded-lg items-center justify-center bg-gray-500">
+                            <Ionicons name="pricetag" size={18} color="white" />
+                          </View>
+                          <Text numberOfLines={1} className="flex-1 text-sm text-textDark font-bold">
+                            {catName}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                      {filteredCategories.map((cat) => {
+                        const isSelected = selectedCategories.includes(cat.category_name);
+                        return (
+                          <TouchableOpacity
+                            key={cat.id}
+                            onPress={() => toggleCategory(cat.category_name)}
+                            className={`flex-row items-center gap-2.5 px-3 py-3 rounded-xl border ${
+                              isSelected ? "border-accentBlue bg-accentBlue/10" : "border-borderDark bg-inputDark"
+                            } w-[48%]`}
+                          >
+                            <View
+                              className="w-9 h-9 rounded-lg items-center justify-center"
+                              style={{ backgroundColor: cat.color }}
+                            >
+                              <Ionicons name={cat.icon as any} size={18} color="white" />
+                            </View>
+                            <Text numberOfLines={1} className={`flex-1 text-sm ${isSelected ? "text-textDark font-bold" : "text-textDark"}`}>
+                              {cat.category_name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </>
+                  )}
                 </View>
               </View>
             </ScrollView>

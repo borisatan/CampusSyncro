@@ -34,9 +34,7 @@ const AccountItemSkeleton = ({
     className="mb-2"
   >
     <View
-      className={`rounded-2xl p-4 border ${
-        isDarkMode ? 'bg-surfaceDark border-gray600' : 'bg-surfaceLightAlt border-slate100'
-      }`}
+      className="rounded-2xl p-4 border bg-surfaceDark border-gray600"
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">

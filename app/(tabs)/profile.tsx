@@ -4,7 +4,6 @@ import {
   Bell,
   ChevronRight,
   Fingerprint,
-  Globe,
   LogOut,
   MessageSquare,
   RotateCcw,
@@ -15,7 +14,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { PageTour } from "../components/Shared/AppTour";
 import {
   Alert,
-  Animated,
   Pressable,
   ScrollView,
   Text,
@@ -24,6 +22,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ProfileCardSkeleton } from "../components/ProfilePage/ProfileSkeleton";
 import { AnimatedToggle } from "../components/Shared/AnimatedToggle";
+import { CurrencySelector } from "../components/Shared/CurrencySelector";
 import { RipplePressable } from "../components/Shared/RipplePressable";
 
 // Custom Hooks & Utils
@@ -36,14 +35,6 @@ import { useOnboardingStore } from "../store/useOnboardingStore";
 import { NotificationFrequency } from "../types/types";
 import { supabase } from "../utils/supabase";
 import { DEVELOPER_USER_IDS } from "../utils/constants";
-
-const currencies = [
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "JPY", symbol: "¥", name: "Japanese Yen" },
-  { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
-  { code: "INR", symbol: "₹", name: "Indian Rupee" },
-];
 
 const frequencyOptions = [
   { value: 0, label: "Off", description: "0 times per day" },
@@ -67,7 +58,6 @@ export default function ProfileScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
-  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
@@ -128,7 +118,6 @@ export default function ProfileScreen() {
     try {
       // 1. Update local UI state
       setSelectedCurrency(code);
-      setShowCurrencyPicker(false);
 
       // 2. Update Zustand store (which also persists to backend)
       await updateCurrency(code);
@@ -252,46 +241,11 @@ export default function ProfileScreen() {
           </Text>
 
           {/* Currency Selector */}
-          <Pressable
-            onPress={() => setShowCurrencyPicker(!showCurrencyPicker)}
-            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
-          >
-            <View className="w-10 h-10 bg-indigo-600 rounded-xl items-center justify-center mr-3">
-              <Globe color="white" size={20} />
-            </View>
-            <View className="flex-1">
-              <Text className={`font-medium ${textPrimary}`}>Currency</Text>
-              <Text className={`text-sm ${textSecondary}`}>
-                {isLoading
-                  ? "Loading..."
-                  : currencies.find((c) => c.code === selectedCurrency)?.name ||
-                    selectedCurrency}
-              </Text>
-            </View>
-            <Ionicons
-              name={showCurrencyPicker ? "chevron-up" : "chevron-down"}
-              size={20}
-              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
-            />
-          </Pressable>
-
-          {showCurrencyPicker && (
-            <View
-              className={`mb-3 rounded-xl overflow-hidden border ${cardBg}`}
-            >
-              {currencies.map((currency, index) => (
-                <AnimatedCurrencyRow
-                  key={currency.code}
-                  currency={currency}
-                  index={index}
-                  isDarkMode={isDarkMode}
-                  isSelected={selectedCurrency === currency.code}
-                  onSelect={() => handleCurrencyChange(currency.code)}
-                  isLast={index === currencies.length - 1}
-                />
-              ))}
-            </View>
-          )}
+          <CurrencySelector
+            selectedCurrency={selectedCurrency}
+            onSelect={handleCurrencyChange}
+            isDarkMode={isDarkMode}
+          />
 
           {/* Accounts Button */}
           <View ref={accountsButtonRef}>
@@ -345,7 +299,6 @@ export default function ProfileScreen() {
                 <AnimatedFrequencyRow
                   key={option.value}
                   option={option}
-                  index={index}
                   isDarkMode={isDarkMode}
                   isSelected={frequency === option.value}
                   onSelect={() => handleFrequencyChange(option.value)}
@@ -479,155 +432,49 @@ export default function ProfileScreen() {
   );
 }
 
-const AnimatedCurrencyRow = ({
-  currency,
-  index,
-  isDarkMode,
-  isSelected,
-  onSelect,
-  isLast,
-}: {
-  currency: { code: string; symbol: string; name: string };
-  index: number;
-  isDarkMode: boolean;
-  isSelected: boolean;
-  onSelect: () => void;
-  isLast: boolean;
-}) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(10)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
-    >
-      <Pressable
-        onPress={onSelect}
-        className={`px-4 py-4 flex-row items-center justify-between ${
-          !isLast
-            ? isDarkMode
-              ? "border-b border-borderDark"
-              : "border-b border-borderLight"
-            : ""
-        } ${isSelected ? (isDarkMode ? "bg-backgroundDark" : "bg-backgroundMuted") : ""}`}
-      >
-        <View className="flex-row items-center">
-          <Text
-            className={`text-xl mr-3 ${isDarkMode ? "text-textDark" : "text-textLight"}`}
-          >
-            {currency.symbol}
-          </Text>
-          <View>
-            <Text
-              className={`font-medium ${isDarkMode ? "text-textDark" : "text-textLight"}`}
-            >
-              {currency.name}
-            </Text>
-            <Text
-              className={`text-xs ${isDarkMode ? "text-secondaryDark" : "text-secondaryLight"}`}
-            >
-              {currency.code}
-            </Text>
-          </View>
-        </View>
-        {isSelected && (
-          <Ionicons
-            name="checkmark-circle"
-            size={20}
-            color={isDarkMode ? "#B2A4FF" : "#2563EB"}
-          />
-        )}
-      </Pressable>
-    </Animated.View>
-  );
-};
-
 const AnimatedFrequencyRow = ({
   option,
-  index,
   isDarkMode,
   isSelected,
   onSelect,
   isLast,
 }: {
   option: { value: number; label: string; description: string };
-  index: number;
   isDarkMode: boolean;
   isSelected: boolean;
   onSelect: () => void;
   isLast: boolean;
 }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(10)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
   return (
-    <Animated.View
-      style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+    <Pressable
+      onPress={onSelect}
+      className={`px-4 py-4 flex-row items-center justify-between ${
+        !isLast
+          ? isDarkMode
+            ? "border-b border-borderDark"
+            : "border-b border-borderLight"
+          : ""
+      } ${isSelected ? (isDarkMode ? "bg-backgroundDark" : "bg-backgroundMuted") : ""}`}
     >
-      <Pressable
-        onPress={onSelect}
-        className={`px-4 py-4 flex-row items-center justify-between ${
-          !isLast
-            ? isDarkMode
-              ? "border-b border-borderDark"
-              : "border-b border-borderLight"
-            : ""
-        } ${isSelected ? (isDarkMode ? "bg-backgroundDark" : "bg-backgroundMuted") : ""}`}
-      >
-        <View>
-          <Text
-            className={`font-medium ${isDarkMode ? "text-textDark" : "text-textLight"}`}
-          >
-            {option.label}
-          </Text>
-          <Text
-            className={`text-xs ${isDarkMode ? "text-secondaryDark" : "text-secondaryLight"}`}
-          >
-            {option.description}
-          </Text>
-        </View>
-        {isSelected && (
-          <Ionicons
-            name="checkmark-circle"
-            size={20}
-            color={isDarkMode ? "#B2A4FF" : "#2563EB"}
-          />
-        )}
-      </Pressable>
-    </Animated.View>
+      <View>
+        <Text
+          className={`font-medium ${isDarkMode ? "text-textDark" : "text-textLight"}`}
+        >
+          {option.label}
+        </Text>
+        <Text
+          className={`text-xs ${isDarkMode ? "text-secondaryDark" : "text-secondaryLight"}`}
+        >
+          {option.description}
+        </Text>
+      </View>
+      {isSelected && (
+        <Ionicons
+          name="checkmark-circle"
+          size={20}
+          color={isDarkMode ? "#B2A4FF" : "#2563EB"}
+        />
+      )}
+    </Pressable>
   );
 };

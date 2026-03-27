@@ -25,6 +25,7 @@ import { useCategoriesStore } from "../store/useCategoriesStore";
 import { useIncomeStore } from "../store/useIncomeStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
+import { useSubscription } from "../context/SubscriptionContext";
 import { supabase } from "../utils/supabase";
 
 // Configure WebBrowser to properly complete auth sessions
@@ -147,6 +148,7 @@ export default function SignUpScreen() {
   const router = useRouter();
   const { trackEvent, identifyUser } = useAnalytics();
   const { newOnboardingData, setOnboardingDataPersisted, clearOnboardingDataPersisted } = useOnboardingStore();
+  const { linkUser } = useSubscription();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -202,6 +204,7 @@ export default function SignUpScreen() {
         // Instant session: flag is already claimed above, we're the sole persister.
         await ensureUserProfile(data.user.id);
         await persistOnboardingData(data.user.id, newOnboardingData);
+        await linkUser(data.user.id);
         // Force reload stores so freshly created data is available immediately
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
@@ -325,6 +328,7 @@ export default function SignUpScreen() {
 
         // Persist onboarding data to database
         await persistOnboardingData(sessionData.user.id, newOnboardingData);
+        await linkUser(sessionData.user.id);
         // Force reload stores so freshly created data is available immediately
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
@@ -386,6 +390,7 @@ export default function SignUpScreen() {
       if (data.user) {
         await ensureUserProfile(data.user.id);
         await persistOnboardingData(data.user.id, newOnboardingData);
+        await linkUser(data.user.id);
         // Force reload stores so freshly created data is available immediately
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),

@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
-import { useTheme } from "../../context/ThemeContext";
 import { useCurrencyStore } from "../../store/useCurrencyStore";
 import { CategoryIconInfo, Transaction } from "../../types/types";
 
@@ -12,12 +11,11 @@ type TransactionItemProps = {
 };
 
 const TransactionItem: React.FC<TransactionItemProps> = React.memo(({ transaction, categoryIcons }) => {
-  const { isDarkMode } = useTheme();
   const { currencySymbol } = useCurrencyStore();
   const iconInfo = categoryIcons[transaction.category_name] || { icon: "help-circle", color: "#999" };
 
   return (
-    <View className="bg-backgroundMuted dark:bg-surfaceDark border border-borderLight dark:border-borderDark p-4 rounded-2xl flex-row justify-between items-start">
+    <View className="bg-surfaceDark border border-borderDark p-4 rounded-2xl flex-row justify-between items-start">
       {/* Left side */}
       <View className="flex-row items-start flex-1 pr-3">
         <View
@@ -27,12 +25,10 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(({ transactio
           <Ionicons name={iconInfo.icon as any} size={20} color="#FFFFFF" />
         </View>
         <View className="flex-1">
-          <Text className="text-md font-medium text-textLight dark:text-textDark">
+          <Text className="text-md font-medium text-textDark">
             {transaction.category_name}
           </Text>
-          <Text
-            className="text-sm text-secondaryLight dark:text-secondaryDark"
-          >
+          <Text className="text-sm text-secondaryDark">
             {transaction.description}
           </Text>
         </View>
@@ -40,19 +36,15 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(({ transactio
 
       {/* Right side */}
       <View className="items-end flex-shrink-0">
-      <Text
-        className={`text-md font-medium mb-1 ${
-          transaction.amount < 0 ? "text-textDark" : "text-accentTeal"
-        }`}
-      >
-        {transaction.amount < 0 ? `-${currencySymbol}` : currencySymbol}
-        {Math.abs(transaction.amount)}
-      </Text>
         <Text
-          className={`text-md ${
-            isDarkMode ? "text-textDark" : "text-textLight"
+          className={`text-md font-medium mb-1 ${
+            transaction.amount < 0 ? "text-textDark" : "text-accentTeal"
           }`}
         >
+          {transaction.amount < 0 ? `-${currencySymbol}` : currencySymbol}
+          {Math.abs(transaction.amount)}
+        </Text>
+        <Text className="text-md text-textDark">
           {transaction.account_name}
         </Text>
       </View>

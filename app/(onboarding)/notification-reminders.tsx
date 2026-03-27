@@ -217,7 +217,7 @@ export default function NotificationRemindersScreen() {
                           alignItems: "center",
                           gap: 16,
                           padding: 16,
-                          borderRadius: 16,
+                          borderRadius: 24,
                           borderWidth: 1,
                           borderColor: isSelected ? "#3B7EFF" : "#1E293B",
                           backgroundColor: isSelected
@@ -230,7 +230,7 @@ export default function NotificationRemindersScreen() {
                           style={{
                             width: 48,
                             height: 48,
-                            borderRadius: 12,
+                            borderRadius: 24,
                             overflow: "hidden",
                           }}
                         >
@@ -333,7 +333,7 @@ export default function NotificationRemindersScreen() {
                   alignItems: "flex-start",
                   gap: 12,
                   padding: 16,
-                  borderRadius: 16,
+                  borderRadius: 24,
                   backgroundColor: "rgba(59, 126, 255, 0.08)",
                   borderWidth: 1,
                   borderColor: "rgba(59, 126, 255, 0.2)",
@@ -387,7 +387,7 @@ export default function NotificationRemindersScreen() {
           <Pressable
             onPress={handleContinue}
             disabled={isSubmitting}
-            className="w-full py-5 rounded-xl active:opacity-80"
+            className="w-full py-5 rounded-3xl active:opacity-80"
             style={{ backgroundColor: "#3B7EFF", opacity: isSubmitting ? 0.7 : 1 }}
             android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
           >

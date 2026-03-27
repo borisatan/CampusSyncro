@@ -306,7 +306,7 @@ export default function PracticeEntryScreen() {
                 >
                   <Pressable
                     onPress={handleSubmit}
-                    className="w-full rounded-xl overflow-hidden active:opacity-80"
+                    className="w-full rounded-3xl overflow-hidden active:opacity-80"
                     android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
                   >
                     <LinearGradient
@@ -323,7 +323,7 @@ export default function PracticeEntryScreen() {
                 </MotiView>
               </MotiView>
             ) : (
-              <View className="w-full py-4 rounded-xl bg-surfaceDark border border-borderDark">
+              <View className="w-full py-4 rounded-3xl bg-surfaceDark border border-borderDark">
                 <Text className="text-lg text-center font-medium text-secondaryDark">
                   Add Transaction
                 </Text>

@@ -44,30 +44,30 @@ const TransactionsHeader: React.FC<TransactionsHeaderProps> = ({
       {/* Search + Filter */}
       <View className="flex-row items-center mb-3 mt-1">
         {/* Search Bar */}
-        <View className="flex-row items-center bg-backgroundMuted border border-borderLight dark:border-borderDark dark:bg-surfaceDark rounded-3xl px-4 py-2 flex-1 mr-2">
+        <View className="flex-row items-center bg-surfaceDark border border-borderDark rounded-3xl px-4 py-2 flex-1 mr-2">
           <Ionicons
             name="search"
             size={16}
-            color={isDarkMode ? "#E5E7EB" : "#374151"}
+            color="#E5E7EB"
           />
           <TextInput
             placeholder="Search"
-            placeholderTextColor={isDarkMode ? "#E5E7EB" : "#374151"}
+            placeholderTextColor="#E5E7EB"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            className="ml-2 text-lg text-textLight dark:text-textDark flex-1"
+            className="ml-2 text-lg text-textDark flex-1"
           />
         </View>
 
         {/* Filter Button */}
         <TouchableOpacity
-          className="p-5 border border-borderLight dark:border-borderDark rounded-full bg-backgroundMuted dark:bg-surfaceDark"
+          className="p-5 border border-borderDark rounded-full bg-surfaceDark"
           onPress={onFilterPress}
         >
           <Ionicons
             name="filter"
             size={20}
-            color={isDarkMode ? "#FFFFFF" : "#1F2937"}
+            color="#FFFFFF"
           />
         </TouchableOpacity>
       </View>

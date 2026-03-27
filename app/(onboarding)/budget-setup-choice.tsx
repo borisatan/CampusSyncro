@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Sparkles, PenTool, ArrowRight } from "lucide-react-native";
+import { Sparkles, PenTool, ArrowRight, Lightbulb } from "lucide-react-native";
 import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
 import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
@@ -105,18 +105,18 @@ export default function BudgetSetupChoiceScreen() {
               >
                 <Pressable
                   onPress={handleSmartBudget}
-                  className="rounded-xl overflow-hidden active:opacity-80"
+                  className="rounded-3xl overflow-hidden active:opacity-80"
                   android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
                 >
                   <LinearGradient
                     colors={["#0D1B3E", "#1A4CB0", "#2563EB"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={{ borderWidth: 2, borderColor: "#3B7EFF", borderRadius: 12 }}
+                    style={{ borderWidth: 2, borderColor: "#3B7EFF", borderRadius: 24 }}
                   >
                     <View className="p-5">
                       <View className="flex-row items-center gap-3 mb-3">
-                        <View className="w-12 h-12 rounded-xl bg-accentBlue items-center justify-center">
+                        <View className="w-12 h-12 rounded-3xl bg-accentBlue items-center justify-center">
                           <Sparkles size={24} color="#ffffff" />
                         </View>
                         <View className="flex-1">
@@ -142,14 +142,14 @@ export default function BudgetSetupChoiceScreen() {
               >
                 <Pressable
                   onPress={handleManualBudget}
-                  className="rounded-xl overflow-hidden active:opacity-80"
+                  className="rounded-3xl overflow-hidden active:opacity-80"
                   android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
                 >
                   <View
-                    className="bg-surfaceDark border-2 border-borderDark rounded-xl p-5"
+                    className="bg-surfaceDark border-2 border-borderDark rounded-3xl p-5"
                   >
                     <View className="flex-row items-center gap-3 mb-3">
-                      <View className="w-12 h-12 rounded-xl bg-inputDark items-center justify-center">
+                      <View className="w-12 h-12 rounded-3xl bg-inputDark items-center justify-center">
                         <PenTool size={24} color="#8A96B4" />
                       </View>
                       <View className="flex-1">
@@ -173,9 +173,9 @@ export default function BudgetSetupChoiceScreen() {
               >
                 <Pressable
                   onPress={handleSkip}
-                  className="rounded-xl overflow-hidden active:opacity-60"
+                  className="rounded-3xl overflow-hidden active:opacity-60"
                 >
-                  <View className="bg-transparent border border-borderDark rounded-xl p-4">
+                  <View className="bg-transparent border border-borderDark rounded-3xl p-4">
                     <Text className="text-secondaryDark text-base text-center">
                       Skip for now
                     </Text>
@@ -191,9 +191,10 @@ export default function BudgetSetupChoiceScreen() {
               transition={{ delay: 850, duration: 600 }}
               className="mt-auto"
             >
-              <View className="bg-surfaceDark/50 border border-borderDark rounded-xl px-4 py-3">
+              <View className="bg-surfaceDark/50 border border-borderDark rounded-3xl px-4 py-3 flex-row items-center justify-center gap-2">
+                <Lightbulb size={13} color="#8A96B4" />
                 <Text className="text-secondaryDark text-xs text-center leading-relaxed">
-                  💡 Don't worry - you can always adjust your budgets later in the app
+                  Don't worry - you can always adjust your budgets later in the app
                 </Text>
               </View>
             </MotiView>
