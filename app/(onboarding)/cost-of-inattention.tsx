@@ -56,7 +56,7 @@ export default function CostOfInattentionScreen() {
       cancelAnimation(glowOpacity);
       cancelAnimation(arrowY);
     };
-  }, [setOnboardingStep, glowOpacity, arrowY]);
+  }, [setOnboardingStep, trackEvent]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,

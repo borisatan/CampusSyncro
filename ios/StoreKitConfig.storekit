@@ -1,24 +1,34 @@
 {
   "identifier" : "primary",
-  "nonConsumableIAP" : [
+  "nonConsumableIAP" : [],
+  "consumableIAP" : [],
+  "autoRenewableSubscriptions" : [
     {
-      "displayPrice" : "79.99",
+      "adHocOfferCodeRedemption" : false,
+      "debugGracePeriodSeconds" : 0,
+      "displayPrice" : "3.99",
       "familyShareable" : false,
-      "internalID" : "lifetime_001",
+      "groupNumber" : 1,
+      "introductoryOffer" : {
+        "offerIdentifier" : "14_day_trial",
+        "offerMode" : "FreeTrial",
+        "periodCount" : 14,
+        "periodUnit" : "Day",
+        "type" : "IntroductoryOffer"
+      },
       "localizations" : [
         {
-          "description" : "Lifetime access to premium features",
-          "displayName" : "Lifetime",
+          "description" : "Full access, billed weekly",
+          "displayName" : "Weekly",
           "locale" : "en_US"
         }
       ],
-      "productID" : "lifetime",
-      "referenceName" : "Lifetime",
-      "type" : "NonConsumable"
-    }
-  ],
-  "consumableIAP" : [],
-  "autoRenewableSubscriptions" : [
+      "productID" : "weekly",
+      "recurringSubscriptionPeriod" : "P1W",
+      "referenceName" : "Weekly",
+      "subscriptionGroupID" : "premium_group",
+      "type" : "RecurringSubscription"
+    },
     {
       "adHocOfferCodeRedemption" : false,
       "debugGracePeriodSeconds" : 0,

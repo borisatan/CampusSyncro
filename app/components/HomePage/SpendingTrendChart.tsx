@@ -6,7 +6,7 @@ import {
 } from "@shopify/react-native-skia";
 // import * as Haptics from "expo-haptics";
 import { MotiView } from "moti";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import {
   runOnJS,
@@ -430,7 +430,7 @@ export const SpendingTrendChart = React.memo(
     //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // };
 
-    const handleTooltipUpdate = (rawIndex: number) => {
+    const handleTooltipUpdate = useCallback((rawIndex: number) => {
       const index = Math.min(
         Math.max(Math.round(rawIndex), 0),
         smoothLastActualIndex,
@@ -465,19 +465,16 @@ export const SpendingTrendChart = React.memo(
         isOverBudget,
         isFuture: false,
       });
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [smoothData, smoothLastActualIndex, cumulativeData, currencySymbol, timeFrame, INTERPOLATION_STEPS]);
 
-    const handleTooltipClear = () => {
-      setTooltipData({
-        label: "",
-        value: "",
-        paceValue: "",
-        diffStr: "",
-        diffPctStr: "",
-        isOverBudget: false,
-        isFuture: false,
-      });
-    };
+    const handleTooltipClear = useCallback(() => {
+      // Use functional update and bail out if already cleared — prevents
+      // spurious re-renders when the reaction fires on mount with isActive=false
+      setTooltipData(prev =>
+        prev.value === "" ? prev : { label: "", value: "", paceValue: "", diffStr: "", diffPctStr: "", isOverBudget: false, isFuture: false }
+      );
+    }, []);
 
     useAnimatedReaction(
       () => ({
@@ -522,6 +519,7 @@ export const SpendingTrendChart = React.memo(
         // runOnJS(triggerHaptic)();
         runOnJS(handleTooltipUpdate)(current.x);
       },
+      [handleTooltipUpdate, handleTooltipClear],
     );
 
     return (
@@ -611,144 +609,138 @@ export const SpendingTrendChart = React.memo(
               )}
             </View>
 
-            <View className="h-[270px] -ml-2">
-              <CartesianChart
-                data={smoothData}
-                xKey="x"
-                yKeys={["amount", "pace"]}
-                padding={{ left: 10, right: 10, top: 10, bottom: 30 }}
-                domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
-                domain={{ y: [0, maxValue] }}
-                gestureLongPressDelay={100}
-                xAxis={{
-                  font,
-                  tickValues: (() => {
-                    if (timeFrame === "week") {
-                      // All 7 days
-                      return cumulativeData.map(
-                        (_, i) => i * INTERPOLATION_STEPS,
-                      );
-                    } else if (timeFrame === "month") {
-                      // Show labels at days 1, 8, 15, 22, 29 (or last day if month is shorter)
-                      const tickDays = [1, 8, 15, 22, 29].filter(
-                        (d) => d <= cumulativeData.length,
-                      );
-                      // Replace 29 with the last day if it's different
-                      if (
-                        cumulativeData.length > 28 &&
-                        cumulativeData.length !== 29
-                      ) {
-                        const lastIdx = tickDays.indexOf(29);
-                        if (lastIdx >= 0)
-                          tickDays[lastIdx] = cumulativeData.length;
-                      }
-                      return tickDays.map((d) => (d - 1) * INTERPOLATION_STEPS);
-                    } else {
-                      // Year: show ~5 labels including first and last
-                      const indices = [0, 2, 5, 8, 11].filter(
-                        (i) => i < cumulativeData.length,
-                      );
-                      return indices.map((i) => i * INTERPOLATION_STEPS);
-                    }
-                  })(),
-                  labelColor: "#94a3b8",
-                  formatXLabel: (v) => {
-                    const idx = Math.round(Number(v) / INTERPOLATION_STEPS);
-                    if (idx < 0 || idx >= cumulativeData.length) return "";
-                    return cumulativeData[idx]?.label || "";
-                  },
-                }}
-                yAxis={[
-                  {
+            {/* Memoized so the CartesianChart subtree is not reconciled when
+                tooltipData state changes during scrubbing. All deps here are
+                stable after initial data load; tooltipData is intentionally
+                excluded because the render prop never reads it. */}
+            {useMemo(() => (
+              <View className="h-[270px] -ml-2">
+                <CartesianChart
+                  data={smoothData}
+                  xKey="x"
+                  yKeys={["amount", "pace"]}
+                  padding={{ left: 10, right: 10, top: 10, bottom: 30 }}
+                  domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
+                  domain={{ y: [0, maxValue] }}
+                  gestureLongPressDelay={100}
+                  xAxis={{
                     font,
-                    tickCount: 2,
-                    labelOffset: -8,
+                    tickValues: (() => {
+                      if (timeFrame === "week") {
+                        return cumulativeData.map(
+                          (_, i) => i * INTERPOLATION_STEPS,
+                        );
+                      } else if (timeFrame === "month") {
+                        const tickDays = [1, 8, 15, 22, 29].filter(
+                          (d) => d <= cumulativeData.length,
+                        );
+                        if (
+                          cumulativeData.length > 28 &&
+                          cumulativeData.length !== 29
+                        ) {
+                          const lastIdx = tickDays.indexOf(29);
+                          if (lastIdx >= 0)
+                            tickDays[lastIdx] = cumulativeData.length;
+                        }
+                        return tickDays.map((d) => (d - 1) * INTERPOLATION_STEPS);
+                      } else {
+                        const indices = [0, 2, 5, 8, 11].filter(
+                          (i) => i < cumulativeData.length,
+                        );
+                        return indices.map((i) => i * INTERPOLATION_STEPS);
+                      }
+                    })(),
                     labelColor: "#94a3b8",
-                    formatYLabel: (v) => `${currencySymbol}${Math.round(v)}`,
-                  },
-                ]}
-                chartPressState={state}
-              >
-                {({ points }) => {
-                  // Determine endpoint circle color
-                  const endpointColor =
-                    totalBudget > 0
-                      ? smoothData[smoothLastActualIndex]?.isOverBudget
-                        ? "#ef4444"
-                        : "#22c55e"
-                      : "#6366f1";
+                    formatXLabel: (v) => {
+                      const idx = Math.round(Number(v) / INTERPOLATION_STEPS);
+                      if (idx < 0 || idx >= cumulativeData.length) return "";
+                      return cumulativeData[idx]?.label || "";
+                    },
+                  }}
+                  yAxis={[
+                    {
+                      font,
+                      tickCount: 2,
+                      labelOffset: -8,
+                      labelColor: "#94a3b8",
+                      formatYLabel: (v) => `${currencySymbol}${Math.round(v)}`,
+                    },
+                  ]}
+                  chartPressState={state}
+                >
+                  {({ points }) => {
+                    const endpointColor =
+                      totalBudget > 0
+                        ? smoothData[smoothLastActualIndex]?.isOverBudget
+                          ? "#ef4444"
+                          : "#22c55e"
+                        : "#6366f1";
 
-                  const endpointPixel =
-                    smoothLastActualIndex >= 0
-                      ? points.amount[smoothLastActualIndex]
-                      : null;
+                    const endpointPixel =
+                      smoothLastActualIndex >= 0
+                        ? points.amount[smoothLastActualIndex]
+                        : null;
 
-                  // Store endpoint pixel position and over-budget status for tooltip clamping
-                  // Defer shared value updates to avoid setState during render
-                  if (endpointPixel) {
-                    queueMicrotask(() => {
-                      lastActualPixelX.value = endpointPixel.x;
-                      lastActualPixelY.value = endpointPixel.y;
-                      endpointIsOverBudget.value =
-                        smoothData[smoothLastActualIndex]?.isOverBudget ||
-                        false;
-                    });
-                  }
+                    if (endpointPixel) {
+                      queueMicrotask(() => {
+                        lastActualPixelX.value = endpointPixel.x;
+                        lastActualPixelY.value = endpointPixel.y;
+                        endpointIsOverBudget.value =
+                          smoothData[smoothLastActualIndex]?.isOverBudget ||
+                          false;
+                      });
+                    }
 
-                  const renderLines = () => (
-                    <>
-                      {/* White spending line */}
+                    // Cache the filtered points array so it isn't recreated
+                    // each time renderLines() is called within the same render.
+                    const filteredPoints = points.amount.filter(
+                      (_, i) => i <= smoothLastActualIndex,
+                    );
+
+                    const renderLines = () => (
                       <Line
-                        points={points.amount.filter(
-                          (_, i) => i <= smoothLastActualIndex,
-                        )}
+                        points={filteredPoints}
                         color="#ffffff"
                         strokeWidth={3}
                         curveType="catmullRom"
                       />
-                    </>
-                  );
+                    );
 
-                  if (!hasSpendingData) return null;
+                    if (!hasSpendingData) return null;
 
-                  return (
-                    <>
-                      {/* Dimmed lines when scrubbing, full opacity otherwise */}
-                      <Group opacity={dimmedOpacity}>{renderLines()}</Group>
-
-                      {/* Highlighted section near tooltip at full opacity */}
-                      <Group clip={highlightClip} opacity={highlightOpacity}>
-                        {renderLines()}
-                      </Group>
-
-                      {/* Endpoint circle at cutoff - hidden when tooltip is active */}
-                      {endpointPixel && (
-                        <Group opacity={endpointOpacity}>
-                          <Circle
-                            cx={endpointPixel.x}
-                            cy={endpointPixel.y}
-                            r={5}
-                            color={endpointColor}
-                          />
+                    return (
+                      <>
+                        <Group opacity={dimmedOpacity}>{renderLines()}</Group>
+                        <Group clip={highlightClip} opacity={highlightOpacity}>
+                          {renderLines()}
                         </Group>
-                      )}
-
-                      {/* Tooltip indicator */}
-                      <ToolTip
-                        x={clampedX}
-                        y={clampedY}
-                        isActive={state.isActive}
-                        isOverBudget={tooltipIsOverBudget}
-                        hasBudget={totalBudget > 0}
-                        overColor="#ef4444"
-                        underColor="#22c55e"
-                        defaultColor="#6366f1"
-                      />
-                    </>
-                  );
-                }}
-              </CartesianChart>
-            </View>
+                        {endpointPixel && (
+                          <Group opacity={endpointOpacity}>
+                            <Circle
+                              cx={endpointPixel.x}
+                              cy={endpointPixel.y}
+                              r={5}
+                              color={endpointColor}
+                            />
+                          </Group>
+                        )}
+                        <ToolTip
+                          x={clampedX}
+                          y={clampedY}
+                          isActive={state.isActive}
+                          isOverBudget={tooltipIsOverBudget}
+                          hasBudget={totalBudget > 0}
+                          overColor="#ef4444"
+                          underColor="#22c55e"
+                          defaultColor="#6366f1"
+                        />
+                      </>
+                    );
+                  }}
+                </CartesianChart>
+              </View>
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            ), [smoothData, smoothLastActualIndex, maxValue, font, timeFrame, cumulativeData, INTERPOLATION_STEPS, currencySymbol, hasSpendingData, totalBudget, state])}
           </View>
         </MotiView>
       </View>

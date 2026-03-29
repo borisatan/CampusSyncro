@@ -119,10 +119,15 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
       setLoading(false);
     }
 
-    // 2. Background: fetch remaining offsets for current timeframe only
+    // 2. Background: fetch all offsets for all timeframes
+    const allTimeFrames: TimeFrame[] = ['week', 'month', 'year'];
     try {
       await Promise.all(
-        OFFSETS.filter(o => o !== 0).map(o => fetchAndCache(timeFrame, o, force))
+        allTimeFrames.flatMap(period =>
+          OFFSETS.map(o =>
+            (period === timeFrame && o === 0) ? Promise.resolve() : fetchAndCache(period, o, force)
+          )
+        )
       );
       updateChartDataByOffset(timeFrame);
     } catch (err) {

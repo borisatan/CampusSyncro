@@ -131,7 +131,6 @@ export default function PracticeEntryScreen() {
   };
 
   const handleSuccessModalDismiss = () => {
-    setShowSuccess(false);
     setOnboardingStep(10);
     router.push("/(onboarding)/subscription-trial");
   };
@@ -161,7 +160,7 @@ export default function PracticeEntryScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" style={{ opacity: showSuccess ? 0 : 1 }}>
           {/* Progress Bar */}
           <View className="px-2 pt-12 pb-4">
             <View className="flex-row items-center justify-between">
@@ -313,7 +312,7 @@ export default function PracticeEntryScreen() {
                       colors={["#DC2626", "#EF4444", "#F87171"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      className="w-full py-4"
+                      style={{ width: '100%', paddingVertical: 16 }}
                     >
                       <Text className="text-lg text-center font-medium text-white">
                         Add Transaction

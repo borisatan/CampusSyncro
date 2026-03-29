@@ -40,7 +40,7 @@ export default function WhyManualScreen() {
     return () => {
       cancelAnimation(glowOpacity);
     };
-  }, [glowOpacity, setOnboardingStep]);
+  }, [setOnboardingStep, trackEvent]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,

@@ -13,12 +13,13 @@ interface SuccessModalProps {
 export const SuccessModal = ({
   visible,
   text,
-  duration = 1080,
+  duration = 2500,
   animationSpeed = 1.2,
   onDismiss,
 }: SuccessModalProps) => {
   const animationRef = useRef<LottieView>(null);
   const onDismissRef = useRef(onDismiss);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep ref updated with latest callback
   useEffect(() => {
@@ -30,23 +31,43 @@ export const SuccessModal = ({
       animationRef.current?.reset();
       animationRef.current?.play();
 
-      const timer = setTimeout(() => {
+      // Fallback timer in case onAnimationFinish doesn't fire
+      timerRef.current = setTimeout(() => {
         onDismissRef.current?.();
       }, duration);
-      return () => clearTimeout(timer);
+    } else {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
     }
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [visible, duration]);
+
+  const handleAnimationFinish = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    onDismissRef.current?.();
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View className="flex-1 items-center justify-center bg-black/70">
-        <View className="bg-surface rounded-3xl p-6 items-center">
+      <View className="flex-1 items-center justify-center bg-backgroundDark">
+        <View className="items-center">
           <LottieView
             ref={animationRef}
             source={require("../../../assets/animations/success.json")}
             speed={animationSpeed}
             loop={false}
-            autoPlay
+            autoPlay={false}
+            onAnimationFinish={handleAnimationFinish}
             style={{ width: 280, height: 280 }}
           />
           <Text className="text-textDark text-lg font-semibold mt-2">

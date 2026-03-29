@@ -51,21 +51,14 @@ export default function SubscriptionTrialScreen() {
   const loadOfferings = async () => {
     try {
       const offerings = await Purchases.getOfferings();
-      const current = offerings.current;
-      if (current) {
-        const weekly = current.weekly ?? current.availablePackages.find(
-          (p) => p.packageType === "WEEKLY"
-        ) ?? null;
-        const monthly = current.monthly ?? current.availablePackages.find(
-          (p) => p.packageType === "MONTHLY"
-        ) ?? null;
-        const annual = current.annual ?? current.availablePackages.find(
-          (p) => p.packageType === "ANNUAL"
-        ) ?? null;
-        setWeeklyPackage(weekly);
-        setMonthlyPackage(monthly);
-        setAnnualPackage(annual);
-      }
+      console.log("[SubscriptionTrial] All offerings:", JSON.stringify(offerings, null, 2));
+      const packages = offerings.current?.availablePackages ?? [];
+      const weekly = packages.find((p) => p.packageType === "WEEKLY") ?? null;
+      const monthly = packages.find((p) => p.packageType === "MONTHLY") ?? null;
+      const annual = packages.find((p) => p.packageType === "ANNUAL") ?? null;
+      setWeeklyPackage(weekly);
+      setMonthlyPackage(monthly);
+      setAnnualPackage(annual);
     } catch (e) {
       console.error("[SubscriptionTrial] Failed to load offerings:", e);
     } finally {
