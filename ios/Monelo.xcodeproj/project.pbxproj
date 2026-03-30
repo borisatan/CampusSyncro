@@ -11,6 +11,7 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		46A9CE459100DC81CE376445 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 653FDDFBCB9085C2046265C7 /* ExpoModulesProvider.swift */; };
 		98ABB6188B983251ADC9EBD0 /* libPods-Monelo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 545A4DDE7680C7B4D4C642C1 /* libPods-Monelo.a */; };
+		A14F604C2F7AB66400E21F04 /* StoreKitConfig.storekit in Resources */ = {isa = PBXBuildFile; fileRef = A14F604B2F7AB66400E21F04 /* StoreKitConfig.storekit */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		CD87ED72E78DF2BF8B9D4105 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FEC95BFF459D063CFA1FA671 /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
@@ -24,6 +25,7 @@
 		545A4DDE7680C7B4D4C642C1 /* libPods-Monelo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Monelo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		653FDDFBCB9085C2046265C7 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Monelo/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		6F8B0E3DA883A0AFF48E1CC7 /* Pods-Monelo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Monelo.release.xcconfig"; path = "Target Support Files/Pods-Monelo/Pods-Monelo.release.xcconfig"; sourceTree = "<group>"; };
+		A14F604B2F7AB66400E21F04 /* StoreKitConfig.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = StoreKitConfig.storekit; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Monelo/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -102,6 +104,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				A14F604B2F7AB66400E21F04 /* StoreKitConfig.storekit */,
 				13B07FAE1A68108700A75B9A /* Monelo */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -193,6 +196,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
+				A14F604C2F7AB66400E21F04 /* StoreKitConfig.storekit in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				CD87ED72E78DF2BF8B9D4105 /* PrivacyInfo.xcprivacy in Resources */,

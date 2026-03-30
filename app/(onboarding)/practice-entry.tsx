@@ -131,6 +131,7 @@ export default function PracticeEntryScreen() {
   };
 
   const handleSuccessModalDismiss = () => {
+    setShowSuccess(false);
     setOnboardingStep(10);
     router.push("/(onboarding)/subscription-trial");
   };

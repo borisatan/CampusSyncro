@@ -77,7 +77,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
       >
         <ScrollView className="flex-1 px-2">
         {/* Header */}
-        <View className="flex-row items-center mb-8 mt-2">
+        <View className="flex-row items-center mb-8 mt-6">
           <TouchableOpacity
             onPress={onBack}
             className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"

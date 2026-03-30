@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { ensureUserProfile } from "../services/backendService";
+import { useSubscription } from "../context/SubscriptionContext";
 import { supabase } from "../utils/supabase";
 
 // Configure WebBrowser to properly complete auth sessions
@@ -28,6 +29,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function SignInScreen() {
   const router = useRouter();
   const { trackEvent, identifyUser } = useAnalytics();
+  const { linkUser } = useSubscription();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,6 +82,7 @@ export default function SignInScreen() {
       await SecureStore.setItemAsync("password", userPassword);
       if (data.user) {
         identifyUser(data.user.id, { email: data.user.email });
+        await linkUser(data.user.id);
       }
       trackEvent("user_signed_in", {
         method: inputEmail ? "biometric" : "email",
@@ -165,6 +168,7 @@ export default function SignInScreen() {
 
         if (sessionData.user) {
           identifyUser(sessionData.user.id, { email: sessionData.user.email });
+          await linkUser(sessionData.user.id);
         }
 
         trackEvent("user_authenticated", { method: "google" });
@@ -212,6 +216,7 @@ export default function SignInScreen() {
       if (data.user) {
         await ensureUserProfile(data.user.id);
         identifyUser(data.user.id, { email: data.user.email });
+        await linkUser(data.user.id);
       }
 
       trackEvent("user_authenticated", { method: "apple" });

@@ -1,12 +1,11 @@
 
 import { ArrowLeftRight, Plus } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PageTour } from '../components/Shared/AppTour';
 import { AccountListItem } from '../components/AccountsPage/AccountListItem';
 import { AccountsSkeleton } from '../components/AccountsPage/AccountsSkeleton';
 import AddAccountPage from '../components/AccountsPage/AddAccountPage';
@@ -31,7 +30,6 @@ export default function Accounts() {
   const deleteAccountOptimistic = useAccountsStore((state) => state.deleteAccountOptimistic);
   const { currencySymbol, loadCurrency } = useCurrencyStore();
 
-  const addButtonRef = useRef<View>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMoveMoneyModal, setShowMoveMoneyModal] = useState(false);
   const [editingAccountId, setEditingAccountId] = useState<number | null>(null);
@@ -155,7 +153,6 @@ export default function Accounts() {
                   <ArrowLeftRight color="#94A3B8" size={20} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  ref={addButtonRef}
                   onPress={() => setShowAddModal(true)}
                   className="w-10 h-10 bg-accentBlue rounded-full items-center justify-center"
                 >
@@ -223,12 +220,6 @@ export default function Accounts() {
             currencySymbol={currencySymbol}
           />
         </Modal>
-        <PageTour
-          pageId="accounts-add-button"
-          title="Add your first account"
-          description="Tap the + button to add a bank account, savings, or any financial account. Your total balance will be tracked from here."
-          targetRef={addButtonRef}
-        />
       </SafeAreaView>
     </SafeAreaProvider>
   );

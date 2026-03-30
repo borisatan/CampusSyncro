@@ -46,6 +46,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
       contentContainerStyle={{ paddingBottom: 100 }}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.3}
+      stickySectionHeadersEnabled={false}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
       removeClippedSubviews={true}

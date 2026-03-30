@@ -5,6 +5,12 @@
       location = "group:StoreKitConfig.storekit">
    </FileRef>
    <FileRef
+      location = "group:StoreKitConfig.storekit">
+   </FileRef>
+   <FileRef
+      location = "group:StoreKitConfig.storekit">
+   </FileRef>
+   <FileRef
       location = "group:Monelo.xcodeproj">
    </FileRef>
    <FileRef

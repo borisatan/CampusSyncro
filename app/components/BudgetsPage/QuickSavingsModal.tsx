@@ -125,7 +125,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
         >
           <View className="flex-1">
             {/* Header */}
-            <View className="flex-row items-center px-4 py-2">
+            <View className="flex-row items-center px-4 py-2 mt-4">
               <TouchableOpacity
                 onPress={onClose}
                 className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"

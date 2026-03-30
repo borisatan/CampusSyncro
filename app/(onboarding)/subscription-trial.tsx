@@ -20,12 +20,12 @@ const TIMELINE_ITEMS = [
   },
   {
     icon: Mail,
-    label: "Day 12",
+    label: "Day 5",
     description: "Reminder email",
   },
   {
     icon: CreditCard,
-    label: "Day 14",
+    label: "Day 7",
     description: "Trial ends, subscription begins",
   },
 ];
@@ -345,7 +345,7 @@ export default function SubscriptionTrialScreen() {
                   <ActivityIndicator color="#ffffff" />
                 ) : (
                   <Text className="text-white text-lg text-center font-semibold">
-                    Begin 14-Day Free Trial
+                    Begin 7-Day Free Trial
                   </Text>
                 )}
               </Pressable>

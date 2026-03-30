@@ -10,8 +10,7 @@ import {
   User,
   Wallet,
 } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
-import { PageTour } from "../components/Shared/AppTour";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -30,7 +29,6 @@ import { useLock } from "../context/LockContext";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useNotificationStore } from "../store/useNotificationStore";
-import { useAppTourStore } from "../store/useAppTourStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { NotificationFrequency } from "../types/types";
 import { supabase } from "../utils/supabase";
@@ -47,8 +45,6 @@ const frequencyOptions = [
 export default function ProfileScreen() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
-  const settingsRef = useRef<View>(null);
-  const accountsButtonRef = useRef<View>(null);
   const { isAppLockEnabled, deviceAuthAvailable, setAppLockEnabled } =
     useLock();
 
@@ -62,7 +58,6 @@ export default function ProfileScreen() {
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
   const { resetOnboarding, setTestMode } = useOnboardingStore();
-  const { resetSeenPages } = useAppTourStore();
   const {
     frequency,
     hasPermission,
@@ -158,7 +153,6 @@ export default function ProfileScreen() {
 
   const handleTestOnboarding = () => {
     resetOnboarding();
-    resetSeenPages();
     setTestMode(true);
     router.push("/(onboarding)/welcome");
   };
@@ -233,7 +227,7 @@ export default function ProfileScreen() {
         )}
 
         {/* Settings Section */}
-        <View ref={settingsRef} className="mb-8">
+        <View className="mb-8">
           <Text
             className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}
           >
@@ -248,7 +242,6 @@ export default function ProfileScreen() {
           />
 
           {/* Accounts Button */}
-          <View ref={accountsButtonRef}>
           <RipplePressable
             onPress={() => router.push("/accounts" as any)}
             className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
@@ -263,7 +256,6 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </RipplePressable>
-          </View>
 
           {/* Daily Reminders Selector */}
           <Pressable
@@ -422,12 +414,6 @@ export default function ProfileScreen() {
           </Text>
         </View>
       </ScrollView>
-      <PageTour
-        pageId="profile"
-        title="Add your accounts"
-        description="Tap here to add your bank accounts, savings, and more. Your total balance is tracked from here."
-        targetRef={accountsButtonRef}
-      />
     </SafeAreaView>
   );
 }

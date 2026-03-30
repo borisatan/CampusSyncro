@@ -194,12 +194,13 @@ export default function MonthlyIncomeScreen() {
                   <Text className="text-secondaryDark text-sm text-center mb-2">
                     Monthly Take-Home
                   </Text>
-                  <View className="flex-row items-center justify-center gap-3">
+                  <View className="flex-row items-center justify-center">
                     <Text
                       style={{
                         color: isValid ? "#10B981" : "#4B5A7A",
                         fontSize: 32,
                         fontWeight: "300",
+                        marginRight: 4,
                       }}
                     >
                       {currencySymbol}
@@ -220,7 +221,7 @@ export default function MonthlyIncomeScreen() {
                         fontSize: 48,
                         fontWeight: "300",
                         minWidth: 20,
-                        textAlign: "center",
+                        textAlign: "left",
                       }}
                     />
                   </View>

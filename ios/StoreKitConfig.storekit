@@ -1,18 +1,25 @@
 {
-  "identifier" : "primary",
-  "nonConsumableIAP" : [],
-  "consumableIAP" : [],
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
   "autoRenewableSubscriptions" : [
     {
       "adHocOfferCodeRedemption" : false,
       "debugGracePeriodSeconds" : 0,
-      "displayPrice" : "3.99",
+      "displayPrice" : "1.99",
       "familyShareable" : false,
       "groupNumber" : 1,
       "introductoryOffer" : {
-        "offerIdentifier" : "14_day_trial",
+        "offerIdentifier" : "7_day_trial",
         "offerMode" : "FreeTrial",
-        "periodCount" : 14,
+        "periodCount" : 7,
         "periodUnit" : "Day",
         "type" : "IntroductoryOffer"
       },
@@ -23,7 +30,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "weekly",
+      "productID" : "premium_weekly",
       "recurringSubscriptionPeriod" : "P1W",
       "referenceName" : "Weekly",
       "subscriptionGroupID" : "premium_group",
@@ -32,13 +39,13 @@
     {
       "adHocOfferCodeRedemption" : false,
       "debugGracePeriodSeconds" : 0,
-      "displayPrice" : "9.99",
+      "displayPrice" : "4.99",
       "familyShareable" : false,
       "groupNumber" : 1,
       "introductoryOffer" : {
-        "offerIdentifier" : "14_day_trial",
+        "offerIdentifier" : "7_day_trial",
         "offerMode" : "FreeTrial",
-        "periodCount" : 14,
+        "periodCount" : 7,
         "periodUnit" : "Day",
         "type" : "IntroductoryOffer"
       },
@@ -49,7 +56,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "monthly",
+      "productID" : "premium_monthly",
       "recurringSubscriptionPeriod" : "P1M",
       "referenceName" : "Monthly",
       "subscriptionGroupID" : "premium_group",
@@ -58,13 +65,13 @@
     {
       "adHocOfferCodeRedemption" : false,
       "debugGracePeriodSeconds" : 0,
-      "displayPrice" : "79.99",
+      "displayPrice" : "49.99",
       "familyShareable" : false,
       "groupNumber" : 1,
       "introductoryOffer" : {
-        "offerIdentifier" : "14_day_trial",
+        "offerIdentifier" : "7_day_trial",
         "offerMode" : "FreeTrial",
-        "periodCount" : 14,
+        "periodCount" : 7,
         "periodUnit" : "Day",
         "type" : "IntroductoryOffer"
       },
@@ -75,28 +82,181 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "yearly",
+      "productID" : "premium_yearly",
       "recurringSubscriptionPeriod" : "P1Y",
       "referenceName" : "Yearly",
       "subscriptionGroupID" : "premium_group",
       "type" : "RecurringSubscription"
     }
   ],
-  "nonSubscriptionIAP" : [],
+  "consumableIAP" : [
+
+  ],
+  "identifier" : "primary",
+  "nonConsumableIAP" : [
+
+  ],
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "nonSubscriptionIAP" : [
+
+  ],
+  "products" : [
+
+  ],
   "settings" : {
     "_askToBuyEnabled" : false,
-    "_billingGracePeriodEnabled" : false,
     "_billingGracePeriodDays" : 0,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
     "_customerCancellationEnabled" : false,
+    "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
     "_interruptedPurchaseEnabled" : false,
+    "_locale" : "en_US",
     "_priceConsentEnabled" : false,
-    "_subscriptionRenewalLeadEnabled" : false,
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ],
     "_subscriptionRenewalLeadDays" : 0,
-    "_timeRate" : "Monthly Renewal Every 30 Minutes"
+    "_subscriptionRenewalLeadEnabled" : false,
+    "_timeRate" : 0
   },
+  "subscriptionGroups" : [
+    {
+      "id" : "D56E7C14",
+      "localizations" : [
+
+      ],
+      "name" : "Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "FF9339CB",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "",
+              "displayName" : "",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "premium_weekly",
+          "recurringSubscriptionPeriod" : "P1W",
+          "referenceName" : "Premium Weekly",
+          "subscriptionGroupID" : "D56E7C14",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "49.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6D1E6776",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "",
+              "displayName" : "",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "premium_yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium Yearly",
+          "subscriptionGroupID" : "D56E7C14",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "AFB3C1CB",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "",
+              "displayName" : "",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "premium_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium Monthly",
+          "subscriptionGroupID" : "D56E7C14",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
   "version" : {
-    "major" : 2,
+    "major" : 4,
     "minor" : 0
   }
 }

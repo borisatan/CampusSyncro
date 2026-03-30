@@ -140,7 +140,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </TouchableWithoutFeedback>
     
         <KeyboardAvoidingView behavior="padding" className="justify-end">
-          <View className="bg-backgroundDark px-3 pt-3 pb-4 w-full border-t border-borderDark">
+          <View className="bg-backgroundDark px-3 pt-3 pb-10 w-full border-t border-borderDark">
 
             {/* Header */}
             <View className="flex-row justify-between items-center mb-5 mt-2">
