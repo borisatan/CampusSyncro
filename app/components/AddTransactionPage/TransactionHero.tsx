@@ -133,8 +133,15 @@ export const TransactionHero = ({
         <Text className={`text-sm mb-2 ${isDarkMode ? 'text-slate300' : 'text-secondaryLight'}`}>
           Amount
         </Text>
-        <View className="relative">
-          <Text className={`absolute left-4 top-4 text-2xl z-10 ${isDarkMode ? 'text-slate400' : 'text-gray400'}`}>
+        <View className={`flex-row items-center px-4 rounded-xl border ${
+          isDarkMode
+            ? 'bg-inputDark border-borderDark'
+            : 'bg-background border-borderLight'
+        }`}>
+          <Text
+            className={`text-2xl mr-1 ${isDarkMode ? 'text-slate400' : 'text-gray400'}`}
+            style={{ lineHeight: 24 }}
+          >
             {isCurrencyLoading ? '' : (currencySymbol || '$')}
           </Text>
           <TextInput
@@ -144,11 +151,10 @@ export const TransactionHero = ({
             onChangeText={setAmount}
             placeholder="0.00"
             placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
-            className={`w-full pl-10 pr-4 py-4 rounded-xl text-2xl ${
-              isDarkMode
-                ? 'bg-inputDark border-borderDark text-textDark'
-                : 'bg-background border-borderLight text-textLight'
-            } border`}
+            className={`flex-1 py-4 text-2xl ${
+              isDarkMode ? 'text-textDark' : 'text-textLight'
+            }`}
+            style={{ lineHeight: 24 }}
           />
         </View>
       </View>

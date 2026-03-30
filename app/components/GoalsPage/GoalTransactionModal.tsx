@@ -224,7 +224,7 @@ export function GoalTransactionModal({
             <View className="mb-4">
               <Text className="text-secondaryDark text-sm mb-2">Amount</Text>
               <View className="flex-row items-center px-4 py-3 rounded-xl bg-backgroundDark border border-borderDark">
-                <Text className="text-white/70 text-lg mr-2">{currencySymbol}</Text>
+                <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>{currencySymbol}</Text>
                 <TextInput
                   value={amount}
                   onChangeText={setAmount}
@@ -232,6 +232,7 @@ export function GoalTransactionModal({
                   placeholderTextColor="#64748B"
                   keyboardType="decimal-pad"
                   className="flex-1 text-lg text-white"
+                  style={{ lineHeight: 18 }}
                 />
               </View>
               {mode === 'withdraw' && parsedAmount > goal.current_amount && (

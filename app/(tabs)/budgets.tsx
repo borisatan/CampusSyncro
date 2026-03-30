@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
 import { BudgetsSkeleton } from "../components/BudgetsPage/BudgetsSkeleton";
 import { CategoryBudgetRow } from "../components/BudgetsPage/CategoryBudgetRow";
+import { EditBudgetModal } from "../components/BudgetsPage/EditBudgetModal";
 import { IncomeCard } from "../components/BudgetsPage/IncomeCard";
 import { QuickSavingsModal } from "../components/BudgetsPage/QuickSavingsModal";
 import { SavingsProgressCard } from "../components/BudgetsPage/SavingsProgressCard";
@@ -78,9 +79,10 @@ export default function BudgetsScreen() {
     registerCategoriesRefresh,
   } = useDataRefresh();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(
-    null,
-  );
+  const [editBudgetCategory, setEditBudgetCategory] = useState<{
+    category: Category;
+    budgetStatus: CategoryBudgetStatus | null;
+  } | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
   // AI Budget state — single modal with two views: 'help' and 'preview'
@@ -129,10 +131,6 @@ export default function BudgetsScreen() {
       throw error;
     }
   }, [userId, accounts, updateAccountBalance, refreshSavingsProgress, refreshAccounts]);
-
-  const handleToggleExpand = useCallback((categoryId: string) => {
-    setExpandedCategoryId((prev) => (prev === categoryId ? null : categoryId));
-  }, []);
 
   useEffect(() => {
     registerBudgetsRefresh(refresh);
@@ -570,9 +568,9 @@ export default function BudgetsScreen() {
                       onSave={handleInlineSave}
                       showOnDashboard={item.category.show_on_dashboard ?? true}
                       onToggleDashboard={toggleCategoryDashboardVisibility}
-                      expanded={expandedCategoryId === item.category.id}
+                      expanded={false}
                       onToggleExpand={() =>
-                        handleToggleExpand(item.category.id)
+                        setEditBudgetCategory({ category: item.category, budgetStatus: item.budgetStatus })
                       }
                     />
                   </MotiView>
@@ -715,6 +713,23 @@ export default function BudgetsScreen() {
         onSave={handleQuickSave}
         onClose={() => setShowQuickSavingsModal(false)}
       />
+
+      {/* Edit Budget Modal */}
+      {editBudgetCategory && (
+        <EditBudgetModal
+          visible={editBudgetCategory !== null}
+          onClose={() => setEditBudgetCategory(null)}
+          category={editBudgetCategory.category}
+          budgetStatus={editBudgetCategory.budgetStatus}
+          currencySymbol={currencySymbol}
+          monthlyIncome={monthlyIncome}
+          onSaved={() => {
+            setEditBudgetCategory(null);
+            refresh();
+            refreshDashboard();
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }

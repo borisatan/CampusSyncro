@@ -26,8 +26,8 @@ export default function UserSettingsScreen() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // URLs - Update these with your actual URLs
-  const PRIVACY_POLICY_URL = "https://yourapp.com/privacy";
-  const SUPPORT_URL = "https://yourapp.com/support";
+  const PRIVACY_POLICY_URL = "https://trymonelo.app/privacypolicy";
+  const SUPPORT_URL = "https://trymonelo.app/support";
 
   const handleDeleteAccount = () => {
     Alert.alert(

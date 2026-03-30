@@ -330,7 +330,7 @@ export default function MoveMoneyPage({
               <View className="mt-4">
                 <Text className="text-sm text-secondaryDark mb-2">Amount</Text>
                 <View className="flex-row items-center bg-backgroundDark rounded-xl px-4">
-                  <Text className="text-xl text-secondaryDark mr-2">{currencySymbol}</Text>
+                  <Text className="text-xl text-secondaryDark mr-2" style={{ lineHeight: 20 }}>{currencySymbol}</Text>
                   <TextInput
                     value={amount}
                     onChangeText={setAmount}
@@ -338,6 +338,7 @@ export default function MoveMoneyPage({
                     placeholderTextColor="#64748B"
                     keyboardType="decimal-pad"
                     className="flex-1 py-4 text-textDark text-xl"
+                    style={{ lineHeight: 20 }}
                     autoFocus
                   />
                 </View>

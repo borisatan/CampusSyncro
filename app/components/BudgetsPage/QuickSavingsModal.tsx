@@ -138,8 +138,8 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
             </View>
 
             {/* Content */}
-            <View className="px-2 mt-4">
-              <View className="bg-surfaceDark rounded-3xl p-4 border border-borderDark">
+            <View className="px-2 mt-6">
+              <View className="bg-surfaceDark rounded-3xl p-6 border border-borderDark">
                 {/* Target info */}
                 <View className="flex-row items-center gap-3 mb-5">
                   <View className="w-12 h-12 rounded-xl items-center justify-center bg-accentPurple">
@@ -166,7 +166,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
                 {/* Amount input */}
                 <Text className="text-sm text-secondaryDark mb-2">Amount</Text>
                 <View className="flex-row items-center bg-backgroundDark rounded-xl px-4">
-                  <Text className="text-xl text-secondaryDark mr-2">{currencySymbol}</Text>
+                  <Text className="text-xl text-secondaryDark mr-2" style={{ lineHeight: 20 }}>{currencySymbol}</Text>
                   <TextInput
                     ref={inputRef}
                     value={amountText}
@@ -175,6 +175,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
                     placeholderTextColor="#64748B"
                     keyboardType="decimal-pad"
                     className="flex-1 py-4 text-textDark text-xl"
+                    style={{ lineHeight: 20 }}
                   />
                 </View>
 

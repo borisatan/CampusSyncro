@@ -52,14 +52,14 @@ export default function CategoryEditor() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [focusedInput, setFocusedInput] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  
+
   const iconRefs = useRef<any[]>([]);
   const iconScrollX = useRef(new Animated.Value(0)).current;
 
   const { refreshAll } = useDataRefresh();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
   const loadAccounts = useAccountsStore((state) => state.loadAccounts);
-  
+
   // Animation values
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -80,7 +80,7 @@ export default function CategoryEditor() {
     if (params.category_name) setCategoryName(params.category_name as string);
     if (params.icon) setSelectedIcon(params.icon as string);
     if (params.color) setSelectedColor(params.color as string);
-    
+
     // Entrance animation
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -137,9 +137,9 @@ export default function CategoryEditor() {
 
       // 3. TRIGGER REFRESHES HERE
       // Load fresh categories into Zustand store
-      await loadCategories(); 
+      await loadCategories();
       // Refresh Dashboard, Transaction List, etc. via Context
-      await refreshAll(); 
+      await refreshAll();
 
       setShowSuccess(true);
     } catch (err: any) {
@@ -155,9 +155,9 @@ export default function CategoryEditor() {
       "This category will be removed from all your transactions. This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive", 
+        {
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             try {
               setIsProcessing(true);
@@ -177,7 +177,7 @@ export default function CategoryEditor() {
             } finally {
               setIsProcessing(false);
             }
-          } 
+          }
         }
       ]
     );
@@ -226,16 +226,16 @@ export default function CategoryEditor() {
           style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
           className="mx-2 mt-4"
         >
-          <View 
+          <View
             className={`rounded-3xl p-8 items-center justify-center border ${isDarkMode ? 'bg-surfaceDark border-borderDark' : 'bg-white border-borderLight'}`}
           >
-            <View 
-              className="w-28 h-28 rounded-2xl items-center justify-center mb-5" 
+            <View
+              className="w-28 h-28 rounded-2xl items-center justify-center mb-5"
               style={{ backgroundColor: selectedColor }}
             >
               <Ionicons name={selectedIcon as any} size={56} color="#FFFFFF" />
             </View>
-            <Text 
+            <Text
               className={`text-2xl font-bold text-center ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}
               numberOfLines={1}
             >
@@ -257,10 +257,10 @@ export default function CategoryEditor() {
               {categoryName.length}/30
             </Text>
           </View>
-          <View 
+          <View
             className={`rounded-2xl border ${
-              focusedInput 
-                ? 'border-accentBlue' 
+              focusedInput
+                ? 'border-accentBlue'
                 : isDarkMode ? 'border-borderDark bg-inputDark' : 'border-borderLight bg-white'
             }`}
           >
@@ -272,6 +272,7 @@ export default function CategoryEditor() {
               onFocus={() => setFocusedInput(true)}
               onBlur={() => setFocusedInput(false)}
               className={`px-5 py-4 text-lg font-medium ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}
+              style={{ lineHeight: 18 }}
               maxLength={30}
             />
           </View>
