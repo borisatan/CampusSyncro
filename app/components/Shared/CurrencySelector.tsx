@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Globe } from "lucide-react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, ScrollView, Text, View } from "react-native";
 import { getCurrencySymbol, SupportedCurrency } from "../../types/types";
 
@@ -27,50 +27,56 @@ const CurrencyRow = ({
   isSelected,
   onSelect,
   isLast,
+  animOpacity,
+  animTranslateY,
 }: {
   currency: { code: string; symbol: string; name: string };
   isDarkMode: boolean;
   isSelected: boolean;
   onSelect: () => void;
   isLast: boolean;
+  animOpacity: Animated.Value;
+  animTranslateY: Animated.Value;
 }) => (
-  <Pressable
-    onPress={onSelect}
-    className={`px-4 py-4 flex-row items-center justify-between ${
-      !isLast
-        ? isDarkMode
-          ? "border-b border-borderDark"
-          : "border-b border-borderLight"
-        : ""
-    } ${isSelected ? (isDarkMode ? "bg-backgroundDark" : "bg-backgroundMuted") : ""}`}
-  >
-    <View className="flex-row items-center">
-      <Text
-        className={`text-xl mr-3 ${isDarkMode ? "text-textDark" : "text-textLight"}`}
-      >
-        {currency.symbol}
-      </Text>
-      <View>
+  <Animated.View style={{ opacity: animOpacity, transform: [{ translateY: animTranslateY }] }}>
+    <Pressable
+      onPress={onSelect}
+      className={`px-4 py-4 flex-row items-center justify-between ${
+        !isLast
+          ? isDarkMode
+            ? "border-b border-borderDark"
+            : "border-b border-borderLight"
+          : ""
+      } ${isSelected ? (isDarkMode ? "bg-backgroundDark" : "bg-backgroundMuted") : ""}`}
+    >
+      <View className="flex-row items-center">
         <Text
-          className={`font-medium ${isDarkMode ? "text-textDark" : "text-textLight"}`}
+          className={`text-xl mr-3 ${isDarkMode ? "text-textDark" : "text-textLight"}`}
         >
-          {currency.name}
+          {currency.symbol}
         </Text>
-        <Text
-          className={`text-xs ${isDarkMode ? "text-secondaryDark" : "text-secondaryLight"}`}
-        >
-          {currency.code}
-        </Text>
+        <View>
+          <Text
+            className={`font-medium ${isDarkMode ? "text-textDark" : "text-textLight"}`}
+          >
+            {currency.name}
+          </Text>
+          <Text
+            className={`text-xs ${isDarkMode ? "text-secondaryDark" : "text-secondaryLight"}`}
+          >
+            {currency.code}
+          </Text>
+        </View>
       </View>
-    </View>
-    {isSelected && (
-      <Ionicons
-        name="checkmark-circle"
-        size={20}
-        color={isDarkMode ? "#B2A4FF" : "#2563EB"}
-      />
-    )}
-  </Pressable>
+      {isSelected && (
+        <Ionicons
+          name="checkmark-circle"
+          size={20}
+          color={isDarkMode ? "#B2A4FF" : "#2563EB"}
+        />
+      )}
+    </Pressable>
+  </Animated.View>
 );
 
 interface CurrencySelectorProps {
@@ -86,6 +92,12 @@ export const CurrencySelector = ({
 }: CurrencySelectorProps) => {
   const [showPicker, setShowPicker] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const itemAnims = useRef(
+    CURRENCIES.map(() => ({
+      opacity: new Animated.Value(0),
+      translateY: new Animated.Value(10),
+    }))
+  ).current;
 
   const textPrimary = isDarkMode ? "text-white" : "text-black";
   const textSecondary = isDarkMode ? "text-secondaryDark" : "text-secondaryLight";
@@ -93,15 +105,41 @@ export const CurrencySelector = ({
     ? "bg-surfaceDark border-borderDark"
     : "bg-white border-borderLight";
 
-  const togglePicker = () => {
-    if (!showPicker) {
-      fadeAnim.setValue(0);
-      setShowPicker(true);
+  useEffect(() => {
+    if (showPicker) {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 150,
         useNativeDriver: true,
       }).start();
+      Animated.stagger(
+        40,
+        itemAnims.map((anim) =>
+          Animated.parallel([
+            Animated.timing(anim.opacity, {
+              toValue: 1,
+              duration: 260,
+              useNativeDriver: true,
+            }),
+            Animated.timing(anim.translateY, {
+              toValue: 0,
+              duration: 260,
+              useNativeDriver: true,
+            }),
+          ])
+        )
+      ).start();
+    }
+  }, [showPicker]);
+
+  const togglePicker = () => {
+    if (!showPicker) {
+      fadeAnim.setValue(0);
+      itemAnims.forEach((anim) => {
+        anim.opacity.setValue(0);
+        anim.translateY.setValue(10);
+      });
+      setShowPicker(true);
     } else {
       setShowPicker(false);
     }
@@ -151,6 +189,8 @@ export const CurrencySelector = ({
                   setShowPicker(false);
                 }}
                 isLast={index === CURRENCIES.length - 1}
+                animOpacity={itemAnims[index].opacity}
+                animTranslateY={itemAnims[index].translateY}
               />
             ))}
           </ScrollView>

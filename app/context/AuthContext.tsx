@@ -64,6 +64,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           try {
             await ensureUserProfile(session.user.id);
             await persistOnboardingData(session.user.id, store.newOnboardingData);
+            if (store.newOnboardingData.foundingMemberEmail) {
+              supabase.functions.invoke('notify-founding-claim', {
+                body: { email: store.newOnboardingData.foundingMemberEmail, userId: session.user.id },
+              }).catch((e) => console.error('[AuthContext] notify-founding-claim error:', e));
+            }
             await Promise.all([
               useCategoriesStore.getState().loadCategories(),
               useAccountsStore.getState().loadAccounts(),

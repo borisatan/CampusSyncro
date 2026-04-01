@@ -34,6 +34,7 @@ interface NewOnboardingData {
   practiceEntryCompleted: boolean;        // Screen 9 (was 6)
   selectedBillingPeriod: 'monthly' | 'annual' | null; // Screen 10 (was 7)
   notificationFrequency: 'once' | 'three' | 'five' | null; // Screen 11
+  foundingMemberEmail?: string | null;
 }
 
 interface OnboardingStoreState {

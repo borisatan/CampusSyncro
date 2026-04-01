@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
+import * as Crypto from "expo-crypto";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { Link, useRouter } from "expo-router";
@@ -26,6 +27,7 @@ import { useIncomeStore } from "../store/useIncomeStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useSubscription } from "../context/SubscriptionContext";
+import { pendingSignUp } from "../store/pendingSignUp";
 import { supabase } from "../utils/supabase";
 
 // Configure WebBrowser to properly complete auth sessions
@@ -147,13 +149,12 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
 export default function SignUpScreen() {
   const router = useRouter();
   const { trackEvent, identifyUser } = useAnalytics();
-  const { newOnboardingData, setOnboardingDataPersisted, clearOnboardingDataPersisted } = useOnboardingStore();
+  const { newOnboardingData, setOnboardingDataPersisted } = useOnboardingStore();
   const { linkUser } = useSubscription();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [awaitingVerification, setAwaitingVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -170,56 +171,22 @@ export default function SignUpScreen() {
     try {
       setIsSubmitting(true);
 
-      // Claim the flag BEFORE signUp so that when onAuthStateChange fires
-      // (which supabase calls synchronously during signUp before the promise
-      // returns), AuthContext sees hasPersistedOnboardingData=true and skips.
-      // This makes sign-up.tsx the sole persister for instant-session paths.
-      setOnboardingDataPersisted();
-
-      const redirectTo = Linking.createURL("/");
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: redirectTo },
+      // Send OTP to the user's email before creating the account.
+      // Credentials are stored in memory so verify-email.tsx can complete sign-up.
+      const { error: otpError } = await supabase.functions.invoke("send-signup-otp", {
+        body: { email: email.trim().toLowerCase() },
       });
 
-      if (error) {
-        clearOnboardingDataPersisted(); // Allow retry
-        trackEvent("user_sign_up_failed", { error_message: error.message });
-        Alert.alert("Sign up failed", error.message);
+      if (otpError) {
+        trackEvent("user_sign_up_failed", { error_message: otpError.message });
+        Alert.alert("Could not send code", "Please check your email and try again.");
         return;
       }
 
-      trackEvent("user_signed_up", { requires_verification: !data.session });
+      pendingSignUp.email = email.trim().toLowerCase();
+      pendingSignUp.password = password;
 
-      if (!data.session) {
-        // Email verification required — clear the flag we claimed so that
-        // AuthContext can persist onboarding data after the user verifies and signs in.
-        clearOnboardingDataPersisted();
-        setAwaitingVerification(true);
-        return;
-      }
-
-      if (data.user) {
-        // Instant session: flag is already claimed above, we're the sole persister.
-        await ensureUserProfile(data.user.id);
-        await persistOnboardingData(data.user.id, newOnboardingData);
-        await linkUser(data.user.id);
-        // Force reload stores so freshly created data is available immediately
-        await Promise.all([
-          useCategoriesStore.getState().loadCategories(),
-          useAccountsStore.getState().loadAccounts(),
-          useIncomeStore.getState().loadIncomeSettings(),
-          useCurrencyStore.getState().loadCurrency(),
-        ]);
-        useAppTourStore.getState().resetSeenPages();
-        identifyUser(data.user.id, {
-          email: data.user.email,
-          $set_once: { signup_date: new Date().toISOString() },
-        });
-      }
-
-      router.replace("/(tabs)/profile");
+      router.push("/(auth)/verify-email");
     } catch (e: any) {
       trackEvent("user_sign_up_failed", {
         error_message: e?.message ?? "Unknown error",
@@ -227,32 +194,6 @@ export default function SignUpScreen() {
       Alert.alert("Sign up failed", e?.message ?? "Unknown error");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (!email) {
-      Alert.alert(
-        "Email required",
-        "Enter your email to resend the verification.",
-      );
-      return;
-    }
-    try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email,
-      });
-      if (error) {
-        Alert.alert("Could not resend", error.message);
-        return;
-      }
-      Alert.alert(
-        "Sent",
-        "If an account exists for this email, a link was sent.",
-      );
-    } catch (e: any) {
-      Alert.alert("Could not resend", e?.message ?? "Unknown error");
     }
   };
 
@@ -329,6 +270,11 @@ export default function SignUpScreen() {
         // Persist onboarding data to database
         await persistOnboardingData(sessionData.user.id, newOnboardingData);
         await linkUser(sessionData.user.id);
+        if (newOnboardingData.foundingMemberEmail) {
+          supabase.functions.invoke('notify-founding-claim', {
+            body: { email: newOnboardingData.foundingMemberEmail, userId: sessionData.user.id },
+          }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
+        }
         // Force reload stores so freshly created data is available immediately
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
@@ -369,11 +315,17 @@ export default function SignUpScreen() {
   const handleAppleSignIn = async () => {
     try {
       setIsSubmitting(true);
+      const rawNonce = Crypto.randomUUID();
+      const hashedNonce = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        rawNonce
+      );
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
+        nonce: hashedNonce,
       });
       if (!credential.identityToken) throw new Error("No identity token");
 
@@ -383,6 +335,7 @@ export default function SignUpScreen() {
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: credential.identityToken,
+        nonce: rawNonce,
       });
       if (error) throw error;
 
@@ -391,6 +344,11 @@ export default function SignUpScreen() {
         await ensureUserProfile(data.user.id);
         await persistOnboardingData(data.user.id, newOnboardingData);
         await linkUser(data.user.id);
+        if (newOnboardingData.foundingMemberEmail) {
+          supabase.functions.invoke('notify-founding-claim', {
+            body: { email: newOnboardingData.foundingMemberEmail, userId: data.user.id },
+          }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
+        }
         // Force reload stores so freshly created data is available immediately
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
@@ -481,25 +439,6 @@ export default function SignUpScreen() {
                 <View className="flex-1 h-px bg-borderDark" />
               </View>
 
-              {/* Verification banner */}
-              {awaitingVerification && (
-                <View className="bg-surfaceDark border border-borderDark rounded-xl p-4 mb-5">
-                  <Text className="text-textDark text-sm mb-3">
-                    We sent a verification link to{" "}
-                    <Text className="text-accentBlue">{email}</Text>. Check your
-                    inbox and spam.
-                  </Text>
-                  <Pressable
-                    onPress={handleResend}
-                    className="bg-accentBlue rounded-xl py-3 items-center active:opacity-80"
-                  >
-                    <Text className="text-white font-semibold text-sm">
-                      Resend verification email
-                    </Text>
-                  </Pressable>
-                </View>
-              )}
-
               {/* Form */}
               <View className="gap-5 mb-6">
                 {/* Email */}
@@ -582,7 +521,7 @@ export default function SignUpScreen() {
                 className="rounded-2xl py-4 items-center mb-4 bg-accentBlue active:opacity-80"
               >
                 <Text className="text-white font-semibold text-base">
-                  {isSubmitting ? "Creating account…" : "Sign Up"}
+                  {isSubmitting ? "Sending code…" : "Sign Up"}
                 </Text>
               </Pressable>
 

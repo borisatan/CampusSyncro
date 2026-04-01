@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import Purchases, { CustomerInfo, LOG_LEVEL } from 'react-native-purchases';
 import { NativeModules } from 'react-native';
+import { useAuth } from './AuthContext';
+import { supabase } from '../utils/supabase';
 
 const isRevenueCatAvailable = !!NativeModules.RNPurchases;
 
@@ -10,6 +12,7 @@ const PREMIUM_ENTITLEMENT = 'premium';
 interface SubscriptionContextType {
   customerInfo: CustomerInfo | null;
   isSubscribed: boolean;
+  isFoundingMember: boolean;
   isLoading: boolean;
   refreshCustomerInfo: () => Promise<void>;
   linkUser: (userId: string) => Promise<void>;
@@ -18,13 +21,16 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType>({
   customerInfo: null,
   isSubscribed: false,
+  isFoundingMember: false,
   isLoading: true,
   refreshCustomerInfo: async () => {},
   linkUser: async () => {},
 });
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { userId } = useAuth();
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+  const [isFoundingMember, setIsFoundingMember] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -63,6 +69,23 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   }, []);
 
+  // Auto-check founding member status whenever the authenticated user changes
+  useEffect(() => {
+    if (!userId) {
+      setIsFoundingMember(false);
+      return;
+    }
+    supabase
+      .from('Profiles')
+      .select('is_founding_member')
+      .eq('id', userId)
+      .single()
+      .then(({ data }) => {
+        if (data?.is_founding_member) setIsFoundingMember(true);
+      })
+      .catch((e) => console.error('[SubscriptionContext] Founding member check failed:', e));
+  }, [userId]);
+
   const refreshCustomerInfo = useCallback(async () => {
     if (!isRevenueCatAvailable) return;
     try {
@@ -83,10 +106,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  const isSubscribed = !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT];
+  const isSubscribed = !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT] || isFoundingMember;
 
   return (
-    <SubscriptionContext.Provider value={{ customerInfo, isSubscribed, isLoading, refreshCustomerInfo, linkUser }}>
+    <SubscriptionContext.Provider value={{ customerInfo, isSubscribed, isFoundingMember, isLoading, refreshCustomerInfo, linkUser }}>
       {children}
     </SubscriptionContext.Provider>
   );

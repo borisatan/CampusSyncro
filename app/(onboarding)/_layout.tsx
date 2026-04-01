@@ -29,6 +29,9 @@ export default function OnboardingLayout() {
         options={{ gestureEnabled: false }}
       />
       <Stack.Screen
+        name="founding-access"
+      />
+      <Stack.Screen
         name="notification-reminders"
         options={{ gestureEnabled: false }}
       />

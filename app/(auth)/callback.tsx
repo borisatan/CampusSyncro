@@ -89,6 +89,11 @@ export default function OAuthCallbackScreen() {
       if (store.hasCompletedOnboarding && !store.hasPersistedOnboardingData) {
         store.setOnboardingDataPersisted();
         await persistOnboardingData(sessionData.user.id, store.newOnboardingData);
+        if (store.newOnboardingData.foundingMemberEmail) {
+          supabase.functions.invoke('notify-founding-claim', {
+            body: { email: store.newOnboardingData.foundingMemberEmail, userId: sessionData.user.id },
+          }).catch((e) => console.error('[OAuthCallback] notify-founding-claim error:', e));
+        }
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
           useAccountsStore.getState().loadAccounts(),

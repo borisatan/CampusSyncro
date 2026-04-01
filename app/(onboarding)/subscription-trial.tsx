@@ -365,6 +365,14 @@ export default function SubscriptionTrialScreen() {
                   Restore purchases
                 </Text>
               </Pressable>
+              <Pressable
+                onPress={() => router.push("/(onboarding)/founding-access")}
+                className="active:opacity-60 mt-3"
+              >
+                <Text className="text-secondaryDark text-xs text-center">
+                  Founding member? Claim free access →
+                </Text>
+              </Pressable>
             </MotiView>
           </MotiView>
         </View>
