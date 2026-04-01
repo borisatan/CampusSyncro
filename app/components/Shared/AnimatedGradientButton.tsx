@@ -1,4 +1,3 @@
-import { LinearGradient } from "expo-linear-gradient";
 import { ArrowRight } from "lucide-react-native";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -9,7 +8,6 @@ interface AnimatedGradientButtonProps {
   disabled?: boolean;
   showIcon?: boolean;
   rounded?: "xl" | "3xl";
-  gradientColors?: [string, string, string];
 }
 
 export const AnimatedGradientButton = React.memo(function AnimatedGradientButton({
@@ -18,7 +16,6 @@ export const AnimatedGradientButton = React.memo(function AnimatedGradientButton
   disabled = false,
   showIcon = false,
   rounded = "3xl",
-  gradientColors = ["#1E40AF", "#3B7EFF", "#60A5FA"],
 }: AnimatedGradientButtonProps) {
   const borderRadiusClass = rounded === "3xl" ? "rounded-3xl" : "rounded-xl";
 
@@ -35,20 +32,13 @@ export const AnimatedGradientButton = React.memo(function AnimatedGradientButton
   return (
     <Pressable
       onPress={onPress}
-      className={`w-full ${borderRadiusClass} overflow-hidden active:opacity-80`}
+      className={`w-full ${borderRadiusClass} bg-accentBlue active:opacity-80`}
       android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
     >
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={{ width: "100%" }}
-      >
-        <View className="py-5 flex-row items-center justify-center gap-2">
-          <Text className="text-white text-lg font-medium">{text}</Text>
-          {showIcon && <ArrowRight size={20} color="#ffffff" />}
-        </View>
-      </LinearGradient>
+      <View className="py-5 flex-row items-center justify-center gap-2">
+        <Text className="text-white text-lg font-medium">{text}</Text>
+        {showIcon && <ArrowRight size={20} color="#ffffff" />}
+      </View>
     </Pressable>
   );
 });

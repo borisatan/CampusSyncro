@@ -275,7 +275,6 @@ export default function AIBudgetSetupScreen() {
                 onPress={handleApply}
                 text="Apply Smart Budget"
                 rounded="3xl"
-                gradientColors={["#1E40AF", "#3B7EFF", "#60A5FA"]}
               />
             </MotiView>
           )}

@@ -234,7 +234,6 @@ export default function MonthlyIncomeScreen() {
                 text="Calculate my margin"
                 disabled={!isValid}
                 rounded="3xl"
-                gradientColors={["#059669", "#10B981", "#34D399"]}
               />
             </MotiView>
           </View>
