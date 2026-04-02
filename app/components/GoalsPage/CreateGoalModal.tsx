@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { parseAmount } from '../../utils/parseAmount';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -43,7 +44,7 @@ export function CreateGoalModal({
 
   const canSubmit =
     name.trim().length > 0 &&
-    parseFloat(targetAmount) > 0 &&
+    parseAmount(targetAmount) > 0 &&
     selectedAccountId !== null &&
     !isSubmitting;
 
@@ -56,7 +57,7 @@ export function CreateGoalModal({
         user_id: userId,
         account_id: selectedAccountId!,
         name: name.trim(),
-        target_amount: parseFloat(targetAmount),
+        target_amount: parseAmount(targetAmount),
       });
 
       // Reset form

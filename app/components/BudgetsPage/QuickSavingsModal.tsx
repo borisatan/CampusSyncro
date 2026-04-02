@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft, PiggyBank } from 'lucide-react-native';
+import { parseAmount } from '../../utils/parseAmount';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -79,7 +80,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
   const handleSave = async () => {
     const selectedAccount = sourceAccounts.find(acc => acc.account_name === selectedAccountName);
     if (!selectedAccount) return;
-    const amount = parseFloat(amountText);
+    const amount = parseAmount(amountText);
     if (isNaN(amount) || amount <= 0) return;
 
     // Validation based on mode
@@ -100,7 +101,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
     }
   };
 
-  const amount = parseFloat(amountText) || 0;
+  const amount = parseAmount(amountText) || 0;
   const selectedAccount = sourceAccounts.find(acc => acc.account_name === selectedAccountName);
   const isValid = mode === 'add'
     ? amount > 0 && selectedAccount && amount <= selectedAccount.balance

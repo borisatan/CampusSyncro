@@ -43,7 +43,8 @@ export default function Accounts() {
   }, [registerAccountsRefresh]);
 
   const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string; sort_order?: number }) => {
-    const { name, balance, type, sort_order } = newAccountData;
+    const { name, type, sort_order } = newAccountData;
+    const balance = Math.round(newAccountData.balance * 100) / 100;
     if (!name.trim()) {
       Alert.alert('Error', 'Please enter an account name');
       return;
@@ -80,7 +81,8 @@ export default function Accounts() {
     if (!selectedAccount) return;
     const originalName = selectedAccount.account_name;
     const oldSortOrder = selectedAccount.sort_order ?? 0;
-    const { name: newName, balance: newBalance, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal } = updatedData;
+    const { name: newName, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal } = updatedData;
+    const newBalance = Math.round(updatedData.balance * 100) / 100;
 
     updateAccountOptimistic(selectedAccount.id, { account_name: newName, balance: newBalance, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal });
     setShowEditModal(false);

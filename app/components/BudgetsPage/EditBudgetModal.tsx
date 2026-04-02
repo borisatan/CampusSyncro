@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ArrowLeft } from 'lucide-react-native';
+import { parseAmount } from '../../utils/parseAmount';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -91,7 +92,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
     }).start();
   }, [visible, category, budgetStatus]);
 
-  const hasBudget = amountText !== '' && parseFloat(amountText) > 0;
+  const hasBudget = amountText !== '' && parseAmount(amountText) > 0;
 
   const animateSelection = () => {
     Animated.sequence([
@@ -112,12 +113,12 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
     if (newMode === budgetMode) return;
     animateSelection();
     if (newMode === 'percentage') {
-      const currentAmount = parseFloat(amountText);
+      const currentAmount = parseAmount(amountText);
       if (currentAmount > 0 && monthlyIncome > 0) {
         setPercentText(((currentAmount / monthlyIncome) * 100).toFixed(1));
       }
     } else {
-      const currentPct = parseFloat(percentText);
+      const currentPct = parseAmount(percentText);
       if (!isNaN(currentPct) && currentPct > 0 && monthlyIncome > 0) {
         setAmountText(Math.round((currentPct / 100) * monthlyIncome).toString());
       }
@@ -156,10 +157,10 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
       let budgetPercentage: number | null = null;
 
       if (budgetMode === 'fixed') {
-        const parsed = parseFloat(amountText);
+        const parsed = parseAmount(amountText);
         if (!isNaN(parsed) && parsed > 0) budgetAmount = parsed;
       } else {
-        const pct = parseFloat(percentText);
+        const pct = parseAmount(percentText);
         if (!isNaN(pct) && pct > 0 && monthlyIncome > 0) {
           budgetPercentage = pct;
           budgetAmount = Math.round((pct / 100) * monthlyIncome);
@@ -369,9 +370,9 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                       </TouchableOpacity>
                     )}
                   </View>
-                  {amountText !== '' && !isNaN(parseFloat(amountText)) && monthlyIncome > 0 && (
+                  {amountText !== '' && !isNaN(parseAmount(amountText)) && monthlyIncome > 0 && (
                     <Text className="text-secondaryDark text-xs mt-1.5">
-                      = {((parseFloat(amountText) / monthlyIncome) * 100).toFixed(1)}% of income
+                      = {((parseAmount(amountText) / monthlyIncome) * 100).toFixed(1)}% of income
                     </Text>
                   )}
                 </View>
@@ -403,9 +404,9 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                       </TouchableOpacity>
                     )}
                   </View>
-                  {percentText !== '' && !isNaN(parseFloat(percentText)) && monthlyIncome > 0 && (
+                  {percentText !== '' && !isNaN(parseAmount(percentText)) && monthlyIncome > 0 && (
                     <Text className="text-secondaryDark text-xs mt-1.5">
-                      = {currencySymbol}{Math.round((parseFloat(percentText) / 100) * monthlyIncome).toLocaleString()}
+                      = {currencySymbol}{Math.round((parseAmount(percentText) / 100) * monthlyIncome).toLocaleString()}
                     </Text>
                   )}
                 </View>

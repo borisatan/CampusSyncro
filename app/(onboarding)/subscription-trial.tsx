@@ -5,10 +5,13 @@ import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton"
 import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, NativeModules, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import Purchases, { PurchasesPackage } from "react-native-purchases";
+
+const isRevenueCatAvailable = !!NativeModules.RNPurchases;
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
+import { useSubscription } from "../context/SubscriptionContext";
 
 type BillingPeriod = "weekly" | "monthly" | "annual";
 
@@ -31,8 +34,9 @@ const TIMELINE_ITEMS = [
 ];
 
 export default function SubscriptionTrialScreen() {
-  const { setOnboardingStep, setNewOnboardingData, completeOnboarding } =
+  const { setOnboardingStep, setNewOnboardingData, completeOnboarding, hasCompletedOnboarding } =
     useOnboardingStore();
+  const { refreshCustomerInfo } = useSubscription();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
   const [weeklyPackage, setWeeklyPackage] = useState<PurchasesPackage | null>(null);
   const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
@@ -49,6 +53,10 @@ export default function SubscriptionTrialScreen() {
   }, [setOnboardingStep, trackEvent]);
 
   const loadOfferings = async () => {
+    if (!isRevenueCatAvailable) {
+      setOfferingsLoaded(true);
+      return;
+    }
     try {
       const offerings = await Purchases.getOfferings();
       console.log("[SubscriptionTrial] All offerings:", JSON.stringify(offerings, null, 2));
@@ -114,8 +122,13 @@ export default function SubscriptionTrialScreen() {
       });
 
       setNewOnboardingData({ selectedBillingPeriod: billingPeriod === "weekly" ? "monthly" : billingPeriod });
-      setOnboardingStep(11);
-      router.push("/(onboarding)/notification-reminders");
+      await refreshCustomerInfo();
+      if (hasCompletedOnboarding) {
+        router.replace("/(tabs)/dashboard");
+      } else {
+        setOnboardingStep(11);
+        router.push("/(onboarding)/notification-reminders");
+      }
     } catch (e: any) {
       if (e?.userCancelled) return;
       console.error("[SubscriptionTrial] Purchase failed:", e);
@@ -133,8 +146,12 @@ export default function SubscriptionTrialScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         trackEvent("purchases_restored");
         setNewOnboardingData({ selectedBillingPeriod: billingPeriod === "weekly" ? "monthly" : billingPeriod });
-        setOnboardingStep(11);
-        router.push("/(onboarding)/notification-reminders");
+        if (hasCompletedOnboarding) {
+          router.replace("/(tabs)/dashboard");
+        } else {
+          setOnboardingStep(11);
+          router.push("/(onboarding)/notification-reminders");
+        }
       } else {
         Alert.alert("No active subscription found", "We couldn't find a previous purchase to restore.");
       }
@@ -263,6 +280,7 @@ export default function SubscriptionTrialScreen() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 800, duration: 600 }}
               className="mb-6 gap-3"
+              pointerEvents="box-none"
             >
               {!offeringsLoaded ? (
                 <ActivityIndicator color="#ffffff" className="py-8" />

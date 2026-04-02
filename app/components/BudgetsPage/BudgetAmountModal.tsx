@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
+import { parseAmount } from '../../utils/parseAmount';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -41,7 +42,7 @@ export const BudgetAmountModal: React.FC<BudgetAmountModalProps> = ({
 
   const handleSave = () => {
     if (!category) return;
-    const amount = parseFloat(amountText);
+    const amount = parseAmount(amountText);
     if (isNaN(amount) || amount <= 0) return;
     onSave(category.id, amount);
   };

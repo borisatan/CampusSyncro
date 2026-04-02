@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
+import { parseAmount } from '../../utils/parseAmount';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -66,7 +67,7 @@ export function GoalTransactionModal({
     (acc) => acc.type !== 'savings' && acc.type !== 'investment'
   );
 
-  const parsedAmount = parseFloat(amount);
+  const parsedAmount = parseAmount(amount);
   const canSubmit =
     parsedAmount > 0 &&
     selectedAccountName.trim() !== '' &&

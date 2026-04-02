@@ -60,24 +60,23 @@ export default function WelcomeScreen() {
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
         />
-        <Svg style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} width="100%" height="100%">
-          <Defs>
-            {/* Gradient coords are relative to each ellipse's bounding box, so 50%/50% = center */}
-            <RadialGradient id="blueGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-              <Stop offset="0%"   stopColor="#00AAFF" stopOpacity="0.40" />
-              <Stop offset="50%"  stopColor="#0077CC" stopOpacity="0.18" />
-              <Stop offset="100%" stopColor="#003366" stopOpacity="0" />
-            </RadialGradient>
-            <RadialGradient id="greenGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-              <Stop offset="0%"   stopColor="#00FF88" stopOpacity="0.35" />
-              <Stop offset="50%"  stopColor="#00CC66" stopOpacity="0.16" />
-              <Stop offset="100%" stopColor="#004422" stopOpacity="0" />
-            </RadialGradient>
-          </Defs>
-          {/* cx/cy as % for positioning, rx/ry as absolute px for a circular shape */}
-          <Ellipse cx="20%" cy="26%" rx={200} ry={200} fill="url(#blueGlow)" />
-          <Ellipse cx="78%" cy="50%" rx={210} ry={210} fill="url(#greenGlow)" />
-        </Svg>
+        <MotiView
+          from={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 300, duration: 1000, type: "timing" }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        >
+          <Svg style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} width="100%" height="100%">
+            <Defs>
+              <RadialGradient id="greenGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <Stop offset="0%"   stopColor="#00FF88" stopOpacity="0.35" />
+                <Stop offset="50%"  stopColor="#00CC66" stopOpacity="0.16" />
+                <Stop offset="100%" stopColor="#004422" stopOpacity="0" />
+              </RadialGradient>
+            </Defs>
+            <Ellipse cx="78%" cy="50%" rx={210} ry={210} fill="url(#greenGlow)" />
+          </Svg>
+        </MotiView>
       </View>
 
       <ScrollView className="flex-1" style={{ backgroundColor: "transparent" }} contentContainerStyle={{ paddingBottom: 32, flexGrow: 1 }}>
@@ -96,26 +95,8 @@ export default function WelcomeScreen() {
         <View style={{ flex: 1, paddingHorizontal: 20, marginTop: 40, justifyContent: "space-between" }}>
           {/* Top: headlines + images */}
           <View>
-            {/* First headline with funnel behind it */}
+            {/* First headline */}
             <View style={{ position: "relative" }}>
-              {/* Funnel rendered first so text paints on top */}
-              <MotiView
-                from={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 150, duration: 700, type: "spring" }}
-                style={{
-                  position: "absolute",
-                  top: -10,
-                  left: -10,
-                }}
-              >
-                <Image
-                  source={require("../../assets/pictures/money_funnel.png")}
-                  style={{ width: 110, height: 110, opacity: 0.55 }}
-                  resizeMode="contain"
-                />
-              </MotiView>
-
               {/* Money flying out from "leave" */}
               <MotiView
                 from={{ opacity: 0, scale: 0.8 }}

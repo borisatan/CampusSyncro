@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ArrowLeft, CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
 import React, { useState } from 'react';
+import { parseAmount } from '../../utils/parseAmount';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -59,9 +60,9 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
     }
 
     // 2. Defaulting Balance to 0 if empty or invalid
-    const sanitizedBalance = balance.trim() === '' || isNaN(parseFloat(balance)) 
+    const sanitizedBalance = balance.trim() === '' || isNaN(parseAmount(balance)) 
       ? 0 
-      : parseFloat(balance);
+      : parseAmount(balance);
 
     setShowSuccess(true);
   };
@@ -103,9 +104,9 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
           </View>
           <View className="flex-row items-baseline">
             <Text className="text-white text-3xl font-bold mr-2">
-              {currencySymbol} {Math.abs(parseFloat(balance) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {currencySymbol} {Math.abs(parseAmount(balance) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </Text>
-            {parseFloat(balance) < 0 && (
+            {parseAmount(balance) < 0 && (
               <Text className="text-white/80 text-sm">Outstanding</Text>
             )}
           </View>
@@ -131,7 +132,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
               <TextInput
                 keyboardType="numeric"
                 value={balance}
-                onChangeText={setBalance}
+                onChangeText={(text) => setBalance(text.replace(',', '.'))}
                 placeholder="0.00"
                 placeholderTextColor="#475569"
                 className="flex-1 py-4 text-textDark text-xl"
@@ -240,7 +241,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
             onSave({
               name: name.trim(),
               type,
-              balance: parseFloat(balance) || 0,
+              balance: parseAmount(balance) || 0,
               sort_order: sortOrder,
             });
             setShowSuccess(false);

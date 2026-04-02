@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { parseAmount } from "../utils/parseAmount";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { MotiView } from "moti";
@@ -53,7 +54,7 @@ export default function MonthlyIncomeScreen() {
       step: 3,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    const incomeValue = parseFloat(amount) || 0;
+    const incomeValue = parseAmount(amount) || 0;
     setNewOnboardingData({ estimatedIncome: incomeValue, selectedCurrency });
     setOnboardingStep(4);
     router.push("/(onboarding)/cost-of-inattention");
@@ -76,7 +77,7 @@ export default function MonthlyIncomeScreen() {
     router.replace("/(auth)/sign-up");
   }, [trackEvent, completeOnboarding]);
 
-  const isValid = amount && parseFloat(amount) > 0;
+  const isValid = amount && parseAmount(amount) > 0;
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">

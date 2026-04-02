@@ -175,7 +175,7 @@ export default function AIBudgetSetupScreen() {
                   Your Smart Budget
                 </Text>
                 <Text className="text-secondaryDark text-sm text-center">
-                  Based on your {currencySymbol}{monthlyIncome.toLocaleString()} monthly income
+                  Based on your {currencySymbol}{monthlyIncome.toFixed(2)} monthly income
                 </Text>
               </MotiView>
 
@@ -188,12 +188,12 @@ export default function AIBudgetSetupScreen() {
               >
                 <View className="bg-green-500/20 border border-green-500 rounded-full px-4 py-2">
                   <Text className="text-green-400 text-xs font-semibold">
-                    Needs {budgetData.totalNeeds}%
+                    Needs {budgetData.totalNeeds.toFixed(2)}%
                   </Text>
                 </View>
                 <View className="bg-blue-500/20 border border-blue-500 rounded-full px-4 py-2">
                   <Text className="text-blue-400 text-xs font-semibold">
-                    Wants {budgetData.totalWants}%
+                    Wants {budgetData.totalWants.toFixed(2)}%
                   </Text>
                 </View>
                 <View className="bg-purple-500/20 border border-purple-500 rounded-full px-4 py-2">
@@ -261,7 +261,7 @@ export default function AIBudgetSetupScreen() {
                             {currencySymbol}{allocation.budget_amount.toFixed(2)}
                           </Text>
                           <Text className="text-slateMuted text-xs mt-0.5">
-                            {allocation.percentage}% of income
+                            {allocation.percentage.toFixed(2)}% of income
                           </Text>
                         </View>
                       </View>

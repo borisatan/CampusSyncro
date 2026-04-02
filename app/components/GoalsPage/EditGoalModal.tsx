@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
+import { parseAmount } from '../../utils/parseAmount';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -45,14 +46,14 @@ export function EditGoalModal({
 
   const canSubmit =
     name.trim().length > 0 &&
-    parseFloat(targetAmount) > 0 &&
+    parseAmount(targetAmount) > 0 &&
     !isSubmitting &&
     !isDeleting;
 
   const hasChanges =
     goal &&
     (name.trim() !== goal.name ||
-      parseFloat(targetAmount) !== goal.target_amount);
+      parseAmount(targetAmount) !== goal.target_amount);
 
   const handleSubmit = async () => {
     if (!canSubmit || !goal || !hasChanges) return;
@@ -61,7 +62,7 @@ export function EditGoalModal({
     try {
       const updates = {
         name: name.trim(),
-        target_amount: parseFloat(targetAmount),
+        target_amount: parseAmount(targetAmount),
       };
 
       updateGoalOptimistic(goal.id, updates);

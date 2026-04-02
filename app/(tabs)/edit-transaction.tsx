@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { parseAmount } from "../utils/parseAmount";
 import { ArrowLeft, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -98,7 +99,7 @@ const EditTransactionScreen = () => {
 
   const handleSave = async () => {
     if (!transaction || !amount || !userId) return;
-    const numericAmount = parseFloat(amount);
+    const numericAmount = parseAmount(amount);
     if (isNaN(numericAmount)) return;
 
     try {

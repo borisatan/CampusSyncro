@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft, CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
+import { parseAmount } from '../../utils/parseAmount';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -63,7 +64,7 @@ export default function MoveMoneyPage({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirectionDown, setIsDirectionDown] = useState(true);
 
-  const numericAmount = parseFloat(amount) || 0;
+  const numericAmount = parseAmount(amount) || 0;
 
   // Determine actual source/destination based on arrow direction
   const actualSource = isDirectionDown ? sourceAccount : destinationAccount;

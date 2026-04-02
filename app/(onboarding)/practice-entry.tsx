@@ -117,7 +117,7 @@ export default function PracticeEntryScreen() {
 
   const handleSubmit = () => {
     const numAmount = parseFloat(amount);
-    if (numAmount === expectedAmount) {
+    if (!isNaN(numAmount) && amount.trim() !== "") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       trackEvent("onboarding_screen_completed", {
         screen: "practice_entry",
@@ -153,7 +153,7 @@ export default function PracticeEntryScreen() {
     router.replace("/(auth)/sign-up");
   };
 
-  const isComplete = parseFloat(amount) === expectedAmount;
+  const isComplete = amount.trim() !== "" && !isNaN(parseFloat(amount));
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">

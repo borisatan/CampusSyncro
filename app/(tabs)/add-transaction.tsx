@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { parseAmount } from "../utils/parseAmount";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -91,7 +92,7 @@ const TransactionAdder = () => {
       return;
     }
 
-    const numericAmount = parseFloat(amount);
+    const numericAmount = parseAmount(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
       Alert.alert("Error", "Please enter a valid amount");
       return;

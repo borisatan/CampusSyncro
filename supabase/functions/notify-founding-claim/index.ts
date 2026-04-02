@@ -78,8 +78,8 @@ Deno.serve(async (req) => {
 
     // 3. Send notification email to support
     const resendKey = Deno.env.get("RESEND_API_KEY")!;
-    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@monelo.app";
-    const supportEmail = Deno.env.get("SUPPORT_EMAIL")!;
+    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") ?? Deno.env.get("RESEND_EMAIL_FROM") ?? "noreply@monelo.app";
+    const supportEmail = Deno.env.get("SUPPORT_EMAIL_TO")!;
 
     const claimedAt = new Date().toLocaleString("en-GB", { timeZone: "UTC" });
 

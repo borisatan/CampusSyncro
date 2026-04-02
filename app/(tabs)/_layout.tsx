@@ -4,14 +4,16 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LoadingSpinner from "../components/Shared/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
+import { useSubscription } from "../context/SubscriptionContext";
 import "../globals.css";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { userId, isLoading } = useAuth();
+  const { userId, isLoading: authLoading } = useAuth();
+  const { isSubscribed, isLoading: subLoading } = useSubscription();
 
-  // Show loading while checking auth
-  if (isLoading) {
+  // Show loading while checking auth or subscription
+  if (authLoading || subLoading) {
     return <LoadingSpinner />;
   }
 
@@ -20,19 +22,22 @@ export default function TabLayout() {
     return <Redirect href="/(auth)/sign-in" />;
   }
 
+  // Redirect to paywall if trial/subscription not active
+  if (!isSubscribed) {
+    return <Redirect href="/(onboarding)/subscription-trial" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        animation: "shift",
-
         sceneStyle: { backgroundColor: "#20283A", flex: 1 }, // Using hex for React Navigation compatibility
         tabBarShowLabel: false,
         tabBarActiveTintColor: "#2563EB", // accentBlue
         tabBarInactiveTintColor: "#9CA3AF", // secondaryDark
 
         tabBarBackground: () => (
-          <View className="flex-1 bg-surfaceDark" />
+          <View style={{ flex: 1, backgroundColor: "#20283A" }} />
         ),
 
         tabBarStyle: {

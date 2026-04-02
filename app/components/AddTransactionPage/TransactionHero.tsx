@@ -148,7 +148,7 @@ export const TransactionHero = ({
             ref={amountInputRef}
             keyboardType="decimal-pad"
             value={amount}
-            onChangeText={setAmount}
+            onChangeText={(text) => setAmount(text.replace(',', '.'))}
             placeholder="0.00"
             placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
             className={`flex-1 py-4 text-2xl ${
