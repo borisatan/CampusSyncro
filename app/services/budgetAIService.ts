@@ -244,11 +244,8 @@ export async function getBudgetAllocations(
   // Check cache first
   const cached = await getCachedResult(categories, monthlyIncome);
   if (cached) {
-    console.log('Budget AI: Using cached response');
     return cached;
   }
-
-  console.log('Budget AI: Calling edge function');
 
   // Get auth session
   const { data: { session }, error: authError } = await supabase.auth.getSession();
@@ -357,7 +354,6 @@ export async function clearBudgetAICache(): Promise<void> {
     const cacheKeys = keys.filter((k) => k.startsWith(CACHE_KEY_PREFIX));
     if (cacheKeys.length > 0) {
       await AsyncStorage.multiRemove(cacheKeys);
-      console.log(`Budget AI: Cleared ${cacheKeys.length} cached responses`);
     }
   } catch (error) {
     console.warn('Failed to clear budget AI cache:', error);

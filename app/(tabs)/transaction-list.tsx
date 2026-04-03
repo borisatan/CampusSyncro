@@ -99,9 +99,6 @@ const TransactionsScreen: React.FC = () => {
       setPage(1);
       setHasMore(transactionsData.length === LIMIT);
 
-      if (transactionsData.length === 0) {
-        console.log("No transactions found");
-      }
     } catch (err) {
       console.error("Failed to load transactions:", err);
       setLoadError("Failed to load transactions. Please try again.");
@@ -113,14 +110,12 @@ const TransactionsScreen: React.FC = () => {
 
   // --- Load filtered transactions (for category + time period from dashboard)
   const loadFilteredTransactionsAsync = async (category: string, timeFrame: string, periodOffset: number = 0) => {
-    console.log('Loading filtered transactions:', { category, timeFrame, periodOffset });
     setIsRefreshing(true);
     setLoadError(null);
     setIsInitialLoading(true);
 
     try {
       const { startDate, endDate } = getDateRange(timeFrame as TimeFrame, periodOffset);
-      console.log('Date range:', { startDate, endDate });
 
       const [transactionsData, iconsData] = await Promise.all([
         fetchFilteredTransactions({
@@ -133,15 +128,11 @@ const TransactionsScreen: React.FC = () => {
         fetchCategoryIcons(),
       ]);
 
-      console.log('Fetched transactions count:', transactionsData.length);
       setTransactions(transactionsData);
       setCategoryIcons(iconsData);
       setPage(1);
       setHasMore(transactionsData.length === LIMIT);
 
-      if (transactionsData.length === 0) {
-        console.warn('No transactions found for category:', category);
-      }
     } catch (err) {
       console.error("Failed to load filtered transactions:", err);
       setLoadError("Failed to load transactions. Please try again.");
@@ -179,21 +170,12 @@ const TransactionsScreen: React.FC = () => {
 
   // Load transactions - either filtered or all
   useEffect(() => {
-    console.log('Navigation params received:', { initialCategory, initialTimeFrame, initialOffset, t });
-
     if (initialCategory && initialCategory.trim() !== '') {
       const periodOffset = initialOffset ? parseInt(initialOffset, 10) : 0;
       const timeFrameToUse = initialTimeFrame && initialTimeFrame.trim() !== '' ? initialTimeFrame : 'year';
 
-      console.log('Loading filtered transactions with:', {
-        category: initialCategory,
-        timeFrame: timeFrameToUse,
-        offset: periodOffset
-      });
-
       loadFilteredTransactionsAsync(initialCategory, timeFrameToUse, periodOffset);
     } else {
-      console.log('Loading all transactions');
       loadInitialTransactions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -24,13 +24,11 @@ export default function NotificationInitializer() {
     initNotifications();
 
     // Set up notification listeners
-    const receivedSubscription = addNotificationReceivedListener((notification) => {
-      console.log('Notification received:', notification);
+    const receivedSubscription = addNotificationReceivedListener((_notification) => {
       // Notification already filtered by smart logic in service
     });
 
-    const responseSubscription = addNotificationResponseListener((response) => {
-      console.log('Notification tapped:', response);
+    const responseSubscription = addNotificationResponseListener((_response) => {
       // Navigate to add transaction screen when user taps notification
       router.push('/(tabs)/add-transaction');
     });

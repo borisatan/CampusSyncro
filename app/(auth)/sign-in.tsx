@@ -93,23 +93,29 @@ export default function SignInScreen() {
       trackEvent("user_sign_in_failed", {
         error_message: e?.message ?? "Unknown error",
       });
-      Alert.alert("Sign in failed", e?.message ?? "Unknown error");
+      if (e?.message?.includes("Invalid login credentials")) {
+        Alert.alert(
+          "No account found",
+          "We couldn't find an account with those details. Would you like to start fresh?",
+          [
+            { text: "Try again", style: "cancel" },
+            { text: "Start over", onPress: () => router.replace("/(onboarding)/welcome") },
+          ]
+        );
+      } else {
+        Alert.alert("Sign in failed", e?.message ?? "Unknown error");
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    console.log("========================================");
-    console.log("[OAuth] GOOGLE SIGN IN STARTED");
-    console.log("========================================");
-
     try {
       setIsSubmitting(true);
 
       // Create proper redirect URI using Linking
       const redirectTo = Linking.createURL("auth/callback");
-      console.log("[OAuth] Step 1: OAuth redirect URL:", redirectTo);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -129,8 +135,6 @@ export default function SignInScreen() {
       }
       if (!data.url) throw new Error("No OAuth URL returned");
 
-      console.log('[OAuth] Step 2: Opening browser for authentication');
-
       // Open the OAuth provider's sign-in page.
       // iOS: ASWebAuthenticationSession intercepts the redirect and returns {type:'success'}.
       // Android: Chrome Custom Tab fires a deep link intent; openAuthSessionAsync returns
@@ -140,11 +144,8 @@ export default function SignInScreen() {
         redirectTo
       );
 
-      console.log('[OAuth] Step 3: Browser result:', result.type);
-
       if (result.type === "success" && result.url) {
         // iOS path: ASWebAuthenticationSession captured the redirect internally.
-        console.log("[OAuth] Step 4: Got callback URL, exchanging for session");
 
         const { data: sessionData, error: sessionError } =
           await supabase.auth.exchangeCodeForSession(result.url);
@@ -157,9 +158,6 @@ export default function SignInScreen() {
         if (!sessionData.session) {
           throw new Error("No session returned after code exchange");
         }
-
-        console.log("[OAuth] Session established successfully!");
-        console.log("[OAuth] User ID:", sessionData.session.user.id);
 
         // Wait for session to be persisted
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -177,7 +175,6 @@ export default function SignInScreen() {
       } else {
         // Android path: Chrome Custom Tab fired a deep link intent and closed.
         // The callback.tsx route receives the deep link and handles the exchange.
-        console.log("[OAuth] Browser dismissed — Android deep link path, callback.tsx will handle");
       }
     } catch (e: any) {
       console.error("[OAuth] GOOGLE OAUTH ERROR:", e);

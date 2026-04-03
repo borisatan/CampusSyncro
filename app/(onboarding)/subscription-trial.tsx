@@ -11,7 +11,6 @@ import Purchases, { PurchasesPackage } from "react-native-purchases";
 const isRevenueCatAvailable = !!NativeModules.RNPurchases;
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
-import { useSubscription } from "../context/SubscriptionContext";
 
 type BillingPeriod = "weekly" | "monthly" | "annual";
 
@@ -36,7 +35,6 @@ const TIMELINE_ITEMS = [
 export default function SubscriptionTrialScreen() {
   const { setOnboardingStep, setNewOnboardingData, completeOnboarding, hasCompletedOnboarding } =
     useOnboardingStore();
-  const { refreshCustomerInfo } = useSubscription();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
   const [weeklyPackage, setWeeklyPackage] = useState<PurchasesPackage | null>(null);
   const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
@@ -59,7 +57,6 @@ export default function SubscriptionTrialScreen() {
     }
     try {
       const offerings = await Purchases.getOfferings();
-      console.log("[SubscriptionTrial] All offerings:", JSON.stringify(offerings, null, 2));
       const packages = offerings.current?.availablePackages ?? [];
       const weekly = packages.find((p) => p.packageType === "WEEKLY") ?? null;
       const monthly = packages.find((p) => p.packageType === "MONTHLY") ?? null;
@@ -122,8 +119,9 @@ export default function SubscriptionTrialScreen() {
       });
 
       setNewOnboardingData({ selectedBillingPeriod: billingPeriod === "weekly" ? "monthly" : billingPeriod });
-      await refreshCustomerInfo();
-      if (hasCompletedOnboarding) {
+
+      const isActive = !!customerInfo.entitlements.active["premium"];
+      if (hasCompletedOnboarding && isActive) {
         router.replace("/(tabs)/dashboard");
       } else {
         setOnboardingStep(11);

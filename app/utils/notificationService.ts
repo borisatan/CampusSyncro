@@ -48,7 +48,6 @@ Notifications.setNotificationHandler({
 export async function requestNotificationPermissions(): Promise<boolean> {
   // Physical device check
   if (!Device.isDevice) {
-    console.log("Notifications only work on physical devices");
     return false;
   }
 
@@ -61,7 +60,6 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 
   if (finalStatus !== "granted") {
-    console.log("Notification permission denied");
     return false;
   }
 
@@ -191,7 +189,6 @@ export async function scheduleNotifications(frequency: number): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 
   if (frequency === 0) {
-    console.log("Notifications disabled (frequency = 0)");
     return;
   }
 
@@ -199,7 +196,6 @@ export async function scheduleNotifications(frequency: number): Promise<void> {
   const timeIndices = FREQUENCY_MAP[frequency];
 
   if (!timeIndices) {
-    console.log(`Invalid frequency: ${frequency}. Supported: 1, 2, 3, 5`);
     return;
   }
 
@@ -245,9 +241,6 @@ export async function scheduleNotifications(frequency: number): Promise<void> {
     }
   }
 
-  console.log(
-    `Scheduled ${scheduledIds.length} notifications for frequency ${frequency}x/day`,
-  );
 }
 
 /**
@@ -303,7 +296,6 @@ export async function rescheduleNotificationsIfNeeded(
   const hasPermission = await checkNotificationPermissions();
 
   if (!hasPermission && frequency > 0) {
-    console.log("No notification permission, skipping schedule");
     return;
   }
 

@@ -199,16 +199,6 @@ export default function WelcomeScreen() {
           {/* Bottom: button + footer */}
           <View style={{ paddingBottom: 16 }}>
             {/* Sub-headline */}
-            <MotiView
-              from={{ opacity: 0, translateY: 16 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 900, duration: 700 }}
-              style={{ marginBottom: 28 }}
-            >
-              <Text className="text-secondaryDark text-lg italic text-center px-6">
-                Mastery begins with awareness.
-              </Text>
-            </MotiView>
 
             <MotiView
               from={{ opacity: 0, translateY: 12 }}
@@ -231,6 +221,19 @@ export default function WelcomeScreen() {
               <Text className="text-secondaryDark text-xs text-center tracking-widest uppercase">
                 A mindful approach to money
               </Text>
+            </MotiView>
+
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1600, duration: 800 }}
+              style={{ marginTop: 20 }}
+            >
+              <Pressable onPress={() => router.push("/(auth)/sign-in")} className="active:opacity-60">
+                <Text className="text-accentBlue text-xs text-center">
+                  Already have an account? Sign in
+                </Text>
+              </Pressable>
             </MotiView>
           </View>
         </View>

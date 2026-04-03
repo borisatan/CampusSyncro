@@ -126,7 +126,6 @@ export async function ensureUserProfile(userId?: string): Promise<void> {
 
   // If profile already exists, we're done
   if (existingProfile) {
-    console.log('[ensureUserProfile] Profile already exists');
     return;
   }
 
@@ -144,8 +143,7 @@ export async function ensureUserProfile(userId?: string): Promise<void> {
 
   if (insertError) {
     throw new Error(`Failed to create user profile: ${insertError.message}`);
-  }
-  console.log('[ensureUserProfile] Profile created successfully');
+  };
 }
 
 export async function getUserCurrency() {

@@ -45,13 +45,11 @@ const NOTIFICATION_FREQUENCY_MAP: Record<string, number> = {
  * Exported so AuthContext and callback route can also call it.
  */
 export async function persistOnboardingData(userId: string, onboardingData: any) {
-  console.log('[persistOnboardingData] Starting data persistence for user:', userId);
 
   const { selectedCategories, categoryBudgets, estimatedIncome, monthlySavingsTarget, notificationFrequency, selectedCurrency } = onboardingData;
 
   // Step 1: Create categories (errors are logged but don't block profile update)
   if (selectedCategories && selectedCategories.length > 0) {
-    console.log('[persistOnboardingData] Creating categories:', selectedCategories);
     try {
       const categoriesToCreate = selectedCategories.map((categoryName: string) => {
         const categoryDef = V3_DEFAULT_CATEGORIES.find((cat) => cat.name === categoryName);
@@ -71,7 +69,6 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
 
       if (categoriesToCreate.length > 0) {
         await bulkCreateCategories(userId, categoriesToCreate as any);
-        console.log('[persistOnboardingData] Categories created successfully');
       }
     } catch (catError: any) {
       console.error('[persistOnboardingData] Error creating categories:', catError.message);
@@ -94,8 +91,6 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
 
       if (incomeError) {
         console.error('[persistOnboardingData] Error updating income:', incomeError.message);
-      } else {
-        console.log('[persistOnboardingData] Income updated successfully');
       }
     } catch (incomeError: any) {
       console.error('[persistOnboardingData] Error updating income:', incomeError.message);
@@ -135,15 +130,12 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
 
       if (currencyError) {
         console.error('[persistOnboardingData] Error updating currency:', currencyError.message);
-      } else {
-        console.log('[persistOnboardingData] Currency updated successfully');
       }
     } catch (currencyError: any) {
       console.error('[persistOnboardingData] Error updating currency:', currencyError.message);
     }
   }
 
-  console.log('[persistOnboardingData] Data persistence completed');
 }
 
 export default function SignUpScreen() {
@@ -198,16 +190,11 @@ export default function SignUpScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    console.log("========================================");
-    console.log("[OAuth] GOOGLE SIGN IN STARTED");
-    console.log("========================================");
-
     try {
       setIsSubmitting(true);
 
       // Create proper redirect URI using Linking
       const redirectTo = Linking.createURL("auth/callback");
-      console.log("[OAuth] Step 1: OAuth redirect URL:", redirectTo);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -227,8 +214,6 @@ export default function SignUpScreen() {
       }
       if (!data.url) throw new Error("No OAuth URL returned");
 
-      console.log('[OAuth] Step 2: Opening browser for authentication');
-
       // Open the OAuth provider's sign-in page.
       // iOS: ASWebAuthenticationSession intercepts the redirect and returns {type:'success'}.
       // Android: Chrome Custom Tab fires a deep link intent; openAuthSessionAsync returns
@@ -238,11 +223,8 @@ export default function SignUpScreen() {
         redirectTo
       );
 
-      console.log('[OAuth] Step 3: Browser result:', result.type);
-
       if (result.type === "success" && result.url) {
         // iOS path: ASWebAuthenticationSession captured the redirect internally.
-        console.log("[OAuth] Step 4: Got callback URL, exchanging for session");
 
         // Claim flag BEFORE exchangeCodeForSession so that when onAuthStateChange fires
         // (synchronously-ish during the exchange), it sees the flag set and skips
@@ -260,9 +242,6 @@ export default function SignUpScreen() {
         if (!sessionData.session) {
           throw new Error("No session returned after code exchange");
         }
-
-        console.log("[OAuth] Session established successfully!");
-        console.log("[OAuth] User ID:", sessionData.session.user.id);
 
         // Ensure user profile exists
         await ensureUserProfile(sessionData.user.id);
@@ -293,7 +272,6 @@ export default function SignUpScreen() {
       } else {
         // Android path: Chrome Custom Tab fired a deep link intent and closed.
         // The callback.tsx route receives the deep link and handles the exchange.
-        console.log("[OAuth] Browser dismissed — Android deep link path, callback.tsx will handle");
       }
     } catch (e: any) {
       console.error("[OAuth] GOOGLE OAUTH ERROR:", e);

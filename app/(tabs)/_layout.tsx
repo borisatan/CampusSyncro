@@ -23,7 +23,7 @@ export default function TabLayout() {
   }
 
   // Redirect to paywall if trial/subscription not active
-  if (!isSubscribed) {
+  if (!isSubscribed && !__DEV__) {
     return <Redirect href="/(onboarding)/subscription-trial" />;
   }
 

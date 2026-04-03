@@ -148,7 +148,6 @@ export default function ProfileScreen() {
   };
 
   const handleExportCSV = () => {
-    console.log("CSV Export triggered");
   };
 
   const handleTestOnboarding = () => {

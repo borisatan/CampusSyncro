@@ -31,9 +31,6 @@ interface CategoryRowProps {
 }
 
 const CategoryRow = React.memo(({ category, index, isSelected, onToggle }: CategoryRowProps) => {
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-  console.log(`[CategoryRow:${category.name}] render #${renderCount.current} — isSelected=${isSelected}`);
 
   const transition = useMemo(
     () => ({ delay: 400 + index * 100, duration: 500 }),
@@ -98,9 +95,6 @@ const CategoryRow = React.memo(({ category, index, isSelected, onToggle }: Categ
 export default function CategoryPreselectionScreen() {
   const { setOnboardingStep, setNewOnboardingData, completeOnboarding } = useOnboardingStore();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-  console.log(`[CategoryPreselectionScreen] render #${renderCount.current} — selected=${JSON.stringify(selectedCategories)}`);
   const { trackEvent } = useAnalytics();
   const screenEnteredAt = useRef(Date.now());
 
@@ -127,7 +121,6 @@ export default function CategoryPreselectionScreen() {
   }, [trackEvent]);
 
   const handleNext = useCallback(() => {
-    console.log(`[handleNext] fired — categories=${JSON.stringify(selectedCategoriesRef.current)}`);
     const categories = selectedCategoriesRef.current;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {

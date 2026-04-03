@@ -40,9 +40,6 @@ export default function OAuthCallbackScreen() {
 
   const handleOAuthCallback = async () => {
     try {
-      console.log("[OAuth Callback] Processing OAuth callback");
-      console.log("[OAuth Callback] URL params:", params);
-
       // Check for OAuth errors from the provider
       if (params.error) {
         const errorDescription = params.error_description || params.error;
@@ -59,7 +56,6 @@ export default function OAuthCallbackScreen() {
       // Reconstruct the full callback URL from router params so that Supabase
       // can extract the code and any other required query params (e.g. state).
       const callbackUrl = Linking.createURL("auth/callback", { queryParams: params });
-      console.log("[OAuth Callback] Exchanging code for session");
 
       const { data: sessionData, error: sessionError } =
         await supabase.auth.exchangeCodeForSession(callbackUrl);
@@ -72,9 +68,6 @@ export default function OAuthCallbackScreen() {
       if (!sessionData.session) {
         throw new Error("No session returned after code exchange");
       }
-
-      console.log("[OAuth Callback] Session established successfully");
-      console.log("[OAuth Callback] User ID:", sessionData.session.user.id);
 
       // Wait for session to be persisted to storage
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -115,10 +108,8 @@ export default function OAuthCallbackScreen() {
 
       // Navigate: profile for new users (completed onboarding), dashboard for returning users
       if (store.hasCompletedOnboarding) {
-        console.log("[OAuth Callback] New user — redirecting to profile");
         router.replace("/(tabs)/profile");
       } else {
-        console.log("[OAuth Callback] Returning user — redirecting to dashboard");
         router.replace("/(tabs)/dashboard");
       }
     } catch (e: any) {

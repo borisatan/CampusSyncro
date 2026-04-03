@@ -39,7 +39,6 @@ export const migrateDashboardCategoriesToDatabase = async (): Promise<void> => {
 
     // Remove old AsyncStorage data after successful migration
     await AsyncStorage.removeItem(DASHBOARD_CATEGORIES_KEY);
-    console.log('Successfully migrated dashboard categories to database');
 
     // Refresh categories to get updated show_on_dashboard values
     await useCategoriesStore.getState().loadCategories();

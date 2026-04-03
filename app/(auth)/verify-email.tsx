@@ -98,7 +98,6 @@ export default function VerifyEmailScreen() {
 
       await ensureUserProfile(authData.user.id);
       await persistOnboardingData(authData.user.id, newOnboardingData);
-      await linkUser(authData.user.id);
 
       if (newOnboardingData.foundingMemberEmail) {
         supabase.functions.invoke("notify-founding-claim", {

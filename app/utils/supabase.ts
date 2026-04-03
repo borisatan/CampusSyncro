@@ -35,7 +35,6 @@ const ExpoSqliteStorage = {
       if (Platform.OS === "web") {
         if (typeof window !== "undefined") {
           const value = localStorage.getItem(key);
-          console.log('[Storage] getItem web:', key, value ? 'found' : 'not found');
           return value;
         }
         return null;
@@ -49,7 +48,6 @@ const ExpoSqliteStorage = {
   },
   setItem: async (key: string, value: string) => {
     try {
-      console.log('[Storage] setItem:', key, value.substring(0, 50) + '...');
       if (Platform.OS === "web") {
         if (typeof window !== "undefined") {
           localStorage.setItem(key, value);
@@ -63,7 +61,6 @@ const ExpoSqliteStorage = {
   },
   removeItem: async (key: string) => {
     try {
-      console.log('[Storage] removeItem:', key);
       if (Platform.OS === "web") {
         if (typeof window !== "undefined") {
           localStorage.removeItem(key);
