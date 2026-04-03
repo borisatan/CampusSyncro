@@ -95,14 +95,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             try {
               const { customerInfo: info } = await Purchases.logIn(userId);
 
-              // logIn can return stale data when RevenueCat hasn't finished propagating
-              // the anonymous→identified customer merge (e.g. after a free trial is started
-              // before account creation). Refresh synchronously so the tabs layout sees
-              // accurate subscription state before rendering.
-              const wasActive = !!customerInfoRef.current?.entitlements.active[PREMIUM_ENTITLEMENT];
+              // If logIn returned a newly-created identified customer (created=true) or
+              // the identified customer has no entitlement, invalidate the cache and
+              // re-fetch. This handles the anonymous→identified merge case where the
+              // entitlement lives on the anonymous customer and RC hasn't propagated it yet.
               const isNowActive = !!info.entitlements.active[PREMIUM_ENTITLEMENT];
 
-              if (wasActive && !isNowActive) {
+              if (!isNowActive) {
                 try {
                   await Purchases.invalidateCustomerInfoCache();
                   const fresh = await Purchases.getCustomerInfo();
