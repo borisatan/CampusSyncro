@@ -161,15 +161,13 @@ export default function PracticeEntryScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" style={{ opacity: showSuccess ? 0 : 1 }}>
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ opacity: showSuccess ? 0 : 1 }}>
           {/* Progress Bar */}
           <View className="px-2 pt-12 pb-4">
             <View className="flex-row items-center justify-between">
               <OnboardingBackButton onPress={handleBack} />
               <OnboardingProgressDots currentStep={9} totalSteps={11} />
-              <Pressable onPress={handleSkip} className="active:opacity-60">
-                <Text className="text-accentBlue text-sm font-medium">Skip</Text>
-              </Pressable>
+              <View style={{ width: 36 }} />
             </View>
           </View>
 

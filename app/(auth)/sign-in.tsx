@@ -7,7 +7,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { Link, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -19,6 +19,9 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+const isValidEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 import { useAnalytics } from "../hooks/useAnalytics";
 import { ensureUserProfile } from "../services/backendService";
 import { useSubscription } from "../context/SubscriptionContext";
@@ -36,6 +39,8 @@ export default function SignInScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
+  const emailValid = isValidEmail(email);
 
   useEffect(() => {
     (async () => {
@@ -48,21 +53,47 @@ export default function SignInScreen() {
   }, []);
 
   const handleBiometricSignIn = async () => {
+    const supported = await LocalAuthentication.supportedAuthenticationTypesAsync();
+    const hasFaceID = supported.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION);
+
+    if (hasFaceID) {
+      // Attempt Face ID directly — disabling device fallback lets us detect permission issues
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Authenticate to Sign In",
+        disableDeviceFallback: true,
+      });
+      if (!result.success) {
+        if (result.error === "user_cancel" || result.error === "system_cancel") return;
+        // Face ID failed for a non-user reason (most likely permission denied)
+        Alert.alert(
+          "Face ID Not Available",
+          "Face ID may be disabled for this app. Enable it in Settings > Face ID & Passcode.",
+          [
+            { text: "Not Now", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openURL("app-settings:") },
+          ]
+        );
+        return;
+      }
+    } else {
+      // No Face ID — fall back to Touch ID or passcode
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Authenticate to Sign In",
+        fallbackLabel: "Use Passcode",
+        disableDeviceFallback: false,
+      });
+      if (!result.success) return;
+    }
+
     const storedEmail = await SecureStore.getItemAsync("email");
     const storedPassword = await SecureStore.getItemAsync("password");
     if (!storedEmail || !storedPassword) {
-      Alert.alert("No saved credentials", "Please sign in manually first.");
+      Alert.alert("No saved credentials", "Please sign in with email first to enable biometric login.");
       return;
     }
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: "Authenticate to Sign In",
-      fallbackLabel: "Enter Password",
-    });
-    if (result.success) {
-      setEmail(storedEmail);
-      setPassword(storedPassword);
-      handleSignIn(storedEmail, storedPassword);
-    }
+    setEmail(storedEmail);
+    setPassword(storedPassword);
+    handleSignIn(storedEmail, storedPassword);
   };
 
   const handleSignIn = async (inputEmail?: string, inputPassword?: string) => {
@@ -256,6 +287,7 @@ export default function SignInScreen() {
             className="flex-1"
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
           >
             <View className="flex-1 px-6 pt-16 pb-8">
               {/* Header */}
@@ -316,8 +348,10 @@ export default function SignInScreen() {
                     placeholderTextColor="#8A96B4"
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    returnKeyType="next"
                     value={email}
                     onChangeText={setEmail}
+                    onSubmitEditing={() => passwordRef.current?.focus()}
                   />
                 </View>
 
@@ -328,6 +362,7 @@ export default function SignInScreen() {
                   </Text>
                   <View className="relative">
                     <TextInput
+                      ref={passwordRef}
                       className="bg-inputDark text-textDark px-4 py-4 rounded-xl border border-borderDark text-base pr-12"
                       placeholder="••••••••"
                       placeholderTextColor="#8A96B4"
@@ -360,10 +395,14 @@ export default function SignInScreen() {
               {/* Sign In Button */}
               <Pressable
                 onPress={() => handleSignIn()}
-                disabled={isSubmitting}
-                className="rounded-2xl py-4 items-center mb-4 bg-accentBlue active:opacity-80"
+                disabled={isSubmitting || !emailValid}
+                className="rounded-2xl py-4 items-center mb-4 active:opacity-80"
+                style={{ backgroundColor: emailValid ? "#4F8EF7" : "#2A3050" }}
               >
-                <Text className="text-white font-semibold text-base">
+                <Text
+                  className="font-semibold text-base"
+                  style={{ color: emailValid ? "#fff" : "#5A6480" }}
+                >
                   {isSubmitting ? "Signing in…" : "Sign In"}
                 </Text>
               </Pressable>
@@ -384,7 +423,7 @@ export default function SignInScreen() {
               {/* Sign Up */}
               <View className="flex-row justify-center mt-auto pt-0">
                 <Text className="text-secondaryDark">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                 </Text>
                 <Link href="/(onboarding)/welcome" asChild>
                   <Pressable className="active:opacity-60">

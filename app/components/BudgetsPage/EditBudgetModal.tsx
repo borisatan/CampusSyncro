@@ -228,7 +228,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
         {/* Header with Back and Delete — identical to edit-category */}
-        <View className="flex-row items-center justify-between px-2 mt-4 mb-4">
+        <View className="flex-row items-center justify-between px-2 mt-8 mb-4">
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={onClose}
@@ -255,6 +255,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
           <ScrollView
             contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
             className="flex-1"
+            keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
           >
             {/* Live Preview Card - Always at top */}

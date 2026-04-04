@@ -93,7 +93,7 @@ const ArrowButton = ({
 };
 
 export const ScrollableSpendingChart = React.memo(
-  ({
+  function ScrollableSpendingChart({
     chartDataByOffset,
     timeFrame,
     font,
@@ -101,7 +101,7 @@ export const ScrollableSpendingChart = React.memo(
     categoryBudgets = [],
     isUnlocked = true,
     onOffsetChange,
-  }: ScrollableSpendingChartProps) => {
+  }: ScrollableSpendingChartProps) {
     const [activeIndex, setActiveIndex] = useState(PAGES.length - 1); // start on current
 
     const goLeft = useCallback(() => {

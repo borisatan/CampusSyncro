@@ -190,7 +190,7 @@ export function GoalTransactionModal({
           {/* Divider */}
           <View className="border-b border-borderDark " />
 
-          <ScrollView showsVerticalScrollIndicator={false} className="bg-backgroundDark" contentContainerStyle={{ padding: 10 }}>
+          <ScrollView showsVerticalScrollIndicator={false} className="bg-backgroundDark" contentContainerStyle={{ padding: 10 }} keyboardDismissMode="on-drag">
             {/* Goal Info */}
             <View className="bg-surfaceDark rounded-xl p-4 mb-4 border border-borderDark">
               <View className="flex-row items-center mb-3">

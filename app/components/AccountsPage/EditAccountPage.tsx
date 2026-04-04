@@ -81,7 +81,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <ScrollView className="flex-1 px-2">
+        <ScrollView className="flex-1 px-2" keyboardDismissMode="on-drag">
         {/* Header */}
         <View className="flex-row items-center mb-8 mt-6">
           <TouchableOpacity
@@ -137,8 +137,13 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
               <TextInput
                 keyboardType="numeric"
                 value={balance}
-                onChangeText={(text) => setBalance(text.replace(',', '.'))}
-                placeholder="0.00"
+                onChangeText={(text) => {
+                  let cleaned = text.replace(',', '.');
+                  // Strip leading zeros before digits (e.g. "01" → "1"), but allow "0." and "-0."
+                  cleaned = cleaned.replace(/^(-?)0+(\d)/, '$1$2');
+                  setBalance(cleaned);
+                }}
+                placeholder="0"
                 placeholderTextColor="#475569"
                 className="flex-1 py-4 text-textDark text-xl"
               />

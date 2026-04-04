@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { parseAmount } from "../utils/parseAmount";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
@@ -52,8 +52,9 @@ const TransactionAdder = () => {
     (state) => state.updateAccountBalance,
   );
 
+  const { type } = useLocalSearchParams<{ type?: "expense" | "income" }>();
   const [transactionType, setTransactionType] = useState<"expense" | "income">(
-    "expense",
+    type === "income" ? "income" : "expense",
   );
   const [selectedAccount, setSelectedAccount] = useState("");
   const [amount, setAmount] = useState("");
@@ -109,7 +110,7 @@ const TransactionAdder = () => {
       const categoryName =
         transactionType === "expense"
           ? selectedCategory?.category_name
-          : "Income";
+          : null;
 
       // Optimistic UI: Update balance immediately
       const currentAccount = accountOptions.find(
@@ -185,6 +186,7 @@ const TransactionAdder = () => {
           contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
           className="flex-1"
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           <TransactionHero
             transactionType={transactionType}

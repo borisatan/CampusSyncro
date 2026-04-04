@@ -85,9 +85,7 @@ export default function WelcomeScreen() {
           <View className="flex-row items-center justify-between">
             <View style={{ width: 36 }} />
             <OnboardingProgressDots currentStep={1} totalSteps={11} />
-            <Pressable onPress={handleSkip} className="active:opacity-60">
-              <Text className="text-accentBlue text-sm font-medium">Skip</Text>
-            </Pressable>
+            <View style={{ width: 36 }} />
           </View>
         </View>
 

@@ -48,7 +48,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
   const sortOrderOptions = Array.from({ length: accountCount + 1 }, (_, i) => i + 1);
   const [name, setName] = useState('');
   const [type, setType] = useState('checking');
-  const [balance, setBalance] = useState('0');
+  const [balance, setBalance] = useState('');
   const [sortOrder, setSortOrder] = useState(accountCount + 1);
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -81,7 +81,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <ScrollView className="flex-1 px-2">
+        <ScrollView className="flex-1 px-2" keyboardDismissMode="on-drag">
         {/* Header */}
         <View className="flex-row items-center mb-8 mt-6">
           <TouchableOpacity
@@ -137,8 +137,13 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
               <TextInput
                 keyboardType="numeric"
                 value={balance}
-                onChangeText={(text) => setBalance(text.replace(',', '.'))}
-                placeholder="0.00"
+                onChangeText={(text) => {
+                  let cleaned = text.replace(',', '.');
+                  // Strip leading zeros before digits (e.g. "01" → "1"), but allow "0." and "-0."
+                  cleaned = cleaned.replace(/^(-?)0+(\d)/, '$1$2');
+                  setBalance(cleaned);
+                }}
+                placeholder="0"
                 placeholderTextColor="#475569"
                 className="flex-1 py-4 text-textDark text-xl"
               />
@@ -244,7 +249,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
           text="Account Added!"
           onDismiss={() => {
             setShowSuccess(false);
-            onBack();
+            setTimeout(() => onBack(), 350);
           }}
         />
       </KeyboardAvoidingView>

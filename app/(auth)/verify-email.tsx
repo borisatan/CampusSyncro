@@ -164,6 +164,7 @@ export default function VerifyEmailScreen() {
             className="flex-1"
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
           >
             <View className="flex-1 px-6 pt-6 pb-8">
               {/* Back button */}
@@ -246,7 +247,7 @@ export default function VerifyEmailScreen() {
                   <ActivityIndicator color="#4F6EF7" size="small" />
                 ) : (
                   <Text className="text-accentBlue text-sm">
-                    Didn't receive it? Resend code
+                    Didn&apos;t receive it? Resend code
                   </Text>
                 )}
               </Pressable>

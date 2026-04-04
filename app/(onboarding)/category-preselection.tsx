@@ -30,7 +30,7 @@ interface CategoryRowProps {
   onToggle: (name: string) => void;
 }
 
-const CategoryRow = React.memo(({ category, index, isSelected, onToggle }: CategoryRowProps) => {
+const CategoryRow = React.memo(function CategoryRow({ category, index, isSelected, onToggle }: CategoryRowProps) {
 
   const transition = useMemo(
     () => ({ delay: 400 + index * 100, duration: 500 }),
@@ -159,7 +159,6 @@ export default function CategoryPreselectionScreen() {
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
         <OnboardingHeader
           onBack={handleBack}
-          onSkip={handleSkip}
           currentStep={2}
           totalSteps={11}
         />

@@ -216,6 +216,7 @@ export function EditGoalModal({
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
+            keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
           >
             {/* Live Preview Card */}

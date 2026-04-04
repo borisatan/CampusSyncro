@@ -116,7 +116,7 @@ const formatDisplayLabel = (
 };
 
 export const SpendingTrendChart = React.memo(
-  ({
+  function SpendingTrendChart({
     data,
     currencySymbol,
     font,
@@ -124,7 +124,7 @@ export const SpendingTrendChart = React.memo(
     categoryBudgets = [],
     isCurrentPeriod = true,
     isUnlocked = true,
-  }: ChartProps) => {
+  }: ChartProps) {
     const [tooltipData, setTooltipData] = useState({
       label: "",
       value: "",

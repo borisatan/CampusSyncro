@@ -194,7 +194,7 @@ export default function BudgetSetupChoiceScreen() {
               <View className="bg-surfaceDark/50 border border-borderDark rounded-3xl px-4 py-3 flex-row items-center justify-center gap-2">
                 <Lightbulb size={13} color="#8A96B4" />
                 <Text className="text-secondaryDark text-xs text-center leading-relaxed">
-                  Don't worry - you can always adjust your budgets later in the app
+                  Don&apos;t worry - you can always adjust your budgets later in the app
                 </Text>
               </View>
             </MotiView>

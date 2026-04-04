@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from "react-native-keyboard-controller";
+import { KeyboardProvider, KeyboardToolbar } from "react-native-keyboard-controller";
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppLockScreen from './components/Shared/AppLockScreen';
@@ -37,7 +37,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded, fontError]);
 
@@ -83,6 +83,7 @@ export default function RootLayout() {
                         <Stack.Screen name="budget-help" />
                       </Stack>
                       <AppLockScreen />
+                      <KeyboardToolbar />
                     </KeyboardProvider>
                   </AppThemeProvider>
                 </ThemeProvider>

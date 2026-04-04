@@ -415,6 +415,7 @@ export default function BudgetsScreen() {
         keyExtractor={(item) => item.type === 'goals' ? 'goals' : item.category.id.toString()}
         onDragEnd={handleDragEnd}
         contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 150 }}
+        keyboardDismissMode="on-drag"
         ListHeaderComponent={
           <>
             {isLoading && !isReorderMode && (
@@ -516,9 +517,6 @@ export default function BudgetsScreen() {
                         className="rounded-2xl p-4 border border-dashed border-purple-500/30 items-center"
                         style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                       >
-                        <View className="w-10 h-10 rounded-full bg-purple-500/20 items-center justify-center mb-2">
-                          <Ionicons name="flag-outline" size={20} color="#a78bfa" />
-                        </View>
                         <Text className="text-purple-400 font-medium text-sm">Create your first goal</Text>
                         <Text className="text-slateMuted text-xs mt-0.5">Emergency fund, vacation, new car...</Text>
                       </Pressable>
@@ -670,6 +668,7 @@ export default function BudgetsScreen() {
               <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 24, paddingTop: 8 }}
+                keyboardDismissMode="on-drag"
               >
                 <View className="flex-row items-center justify-between mb-5 mt-1">
                   <TouchableOpacity
@@ -723,7 +722,7 @@ export default function BudgetsScreen() {
                   className="flex-1 bg-surfaceDark rounded-xl py-4 items-center justify-center border border-borderDark"
                   activeOpacity={0.7}
                 >
-                  <Text className="text-textDark font-semibold text-base">I'll do it myself</Text>
+                  <Text className="text-textDark font-semibold text-base">I&apos;ll do it myself</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -780,6 +779,7 @@ export default function BudgetsScreen() {
         visible={showCreateModal}
         currencySymbol={currencySymbol}
         defaultAccountId={accounts[0]?.id ?? null}
+        existingNames={goals.map((g) => g.name)}
         onClose={() => setShowCreateModal(false)}
         onGoalCreated={loadGoals}
       />

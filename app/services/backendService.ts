@@ -872,7 +872,7 @@ export const contributeToGoal = async (payload: {
   goal_id: number;
   user_id: string;
   amount: number;
-  source_account_id: number;
+  source_account_id: string;
   source_account_name: string;
   destination_account_name: string;
 }): Promise<void> => {
@@ -907,7 +907,7 @@ export const withdrawFromGoal = async (payload: {
   goal_id: number;
   user_id: string;
   amount: number;
-  destination_account_id: number;
+  destination_account_id: string;
   destination_account_name: string;
   source_account_name: string;
 }): Promise<void> => {
@@ -942,7 +942,7 @@ export const trackGoalAmount = async (payload: {
   goal_id: number;
   user_id: string;
   amount: number; // positive to add, negative to withdraw
-  source_account_id?: number;
+  source_account_id?: string;
 }): Promise<void> => {
   // If a source account is provided and we're adding (positive amount), deduct from its balance
   if (payload.source_account_id && payload.amount > 0) {

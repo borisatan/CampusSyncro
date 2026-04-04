@@ -82,9 +82,7 @@ export default function WhyManualScreen() {
           <View className="flex-row items-center justify-between">
             <OnboardingBackButton onPress={handleBack} />
             <OnboardingProgressDots currentStep={8} totalSteps={11} />
-            <Pressable onPress={handleSkip} className="active:opacity-60">
-              <Text className="text-accentBlue text-sm font-medium">Skip</Text>
-            </Pressable>
+            <View style={{ width: 36 }} />
           </View>
         </View>
 

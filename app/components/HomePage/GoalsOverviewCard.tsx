@@ -92,6 +92,7 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
           visible={showCreateModal}
           accounts={accounts}
           currencySymbol={currencySymbol}
+          existingNames={goals.map((g) => g.name)}
           onClose={() => setShowCreateModal(false)}
           onGoalCreated={loadGoals}
         />
@@ -216,6 +217,7 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
         visible={showCreateModal}
         accounts={accounts}
         currencySymbol={currencySymbol}
+        existingNames={goals.map((g) => g.name)}
         onClose={() => setShowCreateModal(false)}
         onGoalCreated={loadGoals}
       />

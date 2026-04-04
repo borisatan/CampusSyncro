@@ -122,7 +122,7 @@ export default function FoundingAccessScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           {/* Header */}
           <View className="px-2 pt-12 pb-4">
             <View className="flex-row items-center">
@@ -244,7 +244,7 @@ export default function FoundingAccessScreen() {
 
                   <Pressable onPress={handleResend} className="active:opacity-60">
                     <Text className="text-accentBlue text-sm text-center">
-                      Didn't receive it? Try a different email
+                      Didn&apos;t receive it? Try a different email
                     </Text>
                   </Pressable>
                 </MotiView>

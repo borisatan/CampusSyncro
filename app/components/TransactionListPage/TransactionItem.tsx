@@ -10,7 +10,7 @@ type TransactionItemProps = {
   categoryIcons: Record<string, CategoryIconInfo>;
 };
 
-const TransactionItem: React.FC<TransactionItemProps> = React.memo(({ transaction, categoryIcons }) => {
+const TransactionItem: React.FC<TransactionItemProps> = React.memo(function TransactionItem({ transaction, categoryIcons }) {
   const { currencySymbol } = useCurrencyStore();
   const iconInfo = categoryIcons[transaction.category_name] || { icon: "help-circle", color: "#999" };
 

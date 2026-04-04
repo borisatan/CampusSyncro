@@ -1,6 +1,7 @@
+import { useRouter } from "expo-router";
 import { TrendingDown, TrendingUp } from "lucide-react-native";
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 
 interface SummaryProps {
@@ -18,6 +19,7 @@ export const DashboardSummary = ({
   currencySymbol,
   isUnlocked = true,
 }: SummaryProps) => {
+  const router = useRouter();
   // Don't animate until unlocked - show static values
   if (!isUnlocked) {
     return (
@@ -33,7 +35,10 @@ export const DashboardSummary = ({
           </View>
         </View>
         <View className="flex-row gap-4 mb-3">
-          <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark">
+          <Pressable
+            className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark"
+            onPress={() => router.push("/(tabs)/add-transaction?type=income")}
+          >
             <View className="flex-row items-center gap-2 mb-2">
               <TrendingUp color="#fff" size={16} />
               <Text className="text-textDark text-lg font-medium opacity-90">
@@ -43,8 +48,11 @@ export const DashboardSummary = ({
             <Text className="text-3xl font-bold text-textDark">
               {currencySymbol}0.00
             </Text>
-          </View>
-          <View className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm border border-borderDark">
+          </Pressable>
+          <Pressable
+            className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm border border-borderDark"
+            onPress={() => router.push("/(tabs)/add-transaction?type=expense")}
+          >
             <View className="flex-row items-center gap-2 mb-2">
               <TrendingDown color="#fff" size={16} />
               <Text className="text-textDark text-lg font-medium opacity-90">
@@ -54,7 +62,7 @@ export const DashboardSummary = ({
             <Text className="text-3xl font-bold text-textDark">
               {currencySymbol}0.00
             </Text>
-          </View>
+          </Pressable>
         </View>
       </View>
     );
@@ -82,7 +90,10 @@ export const DashboardSummary = ({
           </View>
         </View>
         <View className="flex-row gap-4 mb-3">
-          <View className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark">
+          <Pressable
+            className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark"
+            onPress={() => router.push("/(tabs)/add-transaction?type=income")}
+          >
             <View className="flex-row items-center gap-2 mb-2">
               <TrendingUp color="#fff" size={16} />
               <Text className="text-textDark text-lg font-medium opacity-90">
@@ -90,50 +101,53 @@ export const DashboardSummary = ({
               </Text>
             </View>
             <View className="flex-row items-center">
-            <Text className="text-3xl font-bold text-textDark">
-              {currencySymbol}
-            </Text>
-            <AnimatedRollingNumber
-              value={totalIncome}
-              spinningAnimationConfig={{
-                duration: 600,
-              }}
-              textStyle={{
-                fontSize: 30,
-                fontWeight: "700",
-                color: "#FFFFFF",
-              }} // Third-party component prop
-              toFixed={2}
-            />
-          </View>
-        </View>
+              <Text className="text-3xl font-bold text-textDark">
+                {currencySymbol}
+              </Text>
+              <AnimatedRollingNumber
+                value={totalIncome}
+                spinningAnimationConfig={{
+                  duration: 600,
+                }}
+                textStyle={{
+                  fontSize: 30,
+                  fontWeight: "700",
+                  color: "#FFFFFF",
+                }} // Third-party component prop
+                toFixed={2}
+              />
+            </View>
+          </Pressable>
 
-        <View className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm border border-borderDark">
-          <View className="flex-row items-center gap-2 mb-2">
-            <TrendingDown color="#fff" size={16} />
-            <Text className="text-textDark text-lg font-medium opacity-90">
-              Expenses
-            </Text>
-          </View>
-          <View className="flex-row items-center">
-            <Text className="text-3xl font-bold text-textDark">
-              {currencySymbol}
-            </Text>
-            <AnimatedRollingNumber
-              value={Math.abs(totalExpenses)}
-              spinningAnimationConfig={{
-                duration: 600,
-              }}
-              textStyle={{
-                fontSize: 30,
-                fontWeight: "700",
-                color: "#FFFFFF",
-              }} // Third-party component prop
-              toFixed={2}
-            />
-          </View>
+          <Pressable
+            className="flex-1 bg-accentRed rounded-2xl p-4 shadow-sm border border-borderDark"
+            onPress={() => router.push("/(tabs)/add-transaction?type=expense")}
+          >
+            <View className="flex-row items-center gap-2 mb-2">
+              <TrendingDown color="#fff" size={16} />
+              <Text className="text-textDark text-lg font-medium opacity-90">
+                Expenses
+              </Text>
+            </View>
+            <View className="flex-row items-center">
+              <Text className="text-3xl font-bold text-textDark">
+                {currencySymbol}
+              </Text>
+              <AnimatedRollingNumber
+                value={Math.abs(totalExpenses)}
+                spinningAnimationConfig={{
+                  duration: 600,
+                }}
+                textStyle={{
+                  fontSize: 30,
+                  fontWeight: "700",
+                  color: "#FFFFFF",
+                }} // Third-party component prop
+                toFixed={2}
+              />
+            </View>
+          </Pressable>
         </View>
-      </View>
     </View>
   );
 };

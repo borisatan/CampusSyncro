@@ -219,6 +219,7 @@ export default function CategoryEditor() {
         <ScrollView
           contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
           className="flex-1"
+          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
         >
         {/* Live Preview Card - Always at top */}

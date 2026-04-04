@@ -99,7 +99,6 @@ export default function CostOfInattentionScreen() {
       <ScrollView className="flex-1">
         <OnboardingHeader
           onBack={handleBack}
-          onSkip={handleSkip}
           currentStep={4}
           totalSteps={11}
         />

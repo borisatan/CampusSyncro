@@ -86,7 +86,6 @@ export default function ManualBudgetSetupScreen() {
     setNewOnboardingData({
       budgetSetupChoice: 'manual',
       categoryBudgets,
-      monthlySavingsTarget: Math.max(0, remaining),
     });
 
     setOnboardingStep(8);
@@ -146,7 +145,7 @@ export default function ManualBudgetSetupScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           {/* Progress Bar */}
           <View className="px-2 pt-12 pb-4">
             <View className="flex-row items-center justify-between">

@@ -85,10 +85,9 @@ export default function MonthlyIncomeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           <OnboardingHeader
             onBack={handleBack}
-            onSkip={handleSkip}
             currentStep={3}
             totalSteps={11}
           />

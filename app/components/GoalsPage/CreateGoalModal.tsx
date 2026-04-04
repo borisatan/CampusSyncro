@@ -45,6 +45,7 @@ const COLS = 2;
 interface CreateGoalModalProps {
   visible: boolean;
   currencySymbol: string;
+  existingNames?: string[];
   onClose: () => void;
   onGoalCreated: () => void;
 }
@@ -52,6 +53,7 @@ interface CreateGoalModalProps {
 export function CreateGoalModal({
   visible,
   currencySymbol,
+  existingNames = [],
   onClose,
   onGoalCreated,
 }: CreateGoalModalProps) {
@@ -90,6 +92,12 @@ export function CreateGoalModal({
 
   const handleSubmit = async () => {
     if (!canSubmit || !userId) return;
+
+    const trimmedName = name.trim();
+    if (existingNames.some((n) => n.toLowerCase() === trimmedName.toLowerCase())) {
+      Alert.alert('Duplicate Name', 'A goal with this name already exists. Please choose a different name.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -158,6 +166,7 @@ export function CreateGoalModal({
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
+            keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
           >
             {/* Live Preview Card */}

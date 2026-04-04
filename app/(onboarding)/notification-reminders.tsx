@@ -361,13 +361,13 @@ export default function NotificationRemindersScreen() {
                       fontSize: 14,
                     }}
                   >
-                    You're in control
+                    You&apos;re in control
                   </Text>
                   <Text
                     style={{ color: "#8A96B4", fontSize: 13, lineHeight: 19 }}
                   >
                     You can adjust notification settings anytime from your
-                    profile. We'll send gentle nudges to help you stay mindful
+                    profile. We&apos;ll send gentle nudges to help you stay mindful
                     of your spending.
                   </Text>
                 </View>

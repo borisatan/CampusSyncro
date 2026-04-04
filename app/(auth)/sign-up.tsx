@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -17,6 +17,9 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+const isValidEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { bulkCreateCategories, ensureUserProfile } from "../services/backendService";
@@ -46,7 +49,7 @@ const NOTIFICATION_FREQUENCY_MAP: Record<string, number> = {
  */
 export async function persistOnboardingData(userId: string, onboardingData: any) {
 
-  const { selectedCategories, categoryBudgets, estimatedIncome, monthlySavingsTarget, notificationFrequency, selectedCurrency } = onboardingData;
+  const { selectedCategories, categoryBudgets, estimatedIncome, notificationFrequency, selectedCurrency } = onboardingData;
 
   // Step 1: Create categories (errors are logged but don't block profile update)
   if (selectedCategories && selectedCategories.length > 0) {
@@ -84,7 +87,6 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
         .update({
           manual_income: estimatedIncome,
           use_dynamic_income: false,
-          monthly_savings_target: monthlySavingsTarget ?? 0,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
@@ -149,6 +151,9 @@ export default function SignUpScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
+  const emailValid = isValidEmail(email);
 
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
@@ -370,6 +375,7 @@ export default function SignUpScreen() {
             className="flex-1"
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
           >
             <View className="flex-1 px-6 pt-16 pb-8">
               {/* Header */}
@@ -430,8 +436,10 @@ export default function SignUpScreen() {
                     placeholderTextColor="#8A96B4"
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    returnKeyType="next"
                     value={email}
                     onChangeText={setEmail}
+                    onSubmitEditing={() => passwordRef.current?.focus()}
                   />
                 </View>
 
@@ -442,13 +450,16 @@ export default function SignUpScreen() {
                   </Text>
                   <View className="relative">
                     <TextInput
+                      ref={passwordRef}
                       className="bg-inputDark text-textDark px-4 py-4 rounded-xl border border-borderDark text-base pr-12"
                       placeholder="••••••••"
                       placeholderTextColor="#8A96B4"
                       secureTextEntry={!showPassword}
                       autoCapitalize="none"
+                      returnKeyType="next"
                       value={password}
                       onChangeText={setPassword}
+                      onSubmitEditing={() => confirmPasswordRef.current?.focus()}
                     />
                     <Pressable
                       onPress={() => setShowPassword((v) => !v)}
@@ -470,6 +481,7 @@ export default function SignUpScreen() {
                   </Text>
                   <View className="relative">
                     <TextInput
+                      ref={confirmPasswordRef}
                       className="bg-inputDark text-textDark px-4 py-4 rounded-xl border border-borderDark text-base pr-12"
                       placeholder="••••••••"
                       placeholderTextColor="#8A96B4"
@@ -495,10 +507,14 @@ export default function SignUpScreen() {
               {/* Sign Up Button */}
               <Pressable
                 onPress={handleSignUp}
-                disabled={isSubmitting}
-                className="rounded-2xl py-4 items-center mb-4 bg-accentBlue active:opacity-80"
+                disabled={isSubmitting || !emailValid}
+                className="rounded-2xl py-4 items-center mb-4 active:opacity-80"
+                style={{ backgroundColor: emailValid ? "#4F8EF7" : "#2A3050" }}
               >
-                <Text className="text-white font-semibold text-base">
+                <Text
+                  className="font-semibold text-base"
+                  style={{ color: emailValid ? "#fff" : "#5A6480" }}
+                >
                   {isSubmitting ? "Sending code…" : "Sign Up"}
                 </Text>
               </Pressable>
