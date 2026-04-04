@@ -834,7 +834,7 @@ export const fetchGoalsByAccount = async (accountId: number): Promise<Goal[]> =>
 
 export const createGoal = async (payload: {
   user_id: string;
-  account_id: number;
+  account_id?: number | null;
   name: string;
   target_amount: number;
   color?: string;
@@ -934,6 +934,45 @@ export const withdrawFromGoal = async (payload: {
   const { error: updateError } = await supabase.rpc('increment_goal_amount', {
     p_goal_id: payload.goal_id,
     p_amount: -r2(payload.amount), // Negative to decrement
+  });
+  if (updateError) throw updateError;
+};
+
+export const trackGoalAmount = async (payload: {
+  goal_id: number;
+  user_id: string;
+  amount: number; // positive to add, negative to withdraw
+  source_account_id?: number;
+}): Promise<void> => {
+  // If a source account is provided and we're adding (positive amount), deduct from its balance
+  if (payload.source_account_id && payload.amount > 0) {
+    const { data: accountData, error: fetchError } = await supabase
+      .from('Accounts')
+      .select('balance')
+      .eq('id', payload.source_account_id)
+      .single();
+    if (fetchError) throw fetchError;
+
+    const { error: balanceError } = await supabase
+      .from('Accounts')
+      .update({ balance: r2(accountData.balance - Math.abs(payload.amount)) })
+      .eq('id', payload.source_account_id);
+    if (balanceError) throw balanceError;
+  }
+
+  const { error: contribError } = await supabase
+    .from('GoalContributions')
+    .insert([{
+      goal_id: payload.goal_id,
+      user_id: payload.user_id,
+      amount: r2(payload.amount),
+      source_account_id: payload.source_account_id ?? null,
+    }]);
+  if (contribError) throw contribError;
+
+  const { error: updateError } = await supabase.rpc('increment_goal_amount', {
+    p_goal_id: payload.goal_id,
+    p_amount: r2(payload.amount),
   });
   if (updateError) throw updateError;
 };
@@ -1047,117 +1086,6 @@ export async function updateNotificationFrequency(frequency: number): Promise<vo
   if (error) throw new Error(error.message);
 }
 
-// ============ Notification Messages ============
-
-export async function fetchNotificationMessages(): Promise<any[]> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const { data, error } = await supabase
-    .from('NotificationMessages')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching notification messages:', error);
-    return [];
-  }
-  return data ?? [];
-}
-
-export async function createNotificationMessage(messageText: string): Promise<any> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("User not authenticated");
-
-  const { data, error } = await supabase
-    .from('NotificationMessages')
-    .insert([{ user_id: user.id, message_text: messageText }])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-export async function updateNotificationMessage(
-  id: number,
-  messageText: string
-): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("User not authenticated");
-
-  const { error } = await supabase
-    .from('NotificationMessages')
-    .update({
-      message_text: messageText,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', id)
-    .eq('user_id', user.id);
-
-  if (error) throw error;
-}
-
-export async function deleteNotificationMessage(id: number): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("User not authenticated");
-
-  const { error } = await supabase
-    .from('NotificationMessages')
-    .update({ is_active: false })
-    .eq('id', id)
-    .eq('user_id', user.id);
-
-  if (error) throw error;
-}
-
-// ============ Notification Logs ============
-
-export async function logNotification(payload: {
-  notification_message_id: number | null;
-  message_text: string;
-  scheduled_time: Date;
-  had_transaction_today: boolean;
-}): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const { error } = await supabase
-    .from('NotificationLogs')
-    .insert([{
-      user_id: user.id,
-      ...payload,
-      scheduled_time: payload.scheduled_time.toISOString()
-    }]);
-
-  if (error) console.error('Error logging notification:', error);
-}
-
-export async function fetchNotificationLogs(
-  startDate: Date,
-  endDate: Date
-): Promise<any[]> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const { data, error } = await supabase
-    .from('NotificationLogs')
-    .select('*')
-    .eq('user_id', user.id)
-    .gte('sent_time', startDate.toISOString())
-    .lte('sent_time', endDate.toISOString())
-    .order('sent_time', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching notification logs:', error);
-    return [];
-  }
-
-  return data ?? [];
-}
-
 // ============ Transaction Check for Smart Logic ============
 
 export async function checkHasTransactionsToday(): Promise<boolean> {
@@ -1182,43 +1110,3 @@ export async function checkHasTransactionsToday(): Promise<boolean> {
   return (data?.length ?? 0) > 0;
 }
 
-// ============ Seed Default Notification Messages ============
-
-export async function seedDefaultNotificationMessages(): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  // Check if user already has messages
-  const { data: existing } = await supabase
-    .from('NotificationMessages')
-    .select('id')
-    .eq('user_id', user.id)
-    .limit(1);
-
-  if (existing && existing.length > 0) return;
-
-  // Seed default messages with time-contextual themes
-  const defaultMessages = [
-    // Morning messages
-    "Good morning! Start your day with financial clarity ☀️",
-    "Morning check-in: Did you log yesterday's transactions?",
-    // Midday messages
-    "Lunchtime reminder: Don't forget to log that meal! 🍽️",
-    "Midday money check - stay on top of your budget! 📊",
-    // Afternoon messages
-    "Afternoon reminder: Log those coffee runs and snacks! ☕",
-    "Quick financial refresh before the evening rush! ⚡",
-    // Evening messages
-    "Daily review: Time to reconcile today's spending! 🌙",
-    "Wind down with a quick financial check-in 📊",
-    "End-of-day wrap-up - keep your budget on track! ✨",
-    "Evening reflection: Update your expenses before tomorrow! 🎯"
-  ];
-
-  await supabase
-    .from('NotificationMessages')
-    .insert(defaultMessages.map(text => ({
-      user_id: user.id,
-      message_text: text
-    })));
-}

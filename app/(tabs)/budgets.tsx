@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ArrowLeft, PiggyBank } from "lucide-react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { MotiView } from "moti";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Modal, Pressable, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
@@ -14,29 +16,29 @@ import { BudgetsSkeleton } from "../components/BudgetsPage/BudgetsSkeleton";
 import { CategoryBudgetRow } from "../components/BudgetsPage/CategoryBudgetRow";
 import { EditBudgetModal } from "../components/BudgetsPage/EditBudgetModal";
 import { IncomeCard } from "../components/BudgetsPage/IncomeCard";
-import { QuickSavingsModal } from "../components/BudgetsPage/QuickSavingsModal";
-import { SavingsProgressCard } from "../components/BudgetsPage/SavingsProgressCard";
-import { useAuth } from "../context/AuthContext";
-import { useSavingsProgress } from "../hooks/useSavingsProgress";
+import { CreateGoalModal } from "../components/GoalsPage/CreateGoalModal";
+import { EditGoalModal } from "../components/GoalsPage/EditGoalModal";
+import { GoalProgressCard } from "../components/GoalsPage/GoalProgressCard";
+import { GoalTransactionModal } from "../components/GoalsPage/GoalTransactionModal";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
 import { useBudgetsData } from "../hooks/useBudgetsData";
 import {
-  quickSaveFromAccount,
   updateCategoriesOrder,
   updateCategoryBudgetAmount,
   updateCategoryBudgetPercentages,
 } from "../services/backendService";
-import { useAccountsStore } from "../store/useAccountsStore";
 import {
   BudgetAllocation,
   getBudgetAllocations,
 } from "../services/budgetAIService";
+import { useAccountsStore } from "../store/useAccountsStore";
 import { useCategoriesStore } from "../store/useCategoriesStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { toggleCategoryDashboardVisibility } from "../store/useDashboardCategoriesStore";
+import { useGoalsStore } from "../store/useGoalsStore";
 import { useIncomeStore } from "../store/useIncomeStore";
-import { Category, CategoryBudgetStatus } from "../types/types";
+import { Category, CategoryBudgetStatus, Goal } from "../types/types";
 
 interface CategoryListItem {
   type: 'category';
@@ -44,18 +46,16 @@ interface CategoryListItem {
   budgetStatus: CategoryBudgetStatus | null;
 }
 
-interface SavingsListItem {
-  type: 'savings';
+interface GoalsListItem {
+  type: 'goals';
 }
 
-type BudgetListItem = CategoryListItem | SavingsListItem;
+type BudgetListItem = CategoryListItem | GoalsListItem;
 
 export default function BudgetsScreen() {
   const { isDarkMode } = useTheme();
   const {
     categoryBudgets,
-    totalBudgeted,
-    totalSpent,
     monthlyIncome,
     dynamicIncome,
     isLoading,
@@ -64,82 +64,133 @@ export default function BudgetsScreen() {
     upsertCategoryBudget,
   } = useBudgetsData();
   const { currencySymbol } = useCurrencyStore();
-  const { useDynamicIncome, manualIncome, saveIncomeSettings, setSavingsTarget, savingsSortOrder, setSavingsSortOrder, showSavingsOnDashboard, toggleShowSavingsOnDashboard } =
-    useIncomeStore();
-  const { target: savingsTarget, saved: savingsSaved, percentage: savingsPercentage, refresh: refreshSavingsProgress } =
-    useSavingsProgress();
-  const { categories, updateCategoryOptimistic, reorderCategories } =
-    useCategoriesStore();
-  const { accounts, updateAccountBalance } = useAccountsStore();
-  const { userId } = useAuth();
+  const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
+  const { categories, updateCategoryOptimistic, reorderCategories } = useCategoriesStore();
+  const { accounts } = useAccountsStore();
+  const { goals, loadGoals } = useGoalsStore();
   const {
     refreshDashboard,
-    refreshAccounts,
     registerBudgetsRefresh,
     registerCategoriesRefresh,
+    registerGoalsRefresh,
   } = useDataRefresh();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
+
   const [editBudgetCategory, setEditBudgetCategory] = useState<{
     category: Category;
     budgetStatus: CategoryBudgetStatus | null;
   } | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  // AI Budget state — single modal with two views: 'help' and 'preview'
-  const [aiModalView, setAIModalView] = useState<"help" | "preview" | null>(
-    null,
-  );
+  // AI Budget state
+  const [aiModalView, setAIModalView] = useState<"help" | "preview" | null>(null);
   const [aiLoading, setAILoading] = useState(false);
   const [aiError, setAIError] = useState<string | null>(null);
-  const [aiAllocations, setAIAllocations] = useState<BudgetAllocation[] | null>(
-    null,
-  );
+  const [aiAllocations, setAIAllocations] = useState<BudgetAllocation[] | null>(null);
   const [aiFromCache, setAIFromCache] = useState(false);
   const [aiSpendingBudget, setAISpendingBudget] = useState(0);
   const [aiSavingsAmount, setAISavingsAmount] = useState(0);
   const [aiApplying, setAIApplying] = useState(false);
 
-  // Quick savings modal state
-  const [showQuickSavingsModal, setShowQuickSavingsModal] = useState(false);
-  const [savingsModalMode, setSavingsModalMode] = useState<'add' | 'withdraw'>('add');
+  // Goal modal state
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionMode, setTransactionMode] = useState<'add' | 'withdraw'>('add');
+  const [activeGoalIndex, setActiveGoalIndex] = useState(0);
+  const { width: screenWidth } = useWindowDimensions();
+  const goalCardWidth = screenWidth - 32;
 
-  const handleQuickSave = useCallback(async (accountId: number, accountName: string, amount: number) => {
-    if (!userId) return;
+  const goalTranslateX = useSharedValue(0);
+  const goalCurrentPage = useSharedValue(0);
+  const goalCount = useSharedValue(goals.length);
 
-    const account = accounts.find(a => a.id === accountId);
-    if (!account) return;
+  useAnimatedReaction(
+    () => goalCurrentPage.value,
+    (page) => runOnJS(setActiveGoalIndex)(page),
+  );
 
-    const newBalance = account.balance - amount;
-
-    // Optimistic UI update
-    updateAccountBalance(accountName, newBalance);
-
-    try {
-      await quickSaveFromAccount({
-        user_id: userId,
-        account_name: accountName,
-        amount,
-        source_account_id: accountId,
-        new_balance: newBalance,
+  useEffect(() => {
+    goalCount.value = goals.length;
+    if (goalCurrentPage.value >= goals.length) {
+      const newPage = Math.max(0, goals.length - 1);
+      goalCurrentPage.value = newPage;
+      goalTranslateX.value = withSpring(-newPage * goalCardWidth, {
+        damping: 22,
+        stiffness: 180,
+        mass: 0.5,
       });
-
-      // Refresh savings progress and accounts
-      await Promise.all([refreshSavingsProgress(), refreshAccounts()]);
-    } catch (error) {
-      // Rollback on error
-      updateAccountBalance(accountName, account.balance);
-      throw error;
     }
-  }, [userId, accounts, updateAccountBalance, refreshSavingsProgress, refreshAccounts]);
+  }, [goals.length]);
+
+  const goalPanGesture = useMemo(() => Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-20, 20])
+    .onUpdate((e) => {
+      const base = -goalCurrentPage.value * goalCardWidth;
+      const next = base + e.translationX;
+      const min = -(goalCount.value - 1) * goalCardWidth;
+      if (next > 0) {
+        goalTranslateX.value = next * 0.2;
+      } else if (next < min) {
+        goalTranslateX.value = min + (next - min) * 0.2;
+      } else {
+        goalTranslateX.value = next;
+      }
+    })
+    .onEnd((e) => {
+      const vx = e.velocityX;
+      let page = goalCurrentPage.value;
+      if (vx < -500) {
+        page = Math.min(page + 1, goalCount.value - 1);
+      } else if (vx > 500) {
+        page = Math.max(page - 1, 0);
+      } else {
+        page = Math.round(-goalTranslateX.value / goalCardWidth);
+        page = Math.max(0, Math.min(page, goalCount.value - 1));
+      }
+      goalCurrentPage.value = page;
+      goalTranslateX.value = withSpring(-page * goalCardWidth, {
+        velocity: vx,
+        damping: 22,
+        stiffness: 180,
+        mass: 0.5,
+      });
+    }), [goalCardWidth]);
+
+  const goalAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: goalTranslateX.value }],
+  }));
+
+  const handleGoalPress = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setShowEditModal(true);
+  };
+
+  const handleAddPress = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setTransactionMode('add');
+    setShowTransactionModal(true);
+  };
+
+  const handleWithdrawPress = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setTransactionMode('withdraw');
+    setShowTransactionModal(true);
+  };
 
   useEffect(() => {
     registerBudgetsRefresh(refresh);
     registerCategoriesRefresh(loadCategories);
+    registerGoalsRefresh(loadGoals);
   }, [
     registerBudgetsRefresh,
     refresh,
     registerCategoriesRefresh,
     loadCategories,
+    registerGoalsRefresh,
+    loadGoals,
   ]);
 
   const handleSaveIncome = async (useDynamic: boolean, income: number) => {
@@ -148,16 +199,13 @@ export default function BudgetsScreen() {
   };
 
   const handleInlineSave = (categoryId: string, amount: number | null, percentage?: number | null) => {
-    // Get current values to detect actual changes
     const currentCategory = categories.find(c => c.id === categoryId);
     const hasChanged =
       currentCategory?.budget_amount !== amount ||
       currentCategory?.budget_percentage !== percentage;
 
-    // Skip if nothing changed
     if (!hasChanged) return;
 
-    // Optimistic updates — immediate UI feedback
     updateCategoryOptimistic(categoryId, { budget_amount: amount, budget_percentage: percentage });
     if (amount === null) {
       removeCategoryBudget(categoryId);
@@ -165,11 +213,9 @@ export default function BudgetsScreen() {
       upsertCategoryBudget(categoryId, amount);
     }
 
-    // Persist in background — only refresh on error to revert to server state
     updateCategoryBudgetAmount(categoryId, amount, percentage)
       .catch((error) => {
         console.error("Error saving budget amount:", error);
-        // Revert optimistic updates by refreshing from server
         refresh();
       });
   };
@@ -179,7 +225,6 @@ export default function BudgetsScreen() {
       (cat) => cat.category_name !== "Income",
     );
 
-    // Switch from help view to preview view within the same modal — no flicker
     setAIModalView("preview");
     setAILoading(true);
     setAIError(null);
@@ -217,8 +262,7 @@ export default function BudgetsScreen() {
       }));
 
       await updateCategoryBudgetPercentages(allocations);
-      await setSavingsTarget(aiSavingsAmount);
-      await loadCategories(); // Reload categories to get updated budget amounts
+      await loadCategories();
       await refresh();
       refreshDashboard();
 
@@ -231,7 +275,7 @@ export default function BudgetsScreen() {
     } finally {
       setAIApplying(false);
     }
-  }, [aiAllocations, aiSavingsAmount, loadCategories, refresh, refreshDashboard, setSavingsTarget]);
+  }, [aiAllocations, loadCategories, refresh, refreshDashboard]);
 
   const handleRetryAI = useCallback(() => {
     handleSetBudgetWithAI();
@@ -246,25 +290,11 @@ export default function BudgetsScreen() {
 
   const handleDragEnd = useCallback(
     async ({ data }: { data: BudgetListItem[] }) => {
-      // Find the new position of savings card
-      const savingsIndex = data.findIndex(item => item.type === 'savings');
-      if (savingsIndex !== -1) {
-        setSavingsSortOrder(savingsIndex);
-      }
-
-      // Extract and reorder categories (adjust indices for savings position)
       const categoryItems = data.filter((item): item is CategoryListItem => item.type === 'category');
-      const reorderedCategories = categoryItems.map((item, index) => {
-        // Calculate actual sort order accounting for savings card position
-        let sortOrder = index;
-        if (savingsIndex !== -1 && index >= savingsIndex) {
-          sortOrder = index + 1;
-        }
-        return {
-          ...item.category,
-          sort_order: data.indexOf(item),
-        };
-      });
+      const reorderedCategories = categoryItems.map((item) => ({
+        ...item.category,
+        sort_order: data.indexOf(item),
+      }));
       reorderCategories(reorderedCategories);
 
       try {
@@ -279,7 +309,7 @@ export default function BudgetsScreen() {
         refresh();
       }
     },
-    [reorderCategories, refresh, setSavingsSortOrder],
+    [reorderCategories, refresh],
   );
 
   const { allBudgetItems, hasCustomOrder } = useMemo(() => {
@@ -294,20 +324,16 @@ export default function BudgetsScreen() {
       (cat) => cat.sort_order !== undefined,
     );
 
-    const savingsItem: SavingsListItem = { type: 'savings' };
+    const goalsItem: GoalsListItem = { type: 'goals' };
 
     if (customOrder) {
-      // Build items with sort orders, including savings card
       const categoryItems: BudgetListItem[] = filteredCategories.map((cat) => ({
         type: 'category' as const,
         category: cat,
         budgetStatus: budgetMap.get(cat.id) ?? null,
       }));
 
-      // Insert savings card at its saved position
-      const allItems: BudgetListItem[] = [...categoryItems];
-      const insertPosition = Math.min(savingsSortOrder, allItems.length);
-      allItems.splice(insertPosition, 0, savingsItem);
+      const allItems: BudgetListItem[] = [goalsItem, ...categoryItems];
 
       return {
         allBudgetItems: allItems,
@@ -327,14 +353,13 @@ export default function BudgetsScreen() {
       }
     });
 
-    // Insert savings at the beginning (position 0) if no custom order
-    const allItems: BudgetListItem[] = [savingsItem, ...budgeted, ...unbudgeted];
+    const allItems: BudgetListItem[] = [goalsItem, ...budgeted, ...unbudgeted];
 
     return {
       allBudgetItems: allItems,
       hasCustomOrder: false,
     };
-  }, [categories, categoryBudgets, savingsSortOrder]);
+  }, [categories, categoryBudgets]);
 
   const unbudgetedStartIndex = allBudgetItems.findIndex(
     (item) => item.type === 'category' && item.budgetStatus === null,
@@ -387,12 +412,11 @@ export default function BudgetsScreen() {
 
       <DraggableFlatList
         data={isLoading ? [] : allBudgetItems}
-        keyExtractor={(item) => item.type === 'savings' ? 'savings' : item.category.id.toString()}
+        keyExtractor={(item) => item.type === 'goals' ? 'goals' : item.category.id.toString()}
         onDragEnd={handleDragEnd}
         contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 150 }}
         ListHeaderComponent={
           <>
-            {/* Show skeleton when loading */}
             {isLoading && !isReorderMode && (
               <BudgetsSkeleton isDarkMode={isDarkMode} />
             )}
@@ -415,7 +439,6 @@ export default function BudgetsScreen() {
               </MotiView>
             )}
 
-            {/* Section label */}
             {!isLoading &&
               !isReorderMode &&
               !hasCustomOrder &&
@@ -427,7 +450,6 @@ export default function BudgetsScreen() {
                   </Text>
                 </View>
               )}
-
           </>
         }
         renderItem={({
@@ -438,8 +460,8 @@ export default function BudgetsScreen() {
         }: RenderItemParams<BudgetListItem>) => {
           const index = getIndex() ?? 0;
 
-          // Render savings card
-          if (item.type === 'savings') {
+          // Render goals section
+          if (item.type === 'goals') {
             return (
               <ScaleDecorator>
                 {isReorderMode ? (
@@ -454,47 +476,87 @@ export default function BudgetsScreen() {
                     <View className="mr-3">
                       <Ionicons name="menu" size={20} color="#7C8CA0" />
                     </View>
-                    <View className="w-9 h-9 rounded-lg items-center justify-center mr-3 bg-accentPurple">
-                      <PiggyBank size={18} color="#fff" />
+                    <View className="w-9 h-9 rounded-lg items-center justify-center mr-3 bg-purple-600">
+                      <Ionicons name="flag" size={18} color="#fff" />
                     </View>
                     <Text className="text-slate100 text-sm flex-1">
-                      Monthly Savings
+                      Savings Goals
                     </Text>
-                    {savingsTarget > 0 && (
-                      <Text className="text-slateMuted text-xs">
-                        {currencySymbol}
-                        {savingsTarget.toLocaleString()}
-                      </Text>
-                    )}
+                    <Text className="text-slateMuted text-xs">
+                      {goals.length} goal{goals.length !== 1 ? 's' : ''}
+                    </Text>
                   </TouchableOpacity>
                 ) : (
                   <MotiView
                     from={{ opacity: 0, translateY: 8 }}
                     animate={{ opacity: 1, translateY: 0 }}
-                    transition={{
-                      type: "timing",
-                      duration: 250,
-                      delay: index * 25,
-                    }}
+                    transition={{ type: "timing", duration: 250, delay: index * 25 }}
                     className="mb-2.5"
                   >
-                    <SavingsProgressCard
-                      target={savingsTarget}
-                      saved={savingsSaved}
-                      percentage={savingsPercentage}
-                      currencySymbol={currencySymbol}
-                      monthlyIncome={monthlyIncome}
-                      showOnDashboard={showSavingsOnDashboard}
-                      onToggleDashboard={toggleShowSavingsOnDashboard}
-                      onAddPress={() => {
-                        setSavingsModalMode('add');
-                        setShowQuickSavingsModal(true);
-                      }}
-                      onWithdrawPress={() => {
-                        setSavingsModalMode('withdraw');
-                        setShowQuickSavingsModal(true);
-                      }}
-                    />
+                    {/* Goals section header */}
+                    <View className="flex-row items-center justify-between mb-2 px-1">
+                      <View className="flex-row items-center">
+                        <View className="w-1.5 h-1.5 rounded-full mr-2 bg-purple-500" />
+                        <Text className={`text-xs font-semibold uppercase tracking-wide ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
+                          Savings Goals
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => setShowCreateModal(true)}
+                        className="flex-row items-center"
+                      >
+                        <Ionicons name="add-circle-outline" size={16} color="#a78bfa" />
+                        <Text className="text-purple-400 text-xs ml-1 font-medium">New Goal</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {goals.length === 0 ? (
+                      <Pressable
+                        onPress={() => setShowCreateModal(true)}
+                        className="rounded-2xl p-4 border border-dashed border-purple-500/30 items-center"
+                        style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+                      >
+                        <View className="w-10 h-10 rounded-full bg-purple-500/20 items-center justify-center mb-2">
+                          <Ionicons name="flag-outline" size={20} color="#a78bfa" />
+                        </View>
+                        <Text className="text-purple-400 font-medium text-sm">Create your first goal</Text>
+                        <Text className="text-slateMuted text-xs mt-0.5">Emergency fund, vacation, new car...</Text>
+                      </Pressable>
+                    ) : (
+                      <View className="bg-surfaceDark rounded-2xl border border-borderDark" style={{ overflow: 'hidden' }}>
+                        <GestureDetector gesture={goalPanGesture}>
+                          <Animated.View style={[{ flexDirection: 'row', width: goalCardWidth * goals.length }, goalAnimatedStyle]}>
+                            {goals.map((goal) => (
+                              <View key={goal.id} style={{ width: goalCardWidth }}>
+                                <GoalProgressCard
+                                  goal={goal}
+                                  currencySymbol={currencySymbol}
+                                  onPress={() => handleGoalPress(goal)}
+                                  onAddPress={() => handleAddPress(goal)}
+                                  onWithdrawPress={() => handleWithdrawPress(goal)}
+                                  noBg
+                                />
+                              </View>
+                            ))}
+                          </Animated.View>
+                        </GestureDetector>
+                        {goals.length > 1 && (
+                          <View className="flex-row justify-center pb-3 gap-1.5">
+                            {goals.map((_, i) => (
+                              <View
+                                key={i}
+                                style={{
+                                  width: i === activeGoalIndex ? 16 : 6,
+                                  height: 6,
+                                  borderRadius: 3,
+                                  backgroundColor: i === activeGoalIndex ? '#a78bfa' : '#374151',
+                                }}
+                              />
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    )}
                   </MotiView>
                 )}
               </ScaleDecorator>
@@ -505,7 +567,6 @@ export default function BudgetsScreen() {
           return (
             <ScaleDecorator>
               <>
-                {/* "Unbudgeted" section header */}
                 {!isReorderMode &&
                   !hasCustomOrder &&
                   index === unbudgetedStartIndex &&
@@ -531,7 +592,7 @@ export default function BudgetsScreen() {
                     </View>
                     <View
                       className="w-9 h-9 rounded-lg items-center justify-center mr-3"
-                      style={{ backgroundColor: item.category.color }} // Dynamic color from data
+                      style={{ backgroundColor: item.category.color }}
                     >
                       <Ionicons
                         name={item.category.icon as any}
@@ -595,7 +656,7 @@ export default function BudgetsScreen() {
         }
       />
 
-      {/* Unified AI modal — fullscreen, no animation */}
+      {/* AI modal */}
       <Modal
         visible={aiModalView !== null}
         animationType="none"
@@ -610,7 +671,6 @@ export default function BudgetsScreen() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 24, paddingTop: 8 }}
               >
-                {/* Header row: back button left, icon centered, spacer right */}
                 <View className="flex-row items-center justify-between mb-5 mt-1">
                   <TouchableOpacity
                     onPress={handleCloseAIModal}
@@ -625,18 +685,15 @@ export default function BudgetsScreen() {
                     </View>
                   </View>
 
-                  {/* Spacer to keep icon centered */}
                   <View className="w-10" />
                 </View>
 
-                {/* Title */}
                 <Text className="text-center text-2xl font-extrabold text-textDark mb-1.5 leading-[30px]">
                   Let us allocate your budget{"\n"}using the proven{" "}
                   <Text className="text-accentBlue">50/30/20 rule</Text>
                 </Text>
                 <View className="h-6" />
 
-                {/* Rule cards */}
                 {[
                   { pct: "50%", label: "Needs",   desc: "Essential expenses like housing, transportation, and utilities", color: "#139B8B" },
                   { pct: "30%", label: "Wants",   desc: "Lifestyle choices like dining, shopping, and entertainment",     color: "#6D3FD4" },
@@ -660,7 +717,6 @@ export default function BudgetsScreen() {
                 ))}
               </ScrollView>
 
-              {/* I'll do it myself + Generate — pinned to bottom */}
               <View className="flex-row gap-3 px-2 pt-3 pb-6">
                 <TouchableOpacity
                   onPress={handleCloseAIModal}
@@ -702,18 +758,6 @@ export default function BudgetsScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Quick Savings Modal */}
-      <QuickSavingsModal
-        visible={showQuickSavingsModal}
-        mode={savingsModalMode}
-        accounts={accounts}
-        currencySymbol={currencySymbol}
-        targetRemaining={Math.max(0, savingsTarget - savingsSaved)}
-        currentlySaved={savingsSaved}
-        onSave={handleQuickSave}
-        onClose={() => setShowQuickSavingsModal(false)}
-      />
-
       {/* Edit Budget Modal */}
       {editBudgetCategory && (
         <EditBudgetModal
@@ -730,6 +774,39 @@ export default function BudgetsScreen() {
           }}
         />
       )}
+
+      {/* Goal Modals */}
+      <CreateGoalModal
+        visible={showCreateModal}
+        currencySymbol={currencySymbol}
+        defaultAccountId={accounts[0]?.id ?? null}
+        onClose={() => setShowCreateModal(false)}
+        onGoalCreated={loadGoals}
+      />
+
+      <EditGoalModal
+        visible={showEditModal}
+        goal={selectedGoal}
+        currencySymbol={currencySymbol}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedGoal(null);
+        }}
+        onGoalUpdated={loadGoals}
+      />
+
+      <GoalTransactionModal
+        visible={showTransactionModal}
+        goal={selectedGoal}
+        mode={transactionMode}
+        accounts={accounts}
+        currencySymbol={currencySymbol}
+        onClose={() => {
+          setShowTransactionModal(false);
+          setSelectedGoal(null);
+        }}
+        onTransactionComplete={loadGoals}
+      />
     </SafeAreaView>
   );
 }

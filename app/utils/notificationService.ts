@@ -1,11 +1,7 @@
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-import {
-  checkHasTransactionsToday,
-  fetchNotificationMessages,
-  logNotification,
-} from "../services/backendService";
+import { checkHasTransactionsToday } from "../services/backendService";
 
 // Fixed notification times (hour and minute in 24h format)
 // Structured by frequency: 1x, 2x, 3x, and 5x per day
@@ -147,37 +143,8 @@ function getTimeContextualMessage(hour: number): string {
   return "Don't forget to log your transactions today! 💰";
 }
 
-/**
- * Get a random notification message from user's active messages
- * Falls back to time-contextual messages if no custom messages exist
- */
-async function getRandomNotificationMessage(hour: number): Promise<{
-  id: number | null;
-  text: string;
-}> {
-  try {
-    const messages = await fetchNotificationMessages();
-
-    if (messages.length === 0) {
-      // Use time-contextual default message
-      return {
-        id: null,
-        text: getTimeContextualMessage(hour),
-      };
-    }
-
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    return {
-      id: randomMessage.id,
-      text: randomMessage.message_text,
-    };
-  } catch (error) {
-    console.error("Error fetching notification messages:", error);
-    return {
-      id: null,
-      text: getTimeContextualMessage(hour),
-    };
-  }
+function getRandomNotificationMessage(hour: number): string {
+  return getTimeContextualMessage(hour);
 }
 
 /**
@@ -213,9 +180,7 @@ export async function scheduleNotifications(frequency: number): Promise<void> {
 
       // Only schedule future notifications
       if (trigger.getTime() > Date.now()) {
-        const { id: messageId, text } = await getRandomNotificationMessage(
-          time.hour,
-        );
+        const text = getRandomNotificationMessage(time.hour);
 
         const notificationId = await Notifications.scheduleNotificationAsync({
           content: {
@@ -223,7 +188,6 @@ export async function scheduleNotifications(frequency: number): Promise<void> {
             body: text,
             data: {
               type: "transaction-reminder",
-              messageId,
               scheduledTime: trigger.toISOString(),
             },
             sound: true,
@@ -260,18 +224,7 @@ export function addNotificationReceivedListener(
   callback: (notification: Notifications.Notification) => void,
 ): Notifications.Subscription {
   return Notifications.addNotificationReceivedListener(async (notification) => {
-    // Smart logic check
     const shouldShow = await shouldShowNotification();
-
-    // Log the notification
-    const data = notification.request.content.data as any;
-    await logNotification({
-      notification_message_id: data.messageId ?? null,
-      message_text: notification.request.content.body ?? "",
-      scheduled_time: new Date(data.scheduledTime ?? Date.now()),
-      had_transaction_today: !shouldShow,
-    });
-
     if (shouldShow) {
       callback(notification);
     }

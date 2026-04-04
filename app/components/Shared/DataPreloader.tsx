@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { seedDefaultNotificationMessages, fetchIncomeForPeriod, fetchSpendingByCategory } from '../../services/backendService';
+import { fetchIncomeForPeriod, fetchSpendingByCategory } from '../../services/backendService';
 import { useAuth } from '../../context/AuthContext';
 import { useAccountsStore } from '../../store/useAccountsStore';
 import { useBudgetStore } from '../../store/useBudgetStore';
 import { useCategoriesStore } from '../../store/useCategoriesStore';
 import { useIncomeStore } from '../../store/useIncomeStore';
 import { migrateDashboardCategoriesToDatabase } from '../../store/useDashboardCategoriesStore';
+import { useGoalsStore } from '../../store/useGoalsStore';
 import { CategoryBudgetStatus } from '../../types/types';
 
 /**
@@ -24,11 +25,10 @@ export default function DataPreloader() {
 
     const preloadAllData = async () => {
       try {
-        // Load accounts, categories, and seed notifications in parallel
         await Promise.all([
           loadAccounts(),
           loadCategories(),
-          seedDefaultNotificationMessages(),
+          useGoalsStore.getState().loadGoals(),
         ]);
 
         // Migrate old AsyncStorage dashboard categories to database

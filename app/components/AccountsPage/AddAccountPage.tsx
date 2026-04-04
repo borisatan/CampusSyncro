@@ -59,11 +59,16 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
       return;
     }
 
-    // 2. Defaulting Balance to 0 if empty or invalid
-    const sanitizedBalance = balance.trim() === '' || isNaN(parseAmount(balance)) 
-      ? 0 
+    const sanitizedBalance = balance.trim() === '' || isNaN(parseAmount(balance))
+      ? 0
       : parseAmount(balance);
 
+    onSave({
+      name: name.trim(),
+      type,
+      balance: sanitizedBalance,
+      sort_order: sortOrder,
+    });
     setShowSuccess(true);
   };
 
@@ -238,13 +243,8 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
           visible={showSuccess}
           text="Account Added!"
           onDismiss={() => {
-            onSave({
-              name: name.trim(),
-              type,
-              balance: parseAmount(balance) || 0,
-              sort_order: sortOrder,
-            });
             setShowSuccess(false);
+            onBack();
           }}
         />
       </KeyboardAvoidingView>

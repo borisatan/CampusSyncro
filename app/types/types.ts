@@ -79,7 +79,7 @@ export interface CategoryAggregation {
 
 
 export interface Transaction {
-  id: number;
+  id: string;
   amount: number;
   category_name: string;
   account_name: string;
@@ -91,7 +91,7 @@ export interface Transaction {
 // Account Types 
 
 export interface Account {
-  id: number;
+  id: string;
   account_name: string;
   balance: number;
   type: string;
@@ -99,7 +99,7 @@ export interface Account {
   monthly_savings_goal?: number | null;
 }
 export interface AccountOption {
-  id: number;
+  id: string;
   account_name: string;
   
   selected: boolean;
@@ -160,7 +160,7 @@ export interface AIBudgetAllocation {
 export interface Goal {
   id: number;
   user_id: string;
-  account_id: number;
+  account_id: string | null;
   name: string;
   target_amount: number;
   current_amount: number;
@@ -175,29 +175,7 @@ export interface GoalContribution {
   goal_id: number;
   user_id: string;
   amount: number;
-  source_account_id: number | null;
-  created_at: string;
-}
-
-// Notification Types
-export interface NotificationMessage {
-  id: number;
-  user_id: string;
-  message_text: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface NotificationLog {
-  id: number;
-  user_id: string;
-  notification_message_id: number | null;
-  message_text: string;
-  scheduled_time: string;
-  sent_time: string;
-  was_dismissed: boolean;
-  had_transaction_today: boolean;
+  source_account_id: string | null;
   created_at: string;
 }
 

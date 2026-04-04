@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { parseAmount } from '../../utils/parseAmount';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -15,8 +14,9 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { contributeToGoal, withdrawFromGoal } from '../../services/backendService';
+import { contributeToGoal, trackGoalAmount, withdrawFromGoal } from '../../services/backendService';
 import { Account, Goal } from '../../types/types';
+import { parseAmount } from '../../utils/parseAmount';
 import { AccountSelector } from '../AddTransactionPage/AccountSelector';
 
 interface GoalTransactionModalProps {
@@ -67,12 +67,14 @@ export function GoalTransactionModal({
     (acc) => acc.type !== 'savings' && acc.type !== 'investment'
   );
 
+  const hasLinkedAccount = goalAccount !== undefined;
   const parsedAmount = parseAmount(amount);
+  // In add mode, always require an account selection (source of funds)
+  const requiresAccountSelection = mode === 'add' || hasLinkedAccount;
   const canSubmit =
     parsedAmount > 0 &&
-    selectedAccountName.trim() !== '' &&
-    !isSubmitting &&
-    goalAccount !== undefined;
+    (!requiresAccountSelection || selectedAccountName.trim() !== '') &&
+    !isSubmitting;
 
   // Additional validation for withdraw
   const canWithdraw = mode === 'withdraw'
@@ -84,29 +86,38 @@ export function GoalTransactionModal({
       (acc) => acc.account_name === selectedAccountName
     );
 
-    if (!canSubmit || !userId || !goalAccount || !selectedAccount || !canWithdraw) return;
+    if (!canSubmit || !userId || !canWithdraw) return;
+    if (hasLinkedAccount && (!goalAccount || !selectedAccount)) return;
+    if (mode === 'add' && !hasLinkedAccount && !selectedAccount) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsSubmitting(true);
 
     try {
-      if (mode === 'add') {
+      if (!hasLinkedAccount) {
+        await trackGoalAmount({
+          goal_id: goal.id,
+          user_id: userId,
+          amount: mode === 'add' ? parsedAmount : -parsedAmount,
+          source_account_id: selectedAccount?.id,
+        });
+      } else if (mode === 'add') {
         await contributeToGoal({
           goal_id: goal.id,
           user_id: userId,
           amount: parsedAmount,
-          source_account_id: selectedAccount.id,
-          source_account_name: selectedAccount.account_name,
-          destination_account_name: goalAccount.account_name,
+          source_account_id: selectedAccount!.id,
+          source_account_name: selectedAccount!.account_name,
+          destination_account_name: goalAccount!.account_name,
         });
       } else {
         await withdrawFromGoal({
           goal_id: goal.id,
           user_id: userId,
           amount: parsedAmount,
-          destination_account_id: selectedAccount.id,
-          destination_account_name: selectedAccount.account_name,
-          source_account_name: goalAccount.account_name,
+          destination_account_id: selectedAccount!.id,
+          destination_account_name: selectedAccount!.account_name,
+          source_account_name: goalAccount!.account_name,
         });
       }
 
@@ -136,10 +147,10 @@ export function GoalTransactionModal({
   const isAddMode = mode === 'add';
   const modalIcon = isAddMode ? 'add-circle' : 'remove-circle';
   const modalTitle = isAddMode ? 'Add to Goal' : 'Withdraw from Goal';
-  const modalColor = isAddMode ? '#10B981' : '#F59E0B';
+  const modalColor = isAddMode ? '#10B981' : '#F2514A';
   const accountLabel = isAddMode ? 'From Account' : 'To Account';
   const submitButtonText = isAddMode ? 'Add Funds' : 'Withdraw Funds';
-  const submitButtonColor = isAddMode ? 'bg-green-600' : 'bg-orange-600';
+  const submitButtonColor = isAddMode ? 'bg-green-600' : 'bg-accentRed';
 
   return (
     <Modal
@@ -156,9 +167,9 @@ export function GoalTransactionModal({
           className="flex-1"
           onPress={handleClose}
         />
-        <View className="bg-surfaceDark rounded-t-3xl p-6 border-t border-borderDark max-h-[80%]">
+        <View className="bg-surfaceDark rounded-t-3xl border-t border-borderDark max-h-[80%]">
           {/* Header */}
-          <View className="flex-row items-center justify-between mb-6">
+          <View className="flex-row items-center justify-between px-4 pt-6 pb-4">
             <View className="flex-row items-center">
               <View
                 className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -176,9 +187,12 @@ export function GoalTransactionModal({
             </Pressable>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Divider */}
+          <View className="border-b border-borderDark " />
+
+          <ScrollView showsVerticalScrollIndicator={false} className="bg-backgroundDark" contentContainerStyle={{ padding: 10 }}>
             {/* Goal Info */}
-            <View className="bg-backgroundDark rounded-xl p-4 mb-4">
+            <View className="bg-surfaceDark rounded-xl p-4 mb-4 border border-borderDark">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-8 h-8 rounded-full items-center justify-center mr-3"
@@ -224,7 +238,7 @@ export function GoalTransactionModal({
             {/* Amount Input */}
             <View className="mb-4">
               <Text className="text-secondaryDark text-sm mb-2">Amount</Text>
-              <View className="flex-row items-center px-4 py-3 rounded-xl bg-backgroundDark border border-borderDark">
+              <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark">
                 <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>{currencySymbol}</Text>
                 <TextInput
                   value={amount}
@@ -243,18 +257,20 @@ export function GoalTransactionModal({
               )}
             </View>
 
-            {/* Account Selector */}
-            <AccountSelector
-              isDarkMode={isDarkMode}
-              showAccountDropdown={showAccountDropdown}
-              setShowAccountDropdown={setShowAccountDropdown}
-              isLoadingAccounts={false}
-              selectedAccount={selectedAccountName || 'Select account'}
-              setSelectedAccount={setSelectedAccountName}
-              accountOptions={availableAccounts}
-              expenseAccountOptions={availableAccounts}
-              transactionType="expense"
-            />
+            {/* Account Selector — shown in add mode (always) and withdraw mode when linked */}
+            {requiresAccountSelection && (
+              <AccountSelector
+                isDarkMode={isDarkMode}
+                showAccountDropdown={showAccountDropdown}
+                setShowAccountDropdown={setShowAccountDropdown}
+                isLoadingAccounts={false}
+                selectedAccount={selectedAccountName || 'Select account'}
+                setSelectedAccount={setSelectedAccountName}
+                accountOptions={availableAccounts}
+                expenseAccountOptions={availableAccounts}
+                transactionType="expense"
+              />
+            )}
 
             {/* Submit Button */}
             <Pressable

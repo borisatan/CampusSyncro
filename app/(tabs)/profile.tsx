@@ -13,6 +13,7 @@ import {
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -157,12 +158,7 @@ export default function ProfileScreen() {
   };
 
   const handleFeedback = () => {
-    // TODO: Implement feedback form or link to feedback URL
-    Alert.alert(
-      "Feedback",
-      "We'd love to hear from you! Feature coming soon.",
-      [{ text: "OK" }],
-    );
+    Linking.openURL("https://trymonelo.app/support");
   };
 
   // Styling Variables

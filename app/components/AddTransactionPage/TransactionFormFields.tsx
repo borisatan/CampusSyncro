@@ -94,7 +94,8 @@ export const TransactionFormFields = ({
                     display="spinner"
                     onChange={handleDateChange}
                     maximumDate={new Date()}
-                    themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
+                    themeVariant={isDarkMode ? "dark" : "light"}
+                    style={{ width: '100%' }}
                   />
                 </View>
               </TouchableOpacity>
@@ -195,7 +196,8 @@ export const DateSelector = ({
                 display="spinner"
                 onChange={handleDateChange}
                 maximumDate={new Date()}
-                themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
+                themeVariant={isDarkMode ? "dark" : "light"}
+                style={{ width: '100%' }}
               />
             </View>
           </TouchableOpacity>
@@ -207,7 +209,7 @@ export const DateSelector = ({
           display="default"
           onChange={handleDateChange}
           maximumDate={new Date()}
-          themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
+          themeVariant={isDarkMode ? "dark" : "light"}
         />
       ))}
   </View>

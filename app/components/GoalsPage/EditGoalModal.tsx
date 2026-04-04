@@ -1,20 +1,45 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { ArrowLeft } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import { parseAmount } from '../../utils/parseAmount';
 import {
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
   ScrollView,
+  StatusBar,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { deleteGoal, updateGoal } from '../../services/backendService';
 import { useGoalsStore } from '../../store/useGoalsStore';
 import { Goal } from '../../types/types';
+import { ColorPicker } from '../Shared/ColorPicker';
+
+const GOAL_ICONS = [
+  'flag-outline', 'trophy-outline', 'ribbon-outline', 'star-outline', 'rocket-outline', 'flash-outline',
+  'home-outline', 'key-outline', 'bed-outline', 'business-outline', 'hammer-outline', 'construct-outline',
+  'airplane-outline', 'car-outline', 'train-outline', 'bus-outline', 'bicycle-outline', 'boat-outline',
+  'map-outline', 'globe-outline', 'compass-outline', 'trail-sign-outline', 'navigate-outline', 'location-outline',
+  'wallet-outline', 'cash-outline', 'card-outline', 'diamond-outline', 'trending-up-outline', 'bar-chart-outline',
+  'receipt-outline', 'pricetag-outline', 'gift-outline', 'bag-outline', 'cart-outline', 'storefront-outline',
+  'heart-outline', 'people-outline', 'person-outline', 'baby-outline', 'paw-outline', 'rose-outline',
+  'fitness-outline', 'barbell-outline', 'medkit-outline', 'leaf-outline', 'pulse-outline', 'nutrition-outline',
+  'school-outline', 'book-outline', 'library-outline', 'laptop-outline', 'pencil-outline', 'briefcase-outline',
+  'film-outline', 'musical-notes-outline', 'game-controller-outline', 'headset-outline', 'camera-outline', 'ticket-outline',
+  'restaurant-outline', 'cafe-outline', 'wine-outline', 'beer-outline', 'pizza-outline', 'ice-cream-outline',
+  'phone-portrait-outline', 'desktop-outline', 'hardware-chip-outline', 'tv-outline', 'color-palette-outline', 'brush-outline',
+  'sunny-outline', 'moon-outline', 'snow-outline', 'umbrella-outline', 'flower-outline', 'planet-outline',
+  'american-football-outline', 'basketball-outline', 'tennisball-outline', 'baseball-outline', 'football-outline', 'golf-outline',
+  'shirt-outline', 'glasses-outline', 'watch-outline', 'newspaper-outline', 'calculator-outline', 'cube-outline',
+];
+
+const COLS = 2;
 
 interface EditGoalModalProps {
   visible: boolean;
@@ -34,13 +59,38 @@ export function EditGoalModal({
   const { updateGoalOptimistic, deleteGoalOptimistic } = useGoalsStore();
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
+  const [selectedIcon, setSelectedIcon] = useState('flag-outline');
+  const [selectedColor, setSelectedColor] = useState('#a78bfa');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const animateSelection = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start();
+  };
+
+  useEffect(() => {
+    if (visible) {
+      fadeAnim.setValue(0);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (goal) {
       setName(goal.name);
       setTargetAmount(goal.target_amount.toString());
+      setSelectedIcon(goal.icon || 'flag-outline');
+      setSelectedColor(goal.color || '#a78bfa');
     }
   }, [goal]);
 
@@ -53,7 +103,9 @@ export function EditGoalModal({
   const hasChanges =
     goal &&
     (name.trim() !== goal.name ||
-      parseAmount(targetAmount) !== goal.target_amount);
+      parseAmount(targetAmount) !== goal.target_amount ||
+      selectedIcon !== (goal.icon || 'flag-outline') ||
+      selectedColor !== (goal.color || '#a78bfa'));
 
   const handleSubmit = async () => {
     if (!canSubmit || !goal || !hasChanges) return;
@@ -63,6 +115,8 @@ export function EditGoalModal({
       const updates = {
         name: name.trim(),
         target_amount: parseAmount(targetAmount),
+        icon: selectedIcon,
+        color: selectedColor,
       };
 
       updateGoalOptimistic(goal.id, updates);
@@ -115,12 +169,15 @@ export function EditGoalModal({
     if (goal) {
       setName(goal.name);
       setTargetAmount(goal.target_amount.toString());
+      setSelectedIcon(goal.icon || 'flag-outline');
+      setSelectedColor(goal.color || '#a78bfa');
     }
     onClose();
   };
 
   if (!goal) return null;
 
+  const accentColor = selectedColor || goal.color || '#a78bfa';
   const progress =
     goal.target_amount > 0
       ? Math.min((goal.current_amount / goal.target_amount) * 100, 100)
@@ -129,46 +186,56 @@ export function EditGoalModal({
   return (
     <Modal
       visible={visible}
-      transparent
       animationType="slide"
+      presentationStyle="fullScreen"
       onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1 justify-end"
-      >
-        <TouchableOpacity
-          className="flex-1"
-          activeOpacity={1}
-          onPress={handleClose}
-        />
-        <View className="bg-surfaceDark rounded-t-3xl p-6 border-t border-borderDark max-h-[80%]">
-          {/* Header */}
-          <View className="flex-row items-center justify-between mb-6">
-            <View className="flex-row items-center">
-              <View
-                className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: goal.color || '#a78bfa' }}
-              >
-                <Ionicons
-                  name={(goal.icon as any) || 'flag-outline'}
-                  size={20}
-                  color="#fff"
-                />
-              </View>
-              <Text className="text-white text-lg font-semibold">Edit Goal</Text>
-            </View>
-            <TouchableOpacity onPress={handleClose}>
-              <Ionicons name="close" size={24} color="#94A3B8" />
-            </TouchableOpacity>
-          </View>
+      <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+        <StatusBar barStyle="light-content" />
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View className="flex-row items-center justify-between px-2 mt-16 mb-4">
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={handleClose}
+              className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"
+            >
+              <ArrowLeft color="#94A3B8" size={20} />
+            </TouchableOpacity>
+            <View>
+              <Text className="text-textDark text-2xl font-semibold">Edit Goal</Text>
+              <Text className="text-secondaryDark">Update your savings target</Text>
+            </View>
+          </View>
+        </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1"
+        >
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Live Preview Card */}
+            <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }} className="mx-2 mt-4 mb-5">
+              <View className="rounded-3xl p-8 items-center justify-center border bg-surfaceDark border-borderDark">
+                <View className="w-28 h-28 rounded-2xl items-center justify-center mb-5" style={{ backgroundColor: accentColor }}>
+                  <Ionicons name={selectedIcon as any} size={56} color="#FFFFFF" />
+                </View>
+                <Text className="text-textDark text-2xl font-bold text-center" numberOfLines={1}>
+                  {name || 'Goal Name'}
+                </Text>
+                <Text className="text-secondaryDark text-sm mt-2">Editing existing goal</Text>
+              </View>
+            </Animated.View>
+
             {/* Current Progress */}
-            <View className="bg-backgroundDark rounded-xl p-4 mb-4">
+            <View className="bg-surfaceDark rounded-xl p-4 mb-4 border border-borderDark">
               <View className="flex-row justify-between mb-2">
                 <Text className="text-secondaryDark text-sm">Current Progress</Text>
-                <Text className="text-purple-400 font-semibold">
+                <Text className="font-semibold" style={{ color: accentColor }}>
                   {Math.round(progress)}%
                 </Text>
               </View>
@@ -177,7 +244,7 @@ export function EditGoalModal({
                   className="h-full rounded-full"
                   style={{
                     width: `${progress}%`,
-                    backgroundColor: goal.color || '#a78bfa',
+                    backgroundColor: accentColor,
                   }}
                 />
               </View>
@@ -199,14 +266,14 @@ export function EditGoalModal({
                 onChangeText={setName}
                 placeholder="e.g., Vacation Fund, Emergency Savings"
                 placeholderTextColor="#64748B"
-                className="px-4 py-3 rounded-xl bg-backgroundDark border border-borderDark text-white"
+                className="px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark text-white"
               />
             </View>
 
             {/* Target Amount */}
-            <View className="mb-6">
+            <View className="mb-4">
               <Text className="text-secondaryDark text-sm mb-2">Target Amount</Text>
-              <View className="flex-row items-center px-4 py-3 rounded-xl bg-backgroundDark border border-borderDark">
+              <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark">
                 <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>{currencySymbol}</Text>
                 <TextInput
                   value={targetAmount}
@@ -218,6 +285,55 @@ export function EditGoalModal({
                   style={{ lineHeight: 18 }}
                 />
               </View>
+            </View>
+
+            {/* Icon Picker */}
+            <View className="mb-4">
+              <Text className="text-secondaryDark text-sm mb-2">Icon</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={{ flexDirection: 'row' }}>
+                  {Array.from({ length: Math.ceil(GOAL_ICONS.length / COLS) }).map((_, colIndex) => (
+                    <View key={colIndex} style={{ flexDirection: 'column', marginRight: 8 }}>
+                      {GOAL_ICONS.slice(colIndex * COLS, colIndex * COLS + COLS).map((icon) => {
+                        const isSelected = selectedIcon === icon;
+                        return (
+                          <TouchableOpacity
+                            key={icon}
+                            onPress={() => { setSelectedIcon(icon); animateSelection(); }}
+                            activeOpacity={0.7}
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 12,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginBottom: 8,
+                              backgroundColor: isSelected ? accentColor : '#1F2937',
+                              borderWidth: 1.5,
+                              borderColor: isSelected ? accentColor : '#374151',
+                            }}
+                          >
+                            <Ionicons
+                              name={icon as any}
+                              size={22}
+                              color={isSelected ? '#FFFFFF' : '#6B7280'}
+                            />
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+
+            {/* Color Picker */}
+            <View className="mb-6">
+              <ColorPicker
+                selectedColor={selectedColor}
+                onColorSelect={(c) => { setSelectedColor(c); animateSelection(); }}
+                isDarkMode
+              />
             </View>
 
             {/* Save Button */}
@@ -259,8 +375,8 @@ export function EditGoalModal({
               </View>
             </TouchableOpacity>
           </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 }

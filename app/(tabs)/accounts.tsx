@@ -53,7 +53,6 @@ export default function Accounts() {
       const tempId = Date.now();
       const insertPosition = sort_order ?? accounts.length;
       addAccountOptimistic({ id: tempId, account_name: name, balance, type, sort_order: insertPosition });
-      setShowAddModal(false);
 
       // Shift existing accounts if inserting at a position that's not at the end
       if (insertPosition < accounts.length) {

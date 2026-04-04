@@ -257,7 +257,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       mode="date"
                       display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={handleStartDateChange}
-                      themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
+                      themeVariant={isDarkMode ? "dark" : "light"}
                     />
                   )}
 
@@ -268,7 +268,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={handleEndDateChange}
                       minimumDate={startDate}
-                      themeVariant={systemColorScheme === "dark" ? "dark" : "light"}
+                      themeVariant={isDarkMode ? "dark" : "light"}
                     />
                   )}
                 </View>

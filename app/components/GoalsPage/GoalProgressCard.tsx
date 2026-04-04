@@ -12,6 +12,7 @@ interface GoalProgressCardProps {
   onAddPress?: () => void;
   onWithdrawPress?: () => void;
   compact?: boolean;
+  noBg?: boolean;
 }
 
 export function GoalProgressCard({
@@ -21,11 +22,12 @@ export function GoalProgressCard({
   onAddPress,
   onWithdrawPress,
   compact = false,
+  noBg = false,
 }: GoalProgressCardProps) {
   const progress = goal.target_amount > 0
     ? Math.min((goal.current_amount / goal.target_amount) * 100, 100)
     : 0;
-  const remaining = Math.max(goal.target_amount - goal.current_amount, 0);
+
   const isComplete = goal.current_amount >= goal.target_amount;
 
   const formatCurrency = (amount: number) => {
@@ -99,18 +101,18 @@ export function GoalProgressCard({
                   disabled={goal.current_amount === 0}
                   className={`flex-row items-center justify-center py-1.5 rounded-lg overflow-hidden ${
                     goal.current_amount > 0
-                      ? 'bg-orange-600/20 border border-orange-600/30'
+                      ? 'bg-accentRed/20 border border-accentRed/30'
                       : 'bg-gray-600/20 border border-gray-600/30'
                   }`}
-                  rippleColor={goal.current_amount > 0 ? "rgba(245, 158, 11, 0.3)" : "rgba(107, 114, 128, 0.2)"}
+                  rippleColor={goal.current_amount > 0 ? "rgba(242, 81, 74, 0.3)" : "rgba(107, 114, 128, 0.2)"}
                 >
                   <Ionicons
                     name="remove-circle"
                     size={14}
-                    color={goal.current_amount > 0 ? "#F59E0B" : "#6B7280"}
+                    color={goal.current_amount > 0 ? "#F2514A" : "#6B7280"}
                   />
                   <Text className={`font-medium ml-1 text-xs ${
-                    goal.current_amount > 0 ? 'text-orange-500' : 'text-gray-500'
+                    goal.current_amount > 0 ? 'text-accentRed' : 'text-gray-500'
                   }`}>
                     Withdraw
                   </Text>
@@ -123,55 +125,60 @@ export function GoalProgressCard({
     );
   }
 
+  const accentColor = goal.color || '#a78bfa';
+
   return (
-    <View className="bg-surfaceDark rounded-xl p-4 mb-3">
+    <View className={noBg ? 'p-4' : 'bg-surfaceDark rounded-xl p-2 mb-2'}>
+      {/* Header */}
       <Container
         onPress={onPress}
-        className="flex-1"
+        className="flex-row items-center"
         activeOpacity={onPress ? 0.7 : 1}
       >
-        <View className="flex-row items-center mb-3">
-          <View
-            className="w-10 h-10 rounded-full items-center justify-center mr-3"
-            style={{ backgroundColor: goal.color || '#a78bfa' }}
-          >
-            <Ionicons
-              name={isComplete ? 'checkmark' : (goal.icon as any) || 'flag-outline'}
-              size={20}
-              color="#fff"
-            />
-          </View>
-          <View className="flex-1">
-            <Text className="text-textDark font-semibold text-base">{goal.name}</Text>
-            <Text className="text-secondaryDark text-sm">
-              {formatCurrency(goal.current_amount)} of {formatCurrency(goal.target_amount)}
-            </Text>
-          </View>
-          {onPress && (
-            <Ionicons name="chevron-forward" size={20} color="#64748B" />
-          )}
+        <View
+          className="w-14 h-14 rounded-full items-center justify-center mr-3"
+          style={{ backgroundColor: accentColor }}
+        >
+          <Ionicons
+            name={isComplete ? 'checkmark' : (goal.icon as any) || 'flag-outline'}
+            size={28}
+            color="#fff"
+          />
         </View>
+        <View className="flex-1">
+          <Text className="text-textDark font-bold text-2xl" numberOfLines={1}>
+            {goal.name}
+          </Text>
+        </View>
+      </Container>
+
+      {/* Inner progress box */}
+      <View className="rounded-xl p-3 mt-1">
+        {/* Amount row */}
+        <Text className="text-right text-base font-semibold">
+          <Text style={{ color: accentColor }}>{formatCurrency(goal.current_amount)}</Text>
+          <Text className="text-secondaryDark"> of {formatCurrency(goal.target_amount)}</Text>
+        </Text>
 
         {/* Progress bar */}
-        <View className="h-2 bg-gray-700 rounded-full overflow-hidden">
+        <View className="h-2 rounded-full overflow-hidden mt-2" style={{ backgroundColor: '#2A3250' }}>
           <View
-            className="h-full rounded-full"
             style={{
               width: `${progress}%`,
-              backgroundColor: goal.color || '#a78bfa'
+              height: '100%',
+              backgroundColor: accentColor,
+              borderRadius: 999,
             }}
           />
         </View>
 
-        <View className="flex-row justify-between mt-2">
-          <Text className="text-secondaryDark text-xs">
-            {isComplete ? 'Goal reached!' : `${formatCurrency(remaining)} to go`}
-          </Text>
-          <Text className="text-secondaryDark text-xs">
+        {/* Percentage */}
+        <View className="flex-row justify-end mt-1.5">
+          <Text className="text-xs font-semibold" style={{ color: accentColor }}>
             {Math.round(progress)}%
           </Text>
         </View>
-      </Container>
+      </View>
 
       {/* Action Buttons */}
       {(onAddPress || onWithdrawPress) && (
@@ -203,18 +210,18 @@ export function GoalProgressCard({
                 disabled={goal.current_amount === 0}
                 className={`flex-row items-center justify-center py-2 rounded-lg overflow-hidden ${
                   goal.current_amount > 0
-                    ? 'bg-orange-600/20 border border-orange-600/30'
+                    ? 'bg-accentRed/20 border border-accentRed/30'
                     : 'bg-gray-600/20 border border-gray-600/30'
                 }`}
-                rippleColor={goal.current_amount > 0 ? "rgba(245, 158, 11, 0.3)" : "rgba(107, 114, 128, 0.2)"}
+                rippleColor={goal.current_amount > 0 ? "rgba(242, 81, 74, 0.3)" : "rgba(107, 114, 128, 0.2)"}
               >
                 <Ionicons
                   name="remove-circle"
                   size={16}
-                  color={goal.current_amount > 0 ? "#F59E0B" : "#6B7280"}
+                  color={goal.current_amount > 0 ? "#F2514A" : "#6B7280"}
                 />
                 <Text className={`font-medium ml-2 ${
-                  goal.current_amount > 0 ? 'text-orange-500' : 'text-gray-500'
+                  goal.current_amount > 0 ? 'text-accentRed' : 'text-gray-500'
                 }`}>
                   Withdraw
                 </Text>
