@@ -56,6 +56,10 @@ const TransactionAdder = () => {
   const [transactionType, setTransactionType] = useState<"expense" | "income">(
     type === "income" ? "income" : "expense",
   );
+
+  useEffect(() => {
+    setTransactionType(type === "income" ? "income" : "expense");
+  }, [type]);
   const [selectedAccount, setSelectedAccount] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
@@ -110,7 +114,7 @@ const TransactionAdder = () => {
       const categoryName =
         transactionType === "expense"
           ? selectedCategory?.category_name
-          : null;
+          : "Income";
 
       // Optimistic UI: Update balance immediately
       const currentAccount = accountOptions.find(

@@ -52,30 +52,42 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
   const { selectedCategories, categoryBudgets, estimatedIncome, notificationFrequency, selectedCurrency } = onboardingData;
 
   // Step 1: Create categories (errors are logged but don't block profile update)
-  if (selectedCategories && selectedCategories.length > 0) {
-    try {
-      const categoriesToCreate = selectedCategories.map((categoryName: string) => {
+  try {
+    const categoriesToCreate: any[] = [];
+
+    // Always add the Income category first (sort_order 0)
+    categoriesToCreate.push({
+      category_name: 'Income',
+      icon: 'cash-outline',
+      color: '#00C853',
+      sort_order: 0,
+      budget_amount: null,
+      budget_percentage: 0,
+      show_on_dashboard: false,
+    });
+
+    if (selectedCategories && selectedCategories.length > 0) {
+      selectedCategories.forEach((categoryName: string, index: number) => {
         const categoryDef = V3_DEFAULT_CATEGORIES.find((cat) => cat.name === categoryName);
         if (!categoryDef) {
           console.warn(`[persistOnboardingData] Category not found in V3_DEFAULT_CATEGORIES: ${categoryName}`);
-          return null;
+          return;
         }
         const budget = categoryBudgets?.find((b: any) => b.category_name === categoryName);
-        return {
+        categoriesToCreate.push({
           category_name: categoryDef.name,
           icon: categoryDef.icon,
           color: categoryDef.color,
+          sort_order: index + 1,
           budget_amount: budget?.budget_amount ?? null,
           budget_percentage: budget?.budget_percentage ?? null,
-        };
-      }).filter(Boolean);
-
-      if (categoriesToCreate.length > 0) {
-        await bulkCreateCategories(userId, categoriesToCreate as any);
-      }
-    } catch (catError: any) {
-      console.error('[persistOnboardingData] Error creating categories:', catError.message);
+        });
+      });
     }
+
+    await bulkCreateCategories(userId, categoriesToCreate);
+  } catch (catError: any) {
+    console.error('[persistOnboardingData] Error creating categories:', catError.message);
   }
 
   // Step 2: Update income — kept separate from notification frequency so one

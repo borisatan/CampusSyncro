@@ -252,13 +252,15 @@ export const bulkCreateCategories = async (
     color: string;
     budget_amount?: number | null;
     budget_percentage?: number | null;
+    show_on_dashboard?: boolean;
+    sort_order?: number;
   }>
 ) => {
   const payload = categories.map((cat, index) => ({
     id: crypto.randomUUID(), // ⚠️ Requires Categories.id column to be UUID type in Supabase
     ...cat,
     user_id: userId,
-    sort_order: index,
+    sort_order: cat.sort_order ?? index,
   }));
 
   // Insert new categories; skip if already exist (avoids changing the id PK on update)
