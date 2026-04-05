@@ -222,6 +222,7 @@ export const SubmitButton = ({
   transactionType,
   buttonText,
   isSubmitting = false,
+  disabled = false,
 }: Pick<
   FormFieldsProps,
   | "isDarkMode"
@@ -229,20 +230,22 @@ export const SubmitButton = ({
   | "transactionType"
   | "buttonText"
   | "isSubmitting"
->) => {
+> & { disabled?: boolean }) => {
   const defaultButtonText = `Add ${transactionType === "expense" ? "Expense" : "Income"}`;
   const displayButtonText = buttonText || defaultButtonText;
+  const isDisabled = isSubmitting || disabled;
   return (
     <TouchableOpacity
       onPress={() => {
+        if (disabled) return;
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         handleSubmit();
       }}
-      disabled={isSubmitting}
+      disabled={isDisabled}
       activeOpacity={0.7}
       className={`w-full py-4 rounded-xl items-center mb-6 ${
         transactionType === "expense" ? "bg-accentRed" : "bg-accentTeal"
-      } ${isSubmitting ? "opacity-60" : ""}`}
+      } ${isDisabled ? "opacity-60" : ""}`}
     >
       <Text className="text-white font-semibold">
         {isSubmitting ? "Adding..." : displayButtonText}

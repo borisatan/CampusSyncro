@@ -114,8 +114,7 @@ export default function AIBudgetSetupScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(5);
-    router.push("/(onboarding)/budget-setup-choice");
+    router.back();
   };
 
   // Get category color

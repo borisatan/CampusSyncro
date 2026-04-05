@@ -59,8 +59,7 @@ export default function WhyManualScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(5);
-    router.push("/(onboarding)/budget-setup-choice");
+    router.back();
   };
 
   const handleSkip = () => {

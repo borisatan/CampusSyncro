@@ -1,12 +1,12 @@
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Sparkles, PenTool, ArrowRight, Lightbulb } from "lucide-react-native";
-import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
-import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
-import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Linking, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
+import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
@@ -58,8 +58,7 @@ export default function BudgetSetupChoiceScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(4);
-    router.push("/(onboarding)/cost-of-inattention");
+    router.back();
   };
 
   return (
@@ -95,7 +94,7 @@ export default function BudgetSetupChoiceScreen() {
             </MotiView>
 
             {/* Option Cards */}
-            <View className="mb-8">
+            <View className="mb-4">
               {/* Smart Budget Option */}
               <MotiView
                 from={{ opacity: 0, translateX: -30 }}
@@ -117,13 +116,13 @@ export default function BudgetSetupChoiceScreen() {
                     <View className="p-5">
                       <View className="flex-row items-center gap-3 mb-3">
                         <View className="w-12 h-12 rounded-3xl bg-accentBlue items-center justify-center">
-                          <Sparkles size={24} color="#ffffff" />
+                          <Ionicons name="sparkles" size={24} color="#ffffff" />
                         </View>
                         <View className="flex-1">
                           <Text className="text-white text-xl font-semibold">Smart Budget</Text>
-                          <Text className="text-blue-200 text-xs">AI-Powered</Text>
+                          <Text className="text-blue-200 text-sm">AI-Powered</Text>
                         </View>
-                        <ArrowRight size={20} color="#60A5FA" />
+                        <Ionicons name="arrow-forward" size={20} color="#60A5FA" />
                       </View>
                       <Text className="text-blue-100 text-sm leading-relaxed">
                         Let us allocate your budget using the proven 50/30/20 rule.
@@ -150,13 +149,13 @@ export default function BudgetSetupChoiceScreen() {
                   >
                     <View className="flex-row items-center gap-3 mb-3">
                       <View className="w-12 h-12 rounded-3xl bg-inputDark items-center justify-center">
-                        <PenTool size={24} color="#8A96B4" />
+                        <Ionicons name="create-outline" size={24} color="#8A96B4" />
                       </View>
                       <View className="flex-1">
                         <Text className="text-white text-xl font-semibold">Manual Setup</Text>
-                        <Text className="text-secondaryDark text-xs">Full Control</Text>
+                        <Text className="text-secondaryDark text-sm">Full Control</Text>
                       </View>
-                      <ArrowRight size={20} color="#8A96B4" />
+                      <Ionicons name="arrow-forward" size={20} color="#8A96B4" />
                     </View>
                     <Text className="text-secondaryDark text-sm leading-relaxed">
                       Set your own budget amounts for each category.
@@ -191,12 +190,28 @@ export default function BudgetSetupChoiceScreen() {
               transition={{ delay: 850, duration: 600 }}
               className="mt-auto"
             >
-              <View className="bg-surfaceDark/50 border border-borderDark rounded-3xl px-4 py-3 flex-row items-center justify-center gap-2">
-                <Lightbulb size={13} color="#8A96B4" />
-                <Text className="text-secondaryDark text-xs text-center leading-relaxed">
-                  Don&apos;t worry - you can always adjust your budgets later in the app
+              <View className="bg-surfaceDark/50 border border-borderDark rounded-3xl px-4 py-3 flex-row items-start gap-2">
+                <Ionicons name="bulb-outline" size={15} color="#FACC15" style={{ marginLeft: 6, marginTop: 2 }} />
+                <Text className="text-secondaryDark text-sm flex-1 leading-relaxed">
+                  Don&apos;t worry - you can always adjust your budgets later in the app.
                 </Text>
               </View>
+            </MotiView>
+
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 950, duration: 600 }}
+              className="items-center mt-3"
+            >
+              <Pressable
+                onPress={() => Linking.openURL("https://www.unfcu.org/financial-wellness/50-30-20-rule/")}
+                className="active:opacity-60"
+              >
+                <Text className="text-secondaryDark text-sm underline text-center">
+                  Learn about the 50/30/20 rule
+                </Text>
+              </Pressable>
             </MotiView>
           </MotiView>
         </View>

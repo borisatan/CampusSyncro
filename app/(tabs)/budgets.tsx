@@ -1,14 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ArrowLeft } from "lucide-react-native";
 import { MotiView } from "moti";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as Haptics from "expo-haptics";
+import { Alert, Modal, Pressable, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import ReanimatedSwipeable, { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import Animated, { interpolate, runOnJS, SharedValue, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
@@ -24,6 +26,8 @@ import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
 import { useBudgetsData } from "../hooks/useBudgetsData";
 import {
+  deleteCategory,
+  getUserId,
   updateCategoriesOrder,
   updateCategoryBudgetAmount,
   updateCategoryBudgetPercentages,
@@ -65,11 +69,12 @@ export default function BudgetsScreen() {
   } = useBudgetsData();
   const { currencySymbol } = useCurrencyStore();
   const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
-  const { categories, updateCategoryOptimistic, reorderCategories } = useCategoriesStore();
-  const { accounts } = useAccountsStore();
+  const { categories, updateCategoryOptimistic, reorderCategories, deleteCategoryOptimistic } = useCategoriesStore();
+  const { accounts, loadAccounts } = useAccountsStore();
   const { goals, loadGoals } = useGoalsStore();
   const {
     refreshDashboard,
+    refreshAll,
     registerBudgetsRefresh,
     registerCategoriesRefresh,
     registerGoalsRefresh,
@@ -312,6 +317,40 @@ export default function BudgetsScreen() {
     [reorderCategories, refresh],
   );
 
+  const handleDeleteCategory = useCallback((category: Category, swipeableRef: React.RefObject<SwipeableMethods | null>) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Alert.alert(
+      'Delete Category?',
+      `"${category.category_name}" will be removed from all your transactions. This cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => swipeableRef.current?.close(),
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              deleteCategoryOptimistic(category.id.toString());
+              const userId = await getUserId();
+              if (!userId) throw new Error('Not authenticated');
+              await deleteCategory(category.id.toString(), userId);
+              await loadCategories();
+              await loadAccounts();
+              refreshAll();
+              refreshDashboard();
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to delete category');
+              loadCategories();
+            }
+          },
+        },
+      ]
+    );
+  }, [deleteCategoryOptimistic, loadCategories, loadAccounts, refreshAll, refreshDashboard]);
+
   const { allBudgetItems, hasCustomOrder } = useMemo(() => {
     const budgetMap = new Map<number, CategoryBudgetStatus>();
     categoryBudgets.forEach((cb) => budgetMap.set(cb.category.id, cb));
@@ -414,7 +453,7 @@ export default function BudgetsScreen() {
         data={isLoading ? [] : allBudgetItems}
         keyExtractor={(item) => item.type === 'goals' ? 'goals' : item.category.id.toString()}
         onDragEnd={handleDragEnd}
-        contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 150 }}
+        contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 220 }}
         keyboardDismissMode="on-drag"
         ListHeaderComponent={
           <>
@@ -609,30 +648,17 @@ export default function BudgetsScreen() {
                     )}
                   </TouchableOpacity>
                 ) : (
-                  <MotiView
-                    from={{ opacity: 0, translateY: 8 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    transition={{
-                      type: "timing",
-                      duration: 250,
-                      delay: index * 25,
-                    }}
-                    className="mb-2.5"
-                  >
-                    <CategoryBudgetRow
-                      item={item.budgetStatus}
-                      category={item.category}
-                      currencySymbol={currencySymbol}
-                      monthlyIncome={monthlyIncome}
-                      onSave={handleInlineSave}
-                      showOnDashboard={item.category.show_on_dashboard ?? true}
-                      onToggleDashboard={toggleCategoryDashboardVisibility}
-                      expanded={false}
-                      onToggleExpand={() =>
-                        setEditBudgetCategory({ category: item.category, budgetStatus: item.budgetStatus })
-                      }
-                    />
-                  </MotiView>
+                  <SwipeableCategoryRow
+                    item={item}
+                    index={index}
+                    currencySymbol={currencySymbol}
+                    monthlyIncome={monthlyIncome}
+                    onSave={handleInlineSave}
+                    onToggleExpand={() =>
+                      setEditBudgetCategory({ category: item.category, budgetStatus: item.budgetStatus })
+                    }
+                    onDelete={handleDeleteCategory}
+                  />
                 )}
               </>
             </ScaleDecorator>
@@ -808,5 +834,84 @@ export default function BudgetsScreen() {
         onTransactionComplete={loadGoals}
       />
     </SafeAreaView>
+  );
+}
+
+// --- Swipeable delete action background ---
+function CategoryDeleteAction({ drag }: { drag: SharedValue<number> }) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const scale = interpolate(drag.value, [-80, -40, 0], [1, 0.85, 0.7], 'clamp');
+    const opacity = interpolate(drag.value, [-80, -30, 0], [1, 0.8, 0], 'clamp');
+    return { transform: [{ scale }], opacity };
+  });
+
+  return (
+    <View className="bg-red-500 rounded-2xl mb-2.5 justify-center items-center" style={{ width: 80 }}>
+      <Animated.View style={animatedStyle} className="items-center justify-center">
+        <Ionicons name="trash-outline" size={24} color="white" />
+      </Animated.View>
+    </View>
+  );
+}
+
+// --- Swipeable wrapper for CategoryBudgetRow ---
+function SwipeableCategoryRow({
+  item,
+  index,
+  currencySymbol,
+  monthlyIncome,
+  onSave,
+  onToggleExpand,
+  onDelete,
+}: {
+  item: CategoryListItem;
+  index: number;
+  currencySymbol: string;
+  monthlyIncome: number;
+  onSave: (categoryId: number, amount: number | null, percentage?: number | null) => void;
+  onToggleExpand: () => void;
+  onDelete: (category: Category, ref: React.RefObject<SwipeableMethods | null>) => void;
+}) {
+  const swipeableRef = useRef<SwipeableMethods>(null);
+
+  const handleSwipeOpen = useCallback(() => {
+    onDelete(item.category, swipeableRef);
+  }, [item.category, onDelete]);
+
+  const renderRightActions = useCallback(
+    (_progress: SharedValue<number>, drag: SharedValue<number>) => (
+      <CategoryDeleteAction drag={drag} />
+    ),
+    []
+  );
+
+  return (
+    <ReanimatedSwipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      rightThreshold={60}
+      overshootRight={false}
+      onSwipeableOpen={handleSwipeOpen}
+      friction={2}
+    >
+      <MotiView
+        from={{ opacity: 0, translateY: 8 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: "timing", duration: 250, delay: index * 25 }}
+        className="mb-2.5"
+      >
+        <CategoryBudgetRow
+          item={item.budgetStatus}
+          category={item.category}
+          currencySymbol={currencySymbol}
+          monthlyIncome={monthlyIncome}
+          onSave={onSave}
+          showOnDashboard={item.category.show_on_dashboard ?? true}
+          onToggleDashboard={toggleCategoryDashboardVisibility}
+          expanded={false}
+          onToggleExpand={onToggleExpand}
+        />
+      </MotiView>
+    </ReanimatedSwipeable>
   );
 }

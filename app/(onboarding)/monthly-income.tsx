@@ -62,9 +62,8 @@ export default function MonthlyIncomeScreen() {
 
   const handleBack = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(2);
-    router.push("/(onboarding)/category-preselection");
-  }, [setOnboardingStep]);
+    router.back();
+  }, []);
 
   const handleSkip = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

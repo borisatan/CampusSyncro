@@ -31,34 +31,39 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        sceneStyle: { backgroundColor: "#20283A", flex: 1 }, // Using hex for React Navigation compatibility
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: "#2563EB", // accentBlue
-        tabBarInactiveTintColor: "#9CA3AF", // secondaryDark
+        sceneStyle: { backgroundColor: "#20283A", flex: 1 },
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: "#2563EB",
+        tabBarInactiveTintColor: "#9CA3AF",
 
         tabBarBackground: () => (
           <View style={{ flex: 1, backgroundColor: "#20283A" }} />
         ),
 
         tabBarStyle: {
-          backgroundColor: "#20283A", // surfaceDark - using hex for React Navigation compatibility
-          borderTopColor: "#0A0F1F", // backgroundDark - using hex for React Navigation compatibility
+          backgroundColor: "#20283A",
+          borderTopColor: "#0A0F1F",
           borderTopWidth: 1,
           position: "absolute",
-          height: 60 + insets.bottom, // adjust height with safe area
-          paddingBottom: insets.bottom + 7, // keep it above gesture bar
+          height: 68 + insets.bottom,
+          paddingBottom: insets.bottom + 7,
           paddingTop: 7,
+        },
+
+        tabBarLabelStyle: {
+          fontSize: 10,
+          marginTop: 2,
         },
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: "Dashboard",
+          title: "Home",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
-              size={29}
+              size={24}
               color={color}
             />
           ),
@@ -71,7 +76,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "pie-chart" : "pie-chart-outline"}
-              size={29}
+              size={24}
               color={color}
             />
           ),
@@ -84,7 +89,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "add-circle" : "add-circle-outline"}
-              size={30}
+              size={26}
               color={color}
             />
           ),
@@ -93,11 +98,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="transaction-list"
         options={{
-          title: "Transactions",
+          title: "History",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "list" : "list-outline"}
-              size={30}
+              size={24}
               color={color}
             />
           ),
@@ -110,7 +115,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}
-              size={29}
+              size={24}
               color={color}
             />
           ),

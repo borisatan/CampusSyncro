@@ -126,6 +126,7 @@ export const ScrollableSpendingChart = React.memo(
     const canGoRight = activeIndex < PAGES.length - 1;
     const currentOffset = PAGES[activeIndex];
     const chartData = chartDataByOffset[currentOffset] ?? [];
+    const periodDate = getDateRange(timeFrame, currentOffset).startDate;
 
     return (
       <View>
@@ -144,6 +145,7 @@ export const ScrollableSpendingChart = React.memo(
           categoryBudgets={categoryBudgets}
           isCurrentPeriod={currentOffset === 0}
           isUnlocked={isUnlocked}
+          periodDate={periodDate}
         />
 
         {/* Navigation below chart: chevron arrows with dot indicators in the middle */}

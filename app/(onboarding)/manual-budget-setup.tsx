@@ -27,6 +27,72 @@ import { useAnalytics } from "../hooks/useAnalytics";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
+function CategoryToggle({
+  mode,
+  onToggle,
+}: {
+  mode: "fixed" | "percentage";
+  onToggle: (mode: "fixed" | "percentage") => void;
+}) {
+  const progress = useSharedValue(mode === "percentage" ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(mode === "percentage" ? 1 : 0, { duration: 180 });
+  }, [mode]);
+
+  const sliderStyle = useAnimatedStyle(() => ({
+    left: `${progress.value * 50}%` as any,
+  }));
+  const fixedTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(progress.value, [0, 1], ["#ffffff", "#64748B"]),
+  }));
+  const percentTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(progress.value, [0, 1], ["#64748B", "#ffffff"]),
+  }));
+
+  return (
+    <View className="rounded-2xl flex-row bg-inputDark border border-borderDark overflow-hidden mb-3">
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            width: "50%",
+            borderRadius: 10,
+            backgroundColor: "#3B7EFF",
+          },
+          sliderStyle,
+        ]}
+      />
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onToggle("fixed");
+        }}
+        className="flex-1 py-2 z-10"
+        activeOpacity={0.7}
+      >
+        <Animated.Text style={[{ textAlign: "center", fontWeight: "500", fontSize: 12 }, fixedTextStyle]}>
+          Fixed
+        </Animated.Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onToggle("percentage");
+        }}
+        className="flex-1 py-2 z-10"
+        activeOpacity={0.7}
+      >
+        <Animated.Text style={[{ textAlign: "center", fontWeight: "500", fontSize: 12 }, percentTextStyle]}>
+          % of Income
+        </Animated.Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export default function ManualBudgetSetupScreen() {
   const { setOnboardingStep, setNewOnboardingData, newOnboardingData } = useOnboardingStore();
   const { currencySymbol } = useCurrencyStore();
@@ -36,35 +102,70 @@ export default function ManualBudgetSetupScreen() {
   const selectedCategories = newOnboardingData.selectedCategories || [];
   const monthlyIncome = newOnboardingData.estimatedIncome || 0;
 
-  // Budget mode: 'fixed' = dollar amounts, 'percentage' = % of income
-  const [budgetMode, setBudgetMode] = useState<'fixed' | 'percentage'>('fixed');
-
-  const toggleProgress = useSharedValue(0);
-  useEffect(() => {
-    toggleProgress.value = withTiming(budgetMode === 'percentage' ? 1 : 0, { duration: 200 });
-  }, [budgetMode]);
-  const sliderStyle = useAnimatedStyle(() => ({
-    left: `${toggleProgress.value * 50}%` as any,
-  }));
-  const fixedTextStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(toggleProgress.value, [0, 1], ['#ffffff', '#64748B']),
-  }));
-  const percentTextStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(toggleProgress.value, [0, 1], ['#64748B', '#ffffff']),
-  }));
-
-  // Store budgets as amounts (convert from percentage when needed)
+  // Per-category mode: 'fixed' | 'percentage'
+  const [categoryModes, setCategoryModes] = useState<Record<string, "fixed" | "percentage">>({});
+  // Store budgets as fixed amounts internally
   const [budgets, setBudgets] = useState<Record<string, number>>({});
+  // Display values per category (what the user typed)
+  const [displayValues, setDisplayValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setOnboardingStep(7);
     trackEvent("onboarding_manual_budget_setup_viewed");
   }, [setOnboardingStep, trackEvent]);
 
+  const getCategoryMode = (name: string): "fixed" | "percentage" =>
+    categoryModes[name] || "fixed";
+
+  const handleModeToggle = (categoryName: string, newMode: "fixed" | "percentage") => {
+    const currentAmount = budgets[categoryName] || 0;
+    setCategoryModes((prev) => ({ ...prev, [categoryName]: newMode }));
+    // Convert display value to the new mode
+    if (newMode === "percentage") {
+      const pct = monthlyIncome > 0 ? Math.round((currentAmount / monthlyIncome) * 100 * 10) / 10 : 0;
+      setDisplayValues((prev) => ({ ...prev, [categoryName]: pct > 0 ? pct.toString() : "" }));
+    } else {
+      setDisplayValues((prev) => ({ ...prev, [categoryName]: currentAmount > 0 ? currentAmount.toString() : "" }));
+    }
+  };
+
+  const updateBudget = (categoryName: string, value: string) => {
+    setDisplayValues((prev) => ({ ...prev, [categoryName]: value }));
+    const numValue = parseFloat(value) || 0;
+    const mode = getCategoryMode(categoryName);
+    if (mode === "fixed") {
+      setBudgets((prev) => ({ ...prev, [categoryName]: numValue }));
+    } else {
+      const amount = Math.round((numValue / 100) * monthlyIncome);
+      setBudgets((prev) => ({ ...prev, [categoryName]: amount }));
+    }
+  };
+
+  const getBudgetEquivalent = (categoryName: string) => {
+    const amount = budgets[categoryName] || 0;
+    const mode = getCategoryMode(categoryName);
+    if (mode === "fixed") {
+      const pct = monthlyIncome > 0 ? Math.round((amount / monthlyIncome) * 100 * 10) / 10 : 0;
+      return `${pct}% of income`;
+    } else {
+      return `${currencySymbol}${amount.toLocaleString()}`;
+    }
+  };
+
+  const getCategoryColor = (name: string) =>
+    V3_DEFAULT_CATEGORIES.find((c) => c.name === name)?.color || "#6B7280";
+
+  const getCategoryIcon = (name: string) =>
+    (V3_DEFAULT_CATEGORIES.find((c) => c.name === name)?.icon || "apps-outline") as keyof typeof Ionicons.glyphMap;
+
+  const totalBudgeted = Object.values(budgets).reduce((sum, amount) => sum + amount, 0);
+  const totalPercentage = monthlyIncome > 0 ? Math.round((totalBudgeted / monthlyIncome) * 100 * 10) / 10 : 0;
+  const remaining = monthlyIncome - totalBudgeted;
+  const isValid = Object.keys(budgets).length > 0 && totalBudgeted <= monthlyIncome;
+
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(5);
-    router.push("/(onboarding)/budget-setup-choice");
+    router.back();
   };
 
   const handleContinue = () => {
@@ -76,7 +177,6 @@ export default function ManualBudgetSetupScreen() {
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
 
-    // Save budget allocations to onboarding store
     const categoryBudgets = Object.entries(budgets).map(([categoryName, amount]) => ({
       category_name: categoryName,
       budget_amount: amount,
@@ -84,60 +184,13 @@ export default function ManualBudgetSetupScreen() {
     }));
 
     setNewOnboardingData({
-      budgetSetupChoice: 'manual',
+      budgetSetupChoice: "manual",
       categoryBudgets,
     });
 
     setOnboardingStep(8);
     router.push("/(onboarding)/why-manual");
   };
-
-  const updateBudget = (categoryName: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-
-    if (budgetMode === 'fixed') {
-      setBudgets(prev => ({ ...prev, [categoryName]: numValue }));
-    } else {
-      // Convert percentage to amount
-      const amount = Math.round((numValue / 100) * monthlyIncome);
-      setBudgets(prev => ({ ...prev, [categoryName]: amount }));
-    }
-  };
-
-  const getBudgetDisplay = (categoryName: string) => {
-    const amount = budgets[categoryName] || 0;
-    if (budgetMode === 'fixed') {
-      return amount.toString();
-    } else {
-      const percentage = monthlyIncome > 0 ? Math.round((amount / monthlyIncome) * 100 * 10) / 10 : 0;
-      return percentage.toString();
-    }
-  };
-
-  const getBudgetEquivalent = (categoryName: string) => {
-    const amount = budgets[categoryName] || 0;
-    if (budgetMode === 'fixed') {
-      const percentage = monthlyIncome > 0 ? Math.round((amount / monthlyIncome) * 100 * 10) / 10 : 0;
-      return `${percentage}% of income`;
-    } else {
-      return `${currencySymbol}${amount.toLocaleString()}`;
-    }
-  };
-
-  // Get category color
-  const getCategoryColor = (name: string) => {
-    return V3_DEFAULT_CATEGORIES.find((c) => c.name === name)?.color || '#6B7280';
-  };
-
-  // Get category icon
-  const getCategoryIcon = (name: string) => {
-    return (V3_DEFAULT_CATEGORIES.find((c) => c.name === name)?.icon || 'apps-outline') as keyof typeof Ionicons.glyphMap;
-  };
-
-  const totalBudgeted = Object.values(budgets).reduce((sum, amount) => sum + amount, 0);
-  const totalPercentage = monthlyIncome > 0 ? Math.round((totalBudgeted / monthlyIncome) * 100 * 10) / 10 : 0;
-  const remaining = monthlyIncome - totalBudgeted;
-  const isValid = Object.keys(budgets).length > 0 && totalBudgeted <= monthlyIncome;
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
@@ -168,11 +221,8 @@ export default function ManualBudgetSetupScreen() {
                 transition={{ delay: 200, duration: 600 }}
                 className="mb-4"
               >
-                <Text className="text-3xl text-white text-center leading-tight mb-2">
+                <Text className="text-3xl text-white text-center leading-tight">
                   Set Your Budgets
-                </Text>
-                <Text className="text-secondaryDark text-sm text-center">
-                  Monthly Income: {currencySymbol}{monthlyIncome.toLocaleString()}
                 </Text>
               </MotiView>
 
@@ -194,7 +244,7 @@ export default function ManualBudgetSetupScreen() {
                     <Text className="text-secondaryDark text-sm">Remaining</Text>
                     <Text
                       className={`text-lg font-bold ${
-                        remaining < 0 ? 'text-accentRed' : 'text-accentGreen'
+                        remaining < 0 ? "text-accentRed" : "text-accentGreen"
                       }`}
                     >
                       {currencySymbol}{Math.abs(remaining).toLocaleString()}
@@ -203,108 +253,72 @@ export default function ManualBudgetSetupScreen() {
                   <View className="mt-2 pt-2 border-t border-borderDark">
                     <Text className="text-secondaryDark text-xs text-center">
                       {totalPercentage}% of income allocated
-                      {totalPercentage <= 80 && ` • ${80 - totalPercentage}% available for savings`}
+                      {totalPercentage <= 100 && ` • ${Math.round((100 - totalPercentage) * 10) / 10}% available for savings`}
                     </Text>
                   </View>
                 </View>
               </MotiView>
 
-              {/* Mode Toggle */}
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: 400, duration: 600 }}
-                className="mb-6"
-              >
-                <View className="rounded-3xl flex-row bg-inputDark border border-borderDark overflow-hidden">
-                  <Animated.View
-                    style={[
-                      {
-                        position: 'absolute',
-                        top: 0,
-                        bottom: 0,
-                        width: '50%',
-                        borderRadius: 11,
-                        backgroundColor: '#3B7EFF',
-                      },
-                      sliderStyle,
-                    ]}
-                  />
-                  <TouchableOpacity
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (budgetMode !== 'fixed') trackEvent("onboarding_budget_mode_toggled", { mode: "fixed" });
-                      setBudgetMode('fixed');
-                    }}
-                    className="flex-1 py-2.5 z-10"
-                    activeOpacity={0.7}
-                  >
-                    <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 13 }, fixedTextStyle]}>
-                      Fixed Amount
-                    </Animated.Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (budgetMode !== 'percentage') trackEvent("onboarding_budget_mode_toggled", { mode: "percentage" });
-                      setBudgetMode('percentage');
-                    }}
-                    className="flex-1 py-2.5 z-10"
-                    activeOpacity={0.7}
-                  >
-                    <Animated.Text style={[{ textAlign: 'center', fontWeight: '500', fontSize: 13 }, percentTextStyle]}>
-                      % of Income
-                    </Animated.Text>
-                  </TouchableOpacity>
-                </View>
-              </MotiView>
-
               {/* Category Budget Inputs */}
               <View className="mb-6">
-                {selectedCategories.map((categoryName, index) => (
-                  <MotiView
-                    key={categoryName}
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: 500 + index * 100, duration: 500 }}
-                    className="mb-3"
-                  >
-                    <View className="bg-surfaceDark border border-borderDark rounded-3xl p-4">
-                      <View className="flex-row items-center gap-3 mb-3">
-                        <View
-                          className="w-10 h-10 rounded-xl items-center justify-center"
-                          style={{ backgroundColor: getCategoryColor(categoryName) }}
-                        >
-                          <Ionicons name={getCategoryIcon(categoryName)} size={20} color="white" />
+                {selectedCategories.map((categoryName, index) => {
+                  const mode = getCategoryMode(categoryName);
+                  const displayVal = displayValues[categoryName] ?? "";
+                  const hasValue = !!budgets[categoryName];
+
+                  return (
+                    <MotiView
+                      key={categoryName}
+                      from={{ opacity: 0, translateX: -20 }}
+                      animate={{ opacity: 1, translateX: 0 }}
+                      transition={{ delay: 400 + index * 100, duration: 500 }}
+                      className="mb-3"
+                    >
+                      <View className="bg-surfaceDark border border-borderDark rounded-3xl p-4">
+                        {/* Category header */}
+                        <View className="flex-row items-center gap-3 mb-3">
+                          <View
+                            className="w-10 h-10 rounded-xl items-center justify-center"
+                            style={{ backgroundColor: getCategoryColor(categoryName) }}
+                          >
+                            <Ionicons name={getCategoryIcon(categoryName)} size={20} color="white" />
+                          </View>
+                          <Text className="flex-1 text-white text-base font-medium">
+                            {categoryName}
+                          </Text>
                         </View>
-                        <Text className="flex-1 text-white text-base font-medium">
-                          {categoryName}
-                        </Text>
-                      </View>
-                      <View className="flex-row items-center gap-3">
-                        {budgetMode === 'fixed' ? (
-                          <Text className="text-secondaryDark text-lg">{currencySymbol}</Text>
-                        ) : null}
-                        <TextInput
-                          value={getBudgetDisplay(categoryName)}
-                          onChangeText={(value) => updateBudget(categoryName, value)}
-                          keyboardType="numeric"
-                          placeholder="0"
-                          placeholderTextColor="#4B5A7A"
-                          className="flex-1 text-white text-xl font-semibold bg-inputDark border border-borderDark rounded-3xl px-4 py-3"
+
+                        {/* Per-category toggle */}
+                        <CategoryToggle
+                          mode={mode}
+                          onToggle={(newMode) => handleModeToggle(categoryName, newMode)}
                         />
-                        {budgetMode === 'percentage' ? (
-                          <Text className="text-secondaryDark text-lg">%</Text>
-                        ) : null}
+
+                        {/* Integrated input */}
+                        <View className="flex-row items-center bg-inputDark border border-borderDark rounded-2xl px-4">
+                          <Text className="text-secondaryDark text-xl mr-1" style={{ lineHeight: 24 }}>
+                            {mode === "fixed" ? currencySymbol : "%"}
+                          </Text>
+                          <TextInput
+                            value={displayVal}
+                            onChangeText={(value) => updateBudget(categoryName, value)}
+                            keyboardType="numeric"
+                            placeholder="0"
+                            placeholderTextColor="#4B5A7A"
+                            className="flex-1 text-white text-xl font-semibold py-3"
+                            style={{ lineHeight: 24 }}
+                          />
+                        </View>
+
+                        {hasValue && (
+                          <Text className="text-secondaryDark text-sm mt-2 text-center">
+                            = {getBudgetEquivalent(categoryName)}
+                          </Text>
+                        )}
                       </View>
-                      {budgets[categoryName] ? (
-                        <Text className="text-secondaryDark text-sm mt-2 text-center">
-                          = {getBudgetEquivalent(categoryName)}
-                        </Text>
-                      ) : null}
-                    </View>
-                  </MotiView>
-                ))}
+                    </MotiView>
+                  );
+                })}
               </View>
 
               {/* Continue Button */}

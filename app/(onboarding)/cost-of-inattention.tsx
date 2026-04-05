@@ -79,8 +79,7 @@ export default function CostOfInattentionScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(3);
-    router.push("/(onboarding)/monthly-income");
+    router.back();
   };
 
   const handleSkip = () => {

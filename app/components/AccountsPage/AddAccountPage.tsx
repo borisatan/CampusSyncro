@@ -82,8 +82,12 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
         className="flex-1"
       >
         <ScrollView className="flex-1 px-2" keyboardDismissMode="on-drag">
+        {/* Drag handle */}
+        <View className="items-center pt-3 pb-1">
+          <View className="w-10 h-1 rounded-full bg-borderDark" />
+        </View>
         {/* Header */}
-        <View className="flex-row items-center mb-8 mt-6">
+        <View className="flex-row items-center mb-8 mt-4">
           <TouchableOpacity
             onPress={onBack}
             className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"
@@ -127,6 +131,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
               placeholder="e.g., Main Checking"
               placeholderTextColor="#475569"
               className="w-full px-4 py-4 bg-surfaceDark border border-borderDark rounded-2xl text-textDark text-base"
+              style={{ lineHeight: 16 }}
             />
           </View>
 
@@ -146,6 +151,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
                 placeholder="0"
                 placeholderTextColor="#475569"
                 className="flex-1 py-4 text-textDark text-xl"
+                style={{ lineHeight: 20 }}
               />
             </View>
             <Text className="text-xs text-secondaryDark mt-2 italic">

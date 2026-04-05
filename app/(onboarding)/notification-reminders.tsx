@@ -107,8 +107,7 @@ export default function NotificationRemindersScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(10);
-    router.push("/(onboarding)/subscription-trial");
+    router.back();
   };
 
   return (

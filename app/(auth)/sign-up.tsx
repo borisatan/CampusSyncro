@@ -452,6 +452,7 @@ export default function SignUpScreen() {
                     value={email}
                     onChangeText={setEmail}
                     onSubmitEditing={() => passwordRef.current?.focus()}
+                    style={{ lineHeight: 16 }}
                   />
                 </View>
 
@@ -472,6 +473,7 @@ export default function SignUpScreen() {
                       value={password}
                       onChangeText={setPassword}
                       onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                      style={{ lineHeight: 16 }}
                     />
                     <Pressable
                       onPress={() => setShowPassword((v) => !v)}
@@ -501,6 +503,7 @@ export default function SignUpScreen() {
                       autoCapitalize="none"
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
+                      style={{ lineHeight: 16 }}
                     />
                     <Pressable
                       onPress={() => setShowConfirmPassword((v) => !v)}

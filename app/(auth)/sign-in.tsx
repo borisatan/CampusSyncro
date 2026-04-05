@@ -352,6 +352,7 @@ export default function SignInScreen() {
                     value={email}
                     onChangeText={setEmail}
                     onSubmitEditing={() => passwordRef.current?.focus()}
+                    style={{ lineHeight: 16 }}
                   />
                 </View>
 
@@ -370,6 +371,7 @@ export default function SignInScreen() {
                       autoCapitalize="none"
                       value={password}
                       onChangeText={setPassword}
+                      style={{ lineHeight: 16 }}
                     />
                     <Pressable
                       onPress={() => setShowPassword((v) => !v)}

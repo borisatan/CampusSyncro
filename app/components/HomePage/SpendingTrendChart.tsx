@@ -27,6 +27,7 @@ interface ChartProps {
   categoryBudgets?: CategoryBudgetStatus[];
   isCurrentPeriod?: boolean;
   isUnlocked?: boolean;
+  periodDate?: Date;
 }
 
 function ToolTip({
@@ -124,7 +125,9 @@ export const SpendingTrendChart = React.memo(
     categoryBudgets = [],
     isCurrentPeriod = true,
     isUnlocked = true,
+    periodDate,
   }: ChartProps) {
+    const refDate = periodDate ?? new Date();
     const [tooltipData, setTooltipData] = useState({
       label: "",
       value: "",
@@ -159,11 +162,9 @@ export const SpendingTrendChart = React.memo(
       if (timeFrame === "week") {
         fullLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       } else if (timeFrame === "month") {
-        // Get the number of days in the current month
-        const now = new Date();
         const daysInMonth = new Date(
-          now.getFullYear(),
-          now.getMonth() + 1,
+          refDate.getFullYear(),
+          refDate.getMonth() + 1,
           0,
         ).getDate();
         fullLabels = Array.from({ length: daysInMonth }, (_, i) =>
@@ -206,16 +207,15 @@ export const SpendingTrendChart = React.memo(
               Sat: 6,
               Sun: 0,
             };
-            const todayNum = new Date().getDay();
+            const todayNum = refDate.getDay();
             const labelNum = dayMap[label];
             const adjustedToday = todayNum === 0 ? 7 : todayNum;
             const adjustedLabel = labelNum === 0 ? 7 : labelNum;
             isFuture = adjustedLabel > adjustedToday;
           } else if (timeFrame === "month") {
-            const todayDate = new Date().getDate();
-            isFuture = index + 1 > todayDate;
+            isFuture = index + 1 > refDate.getDate();
           } else if (timeFrame === "year") {
-            isFuture = index > new Date().getMonth();
+            isFuture = index > refDate.getMonth();
           }
         }
 
@@ -238,7 +238,7 @@ export const SpendingTrendChart = React.memo(
       });
 
       return { cumulativeData: result, lastActualIndex: lastIdx };
-    }, [data, timeFrame, totalBudget, isCurrentPeriod]);
+    }, [data, timeFrame, totalBudget, isCurrentPeriod, refDate]);
 
     // Catmull-Rom spline interpolation for smooth curves
     const catmullRom = (

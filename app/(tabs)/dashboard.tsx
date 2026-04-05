@@ -1,7 +1,7 @@
 import { useFont } from "@shopify/react-native-skia";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Custom Components
@@ -61,6 +61,10 @@ export default function Dashboard() {
     percentage: savingsPercentage,
     refresh: refreshSavings,
   } = useSavingsProgress();
+
+  const hasAnyChartData = useMemo(() => {
+    return Object.values(chartDataByOffset).some((arr) => arr.some((d) => d.amount > 0));
+  }, [chartDataByOffset]);
 
   const filteredCategoryBudgets = useMemo(() => {
     return categoryBudgets.filter((cb) =>
@@ -140,15 +144,21 @@ export default function Dashboard() {
 
               <TimeFrameSelector selected={timeFrame} onChange={setTimeFrame} />
 
-              <ScrollableSpendingChart
-                chartDataByOffset={chartDataByOffset}
-                timeFrame={timeFrame}
-                font={interFont}
-                currencySymbol={currencySymbol}
-                categoryBudgets={categoryBudgets}
-                isUnlocked={isUnlocked}
-                onOffsetChange={setOffset}
-              />
+              {hasAnyChartData ? (
+                <ScrollableSpendingChart
+                  chartDataByOffset={chartDataByOffset}
+                  timeFrame={timeFrame}
+                  font={interFont}
+                  currencySymbol={currencySymbol}
+                  categoryBudgets={categoryBudgets}
+                  isUnlocked={isUnlocked}
+                  onOffsetChange={setOffset}
+                />
+              ) : (
+                <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6 h-[140px] items-center justify-center">
+                  <Text className="text-secondaryDark text-2xl font-bold tracking-widest">No Data - Add a transaction</Text>
+                </View>
+              )}
 
               <BudgetHealthCard
                 categoryBudgets={filteredCategoryBudgets}

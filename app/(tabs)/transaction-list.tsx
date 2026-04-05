@@ -1,15 +1,17 @@
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { View, Text } from "react-native";
+import { Alert, View, Text } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import FilterModal from "../components/TransactionListPage/FilterModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
 import { TransactionListSkeleton } from "../components/TransactionListPage/TransactionListSkeleton";
 import TransactionsList from "../components/TransactionListPage/TransactionsList";
+import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
-import { fetchAccountNames, fetchCategoryIcons, fetchFilteredTransactions, fetchTransactions } from "../services/backendService";
+import { deleteTransaction, fetchAccountNames, fetchCategoryIcons, fetchFilteredTransactions, fetchTransactions, updateAccountBalance } from "../services/backendService";
+import { useAccountsStore } from "../store/useAccountsStore";
 import { CategoryIconInfo, TimeFrame, Transaction } from "../types/types";
 import { getDateRange } from "../utils/dateUtils";
 
@@ -55,7 +57,9 @@ const groupTransactionsByDate = (
 const TransactionsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const router = useRouter();
-  const { registerTransactionListRefresh, registerOptimisticDeleteTransaction, registerOptimisticUpdateTransaction } = useDataRefresh();
+  const { userId } = useAuth();
+  const { updateAccountBalance: updateAccountBalanceStore, accounts } = useAccountsStore();
+  const { registerTransactionListRefresh, registerOptimisticDeleteTransaction, registerOptimisticUpdateTransaction, refreshAll } = useDataRefresh();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categoryIcons, setCategoryIcons] = useState<Record<string, CategoryIconInfo>>({});
@@ -312,6 +316,31 @@ const TransactionsScreen: React.FC = () => {
     );
   };
 
+  const handleSwipeDelete = async (id: number) => {
+    if (!userId) return;
+    const tx = transactions.find(t => t.id === id);
+    if (!tx) return;
+
+    // Optimistic update
+    handleDeleteTransaction(id);
+    const acc = accounts.find(a => a.account_name === tx.account_name);
+    if (acc) {
+      updateAccountBalanceStore(tx.account_name, acc.balance - tx.amount);
+    }
+
+    try {
+      await deleteTransaction(id, userId);
+      if (acc) {
+        await updateAccountBalance(tx.account_name, acc.balance - tx.amount, userId);
+      }
+      refreshAll();
+    } catch (err) {
+      console.error("Failed to delete transaction:", err);
+      Alert.alert("Error", "Could not delete transaction. Please try again.");
+      refreshAll();
+    }
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
@@ -346,6 +375,7 @@ const TransactionsScreen: React.FC = () => {
             onEndReached={loadMoreTransactions}
             isFetchingMore={isFetchingMore}
             onItemLongPress={handleEditTransaction}
+            onDelete={handleSwipeDelete}
           />
         )}
 

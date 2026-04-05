@@ -137,8 +137,7 @@ export default function CategoryPreselectionScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(1);
-    router.push("/(onboarding)/welcome");
+    router.back();
   };
 
   const handleSkip = () => {

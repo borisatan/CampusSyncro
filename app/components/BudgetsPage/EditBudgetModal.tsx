@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDataRefresh } from '../../context/DataRefreshContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -54,6 +54,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
 }) => {
   const { isDarkMode } = useTheme();
   const { refreshAll } = useDataRefresh();
+  const insets = useSafeAreaInsets();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
   const loadAccounts = useAccountsStore((state) => state.loadAccounts);
 
@@ -224,11 +225,11 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} edges={['top']}>
+      <View className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} style={{ paddingTop: insets.top }}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
         {/* Header with Back and Delete — identical to edit-category */}
-        <View className="flex-row items-center justify-between px-2 mt-8 mb-4">
+        <View className="flex-row items-center justify-between px-2 mt-4 mb-4">
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={onClose}
@@ -348,28 +349,17 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                   <Text className="text-secondaryDark text-[11px] mb-1.5 uppercase tracking-wide">
                     Budget Amount
                   </Text>
-                  <View className="flex-row items-center gap-2">
-                    <View className={`flex-1 flex-row items-center px-3 h-12 rounded-xl border ${isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-white border-borderLight'}`}>
-                      <Text className="text-slateMuted text-base mr-1">{currencySymbol}</Text>
-                      <TextInput
-                        className={`flex-1 py-0 text-base ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}
-                        value={amountText}
-                        onChangeText={setAmountText}
-                        keyboardType="numeric"
-                        placeholder="0"
-                        placeholderTextColor="#6B7280"
-                        selectionColor={category.color}
-                      />
-                    </View>
-                    {hasBudget && (
-                      <TouchableOpacity
-                        onPress={handleRemoveBudget}
-                        activeOpacity={0.7}
-                        className="h-12 px-3 items-center justify-center rounded-xl bg-accentRed"
-                      >
-                        <Text className="text-white text-sm font-semibold">Remove</Text>
-                      </TouchableOpacity>
-                    )}
+                  <View className={`flex-row items-center px-3 h-12 rounded-xl border ${isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-white border-borderLight'}`}>
+                    <Text className="text-slateMuted text-base mr-1">{currencySymbol}</Text>
+                    <TextInput
+                      className={`flex-1 py-0 text-base ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}
+                      value={amountText}
+                      onChangeText={setAmountText}
+                      keyboardType="numeric"
+                      placeholder="0"
+                      placeholderTextColor="#6B7280"
+                      selectionColor={category.color}
+                    />
                   </View>
                   {amountText !== '' && !isNaN(parseAmount(amountText)) && monthlyIncome > 0 && (
                     <Text className="text-secondaryDark text-xs mt-1.5">
@@ -382,28 +372,17 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                   <Text className="text-secondaryDark text-[11px] mb-1.5 uppercase tracking-wide">
                     Percentage of Income {monthlyIncome > 0 ? `(${currencySymbol}${monthlyIncome.toLocaleString()}/mo)` : ''}
                   </Text>
-                  <View className="flex-row items-center gap-2">
-                    <View className={`flex-1 flex-row items-center px-3 h-12 rounded-xl border ${isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-white border-borderLight'}`}>
-                      <TextInput
-                        className={`flex-1 py-0 text-base ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}
-                        value={percentText}
-                        onChangeText={setPercentText}
-                        keyboardType="numeric"
-                        placeholder="0"
-                        placeholderTextColor="#6B7280"
-                        selectionColor={category.color}
-                      />
-                      <Text className="text-slateMuted text-base ml-1">%</Text>
-                    </View>
-                    {hasBudget && (
-                      <TouchableOpacity
-                        onPress={handleRemoveBudget}
-                        activeOpacity={0.7}
-                        className="h-12 px-3 items-center justify-center rounded-xl bg-accentRed"
-                      >
-                        <Text className="text-white text-sm font-semibold">Remove</Text>
-                      </TouchableOpacity>
-                    )}
+                  <View className={`flex-row items-center px-3 h-12 rounded-xl border ${isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-white border-borderLight'}`}>
+                    <TextInput
+                      className={`flex-1 py-0 text-base ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}
+                      value={percentText}
+                      onChangeText={setPercentText}
+                      keyboardType="numeric"
+                      placeholder="0"
+                      placeholderTextColor="#6B7280"
+                      selectionColor={category.color}
+                    />
+                    <Text className="text-slateMuted text-base ml-1">%</Text>
                   </View>
                   {percentText !== '' && !isNaN(parseAmount(percentText)) && monthlyIncome > 0 && (
                     <Text className="text-secondaryDark text-xs mt-1.5">
@@ -472,7 +451,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
             onClose();
           }}
         />
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };

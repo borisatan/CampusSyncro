@@ -214,7 +214,11 @@ export default function ProfileScreen() {
             <View className="flex-1">
               <Text className="text-xl font-bold text-white">Current User</Text>
               <Text className="text-indigo-200 text-sm">
-                {email ?? "Loading..."}
+                {email
+                  ? email.endsWith("@privaterelay.appleid.com")
+                    ? "Anonymous"
+                    : email
+                  : "Loading..."}
               </Text>
             </View>
             <ChevronRight color="white" size={24} />

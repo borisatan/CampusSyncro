@@ -45,6 +45,7 @@ const TransactionAdder = () => {
   const categories = useCategoriesStore((state) => state.categories);
   const isCategoriesLoading = useCategoriesStore((state) => state.isLoading);
   const accountOptions = useAccountsStore((state) => state.accounts);
+  const hasNoAccounts = accountOptions.length === 0;
   const expenseAccountOptions = accountOptions.filter(
     (acc) => acc.type !== "investment",
   );
@@ -237,24 +238,26 @@ const TransactionAdder = () => {
                 />
               )}
 
-              <MotiView
-                key={`account-${transactionType}`}
-                from={{ opacity: 0, translateY: 8 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ type: "timing", duration: 250, delay: 0 }}
-              >
-                <AccountSelector
-                  isDarkMode={isDarkMode}
-                  showAccountDropdown={showAccountDropdown}
-                  setShowAccountDropdown={setShowAccountDropdown}
-                  isLoadingAccounts={false}
-                  selectedAccount={selectedAccount}
-                  setSelectedAccount={setSelectedAccount}
-                  accountOptions={accountOptions}
-                  expenseAccountOptions={expenseAccountOptions}
-                  transactionType={transactionType}
-                />
-              </MotiView>
+              {!hasNoAccounts && (
+                <MotiView
+                  key={`account-${transactionType}`}
+                  from={{ opacity: 0, translateY: 8 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  transition={{ type: "timing", duration: 250, delay: 0 }}
+                >
+                  <AccountSelector
+                    isDarkMode={isDarkMode}
+                    showAccountDropdown={showAccountDropdown}
+                    setShowAccountDropdown={setShowAccountDropdown}
+                    isLoadingAccounts={false}
+                    selectedAccount={selectedAccount}
+                    setSelectedAccount={setSelectedAccount}
+                    accountOptions={accountOptions}
+                    expenseAccountOptions={expenseAccountOptions}
+                    transactionType={transactionType}
+                  />
+                </MotiView>
+              )}
             </>
           )}
 
@@ -285,6 +288,8 @@ const TransactionAdder = () => {
                 handleSubmit={handleSubmit}
                 transactionType={transactionType}
                 isSubmitting={isSubmitting}
+                disabled={hasNoAccounts}
+                buttonText={hasNoAccounts ? "Add an account from the profile page" : undefined}
               />
             </MotiView>
           </View>

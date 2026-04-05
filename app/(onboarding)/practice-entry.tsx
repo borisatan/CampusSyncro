@@ -138,8 +138,7 @@ export default function PracticeEntryScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(8);
-    router.push("/(onboarding)/why-manual");
+    router.back();
   };
 
   const handleSkip = () => {
