@@ -102,8 +102,8 @@ export default function BudgetsScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [transactionMode, setTransactionMode] = useState<'add' | 'withdraw'>('add');
   const [activeGoalIndex, setActiveGoalIndex] = useState(0);
+  const [isGoalEditMode, setIsGoalEditMode] = useState(false);
   const { width: screenWidth } = useWindowDimensions();
   const goalCardWidth = screenWidth - 32;
 
@@ -170,19 +170,11 @@ export default function BudgetsScreen() {
 
   const handleGoalPress = (goal: Goal) => {
     setSelectedGoal(goal);
-    setShowEditModal(true);
-  };
-
-  const handleAddPress = (goal: Goal) => {
-    setSelectedGoal(goal);
-    setTransactionMode('add');
-    setShowTransactionModal(true);
-  };
-
-  const handleWithdrawPress = (goal: Goal) => {
-    setSelectedGoal(goal);
-    setTransactionMode('withdraw');
-    setShowTransactionModal(true);
+    if (isGoalEditMode) {
+      setShowEditModal(true);
+    } else {
+      setShowTransactionModal(true);
+    }
   };
 
   useEffect(() => {
@@ -542,11 +534,16 @@ export default function BudgetsScreen() {
                         </Text>
                       </View>
                       <TouchableOpacity
-                        onPress={() => setShowCreateModal(true)}
-                        className="flex-row items-center"
+                        onPress={() => setIsGoalEditMode(!isGoalEditMode)}
+                        className={`px-4 py-1 rounded-lg border items-center justify-center ${
+                          isGoalEditMode
+                            ? 'bg-accentBlue border-surfaceDark'
+                            : 'bg-surfaceDark border-slate700'
+                        }`}
                       >
-                        <Ionicons name="add-circle-outline" size={16} color="#a78bfa" />
-                        <Text className="text-purple-400 text-xs ml-1 font-medium">New Goal</Text>
+                        <Text className={`text-sm ${isGoalEditMode ? 'text-white' : 'text-textDark'}`}>
+                          {isGoalEditMode ? 'Done Editing' : 'Edit Goals'}
+                        </Text>
                       </TouchableOpacity>
                     </View>
 
@@ -560,7 +557,7 @@ export default function BudgetsScreen() {
                         <Text className="text-slateMuted text-xs mt-0.5">Emergency fund, vacation, new car...</Text>
                       </Pressable>
                     ) : (
-                      <View className="bg-surfaceDark rounded-2xl border border-borderDark" style={{ overflow: 'hidden' }}>
+                      <View className={`rounded-2xl border border-borderDark ${isGoalEditMode ? 'bg-black/40' : 'bg-surfaceDark'}`} style={{ overflow: 'hidden' }}>
                         <GestureDetector gesture={goalPanGesture}>
                           <Animated.View style={[{ flexDirection: 'row', width: goalCardWidth * goals.length }, goalAnimatedStyle]}>
                             {goals.map((goal) => (
@@ -569,9 +566,8 @@ export default function BudgetsScreen() {
                                   goal={goal}
                                   currencySymbol={currencySymbol}
                                   onPress={() => handleGoalPress(goal)}
-                                  onAddPress={() => handleAddPress(goal)}
-                                  onWithdrawPress={() => handleWithdrawPress(goal)}
                                   noBg
+                                  isEditMode={isGoalEditMode}
                                 />
                               </View>
                             ))}
@@ -593,6 +589,28 @@ export default function BudgetsScreen() {
                           </View>
                         )}
                       </View>
+                    )}
+                    {isGoalEditMode && goals.length > 0 && (
+                      <MotiView
+                        from={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: 'timing', duration: 250 }}
+                        className="mt-2"
+                      >
+                        <TouchableOpacity
+                          onPress={() => setShowCreateModal(true)}
+                          className="bg-backgroundDark border border-slate500 rounded-2xl px-4 py-3 flex-row items-center justify-center gap-3 self-stretch"
+                          activeOpacity={0.7}
+                        >
+                          <View
+                            className="w-9 h-9 rounded-xl items-center justify-center"
+                            style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#d1d5db' }}
+                          >
+                            <Ionicons name="add-outline" size={20} color="#6366f1" />
+                          </View>
+                          <Text className="text-slate200 text-sm">Add Goal</Text>
+                        </TouchableOpacity>
+                      </MotiView>
                     )}
                   </MotiView>
                 )}
@@ -824,7 +842,6 @@ export default function BudgetsScreen() {
       <GoalTransactionModal
         visible={showTransactionModal}
         goal={selectedGoal}
-        mode={transactionMode}
         accounts={accounts}
         currencySymbol={currencySymbol}
         onClose={() => {

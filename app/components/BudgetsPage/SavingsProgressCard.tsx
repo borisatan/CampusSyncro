@@ -193,10 +193,10 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
                 }}
                 className="w-9 h-9 rounded-full items-center justify-center border border-borderDark"
                 style={({ pressed }: any) => ({
-                  backgroundColor: pressed ? "#16A34A" : "#22D97A",
+                  backgroundColor: pressed ? "#15A891" : "#1DB8A3",
                 })}
               >
-                <Ionicons name="add" size={20} color="#FFFFFF" />
+                <Ionicons name="add-outline" size={20} color="#FFFFFF" />
               </Pressable>
             )}
 
@@ -210,10 +210,10 @@ export const SavingsProgressCard: React.FC<SavingsProgressCardProps> = ({
                 }}
                 className="w-9 h-9 rounded-full items-center justify-center border border-borderDark"
                 style={({ pressed }: any) => ({
-                  backgroundColor: pressed ? "#2563EB" : "#3B7EFF",
+                  backgroundColor: pressed ? "#D4463F" : "#F2514A",
                 })}
               >
-                <Ionicons name="remove" size={20} color="#FFFFFF" />
+                <Ionicons name="remove-outline" size={20} color="#FFFFFF" />
               </Pressable>
             )}
 

@@ -119,7 +119,7 @@ export const QuickSavingsModal: React.FC<QuickSavingsModalProps> = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"

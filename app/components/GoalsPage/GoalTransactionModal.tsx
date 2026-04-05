@@ -10,8 +10,15 @@ import {
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { contributeToGoal, trackGoalAmount, withdrawFromGoal } from '../../services/backendService';
@@ -22,7 +29,6 @@ import { AccountSelector } from '../AddTransactionPage/AccountSelector';
 interface GoalTransactionModalProps {
   visible: boolean;
   goal: Goal | null;
-  mode: 'add' | 'withdraw';
   accounts: Account[];
   currencySymbol: string;
   onClose: () => void;
@@ -32,7 +38,6 @@ interface GoalTransactionModalProps {
 export function GoalTransactionModal({
   visible,
   goal,
-  mode,
   accounts,
   currencySymbol,
   onClose,
@@ -40,17 +45,37 @@ export function GoalTransactionModal({
 }: GoalTransactionModalProps) {
   const { userId } = useAuth();
   const { isDarkMode } = useTheme();
+  const [mode, setMode] = useState<'add' | 'withdraw'>('add');
   const [amount, setAmount] = useState('');
-  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [selectedAccountName, setSelectedAccountName] = useState('');
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Animated slider: 0 = add, 1 = withdraw
+  const sliderProgress = useSharedValue(0);
+
+  useEffect(() => {
+    sliderProgress.value = withTiming(mode === 'withdraw' ? 1 : 0, { duration: 200 });
+  }, [mode]);
+
+  const sliderStyle = useAnimatedStyle(() => ({
+    left: `${sliderProgress.value * 50}%`,
+    backgroundColor: interpolateColor(sliderProgress.value, [0, 1], ['#1DB8A3', '#F2514A']),
+  }));
+
+  const addTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(sliderProgress.value, [0, 1], ['#ffffff', '#94a3b8']),
+  }));
+
+  const withdrawTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(sliderProgress.value, [0, 1], ['#94a3b8', '#ffffff']),
+  }));
+
   // Reset form when modal opens
   useEffect(() => {
     if (visible) {
+      setMode('add');
       setAmount('');
-      setSelectedAccountId(null);
       setSelectedAccountName('');
       setShowAccountDropdown(false);
     }
@@ -58,28 +83,27 @@ export function GoalTransactionModal({
 
   if (!goal) return null;
 
-  // Find the savings account linked to this goal
   const goalAccount = accounts.find((acc) => acc.id === goal.account_id);
-
-  // For adding: filter to non-savings accounts (source accounts)
-  // For withdrawing: filter to non-savings accounts (destination accounts)
   const availableAccounts = accounts.filter(
     (acc) => acc.type !== 'savings' && acc.type !== 'investment'
   );
 
   const hasLinkedAccount = goalAccount !== undefined;
   const parsedAmount = parseAmount(amount);
-  // In add mode, always require an account selection (source of funds)
   const requiresAccountSelection = mode === 'add' || hasLinkedAccount;
   const canSubmit =
     parsedAmount > 0 &&
     (!requiresAccountSelection || selectedAccountName.trim() !== '') &&
     !isSubmitting;
+  const canWithdraw = mode === 'withdraw' ? parsedAmount <= goal.current_amount : true;
 
-  // Additional validation for withdraw
-  const canWithdraw = mode === 'withdraw'
-    ? parsedAmount <= goal.current_amount
-    : true;
+  const handleModeChange = (newMode: 'add' | 'withdraw') => {
+    if (newMode === mode) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setAmount('');
+    setSelectedAccountName('');
+    setMode(newMode);
+  };
 
   const handleSubmit = async () => {
     const selectedAccount = availableAccounts.find(
@@ -133,24 +157,16 @@ export function GoalTransactionModal({
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setAmount('');
-    setSelectedAccountName('');
-    setShowAccountDropdown(false);
     onClose();
   };
 
-  const progress =
-    goal.target_amount > 0
-      ? Math.min((goal.current_amount / goal.target_amount) * 100, 100)
-      : 0;
+  const progress = goal.target_amount > 0
+    ? Math.min((goal.current_amount / goal.target_amount) * 100, 100)
+    : 0;
 
-  const isAddMode = mode === 'add';
-  const modalIcon = isAddMode ? 'add-circle' : 'remove-circle';
-  const modalTitle = isAddMode ? 'Add to Goal' : 'Withdraw from Goal';
-  const modalColor = isAddMode ? '#10B981' : '#F2514A';
-  const accountLabel = isAddMode ? 'From Account' : 'To Account';
-  const submitButtonText = isAddMode ? 'Add Funds' : 'Withdraw Funds';
-  const submitButtonColor = isAddMode ? 'bg-green-600' : 'bg-accentRed';
+  const accentColor = goal.color || '#a78bfa';
+  const submitActive = canSubmit && canWithdraw;
+  const submitBg = submitActive ? (mode === 'add' ? 'bg-accentTeal' : 'bg-accentRed') : 'bg-gray-600';
 
   return (
     <Modal
@@ -163,21 +179,30 @@ export function GoalTransactionModal({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1 justify-end"
       >
-        <Pressable
-          className="flex-1"
-          onPress={handleClose}
-        />
-        <View className="bg-surfaceDark rounded-t-3xl border-t border-borderDark max-h-[80%]">
-          {/* Header */}
-          <View className="flex-row items-center justify-between px-4 pt-6 pb-4">
-            <View className="flex-row items-center">
-              <View
-                className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: `${modalColor}20` }}
-              >
-                <Ionicons name={modalIcon as any} size={20} color={modalColor} />
-              </View>
-              <Text className="text-white text-lg font-semibold">{modalTitle}</Text>
+        <Pressable className="flex-1" onPress={handleClose} />
+
+        <View className="bg-surfaceDark rounded-t-3xl border-t border-borderDark max-h-[85%]">
+          {/* Handle bar */}
+          <View className="items-center pt-3 pb-1">
+            <View className="w-10 h-1 rounded-full bg-borderDark" />
+          </View>
+
+          {/* Goal header */}
+          <View className="flex-row items-center px-4 pt-3 pb-4">
+            <View
+              className="w-10 h-10 rounded-full items-center justify-center mr-3"
+              style={{ backgroundColor: accentColor }}
+            >
+              <Ionicons name={(goal.icon as any) || 'flag-outline'} size={18} color="#fff" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-white text-lg font-semibold">{goal.name}</Text>
+              <Text className="text-secondaryDark text-xs mt-0.5">
+                {currencySymbol}{goal.current_amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                {' / '}
+                {currencySymbol}{goal.target_amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                {'  ·  '}{Math.round(progress)}%
+              </Text>
             </View>
             <Pressable
               onPress={handleClose}
@@ -187,78 +212,87 @@ export function GoalTransactionModal({
             </Pressable>
           </View>
 
-          {/* Divider */}
-          <View className="border-b border-borderDark " />
+          {/* Progress bar */}
+          <View className="px-4 pb-4">
+            <View className="h-1.5 rounded-full overflow-hidden bg-gray-700">
+              <View
+                className="h-full rounded-full"
+                style={{ width: `${progress}%`, backgroundColor: accentColor }}
+              />
+            </View>
+          </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} className="bg-backgroundDark" contentContainerStyle={{ padding: 10 }} keyboardDismissMode="on-drag">
-            {/* Goal Info */}
-            <View className="bg-surfaceDark rounded-xl p-4 mb-4 border border-borderDark">
-              <View className="flex-row items-center mb-3">
-                <View
-                  className="w-8 h-8 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: goal.color || '#a78bfa' }}
-                >
-                  <Ionicons
-                    name={(goal.icon as any) || 'flag-outline'}
-                    size={16}
-                    color="#fff"
-                  />
-                </View>
-                <Text className="text-white font-medium">{goal.name}</Text>
-              </View>
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-secondaryDark text-sm">Current Progress</Text>
-                <Text className="text-purple-400 font-semibold">
-                  {Math.round(progress)}%
-                </Text>
-              </View>
-              <View className="h-2 bg-gray-700 rounded-full overflow-hidden mb-2">
-                <View
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${progress}%`,
-                    backgroundColor: goal.color || '#a78bfa',
-                  }}
-                />
-              </View>
-              <Text className="text-white text-sm">
-                {currencySymbol}
-                {goal.current_amount.toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}{' '}
-                of {currencySymbol}
-                {goal.target_amount.toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}
+          <View className="border-b border-borderDark" />
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            className="bg-backgroundDark"
+            contentContainerStyle={{ padding: 16, paddingBottom: 44 }}
+            keyboardDismissMode="on-drag"
+          >
+            {/* Mode slider */}
+            <View
+              className="bg-inputDark border border-borderDark rounded-2xl flex-row mb-5"
+              style={{ overflow: 'hidden' }}
+            >
+              <Animated.View
+                style={[
+                  {
+                    position: 'absolute',
+                    top: 0,
+                    bottom: 0,
+                    width: '50%',
+                    borderRadius: 12,
+                  },
+                  sliderStyle,
+                ]}
+              />
+              <TouchableOpacity
+                onPress={() => handleModeChange('add')}
+                className="flex-1 py-3 z-10"
+                activeOpacity={0.7}
+              >
+                <Animated.Text style={[{ textAlign: 'center', fontWeight: '600', fontSize: 14 }, addTextStyle]}>
+                  Add Funds
+                </Animated.Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleModeChange('withdraw')}
+                className="flex-1 py-3 z-10"
+                activeOpacity={0.7}
+              >
+                <Animated.Text style={[{ textAlign: 'center', fontWeight: '600', fontSize: 14 }, withdrawTextStyle]}>
+                  Withdraw
+                </Animated.Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Amount input */}
+            <Text className="text-secondaryDark text-sm mb-2">Amount</Text>
+            <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark mb-4">
+              <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>{currencySymbol}</Text>
+              <TextInput
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="0"
+                placeholderTextColor="#64748B"
+                keyboardType="decimal-pad"
+                className="flex-1 text-lg text-white"
+                style={{ lineHeight: 18 }}
+              />
+            </View>
+            {mode === 'withdraw' && parsedAmount > goal.current_amount && (
+              <Text className="text-accentRed text-xs -mt-3 mb-3">
+                Amount exceeds current goal balance
               </Text>
-            </View>
+            )}
 
-            {/* Amount Input */}
-            <View className="mb-4">
-              <Text className="text-secondaryDark text-sm mb-2">Amount</Text>
-              <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark">
-                <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>{currencySymbol}</Text>
-                <TextInput
-                  value={amount}
-                  onChangeText={setAmount}
-                  placeholder="0"
-                  placeholderTextColor="#64748B"
-                  keyboardType="decimal-pad"
-                  className="flex-1 text-lg text-white"
-                  style={{ lineHeight: 18 }}
-                />
-              </View>
-              {mode === 'withdraw' && parsedAmount > goal.current_amount && (
-                <Text className="text-red-400 text-xs mt-1">
-                  Amount exceeds current goal balance
-                </Text>
-              )}
-            </View>
-
-            {/* Account Selector — shown in add mode (always) and withdraw mode when linked */}
-            {requiresAccountSelection && (
+            {/* Account selector — always rendered to prevent layout shift */}
+            <View
+              className="mb-4"
+              pointerEvents={requiresAccountSelection ? 'auto' : 'none'}
+              style={{ opacity: requiresAccountSelection ? 1 : 0 }}
+            >
               <AccountSelector
                 isDarkMode={isDarkMode}
                 showAccountDropdown={showAccountDropdown}
@@ -270,23 +304,17 @@ export function GoalTransactionModal({
                 expenseAccountOptions={availableAccounts}
                 transactionType="expense"
               />
-            )}
+            </View>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <Pressable
               onPress={handleSubmit}
-              disabled={!canSubmit || !canWithdraw}
-              className={`py-4 rounded-xl items-center ${
-                canSubmit && canWithdraw ? submitButtonColor : 'bg-gray-600'
-              }`}
-              style={({ pressed }) => [{ opacity: pressed && canSubmit && canWithdraw ? 0.8 : 1 }]}
+              disabled={!submitActive}
+              className={`py-4 rounded-xl items-center ${submitBg}`}
+              style={({ pressed }) => [{ opacity: pressed && submitActive ? 0.8 : 1 }]}
             >
-              <Text
-                className={`font-semibold text-base ${
-                  canSubmit && canWithdraw ? 'text-white' : 'text-gray-400'
-                }`}
-              >
-                {isSubmitting ? 'Processing...' : submitButtonText}
+              <Text className={`font-semibold text-base ${submitActive ? 'text-white' : 'text-gray-400'}`}>
+                {isSubmitting ? 'Processing...' : mode === 'add' ? 'Add Funds' : 'Withdraw Funds'}
               </Text>
             </Pressable>
           </ScrollView>
