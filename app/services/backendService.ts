@@ -688,15 +688,36 @@ export  const getUserId = async () => {
   return data.user?.id;
 };
 export async function deleteCategory(id: string, user_id: string) {
-  const { data, error } = await supabase
-      .from('Categories')
+  // Fetch the category name so we can null it out on transactions first
+  const { data: categoryData, error: fetchError } = await supabase
+    .from('Categories')
+    .select('category_name')
+    .eq('id', id)
+    .eq('user_id', user_id)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  // Delete all transactions using this category before deleting the category
+  if (categoryData?.category_name) {
+    const { error: deleteError } = await supabase
+      .from('Transactions')
       .delete()
-      .eq('id', id)
-      .eq('user_id', user_id)
-      .select();
-      
-    if (error) throw error;
-    return data;
+      .eq('category_name', categoryData.category_name)
+      .eq('user_id', user_id);
+
+    if (deleteError) throw deleteError;
+  }
+
+  const { data, error } = await supabase
+    .from('Categories')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user_id)
+    .select();
+
+  if (error) throw error;
+  return data;
 }
 
 

@@ -28,7 +28,7 @@ export const DashboardSummary = ({
           <Text className="text-3xl font-extrabold text-slate50 -tracking-tight">
             Total Balance
           </Text>
-          <View className="flex-row items-center">
+          <View className="flex-row items-baseline flex-wrap">
             <Text className="text-5xl font-bold text-textDark">
               {currencySymbol}0.00
             </Text>
@@ -73,7 +73,7 @@ export const DashboardSummary = ({
           <Text className="text-3xl font-extrabold text-slate50 -tracking-tight">
             Total Balance
           </Text>
-          <View className="flex-row items-center">
+          <View className="flex-row items-baseline flex-wrap">
             <Text className="text-5xl font-bold text-textDark">
               {currencySymbol}
             </Text>

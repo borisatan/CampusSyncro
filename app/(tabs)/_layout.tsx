@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LoadingSpinner from "../components/Shared/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
@@ -54,6 +54,8 @@ export default function TabLayout() {
           fontSize: 10,
           marginTop: 2,
         },
+
+        animation: Platform.OS === "android" ? "shift" : "none",
       }}
     >
       <Tabs.Screen

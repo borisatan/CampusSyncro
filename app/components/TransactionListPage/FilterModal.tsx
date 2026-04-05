@@ -229,7 +229,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 <View className="gap-y-2.5">
                   {/* Start Date */}
                   <TouchableOpacity
-                    onPress={() => setShowStartPicker(true)}
+                    onPress={() => { setShowEndPicker(false); setShowStartPicker((prev) => !prev); }}
                     className="flex-row items-center rounded-xl px-4 py-3.5 border border-borderDark bg-inputDark"
                   >
                     <Calendar size={18} color="#94a3b8" />
@@ -241,7 +241,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
                   {/* End Date */}
                   <TouchableOpacity
-                    onPress={() => setShowEndPicker(true)}
+                    onPress={() => { setShowStartPicker(false); setShowEndPicker((prev) => !prev); }}
                     className="flex-row items-center rounded-xl px-4 py-3.5 border border-borderDark bg-inputDark"
                   >
                     <Calendar size={18} color="#94a3b8" />
@@ -257,6 +257,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       mode="date"
                       display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={handleStartDateChange}
+                      maximumDate={new Date()}
                       themeVariant={isDarkMode ? "dark" : "light"}
                     />
                   )}
@@ -268,6 +269,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={handleEndDateChange}
                       minimumDate={startDate}
+                      maximumDate={new Date()}
                       themeVariant={isDarkMode ? "dark" : "light"}
                     />
                   )}
