@@ -26,7 +26,8 @@ export default function UserSettingsScreen() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // URLs - Update these with your actual URLs
-  const PRIVACY_POLICY_URL = "https://trymonelo.app/privacypolicy";
+  const PRIVACY_POLICY_URL = "https://trymonelo.app/privacy-policy";
+  const TERMS_URL = "https://trymonelo.app/terms-and-conditions";
   const SUPPORT_URL = "https://trymonelo.app/support";
 
   const handleDeleteAccount = () => {
@@ -163,6 +164,28 @@ export default function UserSettingsScreen() {
               </Text>
               <Text className={`text-sm ${textSecondary}`}>
                 View our privacy policy
+              </Text>
+            </View>
+            <ExternalLink
+              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+              size={20}
+            />
+          </Pressable>
+
+          {/* Terms and Conditions */}
+          <Pressable
+            onPress={() => openURL(TERMS_URL, "Terms and Conditions")}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 active:bg-slate-800/10 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-purple-600 rounded-xl items-center justify-center mr-3">
+              <FileText color="white" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>
+                Terms and Conditions
+              </Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                View our terms of service
               </Text>
             </View>
             <ExternalLink

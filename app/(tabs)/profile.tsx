@@ -7,6 +7,7 @@ import {
   LogOut,
   MessageSquare,
   RotateCcw,
+  Star,
   User,
   Wallet,
 } from "lucide-react-native";
@@ -157,8 +158,14 @@ export default function ProfileScreen() {
     router.push("/(onboarding)/welcome");
   };
 
-  const handleFeedback = () => {
+  const handleSupport = () => {
     Linking.openURL("https://trymonelo.app/support");
+  };
+
+  const handleRateApp = () => {
+    Linking.openURL(
+      "https://apps.apple.com/app/id6742437027?action=write-review",
+    );
   };
 
   // Styling Variables
@@ -323,26 +330,44 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Feedback Section */}
+        {/* Support Section */}
         <View className="mb-8">
           <Text
             className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}
           >
-            Feedback
+            Support
           </Text>
           <RipplePressable
-            onPress={handleFeedback}
-            className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
+            onPress={handleSupport}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-teal-600 rounded-xl items-center justify-center mr-3">
               <MessageSquare color="white" size={20} />
             </View>
             <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>Support</Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                Get help and send feedback
+              </Text>
+            </View>
+            <ChevronRight
+              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+              size={20}
+            />
+          </RipplePressable>
+          <RipplePressable
+            onPress={handleRateApp}
+            className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-amber-500 rounded-xl items-center justify-center mr-3">
+              <Star color="white" size={20} />
+            </View>
+            <View className="flex-1">
               <Text className={`font-medium ${textPrimary}`}>
-                Give Feedback
+                Rate Monelo
               </Text>
               <Text className={`text-sm ${textSecondary}`}>
-                Give feature requests and feedback
+                Leave a review on the App Store
               </Text>
             </View>
             <ChevronRight

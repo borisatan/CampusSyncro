@@ -225,7 +225,7 @@ export default function MoveMoneyPage({
       <TouchableWithoutFeedback onPress={onClose}>
         <View className="flex-1 justify-end">
           <TouchableWithoutFeedback>
-            <View className="bg-backgroundDark rounded-t-3xl max-h-[70%]">
+            <View className="bg-backgroundDark rounded-t-3xl max-h-[70%] pb-8">
               <View className="flex-row items-center justify-between px-4 py-4 border-b border-borderDark bg-surfaceDark rounded-t-3xl">
                 <Text className="text-lg font-semibold text-textDark">Select Account</Text>
                 <TouchableOpacity onPress={onClose}>
@@ -274,7 +274,7 @@ export default function MoveMoneyPage({
       >
         <View className="flex-1">
           {/* Header */}
-          <View className="flex-row items-center px-2 py-3 my-2">
+          <View className="flex-row items-center px-2 py-3 mt-6 mb-2">
             <TouchableOpacity
               onPress={onBack}
               className="w-10 h-10 items-center justify-center mr-2"

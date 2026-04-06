@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ArrowLeft } from "lucide-react-native";
+import { ArrowLeft, Sparkles, TrendingUp } from "lucide-react-native";
 import { MotiView } from "moti";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Haptics from "expo-haptics";
-import { Alert, Modal, Pressable, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
@@ -88,7 +88,7 @@ export default function BudgetsScreen() {
   const [isReorderMode, setIsReorderMode] = useState(false);
 
   // AI Budget state
-  const [aiModalView, setAIModalView] = useState<"help" | "preview" | null>(null);
+  const [aiModalView, setAIModalView] = useState<"info" | "loading" | "results" | null>(null);
   const [aiLoading, setAILoading] = useState(false);
   const [aiError, setAIError] = useState<string | null>(null);
   const [aiAllocations, setAIAllocations] = useState<BudgetAllocation[] | null>(null);
@@ -222,7 +222,7 @@ export default function BudgetsScreen() {
       (cat) => cat.category_name !== "Income",
     );
 
-    setAIModalView("preview");
+    setAIModalView("loading");
     setAILoading(true);
     setAIError(null);
     setAIAllocations(null);
@@ -242,8 +242,10 @@ export default function BudgetsScreen() {
       setAIFromCache(result.fromCache);
       setAISpendingBudget(result.spendingBudget);
       setAISavingsAmount(result.savingsAmount);
+      setAIModalView("results");
     } else {
       setAIError("error" in result ? result.error : "Unknown error occurred");
+      setAIModalView("info");
     }
   }, [categories, monthlyIncome]);
 
@@ -433,7 +435,7 @@ export default function BudgetsScreen() {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setAIModalView("help")}
+            onPress={() => setAIModalView("info")}
             className="w-9 h-9 rounded-xl items-center justify-center bg-accentBlue"
           >
             <Ionicons name="sparkles" size={16} color="#FFF" />
@@ -701,101 +703,266 @@ export default function BudgetsScreen() {
       {/* AI modal */}
       <Modal
         visible={aiModalView !== null}
-        animationType="none"
+        animationType="slide"
         statusBarTranslucent
         onRequestClose={aiLoading ? undefined : handleCloseAIModal}
       >
         <SafeAreaView className="flex-1 bg-backgroundDark">
 
-          {aiModalView === "help" && (
-            <>
+          {/* ── Info screen ── */}
+          {aiModalView === "info" && (
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 300 }}
+              className="flex-1"
+            >
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 24, paddingTop: 8 }}
-                keyboardDismissMode="on-drag"
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8 }}
               >
-                <View className="flex-row items-center justify-between mb-5 mt-1">
-                  <TouchableOpacity
-                    onPress={handleCloseAIModal}
-                    className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-xl items-center justify-center"
-                  >
-                    <ArrowLeft color="#94A3B8" size={20} />
-                  </TouchableOpacity>
-
-                  <View className="w-[100px] h-[100px] rounded-[24px] bg-accentBlue/10 items-center justify-center">
-                    <View className="w-[82px] h-[82px] rounded-[20px] bg-accentTeal items-center justify-center">
-                      <Ionicons name="pie-chart-outline" size={42} color="#FFF" />
-                    </View>
-                  </View>
-
-                  <View className="w-10" />
-                </View>
-
-                <Text className="text-center text-2xl font-extrabold text-textDark mb-1.5 leading-[30px]">
-                  Let us allocate your budget{"\n"}using the proven{" "}
-                  <Text className="text-accentBlue">50/30/20 rule</Text>
-                </Text>
-                <View className="h-6" />
-
-                {[
-                  { pct: "50%", label: "Needs",   desc: "Essential expenses like housing, transportation, and utilities", color: "#139B8B" },
-                  { pct: "30%", label: "Wants",   desc: "Lifestyle choices like dining, shopping, and entertainment",     color: "#6D3FD4" },
-                  { pct: "20%", label: "Savings", desc: "Future goals like emergency fund, investments, and debt payoff", color: "#2550D4" },
-                ].map((rule) => (
-                  <View
-                    key={rule.label}
-                    className="flex-row items-center mb-3 p-4 rounded-xl border bg-surfaceDark border-borderDark"
-                  >
-                    <View
-                      className="w-[52px] h-[52px] rounded-xl items-center justify-center mr-4 border border-overlayLight"
-                      style={{ backgroundColor: rule.color }}
-                    >
-                      <Text className="text-sm font-black text-white">{rule.pct}</Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-base font-bold text-textDark mb-0.5">{rule.label}</Text>
-                      <Text className="text-[13px] text-secondaryDark leading-[18px]">{rule.desc}</Text>
-                    </View>
-                  </View>
-                ))}
-              </ScrollView>
-
-              <View className="flex-row gap-3 px-2 pt-3 pb-6">
+                {/* Close button */}
                 <TouchableOpacity
                   onPress={handleCloseAIModal}
-                  className="flex-1 bg-surfaceDark rounded-xl py-4 items-center justify-center border border-borderDark"
-                  activeOpacity={0.7}
+                  className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mb-8 mt-1"
                 >
-                  <Text className="text-textDark font-semibold text-base">I&apos;ll do it myself</Text>
+                  <ArrowLeft color="#94A3B8" size={20} />
                 </TouchableOpacity>
 
+                {/* Icon */}
+                <View className="items-center mb-6">
+                  <View className="w-20 h-20 rounded-full bg-accentBlue/15 items-center justify-center">
+                    <View className="w-14 h-14 rounded-full bg-accentBlue items-center justify-center">
+                      <Sparkles size={28} color="#fff" />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Title */}
+                <Text className="text-center text-2xl font-bold text-textDark mb-1">
+                  Smart Budget Setup
+                </Text>
+                <Text className="text-center text-sm text-secondaryDark mb-8">
+                  Based on your {currencySymbol}{monthlyIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} monthly income
+                </Text>
+
+                {/* 2-col grid: Needs + Wants */}
+                <View className="flex-row gap-3 mb-3">
+                  {[
+                    { pct: "50%", label: "Needs", desc: "Rent, groceries, transport & essentials", color: "#139B8B" },
+                    { pct: "30%", label: "Wants", desc: "Dining, shopping & entertainment", color: "#6D3FD4" },
+                  ].map((rule) => (
+                    <View
+                      key={rule.label}
+                      className="flex-1 rounded-2xl p-4"
+                      style={{ backgroundColor: rule.color + '22', borderWidth: 1, borderColor: rule.color + '55' }}
+                    >
+                      <Text className="text-3xl font-black mb-1" style={{ color: rule.color }}>{rule.pct}</Text>
+                      <Text className="text-base font-bold text-textDark mb-1">{rule.label}</Text>
+                      <Text className="text-xs text-secondaryDark leading-4">{rule.desc}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Savings — full width centered */}
+                <View
+                  className="rounded-2xl p-4 mb-8"
+                  style={{ backgroundColor: '#2550D422', borderWidth: 1, borderColor: '#2550D455' }}
+                >
+                  <View className="flex-row items-center gap-3">
+                    <View>
+                      <Text className="text-3xl font-black mb-1" style={{ color: '#5B8BFF' }}>20%</Text>
+                      <Text className="text-base font-bold text-textDark mb-1">Savings</Text>
+                      <Text className="text-xs text-secondaryDark leading-4">Emergency fund, investments & debt payoff</Text>
+                    </View>
+                    <View className="flex-1 items-end">
+                      <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: '#2550D433' }}>
+                        <TrendingUp size={22} color="#5B8BFF" />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </ScrollView>
+
+              {/* Action buttons */}
+              <View className="px-4 pb-8 pt-3 gap-3">
                 <TouchableOpacity
                   onPress={handleSetBudgetWithAI}
-                  className="flex-1 bg-accentTeal rounded-xl py-4 items-center justify-center"
+                  className="bg-accentBlue rounded-2xl py-4 items-center"
                   activeOpacity={0.8}
                 >
-                  <Text className="text-white font-bold text-base">Generate</Text>
+                  <Text className="text-white font-bold text-base">Generate My Budget</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleCloseAIModal}
+                  className="bg-surfaceDark rounded-2xl py-4 items-center border border-borderDark"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-secondaryDark font-semibold text-base">I&apos;ll do it myself</Text>
                 </TouchableOpacity>
               </View>
-            </>
+            </MotiView>
           )}
 
-          {aiModalView === "preview" && (
-            <AIBudgetPreviewModal
-              isLoading={aiLoading}
-              isApplying={aiApplying}
-              error={aiError}
-              allocations={aiAllocations}
-              categories={categories}
-              monthlyIncome={monthlyIncome}
-              spendingBudget={aiSpendingBudget}
-              savingsAmount={aiSavingsAmount}
-              currencySymbol={currencySymbol}
-              fromCache={aiFromCache}
-              onApply={handleApplyAIBudget}
-              onCancel={handleCloseAIModal}
-              onRetry={handleRetryAI}
-            />
+          {/* ── Loading screen ── */}
+          {aiModalView === "loading" && (
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 600 }}
+              className="flex-1 items-center justify-center px-6"
+            >
+              <Sparkles size={48} color="#3B7EFF" />
+              <ActivityIndicator size="large" color="#3B7EFF" style={{ marginTop: 20 }} />
+              <Text className="text-white text-xl font-semibold mt-4 text-center">
+                Creating your smart budget...
+              </Text>
+              <Text className="text-secondaryDark text-sm mt-2 text-center">
+                Using the 50/30/20 rule
+              </Text>
+            </MotiView>
+          )}
+
+          {/* ── Results screen ── */}
+          {aiModalView === "results" && aiAllocations && (
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 400 }}
+              className="flex-1"
+            >
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32, paddingTop: 8 }}
+              >
+                {/* Headline */}
+                <MotiView
+                  from={{ opacity: 0, translateY: 20 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  transition={{ delay: 100, duration: 500 }}
+                  className="mb-6 mt-2"
+                >
+                  <Text className="text-3xl text-white text-center font-bold mb-1">Your Smart Budget</Text>
+                  <Text className="text-secondaryDark text-sm text-center">
+                    Based on your {currencySymbol}{monthlyIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} monthly income
+                  </Text>
+                </MotiView>
+
+                {/* Summary pills */}
+                <MotiView
+                  from={{ opacity: 0, translateY: 20 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  transition={{ delay: 200, duration: 500 }}
+                  className="flex-row justify-center gap-2 mb-6"
+                >
+                  <View className="bg-green-500/20 border border-green-500 rounded-full px-4 py-2">
+                    <Text className="text-green-400 text-xs font-semibold">
+                      Needs {aiAllocations.filter(a => a.classification === 'needs').reduce((s, a) => s + a.percentage, 0).toFixed(1)}%
+                    </Text>
+                  </View>
+                  <View className="bg-blue-500/20 border border-blue-500 rounded-full px-4 py-2">
+                    <Text className="text-blue-400 text-xs font-semibold">
+                      Wants {aiAllocations.filter(a => a.classification === 'wants').reduce((s, a) => s + a.percentage, 0).toFixed(1)}%
+                    </Text>
+                  </View>
+                  <View className="bg-purple-500/20 border border-purple-500 rounded-full px-4 py-2">
+                    <Text className="text-purple-400 text-xs font-semibold">Savings 20%</Text>
+                  </View>
+                </MotiView>
+
+                {/* Spending & Savings card */}
+                <MotiView
+                  from={{ opacity: 0, translateY: 20 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  transition={{ delay: 300, duration: 500 }}
+                  className="mb-6"
+                >
+                  <View className="bg-surfaceDark border border-borderDark rounded-3xl p-4">
+                    <View className="flex-row justify-between items-center mb-3">
+                      <Text className="text-white text-base font-semibold">Spending Budget</Text>
+                      <Text className="text-white text-lg font-bold">
+                        {currencySymbol}{aiSpendingBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </Text>
+                    </View>
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row items-center gap-2">
+                        <TrendingUp size={16} color="#22C55E" />
+                        <Text className="text-secondaryDark text-base">Savings Goal</Text>
+                      </View>
+                      <Text className="text-green-400 text-lg font-bold">
+                        {currencySymbol}{aiSavingsAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </Text>
+                    </View>
+                  </View>
+                </MotiView>
+
+                {/* Category list */}
+                <MotiView
+                  from={{ opacity: 0, translateY: 20 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  transition={{ delay: 400, duration: 500 }}
+                  className="mb-6"
+                >
+                  <Text className="text-white text-lg font-semibold mb-3">Category Budgets</Text>
+                  {aiAllocations.map((allocation, index) => {
+                    const cat = categories.find(c => String(c.id) === String(allocation.categoryId));
+                    const color = cat?.color || '#6B7280';
+                    const icon = cat?.icon || 'apps-outline';
+                    return (
+                      <MotiView
+                        key={allocation.categoryId}
+                        from={{ opacity: 0, translateX: -20 }}
+                        animate={{ opacity: 1, translateX: 0 }}
+                        transition={{ delay: 500 + index * 80, duration: 400 }}
+                        className="mb-3"
+                      >
+                        <View className="bg-surfaceDark border border-borderDark rounded-2xl p-4 flex-row items-center">
+                          <View
+                            className="w-11 h-11 rounded-xl items-center justify-center mr-3"
+                            style={{ backgroundColor: color }}
+                          >
+                            <Ionicons name={icon as any} size={20} color="#fff" />
+                          </View>
+                          <Text className="text-textDark text-[15px] font-semibold flex-1">{allocation.categoryName}</Text>
+                          <View className="items-end">
+                            <Text className="text-textDark text-base font-bold">
+                              {currencySymbol}{allocation.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </Text>
+                            <Text className="text-secondaryDark text-xs mt-0.5">
+                              {allocation.percentage.toFixed(1)}% of income
+                            </Text>
+                          </View>
+                        </View>
+                      </MotiView>
+                    );
+                  })}
+                </MotiView>
+              </ScrollView>
+
+              {/* Apply / Cancel buttons */}
+              <View className="px-4 pb-8 pt-3 gap-3">
+                <TouchableOpacity
+                  onPress={handleApplyAIBudget}
+                  disabled={aiApplying}
+                  className="bg-accentBlue rounded-2xl py-4 items-center"
+                  activeOpacity={0.8}
+                >
+                  {aiApplying ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className="text-white font-bold text-base">Apply Smart Budget</Text>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleCloseAIModal}
+                  disabled={aiApplying}
+                  className="py-4 items-center bg-surfaceDark rounded-2xl border border-borderDark"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-secondaryDark font-semibold text-base">Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </MotiView>
           )}
 
         </SafeAreaView>
