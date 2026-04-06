@@ -5,7 +5,7 @@ import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton"
 import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, NativeModules, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, NativeModules, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import Purchases, { PurchasesPackage } from "react-native-purchases";
 
 const isRevenueCatAvailable = !!NativeModules.RNPurchases;
@@ -209,7 +209,7 @@ export default function SubscriptionTrialScreen() {
           <View className="flex-row items-center justify-between">
             <OnboardingBackButton onPress={handleBack} />
             <OnboardingProgressDots currentStep={10} totalSteps={11} />
-            {__DEV__ ? (
+            {(__DEV__ || Platform.OS === 'android') ? (
               <Pressable onPress={handleSkip} className="active:opacity-60">
                 <Text className="text-red-400 text-sm font-medium">Skip (Dev)</Text>
               </Pressable>
