@@ -9,6 +9,7 @@ const isRevenueCatAvailable = !!NativeModules.RNPurchases;
 const RC_IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '';
 const RC_ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
 const PREMIUM_ENTITLEMENT = 'premium';
+const platformApiKey = Platform.OS === 'android' ? RC_ANDROID_KEY : RC_IOS_KEY;
 
 interface SubscriptionContextType {
   customerInfo: CustomerInfo | null;
@@ -42,7 +43,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [customerInfo]);
 
   useEffect(() => {
-    if (!isRevenueCatAvailable) {
+    if (!isRevenueCatAvailable || !platformApiKey) {
       setIsLoading(false);
       return;
     }
@@ -51,8 +52,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     }
 
-    const apiKey = Platform.OS === 'android' ? RC_ANDROID_KEY : RC_IOS_KEY;
-    Purchases.configure({ apiKey });
+    Purchases.configure({ apiKey: platformApiKey });
 
     const fetchInitialInfo = async () => {
       try {
@@ -91,7 +91,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         await Promise.all([
           // Link Supabase user ID to RevenueCat — converts anonymous customer → identified customer
           (async () => {
-            if (!isRevenueCatAvailable) return;
+            if (!isRevenueCatAvailable || !platformApiKey) return;
             try {
               const { customerInfo: info } = await Purchases.logIn(userId);
 
@@ -142,7 +142,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [userId]);
 
   const refreshCustomerInfo = useCallback(async () => {
-    if (!isRevenueCatAvailable) return;
+    if (!isRevenueCatAvailable || !platformApiKey) return;
     try {
       const info = await Purchases.getCustomerInfo();
       setCustomerInfo(info);
@@ -152,7 +152,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const linkUser = useCallback(async (userId: string) => {
-    if (!isRevenueCatAvailable) return;
+    if (!isRevenueCatAvailable || !platformApiKey) return;
     try {
       const { customerInfo: info } = await Purchases.logIn(userId);
       setCustomerInfo(info);
@@ -161,7 +161,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  const isSubscribed = !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT] || isFoundingMember;
+  const isSubscribed = !platformApiKey || !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT] || isFoundingMember;
 
   return (
     <SubscriptionContext.Provider value={{ customerInfo, isSubscribed, isFoundingMember, isLoading: isLoading || isLinkingUser, refreshCustomerInfo, linkUser }}>
