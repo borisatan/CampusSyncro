@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Purchases, { CustomerInfo, LOG_LEVEL } from 'react-native-purchases';
 import { NativeModules, Platform } from 'react-native';
 import { useAuth } from './AuthContext';
@@ -78,15 +78,21 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   }, []);
 
+  // Set isLinkingUser synchronously when userId appears to prevent a render
+  // where subLoading=false but linking hasn't started yet (race → paywall flash).
+  useLayoutEffect(() => {
+    if (userId) setIsLinkingUser(true);
+  }, [userId]);
+
   // Auto-link RC user and check founding member status whenever the authenticated user changes
   useEffect(() => {
     if (!userId) {
       setIsFoundingMember(false);
+      setIsLinkingUser(false);
       return;
     }
 
     const initForUser = async () => {
-      setIsLinkingUser(true);
       try {
         await Promise.all([
           // Link Supabase user ID to RevenueCat — converts anonymous customer → identified customer
