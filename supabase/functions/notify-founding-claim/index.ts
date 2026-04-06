@@ -48,14 +48,14 @@ Deno.serve(async (req) => {
 
     const serviceClient = createClient(supabaseUrl, serviceKey);
 
-    // Idempotency: skip if already marked as founding member
-    const { data: profile } = await serviceClient
-      .from("Profiles")
-      .select("is_founding_member")
-      .eq("id", userId)
-      .single();
+    // Idempotency: skip if already a founding member
+    const { data: existing } = await serviceClient
+      .from("founding_members")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    if (profile?.is_founding_member) {
+    if (existing) {
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -64,11 +64,10 @@ Deno.serve(async (req) => {
     const normalizedEmail = email.trim().toLowerCase();
     const now = new Date().toISOString();
 
-    // 1. Grant founding member flag on their profile
+    // 1. Grant founding member status (service_role bypasses RLS)
     await serviceClient
-      .from("Profiles")
-      .update({ is_founding_member: true, updated_at: now })
-      .eq("id", userId);
+      .from("founding_members")
+      .insert({ user_id: userId });
 
     // 2. Mark the waitlist entry as claimed
     await serviceClient

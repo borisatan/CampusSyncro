@@ -129,11 +129,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           (async () => {
             try {
               const { data } = await supabase
-                .from('Profiles')
-                .select('is_founding_member')
-                .eq('id', userId)
-                .single();
-              if (data?.is_founding_member) setIsFoundingMember(true);
+                .from('founding_members')
+                .select('user_id')
+                .eq('user_id', userId)
+                .maybeSingle();
+              if (data) setIsFoundingMember(true);
             } catch (e) {
               console.error('[SubscriptionContext] Founding member check failed:', e);
             }
