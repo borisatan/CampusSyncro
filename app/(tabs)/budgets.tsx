@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
 import { BudgetsSkeleton } from "../components/BudgetsPage/BudgetsSkeleton";
 import { CategoryBudgetRow } from "../components/BudgetsPage/CategoryBudgetRow";
-import { BudgetAmountModal } from "../components/BudgetsPage/BudgetAmountModal";
+import { EditBudgetModal } from "../components/BudgetsPage/EditBudgetModal";
 import { IncomeCard } from "../components/BudgetsPage/IncomeCard";
 import { CreateGoalModal } from "../components/GoalsPage/CreateGoalModal";
 import { EditGoalModal } from "../components/GoalsPage/EditGoalModal";
@@ -349,7 +349,7 @@ export default function BudgetsScreen() {
   }, [deleteCategoryOptimistic, loadCategories, loadAccounts, refreshAll, refreshDashboard]);
 
   const { allBudgetItems, hasCustomOrder } = useMemo(() => {
-    const budgetMap = new Map<number, CategoryBudgetStatus>();
+    const budgetMap = new Map<string, CategoryBudgetStatus>();
     categoryBudgets.forEach((cb) => budgetMap.set(cb.category.id, cb));
 
     const filteredCategories = categories.filter(
@@ -975,24 +975,26 @@ export default function BudgetsScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Budget Amount Modal */}
-      <BudgetAmountModal
-        visible={editBudgetCategory !== null}
-        category={editBudgetCategory?.category ?? null}
-        currencySymbol={currencySymbol}
-        onClose={() => setEditBudgetCategory(null)}
-        onSave={(categoryId, amount) => {
-          handleInlineSave(categoryId.toString(), amount, null);
-          setEditBudgetCategory(null);
-          refreshDashboard();
-        }}
-      />
+      {/* Edit Budget Modal */}
+      {editBudgetCategory && (
+        <EditBudgetModal
+          visible={editBudgetCategory !== null}
+          category={editBudgetCategory.category}
+          budgetStatus={editBudgetCategory.budgetStatus}
+          currencySymbol={currencySymbol}
+          monthlyIncome={monthlyIncome}
+          onClose={() => setEditBudgetCategory(null)}
+          onSaved={() => {
+            setEditBudgetCategory(null);
+            refreshDashboard();
+          }}
+        />
+      )}
 
       {/* Goal Modals */}
       <CreateGoalModal
         visible={showCreateModal}
         currencySymbol={currencySymbol}
-        defaultAccountId={accounts[0]?.id ?? null}
         existingNames={goals.map((g) => g.name)}
         onClose={() => setShowCreateModal(false)}
         onGoalCreated={loadGoals}
@@ -1055,7 +1057,7 @@ function SwipeableCategoryRow({
   index: number;
   currencySymbol: string;
   monthlyIncome: number;
-  onSave: (categoryId: number, amount: number | null, percentage?: number | null) => void;
+  onSave: (categoryId: string, amount: number | null, percentage?: number | null) => void;
   onToggleExpand: () => void;
   onDelete: (category: Category, ref: React.RefObject<SwipeableMethods | null>) => void;
 }) {

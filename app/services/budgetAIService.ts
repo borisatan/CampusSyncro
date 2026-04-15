@@ -12,14 +12,14 @@ import { supabase } from '../utils/supabase';
 // ============= TYPES =============
 
 export interface CategoryForAI {
-  id: number;
+  id: string;
   category_name: string;
 }
 
 export type BudgetClassification = 'needs' | 'wants';
 
 export interface BudgetAllocation {
-  categoryId: number;
+  categoryId: string;
   categoryName: string;
   classification: BudgetClassification;
   percentage: number;
@@ -116,7 +116,7 @@ async function getCachedResult(
         (c) => c.category_name.toLowerCase() === a.categoryName.toLowerCase()
       );
       return {
-        categoryId: category?.id ?? 0,
+        categoryId: category?.id ?? '',
         categoryName: a.categoryName,
         classification: a.classification,
         percentage: a.percentage,
@@ -326,7 +326,7 @@ export async function getBudgetAllocations(
 
     // Map response with amounts (percentages are of total income)
     const rawAllocations: BudgetAllocation[] = data.allocations.map((a: {
-      categoryId: number;
+      categoryId: string;
       categoryName: string;
       classification: BudgetClassification;
       percentage: number;

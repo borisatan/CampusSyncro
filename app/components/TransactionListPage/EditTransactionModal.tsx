@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AccountSelector } from '../AddTransactionPage/AccountSelector';
+import { CategoryEditorModal } from '../AddTransactionPage/CategoryEditorModal';
 import { CategoryGrid } from '../AddTransactionPage/CategoryGrid';
 import { TransactionFormFields } from '../AddTransactionPage/TransactionFormFields';
 import { TransactionHero } from '../AddTransactionPage/TransactionHero';
@@ -64,6 +65,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [categoryEditorVisible, setCategoryEditorVisible] = useState(false);
+  const [categoryEditorData, setCategoryEditorData] = useState<{ id?: string; name?: string; icon?: string; color?: string }>({});
   const amountInputRef = useRef<TextInput>(null);
   const lottieRef = useRef<LottieView>(null);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -258,6 +261,10 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                 isLoadingCategories={false}
                 isEditMode={isEditMode}
                 setIsEditMode={setIsEditMode}
+                onEditCategory={(category) => {
+                  setCategoryEditorData(category ? { id: category.id, name: category.category_name, icon: category.icon, color: category.color } : {});
+                  setCategoryEditorVisible(true);
+                }}
               />
             )}
 
@@ -288,6 +295,15 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             />
           </ScrollView>
         </KeyboardAvoidingView>
+
+        <CategoryEditorModal
+          visible={categoryEditorVisible}
+          onClose={() => setCategoryEditorVisible(false)}
+          categoryId={categoryEditorData.id}
+          initialName={categoryEditorData.name}
+          initialIcon={categoryEditorData.icon}
+          initialColor={categoryEditorData.color}
+        />
 
         {showSuccess && (
           <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#0f172a' }]} className="items-center justify-center">

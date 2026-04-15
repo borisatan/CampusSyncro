@@ -80,7 +80,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
 }));
 
 // Selector hook for subscribing to a specific category's budget
-export const useCategoryBudget = (categoryId: number): CategoryBudgetStatus | null => {
+export const useCategoryBudget = (categoryId: string): CategoryBudgetStatus | null => {
   return useBudgetStore((state) =>
     state.categoryBudgets.find((cb) => cb.category.id === categoryId) ?? null
   );

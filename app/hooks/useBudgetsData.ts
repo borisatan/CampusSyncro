@@ -13,8 +13,8 @@ interface BudgetsDataResult {
   dynamicIncome: number;
   isLoading: boolean;
   refresh: () => Promise<void>;
-  removeCategoryBudget: (categoryId: number) => void;
-  upsertCategoryBudget: (categoryId: number, amount: number) => void;
+  removeCategoryBudget: (categoryId: string) => void;
+  upsertCategoryBudget: (categoryId: string, amount: number) => void;
 }
 
 export const getPeriodDates = (): { startDate: Date; endDate: Date } => {

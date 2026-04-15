@@ -32,7 +32,8 @@
       "Bash(yarn install)",
       "Bash(yarn dev)",
       "Bash(identify:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(eas update *)"
     ]
   }
 }

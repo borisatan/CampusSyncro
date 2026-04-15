@@ -15,7 +15,7 @@ export const migrateDashboardCategoriesToDatabase = async (): Promise<void> => {
       return; // No old data to migrate
     }
 
-    const pinnedCategoryIds: number[] = JSON.parse(stored);
+    const pinnedCategoryIds: string[] = JSON.parse(stored);
     const { categories } = useCategoriesStore.getState();
 
     if (pinnedCategoryIds.length === 0) {
@@ -53,7 +53,7 @@ export const migrateDashboardCategoriesToDatabase = async (): Promise<void> => {
  * Updates the database and refreshes the categories store
  */
 export const toggleCategoryDashboardVisibility = async (
-  categoryId: number
+  categoryId: string
 ): Promise<void> => {
   try {
     const { categories } = useCategoriesStore.getState();

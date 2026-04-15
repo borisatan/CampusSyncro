@@ -28,9 +28,9 @@ interface CategoryBudgetRowProps {
   category: Category;
   currencySymbol: string;
   monthlyIncome: number;
-  onSave: (categoryId: number, amount: number | null, percentage?: number | null) => void;
+  onSave: (categoryId: string, amount: number | null, percentage?: number | null) => void;
   showOnDashboard: boolean;
-  onToggleDashboard: (categoryId: number) => void;
+  onToggleDashboard: (categoryId: string) => void;
   expanded: boolean;
   onToggleExpand: () => void;
 }

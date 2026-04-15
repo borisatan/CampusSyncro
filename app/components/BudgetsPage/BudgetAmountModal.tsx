@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { parseAmount } from '../../utils/parseAmount';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -10,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { parseAmount } from '../../utils/parseAmount';
 
 import { Category } from '../../types/types';
 
@@ -17,7 +17,7 @@ interface BudgetAmountModalProps {
   visible: boolean;
   category: Category | null;
   currencySymbol: string;
-  onSave: (categoryId: number, amount: number | null) => void;
+  onSave: (categoryId: string, amount: number | null) => void;
   onClose: () => void;
 }
 
@@ -74,13 +74,13 @@ export const BudgetAmountModal: React.FC<BudgetAmountModalProps> = ({
           {/* Category header */}
           <View className="flex-row items-center gap-3 mb-6">
             <View
-              className="w-12 h-12 rounded-2xl items-center justify-center"
-              style={{ backgroundColor: category.color }}
+              className="w-12 h-12 rounded-full items-center justify-center"
+              style={{ backgroundColor: category.color + '20' }}
             >
               <Ionicons
                 name={category.icon as any}
                 size={24}
-                color="white"
+                color={category.color}
               />
             </View>
             <View>
@@ -93,15 +93,15 @@ export const BudgetAmountModal: React.FC<BudgetAmountModalProps> = ({
 
           {/* Amount input */}
           <View className="flex-row items-center px-4 py-3 rounded-xl bg-backgroundDark border border-borderDark mb-6">
-            <Text className="text-white/70 text-xl mr-2">{currencySymbol}</Text>
+            <Text className="text-white/70 text-xl mr-2" style={{ lineHeight: 20 }}>{currencySymbol}</Text>
             <TextInput
               value={amountText}
               onChangeText={setAmountText}
               placeholder="0"
               placeholderTextColor="rgba(255,255,255,0.4)"
               keyboardType="decimal-pad"
-              className="flex-1 py-4 text-xl text-white"
-              style={{ lineHeight: 24 }}
+              className="flex-1 text-xl text-white"
+              style={{ lineHeight: 20 }}
               autoFocus
             />
           </View>

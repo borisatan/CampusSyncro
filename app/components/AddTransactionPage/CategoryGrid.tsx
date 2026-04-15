@@ -13,6 +13,7 @@ interface CategoryGridProps {
   isLoadingCategories: boolean;
   isEditMode: boolean;
   setIsEditMode: (val: boolean) => void;
+  onEditCategory?: (category?: Category) => void;
 }
 
 export const CategoryGrid = ({
@@ -23,6 +24,7 @@ export const CategoryGrid = ({
   isLoadingCategories,
   isEditMode,
   setIsEditMode,
+  onEditCategory,
 }: CategoryGridProps) => {
   const router = useRouter();
 
@@ -79,15 +81,19 @@ export const CategoryGrid = ({
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               if (isEditMode) {
-                router.navigate({
-                  pathname: "/components/AddTransactionPage/edit-category",
-                  params: {
-                    id: category.id,
-                    name: category.category_name,
-                    icon: category.icon,
-                    color: category.color,
-                  },
-                });
+                if (onEditCategory) {
+                  onEditCategory(category);
+                } else {
+                  router.navigate({
+                    pathname: "/components/AddTransactionPage/edit-category",
+                    params: {
+                      id: category.id,
+                      name: category.category_name,
+                      icon: category.icon,
+                      color: category.color,
+                    },
+                  });
+                }
               } else {
                 setSelectedCategory(category);
               }
@@ -101,7 +107,7 @@ export const CategoryGrid = ({
             isDarkMode={isDarkMode}
             isEditMode={true}
             onPress={() =>
-              router.navigate("/components/AddTransactionPage/edit-category")
+              onEditCategory ? onEditCategory() : router.navigate("/components/AddTransactionPage/edit-category")
             }
             isAddBtn
           />
