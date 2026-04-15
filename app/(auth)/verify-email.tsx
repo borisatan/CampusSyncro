@@ -66,7 +66,7 @@ export default function VerifyEmailScreen() {
       if (fnError) throw fnError;
 
       if (!data?.valid) {
-        setError(data?.error ?? "Incorrect or expired code. Please try again.");
+        setError("Wrong code. Please try again.");
         return;
       }
 
@@ -135,10 +135,14 @@ export default function VerifyEmailScreen() {
     setIsResending(true);
 
     try {
-      await supabase.functions.invoke("send-signup-otp", { body: { email } });
-      setResendMessage("A new code has been sent to your email.");
-      setCode("");
-      setTimeout(() => codeInputRef.current?.focus(), 100);
+      const { data: resendData } = await supabase.functions.invoke("send-signup-otp", { body: { email } });
+      if (resendData?.rateLimited) {
+        setError("Too many attempts. Please try again in 10 minutes.");
+      } else {
+        setResendMessage("A new code has been sent to your email.");
+        setCode("");
+        setTimeout(() => codeInputRef.current?.focus(), 100);
+      }
     } catch (e: any) {
       setError("Could not resend code. Please try again.");
     } finally {

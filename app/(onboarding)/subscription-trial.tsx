@@ -72,12 +72,12 @@ export default function SubscriptionTrialScreen() {
   };
 
   // Price helpers — fall back to hardcoded values if offerings not loaded
-  const weeklyPrice = weeklyPackage?.product.priceString ?? "$3.99";
-  const monthlyPrice = monthlyPackage?.product.priceString ?? "$9.99";
-  const annualTotalPrice = annualPackage?.product.priceString ?? "$79.99";
+  const weeklyPrice = weeklyPackage?.product.priceString ?? "$1.99";
+  const monthlyPrice = monthlyPackage?.product.priceString ?? "$5.99";
+  const annualTotalPrice = annualPackage?.product.priceString ?? "$49.99";
   const annualMonthlyPrice = annualPackage
     ? `$${(annualPackage.product.price / 12).toFixed(2)}/month`
-    : "$6.67/month";
+    : "$4.17/month";
 
   // Savings badge: difference between paying monthly for 12 months vs annual
   const annualSavings = (() => {
@@ -85,7 +85,7 @@ export default function SubscriptionTrialScreen() {
       const saved = monthlyPackage.product.price * 12 - annualPackage.product.price;
       if (saved > 0) return `Save $${saved.toFixed(2)}`;
     }
-    return "Save 33%";
+    return "Save 30%";
   })();
 
   const handleComplete = async () => {
@@ -385,8 +385,16 @@ export default function SubscriptionTrialScreen() {
                 onPress={() => router.push("/(onboarding)/founding-access")}
                 className="active:opacity-60 mt-3"
               >
-                <Text className="text-secondaryDark text-xs text-center">
+                <Text className="text-secondaryDark text-sm text-center">
                   Founding member? Claim free access →
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => router.replace("/(auth)/sign-in")}
+                className="active:opacity-60 mt-3"
+              >
+                <Text className="text-secondaryDark text-xs text-center">
+                  Already have an account?
                 </Text>
               </Pressable>
             </MotiView>

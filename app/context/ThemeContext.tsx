@@ -4,7 +4,7 @@ interface ThemeContextType {
   isDarkMode: boolean;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType>({ isDarkMode: true });
 
 // Rename the exported component
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
@@ -18,9 +18,5 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  return useContext(ThemeContext);
 }

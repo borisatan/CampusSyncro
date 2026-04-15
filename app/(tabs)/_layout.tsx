@@ -128,10 +128,6 @@ export default function TabLayout() {
         options={{ href: null }} // hides from tab bar
       />
       <Tabs.Screen
-        name="edit-transaction"
-        options={{ href: null }} // hides from tab bar
-      />
-      <Tabs.Screen
         name="accounts"
         options={{ href: null }} // hides from tab bar
       />

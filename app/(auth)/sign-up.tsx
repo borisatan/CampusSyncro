@@ -182,13 +182,18 @@ export default function SignUpScreen() {
 
       // Send OTP to the user's email before creating the account.
       // Credentials are stored in memory so verify-email.tsx can complete sign-up.
-      const { error: otpError } = await supabase.functions.invoke("send-signup-otp", {
+      const { data: otpData, error: otpError } = await supabase.functions.invoke("send-signup-otp", {
         body: { email: email.trim().toLowerCase() },
       });
 
       if (otpError) {
         trackEvent("user_sign_up_failed", { error_message: otpError.message });
         Alert.alert("Could not send code", "Please check your email and try again.");
+        return;
+      }
+
+      if (otpData?.rateLimited) {
+        Alert.alert("Too many attempts", "You've requested too many codes. Please try again in 10 minutes.");
         return;
       }
 
@@ -470,6 +475,7 @@ export default function SignUpScreen() {
                       secureTextEntry={!showPassword}
                       autoCapitalize="none"
                       returnKeyType="next"
+                      textContentType="newPassword"
                       value={password}
                       onChangeText={setPassword}
                       onSubmitEditing={() => confirmPasswordRef.current?.focus()}
@@ -501,6 +507,7 @@ export default function SignUpScreen() {
                       placeholderTextColor="#8A96B4"
                       secureTextEntry={!showConfirmPassword}
                       autoCapitalize="none"
+                      textContentType="newPassword"
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
                       style={{ lineHeight: 16 }}

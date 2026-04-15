@@ -1,12 +1,12 @@
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useRef } from "react";
 import { Alert, SectionList, Text, View } from "react-native";
+import { Pressable } from 'react-native-gesture-handler';
 import ReanimatedSwipeable, { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, { SharedValue, useAnimatedStyle, interpolate } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryIconInfo, TransactionSection } from "../../types/types";
 import TransactionItem from "./TransactionItem";
-import { RipplePressable } from "../Shared/RipplePressable";
 
 type TransactionsListProps = {
   sections: TransactionSection[];
@@ -147,14 +147,12 @@ const AnimatedTransactionItem = React.memo(function AnimatedTransactionItem({
       onSwipeableOpen={handleSwipeOpen}
       friction={2}
     >
-      <RipplePressable
+      <Pressable
         onPress={handlePress}
-        delayLongPress={200}
-        className="rounded-2xl overflow-hidden mb-2"
-        rippleColor="rgba(255, 255, 255, 0.15)"
+        style={{ borderRadius: 16, overflow: 'hidden', marginBottom: 8 }}
       >
         <TransactionItem transaction={transaction} categoryIcons={categoryIcons} />
-      </RipplePressable>
+      </Pressable>
     </ReanimatedSwipeable>
   );
 });

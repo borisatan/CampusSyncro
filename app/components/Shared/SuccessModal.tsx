@@ -20,6 +20,7 @@ export const SuccessModal = ({
   const animationRef = useRef<LottieView>(null);
   const onDismissRef = useRef(onDismiss);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const playStartedAtRef = useRef<number>(0);
 
   // Keep ref updated with latest callback
   useEffect(() => {
@@ -30,6 +31,7 @@ export const SuccessModal = ({
     if (visible) {
       animationRef.current?.reset();
       animationRef.current?.play();
+      playStartedAtRef.current = Date.now();
 
       // Fallback timer in case onAnimationFinish doesn't fire
       timerRef.current = setTimeout(() => {
@@ -50,6 +52,11 @@ export const SuccessModal = ({
   }, [visible, duration]);
 
   const handleAnimationFinish = () => {
+    // On Android, onAnimationFinish can fire immediately after reset() before
+    // the animation has actually played. Guard against this by ignoring the
+    // event if it fires too soon after play() was called.
+    if (Date.now() - playStartedAtRef.current < 500) return;
+
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;

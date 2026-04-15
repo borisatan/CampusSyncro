@@ -5,6 +5,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const INVALID_RESPONSE = new Response(JSON.stringify({ error: "Invalid or expired code" }), {
+  status: 400,
+  headers: { ...corsHeaders, "Content-Type": "application/json" },
+});
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -14,10 +19,7 @@ Deno.serve(async (req) => {
     const { email, code } = await req.json();
 
     if (!email || !code) {
-      return new Response(JSON.stringify({ error: "Invalid or expired code" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return INVALID_RESPONSE;
     }
 
     const normalizedEmail = email.trim().toLowerCase();
@@ -26,22 +28,37 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // Fetch active code by email only (not filtering by code, so we can track failures)
     const { data: codeEntry } = await supabase
       .from("email_verification_codes")
-      .select("id, expires_at, used")
+      .select("id, code, expires_at, used, failed_attempts")
       .ilike("email", normalizedEmail)
-      .eq("code", code)
       .eq("used", false)
       .maybeSingle();
 
     if (!codeEntry || new Date(codeEntry.expires_at) < new Date()) {
-      return new Response(JSON.stringify({ error: "Invalid or expired code" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return INVALID_RESPONSE;
     }
 
-    // Mark code as used
+    // Lockout: too many failed attempts — invalidate the code
+    if (codeEntry.failed_attempts >= 5) {
+      await supabase
+        .from("email_verification_codes")
+        .update({ used: true })
+        .eq("id", codeEntry.id);
+      return INVALID_RESPONSE;
+    }
+
+    // Wrong code — increment failed attempts
+    if (codeEntry.code !== code) {
+      await supabase
+        .from("email_verification_codes")
+        .update({ failed_attempts: codeEntry.failed_attempts + 1 })
+        .eq("id", codeEntry.id);
+      return INVALID_RESPONSE;
+    }
+
+    // Correct code — mark as used
     await supabase
       .from("email_verification_codes")
       .update({ used: true })
@@ -52,9 +69,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("[verify-signup-otp] Error:", error);
-    return new Response(JSON.stringify({ error: "Invalid or expired code" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return INVALID_RESPONSE;
   }
 });

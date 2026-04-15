@@ -11,8 +11,10 @@ import { AccountsSkeleton } from '../components/AccountsPage/AccountsSkeleton';
 import AddAccountPage from '../components/AccountsPage/AddAccountPage';
 import EditAccountPage from '../components/AccountsPage/EditAccountPage';
 import MoveMoneyPage from '../components/MoveMoneyPage/MoveMoneyPage';
+import { OfflineEmptyState } from '../components/Shared/OfflineEmptyState';
 import { useAuth } from '../context/AuthContext';
 import { useDataRefresh } from '../context/DataRefreshContext';
+import { useNetwork } from '../context/NetworkContext';
 import * as AccountService from '../services/backendService';
 import { useAccountsStore } from '../store/useAccountsStore';
 import { useCurrencyStore } from '../store/useCurrencyStore';
@@ -29,6 +31,7 @@ export default function Accounts() {
   const updateAccountOptimistic = useAccountsStore((state) => state.updateAccountOptimistic);
   const deleteAccountOptimistic = useAccountsStore((state) => state.deleteAccountOptimistic);
   const { currencySymbol, loadCurrency } = useCurrencyStore();
+  const { isConnected } = useNetwork();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMoveMoneyModal, setShowMoveMoneyModal] = useState(false);
@@ -164,6 +167,8 @@ export default function Accounts() {
 
             {isLoading && accounts.length === 0 ? (
               <AccountsSkeleton isDarkMode={true} />
+            ) : !isConnected && accounts.length === 0 ? (
+              <OfflineEmptyState />
             ) : (
               <>
                 {/* Total Balance Card */}

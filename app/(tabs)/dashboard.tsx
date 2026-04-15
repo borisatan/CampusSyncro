@@ -9,6 +9,7 @@ import { BudgetHealthCard } from "../components/HomePage/BudgetHealthCard";
 import { CategoryBreakdownList } from "../components/HomePage/CategoryBreakdown";
 import { CategoryDonut } from "../components/HomePage/CategoryDonut";
 import { DashboardSkeleton } from "../components/HomePage/DashboardSkeleton";
+import { OfflineEmptyState } from "../components/Shared/OfflineEmptyState";
 import { DashboardSummary } from "../components/HomePage/DashboardSummary";
 import { ScrollableSpendingChart } from "../components/HomePage/ScrollableSpendingChart";
 import { TimeFrameSelector } from "../components/HomePage/TimeFrameSelector";
@@ -16,6 +17,7 @@ import { TimeFrameSelector } from "../components/HomePage/TimeFrameSelector";
 // Hooks & Utilities
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useLock } from "../context/LockContext";
+import { useNetwork } from "../context/NetworkContext";
 import { useTheme } from "../context/ThemeContext";
 import { useBudgetsData } from "../hooks/useBudgetsData";
 import { useDashboardData } from "../hooks/useDashboardData";
@@ -27,6 +29,7 @@ export default function Dashboard() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const { isUnlocked } = useLock();
+  const { isConnected } = useNetwork();
 
   const {
     currencySymbol,
@@ -156,7 +159,11 @@ export default function Dashboard() {
                 />
               ) : (
                 <View className="bg-surfaceDark rounded-2xl p-5 border border-borderDark mb-6 h-[140px] items-center justify-center">
-                  <Text className="text-secondaryDark text-2xl font-bold tracking-widest">No Data - Add a transaction</Text>
+                  {isConnected ? (
+                    <Text className="text-secondaryDark text-2xl font-bold tracking-widest">No Data - Add a transaction</Text>
+                  ) : (
+                    <OfflineEmptyState />
+                  )}
                 </View>
               )}
 

@@ -10,6 +10,7 @@ import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { persistOnboardingData } from "../(auth)/sign-up";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { ensureUserProfile } from "../services/backendService";
+import { requestNotificationPermissions, scheduleNotifications } from "../utils/notificationService";
 import { useAccountsStore } from "../store/useAccountsStore";
 import { useCategoriesStore } from "../store/useCategoriesStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
@@ -73,6 +74,14 @@ export default function NotificationRemindersScreen() {
     });
     trackEvent("onboarding_completed");
     setNewOnboardingData({ notificationFrequency: selected });
+
+    if (selected) {
+      const FREQ_MAP = { once: 1, three: 3, five: 5 } as const;
+      const granted = await requestNotificationPermissions();
+      if (granted) {
+        await scheduleNotifications(FREQ_MAP[selected]);
+      }
+    }
     completeOnboarding();
 
     // Check if user is already authenticated (profile-reset flow).

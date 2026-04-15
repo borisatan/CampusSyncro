@@ -25,15 +25,32 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Delete any existing unused codes for this email
+    // Rate limit: max 5 sends per email per 10 minutes
+    // NOTE: we do NOT delete old rows before counting — deletion would reset the counter.
+    // Instead we invalidate the previous code below (used = true) so it stays countable.
+    const { count } = await supabase
+      .from("email_verification_codes")
+      .select("*", { count: "exact", head: true })
+      .ilike("email", normalizedEmail)
+      .gte("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString());
+
+    if ((count ?? 0) >= 5) {
+      return new Response(JSON.stringify({ rateLimited: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Invalidate any existing unused codes for this email (keep rows for rate-limit counting)
     await supabase
       .from("email_verification_codes")
-      .delete()
+      .update({ used: true })
       .ilike("email", normalizedEmail)
       .eq("used", false);
 
     // Generate 6-digit code with 10-minute expiry
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const code = (100000 + (array[0] % 900000)).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     await supabase.from("email_verification_codes").insert({

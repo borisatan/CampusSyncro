@@ -16,13 +16,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
 import { BudgetsSkeleton } from "../components/BudgetsPage/BudgetsSkeleton";
 import { CategoryBudgetRow } from "../components/BudgetsPage/CategoryBudgetRow";
-import { EditBudgetModal } from "../components/BudgetsPage/EditBudgetModal";
+import { BudgetAmountModal } from "../components/BudgetsPage/BudgetAmountModal";
 import { IncomeCard } from "../components/BudgetsPage/IncomeCard";
 import { CreateGoalModal } from "../components/GoalsPage/CreateGoalModal";
 import { EditGoalModal } from "../components/GoalsPage/EditGoalModal";
 import { GoalProgressCard } from "../components/GoalsPage/GoalProgressCard";
 import { GoalTransactionModal } from "../components/GoalsPage/GoalTransactionModal";
+import { OfflineEmptyState } from "../components/Shared/OfflineEmptyState";
 import { useDataRefresh } from "../context/DataRefreshContext";
+import { useNetwork } from "../context/NetworkContext";
 import { useTheme } from "../context/ThemeContext";
 import { useBudgetsData } from "../hooks/useBudgetsData";
 import {
@@ -58,6 +60,7 @@ type BudgetListItem = CategoryListItem | GoalsListItem;
 
 export default function BudgetsScreen() {
   const { isDarkMode } = useTheme();
+  const { isConnected } = useNetwork();
   const {
     categoryBudgets,
     monthlyIncome,
@@ -455,7 +458,11 @@ export default function BudgetsScreen() {
               <BudgetsSkeleton isDarkMode={isDarkMode} />
             )}
 
-            {!isLoading && !isReorderMode && (
+            {!isLoading && !isConnected && !isReorderMode && (
+              <OfflineEmptyState />
+            )}
+
+            {!isLoading && isConnected && !isReorderMode && (
               <MotiView
                 from={{ opacity: 0, translateY: 12 }}
                 animate={{ opacity: 1, translateY: 0 }}
@@ -968,22 +975,18 @@ export default function BudgetsScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Edit Budget Modal */}
-      {editBudgetCategory && (
-        <EditBudgetModal
-          visible={editBudgetCategory !== null}
-          onClose={() => setEditBudgetCategory(null)}
-          category={editBudgetCategory.category}
-          budgetStatus={editBudgetCategory.budgetStatus}
-          currencySymbol={currencySymbol}
-          monthlyIncome={monthlyIncome}
-          onSaved={() => {
-            setEditBudgetCategory(null);
-            refresh();
-            refreshDashboard();
-          }}
-        />
-      )}
+      {/* Budget Amount Modal */}
+      <BudgetAmountModal
+        visible={editBudgetCategory !== null}
+        category={editBudgetCategory?.category ?? null}
+        currencySymbol={currencySymbol}
+        onClose={() => setEditBudgetCategory(null)}
+        onSave={(categoryId, amount) => {
+          handleInlineSave(categoryId.toString(), amount, null);
+          setEditBudgetCategory(null);
+          refreshDashboard();
+        }}
+      />
 
       {/* Goal Modals */}
       <CreateGoalModal

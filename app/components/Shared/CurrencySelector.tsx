@@ -8,17 +8,11 @@ const CURRENCIES: { code: SupportedCurrency; symbol: string; name: string }[] = 
   { code: "USD", symbol: getCurrencySymbol("USD"), name: "US Dollar" },
   { code: "EUR", symbol: getCurrencySymbol("EUR"), name: "Euro" },
   { code: "GBP", symbol: getCurrencySymbol("GBP"), name: "British Pound" },
-  { code: "CAD", symbol: getCurrencySymbol("CAD"), name: "CA Dollar" },
-  { code: "AUD", symbol: getCurrencySymbol("AUD"), name: "AU Dollar" },
-  { code: "NZD", symbol: getCurrencySymbol("NZD"), name: "NZ Dollar" },
-  { code: "CHF", symbol: getCurrencySymbol("CHF"), name: "Swiss Franc" },
   { code: "JPY", symbol: getCurrencySymbol("JPY"), name: "Japanese Yen" },
   { code: "CNY", symbol: getCurrencySymbol("CNY"), name: "Chinese Yuan" },
   { code: "INR", symbol: getCurrencySymbol("INR"), name: "Indian Rupee" },
-  { code: "BRL", symbol: getCurrencySymbol("BRL"), name: "Brazilian Real" },
   { code: "MXN", symbol: getCurrencySymbol("MXN"), name: "Mexican Peso" },
   { code: "ZAR", symbol: getCurrencySymbol("ZAR"), name: "South African Rand" },
-  { code: "SEK", symbol: getCurrencySymbol("SEK"), name: "Swedish Krona" },
 ];
 
 const CurrencyRow = ({

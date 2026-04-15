@@ -160,7 +160,7 @@ export default function PracticeEntryScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ opacity: showSuccess ? 0 : 1 }}>
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           {/* Progress Bar */}
           <View className="px-2 pt-12 pb-4">
             <View className="flex-row items-center justify-between">

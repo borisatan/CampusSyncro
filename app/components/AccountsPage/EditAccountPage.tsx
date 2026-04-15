@@ -138,7 +138,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
           <View className="mb-6">
             <Text className="text-sm text-secondaryDark mb-2 font-medium">Current Balance</Text>
             <View className="relative flex-row items-center bg-surfaceDark border border-borderDark rounded-2xl px-4">
-              <Text className="text-xl text-secondaryDark mr-2">{currencySymbol}</Text>
+              <Text className="text-xl text-secondaryDark mr-2" style={{ lineHeight: 20 }}>{currencySymbol}</Text>
               <TextInput
                 keyboardType="numeric"
                 value={balance}

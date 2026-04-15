@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import * as Crypto from "expo-crypto";
+import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 // Polyfill WebCrypto for React Native
@@ -26,8 +26,8 @@ if (!globalThis.crypto) {
   };
 }
 
-const supabaseUrl = "https://rrttwewkekyvwgjilrzo.supabase.co";
-const supabaseAnonKey = "sb_publishable_RLCVhk8FEp51JwAopY2QdQ_q89rPqJ_";
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
 const ExpoSqliteStorage = {
   getItem: async (key: string) => {
@@ -39,7 +39,7 @@ const ExpoSqliteStorage = {
         }
         return null;
       }
-      const value = await AsyncStorage.getItem(key);
+      const value = await SecureStore.getItemAsync(key);
       return value;
     } catch (error) {
       console.error('[Storage] getItem error:', key, error);
@@ -53,7 +53,7 @@ const ExpoSqliteStorage = {
           localStorage.setItem(key, value);
         }
       } else {
-        await AsyncStorage.setItem(key, value);
+        await SecureStore.setItemAsync(key, value);
       }
     } catch (error) {
       console.error('[Storage] setItem error:', key, error);
@@ -66,7 +66,7 @@ const ExpoSqliteStorage = {
           localStorage.removeItem(key);
         }
       } else {
-        await AsyncStorage.removeItem(key);
+        await SecureStore.deleteItemAsync(key);
       }
     } catch (error) {
       console.error('[Storage] removeItem error:', key, error);

@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
 import {
-  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -77,20 +76,6 @@ export default function WelcomeScreen() {
           <View>
             {/* First headline */}
             <View style={{ position: "relative" }}>
-              {/* Money flying out from "leave" */}
-              <MotiView
-                from={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 500, duration: 700 }}
-                style={{ position: "absolute", bottom: 0, right: -38 }}
-              >
-                <Image
-                  source={require("../../assets/pictures/money_flying_out.png")}
-                  style={{ width: 130, height: 130 }}
-                  resizeMode="contain"
-                />
-              </MotiView>
-
               <MotiView
                 from={{ opacity: 0, translateY: 24 }}
                 animate={{ opacity: 1, translateY: 0 }}

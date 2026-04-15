@@ -186,20 +186,19 @@ export default function MonthlyIncomeScreen() {
                     backgroundColor: isValid ? "rgba(16,185,129,0.08)" : "#141B2D",
                     paddingVertical: 16,
                     paddingHorizontal: 20,
-                    overflow: "hidden",
                   }}
                 >
-
                   <Text className="text-secondaryDark text-sm text-center mb-2">
                     Monthly Take-Home
                   </Text>
-                  <View className="flex-row items-center justify-center">
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Text
                       style={{
                         color: isValid ? "#10B981" : "#4B5A7A",
                         fontSize: 32,
                         fontWeight: "300",
-                        marginRight: 4,
+                        includeFontPadding: false,
+                        width: 32,
                       }}
                     >
                       {currencySymbol}
@@ -210,17 +209,16 @@ export default function MonthlyIncomeScreen() {
                       onChangeText={setAmount}
                       keyboardType="numeric"
                       placeholder="0"
-                      placeholderTextColor={isValid ? "#10B981" : "#ffffff"}
+                      placeholderTextColor={isValid ? "#10B981" : "#4B5A7A"}
                       maxLength={8}
                       style={{
                         includeFontPadding: false,
                         paddingVertical: 0,
-                        lineHeight: 60,
                         color: "#ffffff",
                         fontSize: 48,
                         fontWeight: "300",
-                        minWidth: 20,
-                        textAlign: "left",
+                        flex: 1,
+                        textAlign: "center",
                       }}
                     />
                   </View>

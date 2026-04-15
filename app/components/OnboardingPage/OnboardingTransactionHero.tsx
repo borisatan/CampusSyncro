@@ -25,7 +25,7 @@ export const OnboardingTransactionHero = ({
           Amount
         </Text>
         <View className={`flex-row items-center w-full rounded-xl border ${isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'}`}>
-          <Text className={`pl-4 text-2xl ${isDarkMode ? 'text-slate400' : 'text-gray400'}`}>
+          <Text className={`pl-4 text-2xl ${isDarkMode ? 'text-slate400' : 'text-gray400'}`} style={{ lineHeight: 24 }}>
             {currencySymbol}
           </Text>
           <TextInput
@@ -36,6 +36,7 @@ export const OnboardingTransactionHero = ({
             placeholder="0.00"
             placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
             className={`flex-1 pl-2 pr-4 py-4 text-2xl ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}
+            style={{ lineHeight: 24 }}
           />
         </View>
       </View>

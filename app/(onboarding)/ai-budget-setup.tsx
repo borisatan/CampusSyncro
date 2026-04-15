@@ -7,7 +7,7 @@ import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton"
 import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
 import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
@@ -74,9 +74,16 @@ export default function AIBudgetSetupScreen() {
   const screenEnteredAt = useRef(Date.now());
   const [isLoading, setIsLoading] = useState(true);
   const [budgetData, setBudgetData] = useState<any>(null);
+  const [editingAllocation, setEditingAllocation] = useState<any | null>(null);
+  const [editAmountText, setEditAmountText] = useState("");
 
   const selectedCategories = newOnboardingData.selectedCategories || [];
   const monthlyIncome = newOnboardingData.estimatedIncome || 0;
+
+  const totalAllocated = budgetData?.allocations.reduce((sum: number, a: any) => sum + a.budget_amount, 0) ?? 0;
+  const spendingBudget = monthlyIncome * 0.8;
+  const isOverBudget = totalAllocated > spendingBudget;
+  const budgetRemaining = spendingBudget - totalAllocated;
 
   useEffect(() => {
     setOnboardingStep(6);
@@ -194,9 +201,9 @@ export default function AIBudgetSetupScreen() {
                     Wants {budgetData.totalWants.toFixed(2)}%
                   </Text>
                 </View>
-                <View className="bg-purple-500/20 border border-purple-500 rounded-full px-4 py-2">
-                  <Text className="text-purple-400 text-xs font-semibold">
-                    Savings 20%
+                <View className={`border rounded-full px-4 py-2 ${isOverBudget ? 'bg-red-500/20 border-red-500' : 'bg-purple-500/20 border-purple-500'}`}>
+                  <Text className={`text-xs font-semibold ${isOverBudget ? 'text-red-400' : 'text-purple-400'}`}>
+                    Savings {(budgetData.savingsPercentage ?? 20).toFixed(1)}%
                   </Text>
                 </View>
               </MotiView>
@@ -220,8 +227,16 @@ export default function AIBudgetSetupScreen() {
                       <TrendingUp size={16} color="#22C55E" />
                       <Text className="text-secondaryDark text-base">Savings Goal</Text>
                     </View>
-                    <Text className="text-accentGreen text-lg font-bold">
+                    <Text className={`text-lg font-bold ${isOverBudget ? 'text-red-400' : 'text-accentGreen'}`}>
                       {currencySymbol}{budgetData.savingsAmount.toFixed(2)}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between items-center mt-3 pt-3 border-t border-borderDark">
+                    <Text className="text-secondaryDark text-sm">
+                      {isOverBudget ? 'Over spending budget' : 'Remaining'}
+                    </Text>
+                    <Text className={`text-sm font-semibold ${isOverBudget ? 'text-red-400' : 'text-accentGreen'}`}>
+                      {isOverBudget ? '-' : ''}{currencySymbol}{Math.abs(budgetRemaining).toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -243,41 +258,143 @@ export default function AIBudgetSetupScreen() {
                     transition={{ delay: 500 + index * 100, duration: 500 }}
                     className="mb-3"
                   >
-                    <View className="rounded-3xl overflow-hidden border bg-surfaceDark" style={{ borderColor: '#2A3250' }}>
-                      <View className="p-4 flex-row items-center">
-                        <View
-                          className="w-11 h-11 rounded-xl items-center justify-center mr-3"
-                          style={{ backgroundColor: getCategoryColor(allocation.category_name) }}
-                        >
-                          <Ionicons name={getCategoryIcon(allocation.category_name) as any} size={22} color="#fff" />
-                        </View>
-                        <Text className="text-slate50 text-[15px] font-semibold flex-1">
-                          {allocation.category_name}
-                        </Text>
-                        <View className="items-end">
-                          <Text className="text-slate50 text-base font-bold">
-                            {currencySymbol}{allocation.budget_amount.toFixed(2)}
+                    <Pressable
+                      onPress={() => {
+                        setEditingAllocation(allocation);
+                        setEditAmountText(allocation.budget_amount.toFixed(2));
+                      }}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                    >
+                      <View className="rounded-3xl overflow-hidden border bg-surfaceDark" style={{ borderColor: '#2A3250' }}>
+                        <View className="p-4 flex-row items-center">
+                          <View
+                            className="w-11 h-11 rounded-xl items-center justify-center mr-3"
+                            style={{ backgroundColor: getCategoryColor(allocation.category_name) }}
+                          >
+                            <Ionicons name={getCategoryIcon(allocation.category_name) as any} size={22} color="#fff" />
+                          </View>
+                          <Text className="text-slate50 text-[15px] font-semibold flex-1">
+                            {allocation.category_name}
                           </Text>
-                          <Text className="text-slateMuted text-xs mt-0.5">
-                            {allocation.percentage.toFixed(2)}% of income
-                          </Text>
+                          <View className="items-end">
+                            <Text className="text-slate50 text-base font-bold">
+                              {currencySymbol}{allocation.budget_amount.toFixed(2)}
+                            </Text>
+                            <Text className="text-slateMuted text-xs mt-0.5">
+                              {allocation.percentage.toFixed(2)}% of income
+                            </Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
+                    </Pressable>
                   </MotiView>
                 ))}
               </MotiView>
 
               {/* Apply Button */}
+              {isOverBudget && (
+                <Text className="text-red-400 text-xs text-center mb-3">
+                  Categories exceed spending budget by {currencySymbol}{Math.abs(budgetRemaining).toFixed(2)}. Reduce a category to continue.
+                </Text>
+              )}
               <AnimatedGradientButton
                 onPress={handleApply}
                 text="Apply Smart Budget"
                 rounded="3xl"
+                disabled={isOverBudget}
               />
             </MotiView>
           )}
         </View>
       </ScrollView>
+
+      {/* Edit allocation bottom sheet */}
+      <Modal
+        visible={editingAllocation !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditingAllocation(null)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1 justify-end"
+        >
+          <Pressable className="flex-1" onPress={() => setEditingAllocation(null)} />
+          <View className="bg-surfaceDark rounded-t-3xl p-6 border-t border-borderDark">
+            {/* Header */}
+            <View className="flex-row items-center gap-3 mb-6">
+              <View
+                className="w-12 h-12 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: getCategoryColor(editingAllocation?.category_name) }}
+              >
+                <Ionicons
+                  name={getCategoryIcon(editingAllocation?.category_name) as any}
+                  size={24}
+                  color="white"
+                />
+              </View>
+              <View>
+                <Text className="text-white text-lg font-semibold">
+                  {editingAllocation?.category_name}
+                </Text>
+                <Text className="text-secondaryDark text-sm">Adjust budget amount</Text>
+              </View>
+            </View>
+
+            {/* Amount input */}
+            <View className="flex-row items-center px-4 py-3 rounded-xl bg-backgroundDark border border-borderDark mb-6">
+              <Text className="text-white/70 text-xl mr-2">{currencySymbol}</Text>
+              <TextInput
+                value={editAmountText}
+                onChangeText={setEditAmountText}
+                placeholder="0"
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                keyboardType="decimal-pad"
+                className="flex-1 py-4 text-xl text-white"
+                style={{ lineHeight: 24 }}
+                autoFocus
+              />
+            </View>
+
+            {/* Save button */}
+            <TouchableOpacity
+              onPress={() => {
+                const newAmount = parseFloat(editAmountText);
+                if (isNaN(newAmount) || newAmount <= 0) return;
+                const newPercentage = monthlyIncome > 0 ? (newAmount / monthlyIncome) * 100 : 0;
+                setBudgetData((prev: any) => {
+                  const updatedAllocations = prev.allocations.map((a: any) =>
+                    a.category_name === editingAllocation.category_name
+                      ? { ...a, budget_amount: newAmount, percentage: parseFloat(newPercentage.toFixed(2)) }
+                      : a
+                  );
+                  const needsTotal = updatedAllocations
+                    .filter((a: any) => a.classification === 'needs')
+                    .reduce((sum: number, a: any) => sum + a.percentage, 0);
+                  const wantsTotal = updatedAllocations
+                    .filter((a: any) => a.classification === 'wants')
+                    .reduce((sum: number, a: any) => sum + a.percentage, 0);
+                  const newTotalAllocated = updatedAllocations.reduce((sum: number, a: any) => sum + a.budget_amount, 0);
+                  const newSavings = parseFloat((monthlyIncome - newTotalAllocated).toFixed(2));
+                  return {
+                    ...prev,
+                    allocations: updatedAllocations,
+                    totalNeeds: parseFloat(needsTotal.toFixed(2)),
+                    totalWants: parseFloat(wantsTotal.toFixed(2)),
+                    savingsAmount: newSavings,
+                    savingsPercentage: monthlyIncome > 0 ? parseFloat(((newSavings / monthlyIncome) * 100).toFixed(2)) : 0,
+                  };
+                });
+                setEditingAllocation(null);
+              }}
+              className="py-3 rounded-xl items-center bg-accentBlue"
+              activeOpacity={0.7}
+            >
+              <Text className="text-white font-semibold text-base">Save</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }

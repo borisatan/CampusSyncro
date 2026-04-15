@@ -83,7 +83,9 @@ EXAMPLE OUTPUT for categories [Rent, Groceries, Entertainment, Dining]:
 - Groceries: needs, 22%
 - Entertainment: wants, 16%
 - Dining: wants, 14%
-- Total: 28+22+16+14 = 80% ✓`;
+- Total: 28+22+16+14 = 80% ✓
+
+STEP 3 — VERIFY BEFORE RESPONDING: Add up all your percentages. If the total exceeds 80, you MUST reduce the categories with the highest percentages by 1% each until the total equals exactly 80. Never respond with a total that exceeds 80.`;
 
 // JSON schema for constrained output
 // Note: Only needs/wants (summing to 80% of total income) - savings 20% is handled separately by the app
@@ -123,7 +125,7 @@ function buildBudgetPrompt(categories: CategoryInput[]): string {
     .map((c) => sanitizeCategoryName(c.category_name))
     .join(", ");
 
-  return `Classify and allocate budgets for these categories: ${sanitizedList}`;
+  return `Classify and allocate budgets for these ${categories.length} categories (percentages must sum to exactly 80): ${sanitizedList}`;
 }
 
 // ============= GEMINI API =============
@@ -160,7 +162,7 @@ async function callGeminiFlash(prompt: string): Promise<string> {
     if (response.status === 429) {
       throw new Error("RATE_LIMITED");
     }
-    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+    throw new Error("AI_SERVICE_ERROR");
   }
 
   const data = await response.json();
@@ -242,12 +244,31 @@ function parseGeminiResponse(
 
   // Validate percentages sum to 80 (80% of total income, remaining 20% is savings)
   const totalPercentage = allocations.reduce((sum, a) => sum + a.percentage, 0);
-  if (Math.abs(totalPercentage - 80) > 2) {
+  if (totalPercentage > 85 || totalPercentage < 75) {
     throw new Error(`Percentages sum to ${totalPercentage}%, expected 80%`);
   }
 
-  // Adjust if slightly off due to rounding
-  if (totalPercentage !== 80) {
+  // Adjust if over 80 by up to 5pp: distribute reduction evenly across all categories
+  if (totalPercentage > 80) {
+    const excess = totalPercentage - 80;
+    const n = allocations.length;
+    const floorReduction = Math.floor(excess / n);
+    let remainder = excess - floorReduction * n;
+
+    // Apply floor reduction to all categories
+    allocations.forEach((a) => {
+      a.percentage -= floorReduction;
+    });
+
+    // Remove 1 more from the largest categories to cover the integer remainder
+    if (remainder > 0) {
+      const sorted = [...allocations].sort((a, b) => b.percentage - a.percentage);
+      for (let i = 0; i < remainder; i++) {
+        sorted[i].percentage -= 1;
+      }
+    }
+  } else if (totalPercentage < 80) {
+    // Under budget: add the difference to the largest category
     const diff = 80 - totalPercentage;
     const largestAlloc = allocations.reduce((max, a) =>
       a.percentage > max.percentage ? a : max,
@@ -416,7 +437,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: errorMessage,
+        error: "AI service error",
         code: "AI_ERROR",
       } as ErrorResponse),
       {

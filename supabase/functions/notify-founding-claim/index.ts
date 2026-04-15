@@ -46,6 +46,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Ensure the email in the payload matches the authenticated user's email
+    if (user.email?.toLowerCase() !== normalizedEmail) {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const serviceClient = createClient(supabaseUrl, serviceKey);
 
     // Idempotency: skip if already a founding member
@@ -60,8 +70,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const normalizedEmail = email.trim().toLowerCase();
     const now = new Date().toISOString();
 
     // 1. Grant founding member status (service_role bypasses RLS)

@@ -126,7 +126,7 @@ export const ScrollableSpendingChart = React.memo(
     const canGoRight = activeIndex < PAGES.length - 1;
     const currentOffset = PAGES[activeIndex];
     const chartData = chartDataByOffset[currentOffset] ?? [];
-    const periodDate = getDateRange(timeFrame, currentOffset).startDate;
+    const periodDate = currentOffset === 0 ? new Date() : getDateRange(timeFrame, currentOffset).startDate;
 
     return (
       <View>

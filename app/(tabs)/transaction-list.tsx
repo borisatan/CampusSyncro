@@ -1,14 +1,17 @@
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, View, Text } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import FilterModal from "../components/TransactionListPage/FilterModal";
+import { EditTransactionModal } from "../components/TransactionListPage/EditTransactionModal";
 import TransactionsHeader from "../components/TransactionListPage/TransactionHeader";
 import { TransactionListSkeleton } from "../components/TransactionListPage/TransactionListSkeleton";
 import TransactionsList from "../components/TransactionListPage/TransactionsList";
+import { OfflineEmptyState } from "../components/Shared/OfflineEmptyState";
 import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
+import { useNetwork } from "../context/NetworkContext";
 import { useTheme } from "../context/ThemeContext";
 import { deleteTransaction, fetchAccountNames, fetchCategoryIcons, fetchFilteredTransactions, fetchTransactions, updateAccountBalance } from "../services/backendService";
 import { useAccountsStore } from "../store/useAccountsStore";
@@ -56,7 +59,7 @@ const groupTransactionsByDate = (
 // Main screen
 const TransactionsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
-  const router = useRouter();
+  const { isConnected } = useNetwork();
   const { userId } = useAuth();
   const { updateAccountBalance: updateAccountBalanceStore, accounts } = useAccountsStore();
   const { registerTransactionListRefresh, registerOptimisticDeleteTransaction, registerOptimisticUpdateTransaction, refreshAll } = useDataRefresh();
@@ -72,6 +75,7 @@ const TransactionsScreen: React.FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const [filterAccounts, setFilterAccounts] = useState<string[]>([]);
   const [accountsList, setAccountsList] = useState<string[]>([]);
@@ -297,13 +301,8 @@ const TransactionsScreen: React.FC = () => {
   };
 
   const handleEditTransaction = (transactionId: string) => {
-    const tx = transactions.find(t => t.id === Number(transactionId));
-    if (tx) {
-      router.navigate({
-        pathname: "/edit-transaction",
-        params: { transaction: JSON.stringify(tx) }
-      });
-    }
+    const tx = transactions.find(t => t.id === transactionId);
+    if (tx) setEditingTransaction(tx);
   };
 
   const handleDeleteTransaction = (id: number) => {
@@ -363,11 +362,15 @@ const TransactionsScreen: React.FC = () => {
             </Text>
           </View>
         ) : sections.length === 0 ? (
-          <View className="flex-1 items-center justify-center p-4">
-            <Text className={`text-center text-base ${isDarkMode ? 'text-textDark' : 'text-text'}`}>
-              No transactions found
-            </Text>
-          </View>
+          !isConnected ? (
+            <OfflineEmptyState />
+          ) : (
+            <View className="flex-1 items-center justify-center p-4">
+              <Text className={`text-center text-base ${isDarkMode ? 'text-textDark' : 'text-text'}`}>
+                No transactions found
+              </Text>
+            </View>
+          )
         ) : (
           <TransactionsList
             sections={sections}
@@ -378,6 +381,13 @@ const TransactionsScreen: React.FC = () => {
             onDelete={handleSwipeDelete}
           />
         )}
+
+        {/* Edit Transaction Modal */}
+        <EditTransactionModal
+          visible={editingTransaction !== null}
+          onClose={() => setEditingTransaction(null)}
+          transaction={editingTransaction}
+        />
 
         {/* Filter Modal */}
         <FilterModal

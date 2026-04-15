@@ -111,7 +111,7 @@ async function getCachedResult(
     const savingsAmount = Math.round(income * 0.2);
 
     // Reconstruct full allocations with IDs and amounts (percentages are of total income)
-    const allocations: BudgetAllocation[] = entry.allocations.map((a) => {
+    const rawAllocations: BudgetAllocation[] = entry.allocations.map((a) => {
       const category = categories.find(
         (c) => c.category_name.toLowerCase() === a.categoryName.toLowerCase()
       );
@@ -123,6 +123,7 @@ async function getCachedResult(
         amount: Math.round((a.percentage / 100) * income),
       };
     });
+    const allocations = normalizeAllocatedAmounts(rawAllocations, spendingBudget);
 
     return {
       success: true,
@@ -215,6 +216,36 @@ function validateAllocations(
   return { valid: true, error: '' };
 }
 
+// ============= AMOUNT NORMALIZATION =============
+
+/**
+ * After converting percentages to rounded dollar amounts, floating-point math can
+ * push the total slightly above the spending budget. This helper trims the excess
+ * by subtracting $1 from the highest-amount categories first.
+ *
+ * Only auto-corrects if the overage is within 5% of the spending budget — anything
+ * larger is a real problem that should surface as a validation error.
+ *
+ * This is applied ONLY to AI-generated allocations, not to user-edited amounts.
+ */
+function normalizeAllocatedAmounts(
+  allocations: BudgetAllocation[],
+  spendingBudget: number,
+): BudgetAllocation[] {
+  const total = allocations.reduce((s, a) => s + a.amount, 0);
+  if (total <= spendingBudget) return allocations;
+
+  const excess = total - spendingBudget;
+  if (excess > Math.round(spendingBudget * 0.05)) return allocations;
+
+  const result = allocations.map((a) => ({ ...a }));
+  result.sort((a, b) => b.amount - a.amount);
+  for (let i = 0; i < excess; i++) {
+    result[i % result.length].amount -= 1;
+  }
+  return result;
+}
+
 // ============= MAIN API =============
 
 /**
@@ -294,7 +325,7 @@ export async function getBudgetAllocations(
     }
 
     // Map response with amounts (percentages are of total income)
-    const allocations: BudgetAllocation[] = data.allocations.map((a: {
+    const rawAllocations: BudgetAllocation[] = data.allocations.map((a: {
       categoryId: number;
       categoryName: string;
       classification: BudgetClassification;
@@ -306,6 +337,7 @@ export async function getBudgetAllocations(
       percentage: a.percentage,
       amount: Math.round((a.percentage / 100) * monthlyIncome),
     }));
+    const allocations = normalizeAllocatedAmounts(rawAllocations, spendingBudget);
 
     // Validate response
     const validation = validateAllocations(allocations, categories);

@@ -13,9 +13,11 @@ import AppLockScreen from './components/Shared/AppLockScreen';
 import CurrencyInitializer from './components/Shared/CurrencyInitializer';
 import DataPreloader from './components/Shared/DataPreloader';
 import NotificationInitializer from './components/Shared/NotificationInitializer';
+import { OfflineBanner } from './components/Shared/OfflineBanner';
 import { AuthProvider } from './context/AuthContext';
 import { DataRefreshProvider } from './context/DataRefreshContext';
 import { LockProvider } from './context/LockContext';
+import { NetworkProvider } from './context/NetworkContext';
 import { PostHogProvider } from './context/PostHogContext';
 import { SubscriptionProvider } from './context/SubscriptionContext';
 import { AppThemeProvider } from './context/ThemeContext';
@@ -56,6 +58,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView className="flex-1">
       <SafeAreaProvider>
+        <NetworkProvider>
         <AuthProvider>
           <SubscriptionProvider>
           <PostHogProvider>
@@ -92,6 +95,8 @@ export default function RootLayout() {
           </PostHogProvider>
           </SubscriptionProvider>
         </AuthProvider>
+        <OfflineBanner />
+        </NetworkProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

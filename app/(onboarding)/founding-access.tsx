@@ -59,11 +59,16 @@ export default function FoundingAccessScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const { error: fnError } = await supabase.functions.invoke("send-founding-otp", {
+      const { data: otpData, error: fnError } = await supabase.functions.invoke("send-founding-otp", {
         body: { email: trimmedEmail },
       });
 
       if (fnError) throw fnError;
+
+      if (otpData?.rateLimited) {
+        setError("Too many attempts. Please try again in 10 minutes.");
+        return;
+      }
 
       // Always transition to code phase (vague response protects the list)
       setPhase("code");
@@ -100,10 +105,10 @@ export default function FoundingAccessScreen() {
         setOnboardingStep(11);
         router.push("/(onboarding)/notification-reminders");
       } else {
-        setError(data?.error ?? "Invalid or expired code. Please try again.");
+        setError("Wrong code. Please try again.");
       }
     } catch (e: any) {
-      setError("Invalid or expired code. Please try again.");
+      setError("Something went wrong. Please try again.");
       console.error("[FoundingAccess] verify-founding-otp error:", e);
     } finally {
       setIsLoading(false);
