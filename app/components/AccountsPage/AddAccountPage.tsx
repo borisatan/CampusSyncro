@@ -12,7 +12,6 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SuccessModal } from '../Shared/SuccessModal';
 
 interface Account {
   id?: number;
@@ -52,8 +51,6 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
   const [balance, setBalance] = useState('');
   const [sortOrder, setSortOrder] = useState(accountCount + 1);
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
   const handleSave = () => {
     if (!name.trim()) {
       alert("Please enter an account name");
@@ -70,7 +67,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
       balance: sanitizedBalance,
       sort_order: sortOrder,
     });
-    setShowSuccess(true);
+    onBack();
   };
 
   const Icon = accountTypeIcons[type] || CreditCard;
@@ -245,15 +242,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
         </View>
       </ScrollView>
 
-        {/* Success Modal Overlay */}
-        <SuccessModal
-          visible={showSuccess}
-          text="Account Added!"
-          onDismiss={() => {
-            setShowSuccess(false);
-            setTimeout(() => onBack(), 350);
-          }}
-        />
+
       </KeyboardAvoidingView>
     </View>
   );

@@ -23,7 +23,6 @@ import { contributeToGoal, createTransfer, fetchGoalsByAccount, recordSavingsTra
 import { useAccountsStore } from '../../store/useAccountsStore';
 import { useGoalsStore } from '../../store/useGoalsStore';
 import { Account, Goal } from '../../types/types';
-import { SuccessModal } from '../Shared/SuccessModal';
 import { AccountTransferCard } from './AccountTransferCard';
 import { GoalSelector } from './GoalSelector';
 
@@ -60,7 +59,6 @@ export default function MoveMoneyPage({
   const [amount, setAmount] = useState<string>('');
   const [showSourcePicker, setShowSourcePicker] = useState(false);
   const [showDestinationPicker, setShowDestinationPicker] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirectionDown, setIsDirectionDown] = useState(true);
 
@@ -85,8 +83,6 @@ export default function MoveMoneyPage({
   const headerText = isSavingsTransfer && actualDestination
     ? `Save to ${actualDestination.account_name}`
     : 'Move money';
-  const successText = isSavingsTransfer ? 'Saved!' : 'Transfer Complete!';
-
   const canSubmit =
     actualSource &&
     actualDestination &&
@@ -134,8 +130,6 @@ export default function MoveMoneyPage({
         incrementGoalAmount(selectedGoal.id, numericAmount);
       }
 
-      setShowSuccess(true);
-
       // If a goal is selected, use contributeToGoal (handles transfer + contribution record)
       if (selectedGoal) {
         await contributeToGoal({
@@ -167,6 +161,7 @@ export default function MoveMoneyPage({
 
       // Refresh to sync with server state
       await Promise.all([refreshAccounts(), refreshBudgets(), refreshGoals()]);
+      onBack();
     } catch (error) {
       console.error('Transfer error:', error);
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -181,7 +176,6 @@ export default function MoveMoneyPage({
       if (selectedGoal) {
         incrementGoalAmount(selectedGoal.id, -numericAmount);
       }
-      setShowSuccess(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -390,15 +384,6 @@ export default function MoveMoneyPage({
           handleSelectDestinationAccount
         )}
 
-        {/* Success Modal */}
-        <SuccessModal
-          visible={showSuccess}
-          text={successText}
-          onDismiss={() => {
-            setShowSuccess(false);
-            onBack();
-          }}
-        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

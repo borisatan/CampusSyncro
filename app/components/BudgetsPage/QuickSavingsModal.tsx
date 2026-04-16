@@ -19,7 +19,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { Account } from '../../types/types';
 import { AccountSelector } from '../AddTransactionPage/AccountSelector';
-import { SuccessModal } from '../Shared/SuccessModal';
 
 interface QuickSavingsModalProps {
   visible: boolean;

@@ -1,5 +1,4 @@
 import { ArrowLeft } from 'lucide-react-native';
-import LottieView from 'lottie-react-native';
 import { parseAmount } from '../../utils/parseAmount';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -9,7 +8,6 @@ import {
   Platform,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -61,14 +59,11 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [categoryEditorVisible, setCategoryEditorVisible] = useState(false);
   const [categoryEditorData, setCategoryEditorData] = useState<{ id?: string; name?: string; icon?: string; color?: string }>({});
   const amountInputRef = useRef<TextInput>(null);
-  const lottieRef = useRef<LottieView>(null);
-  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reset state every time modal opens with fresh transaction data
   useEffect(() => {
@@ -78,7 +73,6 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     setSelectedAccount(transaction.account_name || '');
     setSelectedDate(new Date(transaction.created_at));
     setTransactionType(transaction.amount < 0 ? 'expense' : 'income');
-    setShowSuccess(false);
     setShowAccountDropdown(false);
     setShowDatePicker(false);
     setIsEditMode(false);
@@ -88,20 +82,6 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
       setSelectedCategory(match ?? (transaction.amount < 0 ? categories[0] : null));
     }
   }, [visible, transaction, categories]);
-
-  // Play lottie and auto-close when success overlay shows
-  useEffect(() => {
-    if (showSuccess) {
-      lottieRef.current?.reset();
-      lottieRef.current?.play();
-      successTimerRef.current = setTimeout(() => {
-        onClose();
-      }, 2200);
-    }
-    return () => {
-      if (successTimerRef.current) clearTimeout(successTimerRef.current);
-    };
-  }, [showSuccess]);
 
   const handleDateChange = (_event: any, date?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);
@@ -139,7 +119,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
         created_at: selectedDate.toISOString(),
       });
 
-      setShowSuccess(true);
+      onClose();
 
       await updateTransaction(transaction.id, finalAmount, description, selectedAccount, categoryName, selectedDate.toISOString());
 
@@ -327,19 +307,6 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
           initialColor={categoryEditorData.color}
         />
 
-        {showSuccess && (
-          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#0f172a' }]} className="items-center justify-center">
-            <LottieView
-              ref={lottieRef}
-              source={require('../../../assets/animations/success.json')}
-              speed={1.2}
-              loop={false}
-              autoPlay={false}
-              style={{ width: 280, height: 280 }}
-            />
-            <Text className="text-textDark text-lg font-semibold mt-2">Transaction Updated!</Text>
-          </View>
-        )}
       </SafeAreaView>
     </Modal>
   );

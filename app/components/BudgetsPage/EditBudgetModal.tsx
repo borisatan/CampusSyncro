@@ -31,7 +31,6 @@ import { useAccountsStore } from '../../store/useAccountsStore';
 import { useCategoriesStore } from '../../store/useCategoriesStore';
 import { Category, CategoryBudgetStatus } from '../../types/types';
 import { AnimatedToggle } from '../Shared/AnimatedToggle';
-import { SuccessModal } from '../Shared/SuccessModal';
 
 interface EditBudgetModalProps {
   visible: boolean;
@@ -65,7 +64,6 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
   const [percentText, setPercentText] = useState('');
   const [showOnDashboard, setShowOnDashboard] = useState(category.show_on_dashboard ?? true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // Animation values
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -77,7 +75,6 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
     setCategoryName(category.category_name);
     setShowOnDashboard(category.show_on_dashboard ?? true);
     setFocusedInput(false);
-    setShowSuccess(false);
 
     const hasPct = category.budget_percentage != null && category.budget_percentage > 0;
     setBudgetMode(hasPct ? 'percentage' : 'fixed');
@@ -176,7 +173,8 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
       await loadCategories();
       await refreshAll();
 
-      setShowSuccess(true);
+      onSaved();
+      onClose();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to save category');
     } finally {
@@ -442,16 +440,6 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
           </ScrollView>
         </KeyboardAvoidingView>
 
-        {/* Success Modal */}
-        <SuccessModal
-          visible={showSuccess}
-          text="Category Updated!"
-          onDismiss={() => {
-            setShowSuccess(false);
-            onSaved();
-            onClose();
-          }}
-        />
       </View>
     </Modal>
   );

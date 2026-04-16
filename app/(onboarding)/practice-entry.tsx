@@ -18,7 +18,6 @@ import {
 import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 import { OnboardingCategoryGrid } from "../components/OnboardingPage/OnboardingCategoryGrid";
 import { OnboardingTransactionHero } from "../components/OnboardingPage/OnboardingTransactionHero";
-import { SuccessModal } from "../components/Shared/SuccessModal";
 import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useCurrencyStore } from "../store/useCurrencyStore";
@@ -82,7 +81,6 @@ export default function PracticeEntryScreen() {
   const { currencySymbol } = useCurrencyStore();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
   const amountInputRef = useRef<TextInput>(null);
   const screenEnteredAt = useRef(Date.now());
   const { trackEvent } = useAnalytics();
@@ -125,13 +123,12 @@ export default function PracticeEntryScreen() {
         category: selectedCategory,
         time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
       });
-      setShowSuccess(true);
       setNewOnboardingData({ practiceEntryCompleted: true });
+      handleSuccessModalDismiss();
     }
   };
 
   const handleSuccessModalDismiss = () => {
-    setShowSuccess(false);
     setOnboardingStep(10);
     router.push("/(onboarding)/subscription-trial");
   };
@@ -231,8 +228,7 @@ export default function PracticeEntryScreen() {
               </MotiView>
 
               {/* Description field */}
-              {!showSuccess && (
-                <MotiView
+              <MotiView
                   from={{ opacity: 0, translateY: 20 }}
                   animate={{ opacity: 1, translateY: 0 }}
                   transition={{ delay: 400, duration: 600 }}
@@ -249,10 +245,9 @@ export default function PracticeEntryScreen() {
                     className="w-full px-4 py-3 rounded-xl bg-inputDark border border-borderDark text-textDark"
                   />
                 </MotiView>
-              )}
 
               {/* Category Grid */}
-              {!showSuccess && allCategories.length > 0 && (
+              {allCategories.length > 0 && (
                 <MotiView
                   from={{ opacity: 0, translateY: 20 }}
                   animate={{ opacity: 1, translateY: 0 }}
@@ -272,8 +267,7 @@ export default function PracticeEntryScreen() {
         </ScrollView>
 
         {/* Submit button - Fixed at bottom */}
-        {!showSuccess && (
-          <View className="px-2 mb-10 py-2">
+        <View className="px-2 mb-10 py-2">
             {isComplete ? (
               <MotiView
                 animate={{
@@ -327,14 +321,7 @@ export default function PracticeEntryScreen() {
               </View>
             )}
           </View>
-        )}
       </KeyboardAvoidingView>
-
-      <SuccessModal
-        visible={showSuccess}
-        text="Transaction Added!"
-        onDismiss={handleSuccessModalDismiss}
-      />
     </SafeAreaView>
   );
 }

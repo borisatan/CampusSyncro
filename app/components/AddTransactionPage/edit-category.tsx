@@ -18,7 +18,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from '../../context/ThemeContext';
 import { deleteCategory, getUserId, saveCategory } from '../../services/backendService';
-import { SuccessModal } from '../Shared/SuccessModal';
 import { ColorPicker } from '../Shared/ColorPicker';
 
 import { useDataRefresh } from '../../context/DataRefreshContext';
@@ -51,7 +50,6 @@ export default function CategoryEditor() {
   const [selectedColor, setSelectedColor] = useState((params.color as string) || DEFAULT_CATEGORY_COLOR);
   const [isProcessing, setIsProcessing] = useState(false);
   const [focusedInput, setFocusedInput] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const iconRefs = useRef<any[]>([]);
   const iconScrollX = useRef(new Animated.Value(0)).current;
@@ -141,7 +139,7 @@ export default function CategoryEditor() {
       // Refresh Dashboard, Transaction List, etc. via Context
       await refreshAll();
 
-      setShowSuccess(true);
+      router.back();
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to save category");
     } finally {
@@ -346,15 +344,6 @@ export default function CategoryEditor() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Success Modal */}
-      <SuccessModal
-        visible={showSuccess}
-        text={categoryId ? 'Category Updated!' : 'Category Created!'}
-        onDismiss={() => {
-          setShowSuccess(false);
-          router.back();
-        }}
-      />
     </SafeAreaView>
   );
 }

@@ -12,7 +12,6 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SuccessModal } from '../Shared/SuccessModal';
 
 interface Account {
   id: number;
@@ -56,8 +55,6 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
   const [balance, setBalance] = useState(account?.balance.toString() || '0');
   const [sortOrder, setSortOrder] = useState(account?.sort_order ?? 0);
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
   const handleSave = () => {
     if (!name.trim()) {
       alert("Account name cannot be empty");
@@ -69,7 +66,13 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
       ? 0 
       : parseAmount(balance);
 
-    setShowSuccess(true);
+    onSave({
+      ...account,
+      name: name.trim(),
+      type,
+      balance: sanitizedBalance,
+      sort_order: sortOrder,
+    });
   };
 
   
@@ -245,21 +248,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
         </View>
       </ScrollView>
 
-        {/* Success Modal Overlay */}
-        <SuccessModal
-          visible={showSuccess}
-          text="Account Updated!"
-          onDismiss={() => {
-            onSave({
-              ...account,
-              name: name.trim(),
-              type,
-              balance: parseAmount(balance) || 0,
-              sort_order: sortOrder,
-            });
-            setShowSuccess(false);
-          }}
-        />
+
       </KeyboardAvoidingView>
     </View>
   );

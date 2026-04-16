@@ -17,7 +17,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ColorPicker } from '../Shared/ColorPicker';
-import { SuccessModal } from '../Shared/SuccessModal';
 import { useTheme } from '../../context/ThemeContext';
 import { useDataRefresh } from '../../context/DataRefreshContext';
 import { deleteCategory, getUserId, saveCategory } from '../../services/backendService';
@@ -65,7 +64,6 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
   const [selectedColor, setSelectedColor] = useState(initialColor || DEFAULT_CATEGORY_COLOR);
   const [isProcessing, setIsProcessing] = useState(false);
   const [focusedInput, setFocusedInput] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -75,7 +73,6 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
     setCategoryName(initialName);
     setSelectedIcon(initialIcon || availableIcons[0]);
     setSelectedColor(initialColor || DEFAULT_CATEGORY_COLOR);
-    setShowSuccess(false);
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 300,
@@ -102,7 +99,7 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
       await saveCategory(userId, { category_name: categoryName.trim(), icon: selectedIcon, color: selectedColor }, categoryId);
       await loadCategories();
       await refreshAll();
-      setShowSuccess(true);
+      onClose();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to save category');
     } finally {
@@ -256,11 +253,6 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
           </ScrollView>
         </KeyboardAvoidingView>
 
-        <SuccessModal
-          visible={showSuccess}
-          text={categoryId ? 'Category Updated!' : 'Category Created!'}
-          onDismiss={() => { setShowSuccess(false); onClose(); }}
-        />
       </SafeAreaView>
     </Modal>
   );
