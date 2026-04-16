@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SuccessModal } from '../Shared/SuccessModal';
 
 interface Account {
@@ -47,6 +47,7 @@ interface EditAccountProps {
 }
 
 export default function EditAccountPage({ account, currencySymbol, onBack, onSave, accountCount }: EditAccountProps) {
+  const insets = useSafeAreaInsets();
   // Generate sort order options from 1 to accountCount (1-indexed)
   const sortOrderOptions = Array.from({ length: Math.max(accountCount, 1) }, (_, i) => i + 1);
 
@@ -76,7 +77,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
   const colorClass = accountTypeColors[type] || 'bg-accentBlue';
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+    <View style={{ flex: 1, paddingTop: insets.top }} className="bg-backgroundDark">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -232,18 +233,13 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
           </View>
 
           {/* Action Buttons */}
-          <View className="flex-row space-x-3 pt-6 pb-8">
-            <TouchableOpacity
-              onPress={onBack}
-              className="flex-1 py-4 bg-surfaceDark border border-borderDark rounded-2xl items-center mr-2"
-            >
-              <Text className="text-secondaryDark text-base font-semibold">Cancel</Text>
-            </TouchableOpacity>
+          <View className="pt-6 pb-8">
             <TouchableOpacity
               onPress={handleSave}
-              className="flex-1 py-4 bg-accentBlue rounded-2xl items-center"
+              activeOpacity={0.8}
+              className="py-4 bg-accentTeal rounded-2xl items-center"
             >
-              <Text className="text-white text-base font-bold">Save Changes</Text>
+              <Text className="text-white text-lg font-bold">Save Changes</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -265,7 +261,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
           }}
         />
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

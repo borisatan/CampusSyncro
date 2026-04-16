@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Trash2 } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -205,11 +205,7 @@ export default function CategoryEditor() {
             </Text>
           </View>
         </View>
-        {categoryId && (
-          <TouchableOpacity onPress={handleDelete} className="p-2">
-            <Trash2 color="#ef4444" size={24} />
-          </TouchableOpacity>
-        )}
+        <View className="w-10" />
       </View>
 
       <KeyboardAvoidingView

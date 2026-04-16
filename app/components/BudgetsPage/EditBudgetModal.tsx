@@ -225,7 +225,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <View className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} style={{ paddingTop: insets.top }}>
+      <View style={{ flex: 1, paddingTop: insets.top }} className={isDarkMode ? 'bg-backgroundDark' : 'bg-background'}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
         {/* Header with Back and Delete — identical to edit-category */}
@@ -350,7 +350,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                     Budget Amount
                   </Text>
                   <View className={`flex-row items-center px-3 h-12 rounded-xl border ${isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-white border-borderLight'}`}>
-                    <Text className="text-slateMuted text-base mr-1">{currencySymbol}</Text>
+                    <Text className="text-slateMuted text-base mr-1" style={{ lineHeight: 16 }}>{currencySymbol}</Text>
                     <TextInput
                       className={`flex-1 py-0 text-base ${isDarkMode ? 'text-textDark' : 'text-textLight'}`}
                       value={amountText}
@@ -359,6 +359,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                       placeholder="0"
                       placeholderTextColor="#6B7280"
                       selectionColor={category.color}
+                      style={{ lineHeight: 16 }}
                     />
                   </View>
                   {amountText !== '' && !isNaN(parseAmount(amountText)) && monthlyIncome > 0 && (

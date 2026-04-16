@@ -67,6 +67,22 @@ app/
 - `get_transaction_total` - Sum transactions by date range
 - `fetch_category_aggregates` - Category spending by date range
 
+## Known Pitfalls
+
+### Currency Symbol + TextInput vertical alignment (iOS & Android)
+
+When placing a currency symbol `Text` next to a `TextInput` in a `flex-row items-center` container, both elements **must** have a matching explicit `lineHeight` in their `style` prop equal to the font size. Without this, iOS and Android render text baselines differently, causing the symbol and the typed text to appear vertically misaligned.
+
+**Always do this:**
+```tsx
+<View className="flex-row items-center px-4 rounded-xl border ...">
+  <Text style={{ lineHeight: 20 }}>{currencySymbol}</Text>
+  <TextInput style={{ lineHeight: 20 }} ... />
+</View>
+```
+
+Rule: `lineHeight` value = the font size in pixels (`text-base` → 16, `text-xl` → 20, `text-2xl` → 24). Both the symbol `Text` and the `TextInput` must use the same value. Never omit `lineHeight` from either element.
+
 ## Additional Documentation
 
 Check these files for detailed patterns when working on related features:

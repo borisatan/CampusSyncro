@@ -1,4 +1,4 @@
-import { ArrowLeft, Trash2 } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import LottieView from 'lottie-react-native';
 import { parseAmount } from '../../utils/parseAmount';
 import React, { useEffect, useRef, useState } from 'react';
@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AccountSelector } from '../AddTransactionPage/AccountSelector';
 import { CategoryEditorModal } from '../AddTransactionPage/CategoryEditorModal';
 import { CategoryGrid } from '../AddTransactionPage/CategoryGrid';
@@ -46,7 +46,6 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 }) => {
   const { isDarkMode } = useTheme();
   const { userId } = useAuth();
-  const insets = useSafeAreaInsets();
   const { refreshAll, optimisticDeleteTransaction, optimisticUpdateTransaction } = useDataRefresh();
 
   const categories = useCategoriesStore((state) => state.categories);
@@ -198,7 +197,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <View className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} style={{ paddingTop: insets.top }}>
+      <SafeAreaView edges={['top']} className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
         {/* Header */}
@@ -217,9 +216,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
               <Text className="text-secondaryDark">Update transaction details</Text>
             </View>
           </View>
-          <TouchableOpacity onPress={handleDelete} className="p-2">
-            <Trash2 color="#ef4444" size={24} />
-          </TouchableOpacity>
+          <View className="w-10" />
         </View>
 
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
@@ -290,9 +287,34 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
               handleDateChange={handleDateChange}
               handleSubmit={handleSave}
               transactionType={transactionType}
-              buttonText={isSaving ? 'Saving...' : `Update ${transactionType === 'expense' ? 'Expense' : 'Income'}`}
               isSubmitting={isSaving}
+              hideSubmitButton={true}
             />
+
+            {/* Action Buttons */}
+            <View className="flex-row mb-6" style={{ gap: 8 }}>
+              <TouchableOpacity
+                onPress={handleDelete}
+                disabled={isSaving}
+                activeOpacity={0.8}
+                className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-accentRed"
+              >
+                <Text className="text-white font-bold text-lg">Delete</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleSave}
+                disabled={isSaving}
+                activeOpacity={0.8}
+                className={`flex-1 rounded-xl py-3 items-center border ${
+                  isSaving ? 'bg-gray400 border-gray400' : 'bg-accentTeal border-accentTeal'
+                }`}
+              >
+                <Text className="text-white font-bold text-lg">
+                  {isSaving ? 'Saving...' : `Update ${transactionType === 'expense' ? 'Expense' : 'Income'}`}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
 
@@ -318,7 +340,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             <Text className="text-textDark text-lg font-semibold mt-2">Transaction Updated!</Text>
           </View>
         )}
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };

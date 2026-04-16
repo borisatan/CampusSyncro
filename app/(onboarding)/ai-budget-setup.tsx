@@ -343,7 +343,7 @@ export default function AIBudgetSetupScreen() {
 
             {/* Amount input */}
             <View className="flex-row items-center px-4 py-3 rounded-xl bg-backgroundDark border border-borderDark mb-6">
-              <Text className="text-white/70 text-xl mr-2">{currencySymbol}</Text>
+              <Text className="text-white/70 text-xl mr-2" style={{ lineHeight: 20 }}>{currencySymbol}</Text>
               <TextInput
                 value={editAmountText}
                 onChangeText={setEditAmountText}
@@ -351,7 +351,7 @@ export default function AIBudgetSetupScreen() {
                 placeholderTextColor="rgba(255,255,255,0.4)"
                 keyboardType="decimal-pad"
                 className="flex-1 py-4 text-xl text-white"
-                style={{ lineHeight: 24 }}
+                style={{ lineHeight: 20 }}
                 autoFocus
               />
             </View>

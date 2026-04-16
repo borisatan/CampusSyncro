@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ArrowLeft, Trash2 } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ColorPicker } from '../Shared/ColorPicker';
 import { SuccessModal } from '../Shared/SuccessModal';
 import { useTheme } from '../../context/ThemeContext';
@@ -56,7 +56,6 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
   initialColor,
 }) => {
   const { isDarkMode } = useTheme();
-  const insets = useSafeAreaInsets();
   const { refreshAll } = useDataRefresh();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
   const loadAccounts = useAccountsStore((state) => state.loadAccounts);
@@ -144,7 +143,7 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
-      <View className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`} style={{ paddingTop: insets.top }}>
+      <SafeAreaView edges={['top']} className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
         <View className="flex-row items-center justify-between px-4 mb-4 mt-4">
@@ -164,11 +163,7 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
               </Text>
             </View>
           </View>
-          {categoryId && (
-            <TouchableOpacity onPress={handleDelete} className="p-2">
-              <Trash2 color="#ef4444" size={24} />
-            </TouchableOpacity>
-          )}
+          <View className="w-10" />
         </View>
 
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
@@ -266,7 +261,7 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
           text={categoryId ? 'Category Updated!' : 'Category Created!'}
           onDismiss={() => { setShowSuccess(false); onClose(); }}
         />
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };

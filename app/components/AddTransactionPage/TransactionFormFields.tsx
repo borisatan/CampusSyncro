@@ -23,6 +23,7 @@ interface FormFieldsProps {
   transactionType: "expense" | "income";
   buttonText?: string;
   isSubmitting?: boolean;
+  hideSubmitButton?: boolean;
 }
 
 export const TransactionFormFields = ({
@@ -37,6 +38,7 @@ export const TransactionFormFields = ({
   transactionType,
   buttonText,
   isSubmitting = false,
+  hideSubmitButton = false,
 }: FormFieldsProps) => {
   const systemColorScheme = useColorScheme();
   const defaultButtonText = `Add ${transactionType === "expense" ? "Expense" : "Income"}`;
@@ -112,18 +114,20 @@ export const TransactionFormFields = ({
       </View>
 
       {/* Submit Button */}
-      <TouchableOpacity
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          handleSubmit();
-        }}
-        disabled={isSubmitting}
-        className={`w-full py-4 rounded-xl items-center mb-6 ${
-          transactionType === "expense" ? "bg-accentRed" : "bg-accentTeal"
-        }`}
-      >
-        <Text className="text-white font-semibold">{displayButtonText}</Text>
-      </TouchableOpacity>
+      {!hideSubmitButton && (
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            handleSubmit();
+          }}
+          disabled={isSubmitting}
+          className={`w-full py-4 rounded-xl items-center mb-6 ${
+            transactionType === "expense" ? "bg-accentRed" : "bg-accentTeal"
+          }`}
+        >
+          <Text className="text-white font-semibold">{displayButtonText}</Text>
+        </TouchableOpacity>
+      )}
     </>
   );
 };

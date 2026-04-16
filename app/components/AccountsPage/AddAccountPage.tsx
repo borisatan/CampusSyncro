@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SuccessModal } from '../Shared/SuccessModal';
 
 interface Account {
@@ -44,6 +44,7 @@ interface AddAccountProps {
 }
 
 export default function AddAccountPage({ onBack, onSave, currencySymbol, accountCount }: AddAccountProps) {
+  const insets = useSafeAreaInsets();
   // Generate sort order options from 1 to accountCount+1 (1-indexed, new account can go anywhere)
   const sortOrderOptions = Array.from({ length: accountCount + 1 }, (_, i) => i + 1);
   const [name, setName] = useState('');
@@ -76,7 +77,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
   const colorClass = accountTypeColors[type] || 'bg-accentBlue';
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+    <View style={{ flex: 1, paddingTop: insets.top }} className="bg-backgroundDark">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -232,18 +233,13 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
           </View>
 
           {/* Action Buttons */}
-          <View className="flex-row space-x-3 pt-6 pb-8">
-            <TouchableOpacity
-              onPress={onBack}
-              className="flex-1 py-4 bg-surfaceDark border border-borderDark rounded-2xl items-center mr-2"
-            >
-              <Text className="text-secondaryDark text-base font-semibold">Cancel</Text>
-            </TouchableOpacity>
+          <View className="pt-6 pb-8">
             <TouchableOpacity
               onPress={handleSave}
-              className="flex-1 py-4 bg-accentBlue rounded-2xl items-center"
+              activeOpacity={0.8}
+              className="py-4 bg-accentTeal rounded-2xl items-center"
             >
-              <Text className="text-white text-base font-bold">Add Account</Text>
+              <Text className="text-white text-lg font-bold">Add Account</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -259,7 +255,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
           }}
         />
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

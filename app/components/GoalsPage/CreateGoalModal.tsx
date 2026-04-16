@@ -144,7 +144,7 @@ export function CreateGoalModal({
         <StatusBar barStyle="light-content" />
 
         {/* Header */}
-        <View className="flex-row items-center justify-between px-2 mt-16 mb-4">
+        <View className="flex-row items-center justify-between px-2 mt-4 mb-4">
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={handleClose}
@@ -264,11 +264,12 @@ export function CreateGoalModal({
             <TouchableOpacity
               onPress={handleSubmit}
               disabled={!canSubmit}
-              className={`py-4 rounded-xl items-center ${
-                canSubmit ? 'bg-accentBlue' : 'bg-gray-600'
+              activeOpacity={0.8}
+              className={`py-3 rounded-xl items-center border ${
+                canSubmit ? 'bg-accentTeal border-accentTeal' : 'bg-gray400 border-gray400'
               }`}
             >
-              <Text className={`font-semibold text-base ${canSubmit ? 'text-white' : 'text-gray-400'}`}>
+              <Text className="text-white font-bold text-lg">
                 {isSubmitting ? 'Creating...' : 'Create Goal'}
               </Text>
             </TouchableOpacity>

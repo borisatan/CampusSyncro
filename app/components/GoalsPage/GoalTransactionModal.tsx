@@ -206,9 +206,9 @@ export function GoalTransactionModal({
             </View>
             <Pressable
               onPress={handleClose}
-              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1, backgroundColor: '#1E293B', borderRadius: 999, padding: 6 }]}
             >
-              <Ionicons name="close" size={24} color="#94A3B8" />
+              <Ionicons name="close" size={18} color="#94A3B8" />
             </Pressable>
           </View>
 
@@ -227,7 +227,7 @@ export function GoalTransactionModal({
           <ScrollView
             showsVerticalScrollIndicator={false}
             className="bg-backgroundDark"
-            contentContainerStyle={{ padding: 16, paddingBottom: 44 }}
+            contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 16, paddingBottom: 44 }}
             keyboardDismissMode="on-drag"
           >
             {/* Mode slider */}

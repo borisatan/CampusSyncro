@@ -194,7 +194,7 @@ export function EditGoalModal({
         <StatusBar barStyle="light-content" />
 
         {/* Header */}
-        <View className="flex-row items-center justify-between px-2 mt-16 mb-4">
+        <View className="flex-row items-center justify-between px-2 mt-4 mb-4">
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={handleClose}
@@ -337,44 +337,32 @@ export function EditGoalModal({
               />
             </View>
 
-            {/* Save Button */}
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={!canSubmit || !hasChanges}
-              className={`py-4 rounded-xl items-center mb-3 ${
-                canSubmit && hasChanges ? 'bg-accentBlue' : 'bg-gray-600'
-              }`}
-            >
-              <Text
-                className={`font-semibold text-base ${
-                  canSubmit && hasChanges ? 'text-white' : 'text-gray-400'
+            {/* Action Buttons */}
+            <View className="flex-row" style={{ gap: 8 }}>
+              <TouchableOpacity
+                onPress={handleDelete}
+                disabled={isDeleting || isSubmitting}
+                activeOpacity={0.8}
+                className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-accentRed"
+              >
+                <Text className="text-white font-bold text-lg">
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleSubmit}
+                disabled={!canSubmit || !hasChanges}
+                activeOpacity={0.8}
+                className={`flex-1 rounded-xl py-3 items-center border ${
+                  canSubmit && hasChanges ? 'bg-accentTeal border-accentTeal' : 'bg-gray400 border-gray400'
                 }`}
               >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Delete Button */}
-            <TouchableOpacity
-              onPress={handleDelete}
-              disabled={isDeleting || isSubmitting}
-              className="py-4 rounded-xl items-center border border-red-500/30"
-            >
-              <View className="flex-row items-center">
-                <Ionicons
-                  name="trash-outline"
-                  size={18}
-                  color={isDeleting ? '#6B7280' : '#EF4444'}
-                />
-                <Text
-                  className={`font-semibold text-base ml-2 ${
-                    isDeleting ? 'text-gray-500' : 'text-red-500'
-                  }`}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete Goal'}
+                <Text className="text-white font-bold text-lg">
+                  {isSubmitting ? 'Saving...' : 'Update'}
                 </Text>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
