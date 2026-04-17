@@ -145,7 +145,7 @@ const AnimatedTransactionItem = React.memo(function AnimatedTransactionItem({
       rightThreshold={60}
       overshootRight={false}
       onSwipeableOpen={handleSwipeOpen}
-      friction={2}
+      friction={1}
     >
       <Pressable
         onPress={handlePress}
