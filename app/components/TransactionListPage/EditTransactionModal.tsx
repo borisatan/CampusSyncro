@@ -175,6 +175,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
       visible={visible}
       animationType="slide"
       presentationStyle="fullScreen"
+      statusBarTranslucent
       onRequestClose={onClose}
     >
       <SafeAreaView edges={['top']} className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`}>

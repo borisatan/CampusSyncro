@@ -221,6 +221,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
       visible={visible}
       animationType="slide"
       presentationStyle="fullScreen"
+      statusBarTranslucent
       onRequestClose={onClose}
     >
       <View style={{ flex: 1, paddingTop: insets.top }} className={isDarkMode ? 'bg-backgroundDark' : 'bg-background'}>
