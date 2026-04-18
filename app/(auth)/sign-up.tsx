@@ -3,7 +3,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import * as Crypto from "expo-crypto";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
-import { Link, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useRef, useState } from "react";
 import {
@@ -154,6 +154,8 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const isOnboardingFlow = from === "onboarding";
   const { trackEvent, identifyUser } = useAnalytics();
   const { newOnboardingData, setOnboardingDataPersisted } = useOnboardingStore();
   const { linkUser } = useSubscription();
@@ -200,7 +202,7 @@ export default function SignUpScreen() {
       pendingSignUp.email = email.trim().toLowerCase();
       pendingSignUp.password = password;
 
-      router.push("/(auth)/verify-email");
+      router.push(isOnboardingFlow ? "/(auth)/verify-email?from=onboarding" : "/(auth)/verify-email");
     } catch (e: any) {
       trackEvent("user_sign_up_failed", {
         error_message: e?.message ?? "Unknown error",
@@ -248,10 +250,11 @@ export default function SignUpScreen() {
       if (result.type === "success" && result.url) {
         // iOS path: ASWebAuthenticationSession captured the redirect internally.
 
-        // Claim flag BEFORE exchangeCodeForSession so that when onAuthStateChange fires
-        // (synchronously-ish during the exchange), it sees the flag set and skips
-        // persistence — this component is the sole persister for the iOS path.
-        setOnboardingDataPersisted();
+        // Only claim the persisted flag when we're about to persist immediately.
+        // In the onboarding flow, persistence is deferred to notification-reminders.
+        if (!isOnboardingFlow) {
+          setOnboardingDataPersisted();
+        }
 
         const { data: sessionData, error: sessionError } =
           await supabase.auth.exchangeCodeForSession(result.url);
@@ -268,29 +271,37 @@ export default function SignUpScreen() {
         // Ensure user profile exists
         await ensureUserProfile(sessionData.user.id);
 
-        // Persist onboarding data to database
-        await persistOnboardingData(sessionData.user.id, newOnboardingData);
-        await linkUser(sessionData.user.id);
-        if (newOnboardingData.foundingMemberEmail) {
-          supabase.functions.invoke('notify-founding-claim', {
-            body: { email: newOnboardingData.foundingMemberEmail, userId: sessionData.user.id },
-          }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
+        if (isOnboardingFlow) {
+          // Mid-onboarding: link RevenueCat before paywall but defer data persistence
+          // to notification-reminders where notification frequency will also be set.
+          await linkUser(sessionData.user.id);
+          if (sessionData.user) {
+            identifyUser(sessionData.user.id, { email: sessionData.user.email });
+          }
+          trackEvent("user_authenticated", { method: "google" });
+          router.replace("/(onboarding)/subscription-trial");
+        } else {
+          // Normal sign-up: persist everything now.
+          await persistOnboardingData(sessionData.user.id, newOnboardingData);
+          await linkUser(sessionData.user.id);
+          if (newOnboardingData.foundingMemberEmail) {
+            supabase.functions.invoke('notify-founding-claim', {
+              body: { email: newOnboardingData.foundingMemberEmail, userId: sessionData.user.id },
+            }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
+          }
+          await Promise.all([
+            useCategoriesStore.getState().loadCategories(),
+            useAccountsStore.getState().loadAccounts(),
+            useIncomeStore.getState().loadIncomeSettings(),
+            useCurrencyStore.getState().loadCurrency(),
+          ]);
+          useAppTourStore.getState().resetSeenPages();
+          if (sessionData.user) {
+            identifyUser(sessionData.user.id, { email: sessionData.user.email });
+          }
+          trackEvent("user_authenticated", { method: "google" });
+          router.replace("/(tabs)/profile");
         }
-        // Force reload stores so freshly created data is available immediately
-        await Promise.all([
-          useCategoriesStore.getState().loadCategories(),
-          useAccountsStore.getState().loadAccounts(),
-          useIncomeStore.getState().loadIncomeSettings(),
-          useCurrencyStore.getState().loadCurrency(),
-        ]);
-        useAppTourStore.getState().resetSeenPages();
-
-        if (sessionData.user) {
-          identifyUser(sessionData.user.id, { email: sessionData.user.email });
-        }
-
-        trackEvent("user_authenticated", { method: "google" });
-        router.replace("/(tabs)/profile");
       } else {
         // Android path: Chrome Custom Tab fired a deep link intent and closed.
         // The callback.tsx route receives the deep link and handles the exchange.
@@ -329,8 +340,11 @@ export default function SignUpScreen() {
       });
       if (!credential.identityToken) throw new Error("No identity token");
 
-      // Claim flag BEFORE signInWithIdToken so onAuthStateChange sees it already set
-      setOnboardingDataPersisted();
+      // Only claim the persisted flag when we're about to persist immediately.
+      // In the onboarding flow, persistence is deferred to notification-reminders.
+      if (!isOnboardingFlow) {
+        setOnboardingDataPersisted();
+      }
 
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "apple",
@@ -339,29 +353,36 @@ export default function SignUpScreen() {
       });
       if (error) throw error;
 
-      // Ensure user profile exists (creates if needed)
       if (data.user) {
         await ensureUserProfile(data.user.id);
-        await persistOnboardingData(data.user.id, newOnboardingData);
-        await linkUser(data.user.id);
-        if (newOnboardingData.foundingMemberEmail) {
-          supabase.functions.invoke('notify-founding-claim', {
-            body: { email: newOnboardingData.foundingMemberEmail, userId: data.user.id },
-          }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
-        }
-        // Force reload stores so freshly created data is available immediately
-        await Promise.all([
-          useCategoriesStore.getState().loadCategories(),
-          useAccountsStore.getState().loadAccounts(),
-          useIncomeStore.getState().loadIncomeSettings(),
-          useCurrencyStore.getState().loadCurrency(),
-        ]);
-        useAppTourStore.getState().resetSeenPages();
-        identifyUser(data.user.id, { email: data.user.email });
-      }
 
-      trackEvent("user_authenticated", { method: "apple" });
-      router.replace("/(tabs)/profile");
+        if (isOnboardingFlow) {
+          // Mid-onboarding: link RevenueCat before paywall but defer data persistence
+          // to notification-reminders where notification frequency will also be set.
+          await linkUser(data.user.id);
+          identifyUser(data.user.id, { email: data.user.email });
+          trackEvent("user_authenticated", { method: "apple" });
+          router.replace("/(onboarding)/subscription-trial");
+        } else {
+          await persistOnboardingData(data.user.id, newOnboardingData);
+          await linkUser(data.user.id);
+          if (newOnboardingData.foundingMemberEmail) {
+            supabase.functions.invoke('notify-founding-claim', {
+              body: { email: newOnboardingData.foundingMemberEmail, userId: data.user.id },
+            }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
+          }
+          await Promise.all([
+            useCategoriesStore.getState().loadCategories(),
+            useAccountsStore.getState().loadAccounts(),
+            useIncomeStore.getState().loadIncomeSettings(),
+            useCurrencyStore.getState().loadCurrency(),
+          ]);
+          useAppTourStore.getState().resetSeenPages();
+          identifyUser(data.user.id, { email: data.user.email });
+          trackEvent("user_authenticated", { method: "apple" });
+          router.replace("/(tabs)/profile");
+        }
+      }
     } catch (e: any) {
       if (e?.code === "ERR_REQUEST_CANCELED") return;
       trackEvent("user_auth_failed", {
@@ -395,13 +416,23 @@ export default function SignUpScreen() {
             keyboardDismissMode="on-drag"
           >
             <View className="flex-1 px-6 pt-16 pb-8">
+              {/* Back button (onboarding flow only) */}
+              {isOnboardingFlow && (
+                <Pressable
+                  onPress={() => router.back()}
+                  className="self-start p-2 -ml-2 mb-4 active:opacity-60"
+                >
+                  <Ionicons name="arrow-back" size={24} color="#fff" />
+                </Pressable>
+              )}
+
               {/* Header */}
               <View className="items-center mb-10">
                 <Text className="text-4xl font-bold text-white mb-2">
-                  Create account
+                  {isOnboardingFlow ? "Save your progress" : "Create account"}
                 </Text>
                 <Text className="text-secondaryDark text-base text-center">
-                  Join Monelo in seconds
+                  {isOnboardingFlow ? "Create a free account to continue" : "Join Monelo in seconds"}
                 </Text>
               </View>
 

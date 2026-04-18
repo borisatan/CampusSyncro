@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { ensureUserProfile } from "../services/backendService";
+import { useSubscription } from "../context/SubscriptionContext";
 import { useAccountsStore } from "../store/useAccountsStore";
 import { useAppTourStore } from "../store/useAppTourStore";
 import { useCategoriesStore } from "../store/useCategoriesStore";
@@ -30,6 +31,7 @@ import { persistOnboardingData } from "./sign-up";
 export default function OAuthCallbackScreen() {
   const router = useRouter();
   const { trackEvent, identifyUser } = useAnalytics();
+  const { linkUser } = useSubscription();
   const params = useLocalSearchParams<Record<string, string>>();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
@@ -75,42 +77,51 @@ export default function OAuthCallbackScreen() {
       // Ensure user profile exists
       await ensureUserProfile(sessionData.user.id);
 
-      // Persist onboarding data for new users (sign-up path).
-      // Claim the flag BEFORE awaiting to prevent a race with AuthContext's
-      // onAuthStateChange handler (both check the same flag synchronously).
       const store = useOnboardingStore.getState();
-      if (store.hasCompletedOnboarding && !store.hasPersistedOnboardingData) {
-        store.setOnboardingDataPersisted();
-        await persistOnboardingData(sessionData.user.id, store.newOnboardingData);
-        if (store.newOnboardingData.foundingMemberEmail) {
-          supabase.functions.invoke('notify-founding-claim', {
-            body: { email: store.newOnboardingData.foundingMemberEmail, userId: sessionData.user.id },
-          }).catch((e) => console.error('[OAuthCallback] notify-founding-claim error:', e));
+
+      // Detect mid-onboarding sign-up: user completed practice entry (step >= 10)
+      // but hasn't finished onboarding yet (paywall + notification prefs still pending).
+      const isMidOnboardingSignUp = !store.hasCompletedOnboarding && store.onboardingStep >= 10;
+
+      if (isMidOnboardingSignUp) {
+        // Mid-onboarding: link RevenueCat before paywall but defer data persistence
+        // to notification-reminders where notification frequency will also be set.
+        await linkUser(sessionData.user.id);
+        if (sessionData.user) {
+          identifyUser(sessionData.user.id, { email: sessionData.user.email });
         }
-        await Promise.all([
-          useCategoriesStore.getState().loadCategories(),
-          useAccountsStore.getState().loadAccounts(),
-          useIncomeStore.getState().loadIncomeSettings(),
-          useCurrencyStore.getState().loadCurrency(),
-        ]);
-        useAppTourStore.getState().resetSeenPages();
-      }
-
-      // Track analytics
-      if (sessionData.user) {
-        identifyUser(sessionData.user.id, { email: sessionData.user.email });
-      }
-
-      trackEvent("user_authenticated", {
-        method: "google",
-        source: "callback_route"
-      });
-
-      // Navigate: profile for new users (completed onboarding), dashboard for returning users
-      if (store.hasCompletedOnboarding) {
-        router.replace("/(tabs)/profile");
+        trackEvent("user_authenticated", { method: "google", source: "callback_route" });
+        router.replace("/(onboarding)/subscription-trial");
       } else {
-        router.replace("/(tabs)/dashboard");
+        // Normal sign-up or returning user path.
+        // Persist onboarding data for new users who completed the full onboarding first.
+        if (store.hasCompletedOnboarding && !store.hasPersistedOnboardingData) {
+          store.setOnboardingDataPersisted();
+          await persistOnboardingData(sessionData.user.id, store.newOnboardingData);
+          if (store.newOnboardingData.foundingMemberEmail) {
+            supabase.functions.invoke('notify-founding-claim', {
+              body: { email: store.newOnboardingData.foundingMemberEmail, userId: sessionData.user.id },
+            }).catch((e) => console.error('[OAuthCallback] notify-founding-claim error:', e));
+          }
+          await Promise.all([
+            useCategoriesStore.getState().loadCategories(),
+            useAccountsStore.getState().loadAccounts(),
+            useIncomeStore.getState().loadIncomeSettings(),
+            useCurrencyStore.getState().loadCurrency(),
+          ]);
+          useAppTourStore.getState().resetSeenPages();
+        }
+
+        if (sessionData.user) {
+          identifyUser(sessionData.user.id, { email: sessionData.user.email });
+        }
+        trackEvent("user_authenticated", { method: "google", source: "callback_route" });
+
+        if (store.hasCompletedOnboarding) {
+          router.replace("/(tabs)/profile");
+        } else {
+          router.replace("/(tabs)/dashboard");
+        }
       }
     } catch (e: any) {
       console.error("[OAuth Callback] Error:", e);

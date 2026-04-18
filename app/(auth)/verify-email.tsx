@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -34,6 +34,8 @@ function redactEmail(email: string): string {
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const isOnboardingFlow = from === "onboarding";
   const { trackEvent, identifyUser } = useAnalytics();
   const { newOnboardingData, setOnboardingDataPersisted, clearOnboardingDataPersisted } = useOnboardingStore();
   const { linkUser } = useSubscription();
@@ -70,9 +72,12 @@ export default function VerifyEmailScreen() {
         return;
       }
 
-      // Code is valid — claim the flag before signUp so onAuthStateChange
-      // sees it set and skips persistence (this screen is the sole persister).
-      setOnboardingDataPersisted();
+      // Code is valid — claim the persistence flag only when we're about to persist
+      // immediately. In the onboarding flow, persistence is deferred to notification-reminders
+      // (where notification frequency will also be set), so we don't claim it here.
+      if (!isOnboardingFlow) {
+        setOnboardingDataPersisted();
+      }
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -80,14 +85,14 @@ export default function VerifyEmailScreen() {
       });
 
       if (signUpError) {
-        clearOnboardingDataPersisted();
+        if (!isOnboardingFlow) clearOnboardingDataPersisted();
         trackEvent("user_sign_up_failed", { error_message: signUpError.message });
         setError(signUpError.message);
         return;
       }
 
       if (!authData.session || !authData.user) {
-        clearOnboardingDataPersisted();
+        if (!isOnboardingFlow) clearOnboardingDataPersisted();
         setError("Account created but could not sign in automatically. Please sign in manually.");
         return;
       }
@@ -97,29 +102,41 @@ export default function VerifyEmailScreen() {
       pendingSignUp.password = "";
 
       await ensureUserProfile(authData.user.id);
-      await persistOnboardingData(authData.user.id, newOnboardingData);
 
-      if (newOnboardingData.foundingMemberEmail) {
-        supabase.functions.invoke("notify-founding-claim", {
-          body: { email: newOnboardingData.foundingMemberEmail, userId: authData.user.id },
-        }).catch((e) => console.error("[VerifyEmail] notify-founding-claim error:", e));
+      if (isOnboardingFlow) {
+        // Mid-onboarding: link RevenueCat before paywall but defer data persistence
+        // to notification-reminders where notification frequency will also be set.
+        await linkUser(authData.user.id);
+        identifyUser(authData.user.id, {
+          email: authData.user.email,
+          $set_once: { signup_date: new Date().toISOString() },
+        });
+        trackEvent("user_signed_up", { method: "email", requires_verification: false });
+        router.replace("/(onboarding)/subscription-trial");
+      } else {
+        await persistOnboardingData(authData.user.id, newOnboardingData);
+
+        if (newOnboardingData.foundingMemberEmail) {
+          supabase.functions.invoke("notify-founding-claim", {
+            body: { email: newOnboardingData.foundingMemberEmail, userId: authData.user.id },
+          }).catch((e) => console.error("[VerifyEmail] notify-founding-claim error:", e));
+        }
+
+        await Promise.all([
+          useCategoriesStore.getState().loadCategories(),
+          useAccountsStore.getState().loadAccounts(),
+          useIncomeStore.getState().loadIncomeSettings(),
+          useCurrencyStore.getState().loadCurrency(),
+        ]);
+        useAppTourStore.getState().resetSeenPages();
+
+        identifyUser(authData.user.id, {
+          email: authData.user.email,
+          $set_once: { signup_date: new Date().toISOString() },
+        });
+        trackEvent("user_signed_up", { method: "email", requires_verification: false });
+        router.replace("/(tabs)/profile");
       }
-
-      await Promise.all([
-        useCategoriesStore.getState().loadCategories(),
-        useAccountsStore.getState().loadAccounts(),
-        useIncomeStore.getState().loadIncomeSettings(),
-        useCurrencyStore.getState().loadCurrency(),
-      ]);
-      useAppTourStore.getState().resetSeenPages();
-
-      identifyUser(authData.user.id, {
-        email: authData.user.email,
-        $set_once: { signup_date: new Date().toISOString() },
-      });
-      trackEvent("user_signed_up", { method: "email", requires_verification: false });
-
-      router.replace("/(tabs)/profile");
     } catch (e: any) {
       clearOnboardingDataPersisted();
       trackEvent("user_sign_up_failed", { error_message: e?.message ?? "Unknown error" });

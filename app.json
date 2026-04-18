@@ -14,9 +14,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.borisatanassov.Monelo",
-      "runtimeVersion": "1.0.0"
+      "runtimeVersion": "1.0.0",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Monelo uses Face ID to unlock your account quickly and securely."
+      }
     },
     "android": {
       "backgroundColor": "#20283A",

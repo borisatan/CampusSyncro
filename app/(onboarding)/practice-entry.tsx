@@ -129,8 +129,7 @@ export default function PracticeEntryScreen() {
   };
 
   const handleSuccessModalDismiss = () => {
-    setOnboardingStep(10);
-    router.push("/(onboarding)/subscription-trial");
+    router.push("/(auth)/sign-up?from=onboarding");
   };
 
   const handleBack = () => {
@@ -145,8 +144,7 @@ export default function PracticeEntryScreen() {
       step: 9,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    completeOnboarding();
-    router.replace("/(auth)/sign-up");
+    router.replace("/(auth)/sign-up?from=onboarding");
   };
 
   const isComplete = amount.trim() !== "" && !isNaN(parseFloat(amount));

@@ -160,8 +160,7 @@ export default function SubscriptionTrialScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(9);
-    router.push("/(onboarding)/practice-entry");
+    router.back();
   };
 
   const handleSkip = () => {
@@ -171,8 +170,7 @@ export default function SubscriptionTrialScreen() {
       step: 10,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    completeOnboarding();
-    router.replace("/(auth)/sign-up");
+    router.replace("/(onboarding)/notification-reminders");
   };
 
   const plans: Array<{
