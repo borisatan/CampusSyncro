@@ -160,7 +160,7 @@ export default function SubscriptionTrialScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.back();
+    router.replace("/(onboarding)/practice-entry");
   };
 
   const handleSkip = () => {

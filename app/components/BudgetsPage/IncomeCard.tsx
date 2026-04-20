@@ -8,20 +8,12 @@ import {
   View,
 } from "react-native";
 import Animated, {
-  Easing,
   FadeIn,
-  useAnimatedProps,
-  useSharedValue,
-  withDelay,
-  withTiming,
 } from "react-native-reanimated";
-import Svg, { Circle } from "react-native-svg";
 
 import { useSavingsProgress } from "../../hooks/useSavingsProgress";
 import { useIncomeStore } from "../../store/useIncomeStore";
 import { AnimatedToggle } from "../Shared/AnimatedToggle";
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface IncomeCardProps {
   income: number;
@@ -66,43 +58,6 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
   const savingsRing = Math.min(unallocatedPercent, Math.max(0, 100 - categoriesRing));
   const isOverAllocated = remaining < 0;
 
-  const ringSize = 72;
-  const strokeWidth = 6;
-  const radius = (ringSize - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const categoriesRingProgress = useSharedValue(0);
-  const savingsRingProgress = useSharedValue(0);
-
-  useEffect(() => {
-    categoriesRingProgress.value = 0;
-    savingsRingProgress.value = 0;
-    categoriesRingProgress.value = withDelay(
-      200,
-      withTiming(
-        categoriesRing / 100,
-        { duration: 700, easing: Easing.out(Easing.cubic) },
-        (finished) => {
-          if (finished) {
-            savingsRingProgress.value = withTiming(savingsRing / 100, {
-              duration: 500,
-              easing: Easing.out(Easing.cubic),
-            });
-          }
-        },
-      ),
-    );
-  }, [categoriesRing, savingsRing]);
-
-  const categoriesArcProps = useAnimatedProps(() => ({
-    strokeDasharray: [categoriesRingProgress.value * circumference, circumference],
-  }));
-
-  const savingsArcProps = useAnimatedProps(() => ({
-    strokeDasharray: [savingsRingProgress.value * circumference, circumference],
-  }));
-
-  const savingsArcRotation = -90 + (categoriesRing / 100) * 360;
-  const ringColor = isOverAllocated ? "#F2514A" : "#22D97A";
 
   useEffect(() => {
     if (!isExpanded) {
@@ -145,64 +100,13 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
       <TouchableOpacity
         onPress={handleToggleExpand}
         activeOpacity={0.8}
-        className="px-4 py-4"
+        className="px-4 pt-4 pb-4"
       >
-        <View className="flex-row items-center">
-          {/* Progress Ring */}
-          <View className="mr-4" style={{ width: ringSize, height: ringSize }}>
-            <Svg width={ringSize} height={ringSize}>
-              <Circle
-                cx={ringSize / 2}
-                cy={ringSize / 2}
-                r={radius}
-                stroke={isDarkMode ? "#2A3250" : "#E2E8F0"}
-                strokeWidth={strokeWidth}
-                fill="none"
-              />
-              <AnimatedCircle
-                cx={ringSize / 2}
-                cy={ringSize / 2}
-                r={radius}
-                stroke="#22D97A"
-                strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
-                animatedProps={categoriesArcProps}
-                transform={`rotate(-90, ${ringSize / 2}, ${ringSize / 2})`}
-              />
-              <AnimatedCircle
-                cx={ringSize / 2}
-                cy={ringSize / 2}
-                r={radius}
-                stroke="#8B5CF6"
-                strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
-                animatedProps={savingsArcProps}
-                transform={`rotate(${savingsArcRotation}, ${ringSize / 2}, ${ringSize / 2})`}
-              />
-            </Svg>
-            <View className="absolute inset-0 items-center justify-center">
-              <Text style={{ fontSize: 14, fontWeight: "700", color: ringColor }}>
-                {Math.round(categoriesPercent)}%
-              </Text>
-            </View>
-          </View>
-
-          {/* Income info */}
-          <View className="flex-1">
-            <Text className={`text-md mb-1 ${isDarkMode ? 'text-secondaryDark' : 'text-slate400'}`}>
-              Monthly Income
-            </Text>
-            <Text
-              className={`font-bold ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}
-              style={{ fontSize: 26, letterSpacing: -0.5 }}
-            >
-              {formatAmount(income, currencySymbol)}
-            </Text>
-          </View>
-
-          {/* Chevron */}
+        {/* Header row */}
+        <View className="flex-row items-center justify-between mb-1">
+          <Text className={`text-base font-semibold ${isDarkMode ? 'text-slate50' : 'text-slate600'}`}>
+            Monthly Income
+          </Text>
           <View className="w-8 h-8 rounded-xl items-center justify-center bg-surfaceDark">
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
@@ -212,8 +116,68 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           </View>
         </View>
 
+        {/* Amount */}
+        <Text
+          className={`font-bold mb-3 ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}
+          style={{ fontSize: 26, letterSpacing: -0.5 }}
+        >
+          {formatAmount(income, currencySymbol)}
+        </Text>
+
+        {/* Allocation breakdown widget */}
+        <View
+          className={`mb-4 rounded-xl overflow-hidden border ${isDarkMode ? 'border-borderDark' : 'border-slate100'}`}
+        >
+          {/* Budgeted row */}
+          <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
+            <View className="flex-row items-center justify-between mb-1.5">
+              <View className="flex-row items-center" style={{ gap: 6 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#22D97A" }} />
+                <Text className={`text-xs font-medium ${isDarkMode ? 'text-slate300' : 'text-slate500'}`}>
+                  Budgeted
+                </Text>
+              </View>
+              <Text className={`text-xs font-semibold ${isDarkMode ? 'text-slate100' : 'text-slate700'}`}>
+                {formatAmount(totalBudgeted, currencySymbol)}
+              </Text>
+            </View>
+            <View className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-borderDark' : 'bg-slate200'}`}>
+              <View
+                style={{ width: `${Math.min(categoriesPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#22D97A" }}
+              />
+            </View>
+          </View>
+
+          <View className={`h-px ${isDarkMode ? 'bg-borderDark' : 'bg-slate100'}`} />
+
+          {/* Unallocated / Over Budget row */}
+          <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
+            <View className="flex-row items-center justify-between mb-1.5">
+              <View className="flex-row items-center" style={{ gap: 6 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isOverAllocated ? "#F2514A" : "#8B5CF6" }} />
+                <Text className={`text-xs font-medium ${isOverAllocated ? 'text-accentRed' : isDarkMode ? 'text-slate300' : 'text-slate500'}`}>
+                  {isOverAllocated ? "Over Budget" : "Unallocated"}
+                </Text>
+              </View>
+              <Text className={`text-xs font-semibold ${isOverAllocated ? 'text-accentRed' : isDarkMode ? 'text-slate100' : 'text-slate700'}`}>
+                {formatAmount(Math.abs(remaining), currencySymbol)}
+              </Text>
+            </View>
+            <View className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-borderDark' : 'bg-slate200'}`}>
+              <View
+                style={{
+                  width: `${isOverAllocated ? 100 : Math.min(unallocatedPercent, 100)}%`,
+                  height: "100%",
+                  borderRadius: 999,
+                  backgroundColor: isOverAllocated ? "#F2514A" : "#8B5CF6",
+                }}
+              />
+            </View>
+          </View>
+        </View>
+
         {/* Allocated / Remaining stats */}
-        <View className="flex-row mt-4 gap-3">
+        <View className="flex-row gap-3">
           <View
             className={`flex-1 rounded-xl px-3 py-2.5 border ${
               isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-slate50 border-slate100'
@@ -290,7 +254,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                   isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-slate50 border-slate100'
                 }`}
               >
-                <Text className={`text-lg mr-2 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
+                <Text className={`text-lg mr-2 ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`} style={{ lineHeight: 18 }}>
                   {currencySymbol}
                 </Text>
                 <TextInput
@@ -300,7 +264,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                   placeholderTextColor={isDarkMode ? "#334155" : "#CBD5E1"}
                   keyboardType="decimal-pad"
                   className={`flex-1 text-lg ${isDarkMode ? 'text-slate50' : 'text-slate800'}`}
-                  style={{ textAlignVertical: "center" }}
+                  style={{ lineHeight: 18 }}
                 />
               </View>
             </Animated.View>
@@ -325,66 +289,6 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
               </Text>
             </Animated.View>
           )}
-
-          {/* Allocation Breakdown */}
-          <View
-            className={`mb-4 rounded-xl overflow-hidden border ${isDarkMode ? 'border-borderDark' : 'border-slate100'}`}
-          >
-            {/* Budgeted row */}
-            <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
-              <View className="flex-row items-center justify-between mb-1.5">
-                <View className="flex-row items-center" style={{ gap: 6 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#22D97A" }} />
-                  <Text className={`text-xs font-medium ${isDarkMode ? 'text-slate300' : 'text-slate500'}`}>
-                    Budgeted
-                  </Text>
-                </View>
-                <Text className={`text-xs font-semibold ${isDarkMode ? 'text-slate100' : 'text-slate700'}`}>
-                  {formatAmount(totalBudgeted, currencySymbol)}
-                </Text>
-              </View>
-              <View
-                className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-borderDark' : 'bg-slate200'}`}
-              >
-                <View
-                  style={{ width: `${Math.min(categoriesPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#22D97A" }}
-                />
-              </View>
-            </View>
-
-            <View className={`h-px ${isDarkMode ? 'bg-borderDark' : 'bg-slate100'}`} />
-
-            {/* Unallocated / Over Budget row */}
-            <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
-              <View className="flex-row items-center justify-between mb-1.5">
-                <View className="flex-row items-center" style={{ gap: 6 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isOverAllocated ? "#F2514A" : "#8B5CF6" }} />
-                  <Text
-                    className={`text-xs font-medium ${isOverAllocated ? 'text-accentRed' : isDarkMode ? 'text-slate300' : 'text-slate500'}`}
-                  >
-                    {isOverAllocated ? "Over Budget" : "Unallocated"}
-                  </Text>
-                </View>
-                <Text
-                  className={`text-xs font-semibold ${isOverAllocated ? 'text-accentRed' : isDarkMode ? 'text-slate100' : 'text-slate700'}`}
-                >
-                  {formatAmount(Math.abs(remaining), currencySymbol)}
-                </Text>
-              </View>
-              <View
-                className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-borderDark' : 'bg-slate200'}`}
-              >
-                <View
-                  style={{
-                    width: `${isOverAllocated ? 100 : Math.min(unallocatedPercent, 100)}%`,
-                    height: "100%",
-                    borderRadius: 999,
-                    backgroundColor: isOverAllocated ? "#F2514A" : "#8B5CF6",
-                  }}
-                />
-              </View>
-            </View>
-          </View>
 
           {/* Cancel / Save buttons */}
           <View className="flex-row gap-2.5">

@@ -24,7 +24,10 @@ export const DashboardSummary = ({
   if (!isUnlocked) {
     return (
       <View className=" flex-col  mb-2">
-        <View className="flex-1  rounded-2xl p-2 shadow-sm mb-1">
+        <Pressable
+          className="flex-1 rounded-2xl p-2 shadow-sm mb-1"
+          onPress={() => router.push("/(tabs)/accounts")}
+        >
           <Text className="text-3xl font-extrabold text-slate50 -tracking-tight">
             Total Balance
           </Text>
@@ -33,7 +36,7 @@ export const DashboardSummary = ({
               {currencySymbol}0.00
             </Text>
           </View>
-        </View>
+        </Pressable>
         <View className="flex-row gap-4 mb-3">
           <Pressable
             className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark"
@@ -69,7 +72,10 @@ export const DashboardSummary = ({
   }
   return (
       <View className=" flex-col  mb-2">
-        <View className="flex-1  rounded-2xl p-2 shadow-sm mb-1">
+        <Pressable
+          className="flex-1 rounded-2xl p-2 shadow-sm mb-1"
+          onPress={() => router.push("/(tabs)/accounts")}
+        >
           <Text className="text-3xl font-extrabold text-slate50 -tracking-tight">
             Total Balance
           </Text>
@@ -88,7 +94,7 @@ export const DashboardSummary = ({
               toFixed={2}
             />
           </View>
-        </View>
+        </Pressable>
         <View className="flex-row gap-4 mb-3">
           <Pressable
             className="flex-1 bg-accentTeal rounded-2xl p-4 shadow-sm border border-borderDark"

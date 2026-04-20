@@ -44,7 +44,7 @@ export default function FoundingAccessScreen() {
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOnboardingStep(10);
-    router.back();
+    router.replace("/(onboarding)/subscription-trial");
   };
 
   const handleSendCode = async () => {

@@ -7,6 +7,7 @@ import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   SafeAreaView,
@@ -17,6 +18,7 @@ import {
 } from "react-native";
 import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 import { OnboardingCategoryGrid } from "../components/OnboardingPage/OnboardingCategoryGrid";
+import { SuccessModal } from "../components/Shared/SuccessModal";
 import { OnboardingTransactionHero } from "../components/OnboardingPage/OnboardingTransactionHero";
 import { V3_DEFAULT_CATEGORIES } from "../constants/onboardingCategories";
 import { useAnalytics } from "../hooks/useAnalytics";
@@ -81,6 +83,8 @@ export default function PracticeEntryScreen() {
   const { currencySymbol } = useCurrencyStore();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showSaveSheet, setShowSaveSheet] = useState(false);
   const amountInputRef = useRef<TextInput>(null);
   const screenEnteredAt = useRef(Date.now());
   const { trackEvent } = useAnalytics();
@@ -124,17 +128,18 @@ export default function PracticeEntryScreen() {
         time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
       });
       setNewOnboardingData({ practiceEntryCompleted: true });
-      handleSuccessModalDismiss();
+      setShowSuccess(true);
     }
   };
 
   const handleSuccessModalDismiss = () => {
-    router.push("/(auth)/sign-up?from=onboarding");
+    setShowSuccess(false);
+    setShowSaveSheet(true);
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.back();
+    router.replace("/(onboarding)/why-manual");
   };
 
   const handleSkip = () => {
@@ -320,6 +325,49 @@ export default function PracticeEntryScreen() {
             )}
           </View>
       </KeyboardAvoidingView>
+      <SuccessModal
+        visible={showSuccess}
+        text="Transaction Added!"
+        onDismiss={handleSuccessModalDismiss}
+      />
+
+      <Modal
+        visible={showSaveSheet}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+      >
+        <View className="flex-1 justify-end" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+          <View className="bg-surfaceDark rounded-t-3xl px-6 pt-8 pb-12">
+            <Text style={{ fontSize: 32, textAlign: "center", marginBottom: 8, fontFamily: undefined }}>🎉</Text>
+            <Text className="text-2xl font-bold text-white text-center mb-3">
+              Don't lose your progress
+            </Text>
+            <Text className="text-base text-slate300 text-center mb-8">
+              Create a free account to save your transactions and budgets!
+            </Text>
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.replace("/(auth)/sign-up?from=onboarding");
+              }}
+              className="w-full rounded-3xl overflow-hidden active:opacity-80"
+              android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
+            >
+              <LinearGradient
+                colors={["#1D4ED8", "#3B7EFF", "#60A5FA"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: "100%", paddingVertical: 16 }}
+              >
+                <Text className="text-lg text-center font-medium text-white">
+                  Save my progress
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

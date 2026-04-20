@@ -343,7 +343,7 @@ export function EditGoalModal({
                 onPress={handleDelete}
                 disabled={isDeleting || isSubmitting}
                 activeOpacity={0.8}
-                className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-accentRed"
+                className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-borderDark"
               >
                 <Text className="text-white font-bold text-lg">
                   {isDeleting ? 'Deleting...' : 'Delete'}
@@ -355,7 +355,7 @@ export function EditGoalModal({
                 disabled={!canSubmit || !hasChanges}
                 activeOpacity={0.8}
                 className={`flex-1 rounded-xl py-3 items-center border ${
-                  canSubmit && hasChanges ? 'bg-accentTeal border-accentTeal' : 'bg-gray400 border-gray400'
+                  canSubmit && hasChanges ? 'bg-accentTeal border-borderDark' : 'bg-gray400 border-gray400'
                 }`}
               >
                 <Text className="text-white font-bold text-lg">

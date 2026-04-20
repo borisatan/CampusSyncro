@@ -12,7 +12,7 @@ import { useIncomeStore } from "../store/useIncomeStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { supabase } from "../utils/supabase";
-import { persistOnboardingData } from "./sign-up";
+import { persistOnboardingData } from "../services/onboardingService";
 
 /**
  * OAuth Callback Route

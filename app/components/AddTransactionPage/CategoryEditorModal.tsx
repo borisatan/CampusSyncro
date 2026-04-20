@@ -237,7 +237,7 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
 
             <View className="px-2 mt-6 flex-row" style={{ gap: 8 }}>
               {categoryId && (
-                <TouchableOpacity onPress={handleDelete} disabled={isProcessing} activeOpacity={0.8} className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-accentRed">
+                <TouchableOpacity onPress={handleDelete} disabled={isProcessing} activeOpacity={0.8} className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-borderDark">
                   <Text className="text-white font-bold text-lg">Delete</Text>
                 </TouchableOpacity>
               )}
@@ -245,7 +245,7 @@ export const CategoryEditorModal: React.FC<CategoryEditorModalProps> = ({
                 onPress={handleSave}
                 disabled={isProcessing || !categoryName.trim()}
                 activeOpacity={0.8}
-                className={`flex-1 rounded-xl py-3 items-center border ${isProcessing || !categoryName.trim() ? 'bg-gray400 border-gray400' : 'bg-accentTeal border-accentTeal'}`}
+                className={`flex-1 rounded-xl py-3 items-center border ${isProcessing || !categoryName.trim() ? 'bg-gray400 border-gray400' : 'bg-accentTeal border-borderDark'}`}
               >
                 {isProcessing ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">{categoryId ? 'Update' : 'Create'}</Text>}
               </TouchableOpacity>

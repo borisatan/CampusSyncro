@@ -414,7 +414,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                 onPress={handleDelete}
                 disabled={isProcessing}
                 activeOpacity={0.8}
-                className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-accentRed"
+                className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-borderDark"
               >
                 <Text className="text-white font-bold text-lg">
                   Delete
@@ -428,7 +428,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                 className={`flex-1 rounded-xl py-3 items-center border ${
                   isProcessing || !categoryName.trim()
                     ? 'bg-gray400 border-gray400'
-                    : 'bg-accentTeal border-accentTeal'
+                    : 'bg-accentTeal border-borderDark'
                 }`}
               >
                 {isProcessing ? (

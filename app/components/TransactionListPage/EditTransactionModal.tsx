@@ -278,7 +278,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                 onPress={handleDelete}
                 disabled={isSaving}
                 activeOpacity={0.8}
-                className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-accentRed"
+                className="flex-1 rounded-xl py-3 items-center bg-accentRed border border-borderDark"
               >
                 <Text className="text-white font-bold text-lg">Delete</Text>
               </TouchableOpacity>
@@ -288,7 +288,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                 disabled={isSaving}
                 activeOpacity={0.8}
                 className={`flex-1 rounded-xl py-3 items-center border ${
-                  isSaving ? 'bg-gray400 border-gray400' : 'bg-accentTeal border-accentTeal'
+                  isSaving ? 'bg-gray400 border-gray400' : 'bg-accentTeal border-borderDark'
                 }`}
               >
                 <Text className="text-white font-bold text-lg">

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { persistOnboardingData } from '../(auth)/sign-up';
+import { persistOnboardingData } from '../services/onboardingService';
 import { ensureUserProfile } from '../services/backendService';
 import { useAccountsStore } from '../store/useAccountsStore';
 import { useAppTourStore } from '../store/useAppTourStore';
