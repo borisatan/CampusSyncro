@@ -862,6 +862,7 @@ export const createGoal = async (payload: {
   target_amount: number;
   color?: string;
   icon?: string;
+  monthly_contribution?: number | null;
 }): Promise<Goal> => {
   const { data, error } = await supabase
     .from('Goals')

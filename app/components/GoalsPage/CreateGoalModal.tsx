@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { createGoal } from '../../services/backendService';
 import { ColorPicker } from '../Shared/ColorPicker';
@@ -57,9 +57,11 @@ export function CreateGoalModal({
   onClose,
   onGoalCreated,
 }: CreateGoalModalProps) {
+  const insets = useSafeAreaInsets();
   const { userId } = useAuth();
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
+  const [monthlyContribution, setMonthlyContribution] = useState('');
   const [selectedIcon, setSelectedIcon] = useState(DEFAULT_ICON);
   const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,11 +109,13 @@ export function CreateGoalModal({
         target_amount: parseAmount(targetAmount),
         icon: selectedIcon,
         color: selectedColor,
+        monthly_contribution: parseAmount(monthlyContribution) > 0 ? parseAmount(monthlyContribution) : null,
       });
 
       // Reset form
       setName('');
       setTargetAmount('');
+      setMonthlyContribution('');
       setSelectedIcon(DEFAULT_ICON);
       setSelectedColor(DEFAULT_COLOR);
 
@@ -128,6 +132,7 @@ export function CreateGoalModal({
   const handleClose = () => {
     setName('');
     setTargetAmount('');
+    setMonthlyContribution('');
     setSelectedIcon(DEFAULT_ICON);
     setSelectedColor(DEFAULT_COLOR);
     onClose();
@@ -140,7 +145,7 @@ export function CreateGoalModal({
       presentationStyle="fullScreen"
       onRequestClose={handleClose}
     >
-      <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+      <View className="flex-1 bg-backgroundDark" style={{ paddingTop: insets.top }}>
         <StatusBar barStyle="light-content" />
 
         {/* Header */}
@@ -211,6 +216,30 @@ export function CreateGoalModal({
               </View>
             </View>
 
+            {/* Monthly Contribution */}
+            <View className="mb-4">
+              <Text className="text-secondaryDark text-sm mb-2">
+                Monthly Contribution <Text className="text-slateMuted">(optional)</Text>
+              </Text>
+              <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark">
+                <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>{currencySymbol}</Text>
+                <TextInput
+                  value={monthlyContribution}
+                  onChangeText={setMonthlyContribution}
+                  placeholder="0"
+                  placeholderTextColor="#64748B"
+                  keyboardType="decimal-pad"
+                  className="flex-1 text-lg text-white"
+                  style={{ lineHeight: 18 }}
+                />
+              </View>
+              {parseAmount(monthlyContribution) > 0 && parseAmount(targetAmount) > 0 && (
+                <Text className="text-secondaryDark text-xs mt-1.5">
+                  ≈ {Math.ceil(parseAmount(targetAmount) / parseAmount(monthlyContribution))} months to reach goal
+                </Text>
+              )}
+            </View>
+
             {/* Icon Picker */}
             <View className="mb-4">
               <Text className="text-secondaryDark text-sm mb-2">Icon</Text>
@@ -275,7 +304,7 @@ export function CreateGoalModal({
             </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }

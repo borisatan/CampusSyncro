@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { deleteGoal, updateGoal } from '../../services/backendService';
 import { useGoalsStore } from '../../store/useGoalsStore';
 import { Goal } from '../../types/types';
@@ -56,9 +56,11 @@ export function EditGoalModal({
   onClose,
   onGoalUpdated,
 }: EditGoalModalProps) {
+  const insets = useSafeAreaInsets();
   const { updateGoalOptimistic, deleteGoalOptimistic } = useGoalsStore();
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
+  const [monthlyContribution, setMonthlyContribution] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('flag-outline');
   const [selectedColor, setSelectedColor] = useState('#a78bfa');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,6 +91,7 @@ export function EditGoalModal({
     if (goal) {
       setName(goal.name);
       setTargetAmount(goal.target_amount.toString());
+      setMonthlyContribution(goal.monthly_contribution ? goal.monthly_contribution.toString() : '');
       setSelectedIcon(goal.icon || 'flag-outline');
       setSelectedColor(goal.color || '#a78bfa');
     }
@@ -105,7 +108,8 @@ export function EditGoalModal({
     (name.trim() !== goal.name ||
       parseAmount(targetAmount) !== goal.target_amount ||
       selectedIcon !== (goal.icon || 'flag-outline') ||
-      selectedColor !== (goal.color || '#a78bfa'));
+      selectedColor !== (goal.color || '#a78bfa') ||
+      (parseAmount(monthlyContribution) || null) !== (goal.monthly_contribution || null));
 
   const handleSubmit = async () => {
     if (!canSubmit || !goal || !hasChanges) return;
@@ -117,6 +121,7 @@ export function EditGoalModal({
         target_amount: parseAmount(targetAmount),
         icon: selectedIcon,
         color: selectedColor,
+        monthly_contribution: parseAmount(monthlyContribution) > 0 ? parseAmount(monthlyContribution) : null,
       };
 
       updateGoalOptimistic(goal.id, updates);
@@ -169,6 +174,7 @@ export function EditGoalModal({
     if (goal) {
       setName(goal.name);
       setTargetAmount(goal.target_amount.toString());
+      setMonthlyContribution(goal.monthly_contribution ? goal.monthly_contribution.toString() : '');
       setSelectedIcon(goal.icon || 'flag-outline');
       setSelectedColor(goal.color || '#a78bfa');
     }
@@ -190,7 +196,7 @@ export function EditGoalModal({
       presentationStyle="fullScreen"
       onRequestClose={handleClose}
     >
-      <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+      <View className="flex-1 bg-backgroundDark" style={{ paddingTop: insets.top }}>
         <StatusBar barStyle="light-content" />
 
         {/* Header */}
@@ -288,6 +294,30 @@ export function EditGoalModal({
               </View>
             </View>
 
+            {/* Monthly Contribution */}
+            <View className="mb-4">
+              <Text className="text-secondaryDark text-sm mb-2">
+                Monthly Contribution <Text className="text-slateMuted">(optional)</Text>
+              </Text>
+              <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark">
+                <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>{currencySymbol}</Text>
+                <TextInput
+                  value={monthlyContribution}
+                  onChangeText={setMonthlyContribution}
+                  placeholder="0"
+                  placeholderTextColor="#64748B"
+                  keyboardType="decimal-pad"
+                  className="flex-1 text-lg text-white"
+                  style={{ lineHeight: 18 }}
+                />
+              </View>
+              {parseAmount(monthlyContribution) > 0 && parseAmount(targetAmount) > 0 && (
+                <Text className="text-secondaryDark text-xs mt-1.5">
+                  ≈ {Math.ceil(parseAmount(targetAmount) / parseAmount(monthlyContribution))} months to reach goal
+                </Text>
+              )}
+            </View>
+
             {/* Icon Picker */}
             <View className="mb-4">
               <Text className="text-secondaryDark text-sm mb-2">Icon</Text>
@@ -365,7 +395,7 @@ export function EditGoalModal({
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }

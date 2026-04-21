@@ -166,6 +166,7 @@ export interface Goal {
   current_amount: number;
   color: string;
   icon: string;
+  monthly_contribution?: number | null;
   created_at: string;
   updated_at: string;
 }

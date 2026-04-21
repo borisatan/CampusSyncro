@@ -150,13 +150,17 @@ export default function BudgetsScreen() {
     .onEnd((e) => {
       const vx = e.velocityX;
       let page = goalCurrentPage.value;
-      if (vx < -500) {
+      if (vx < -200) {
         page = Math.min(page + 1, goalCount.value - 1);
-      } else if (vx > 500) {
+      } else if (vx > 200) {
         page = Math.max(page - 1, 0);
       } else {
-        page = Math.round(-goalTranslateX.value / goalCardWidth);
-        page = Math.max(0, Math.min(page, goalCount.value - 1));
+        const dragged = -goalTranslateX.value - goalCurrentPage.value * goalCardWidth;
+        if (dragged > goalCardWidth * 0.25) {
+          page = Math.min(page + 1, goalCount.value - 1);
+        } else if (dragged < -goalCardWidth * 0.25) {
+          page = Math.max(page - 1, 0);
+        }
       }
       goalCurrentPage.value = page;
       goalTranslateX.value = withSpring(-page * goalCardWidth, {
