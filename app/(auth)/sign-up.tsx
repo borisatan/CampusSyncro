@@ -66,25 +66,24 @@ export default function SignUpScreen() {
     try {
       setIsSubmitting(true);
 
+      const normalizedEmail = email.trim().toLowerCase();
+      pendingSignUp.email = normalizedEmail;
+      pendingSignUp.password = password;
+
       // Send OTP to the user's email before creating the account.
-      // Credentials are stored in memory so verify-email.tsx can complete sign-up.
       const { data: otpData, error: otpError } = await supabase.functions.invoke("send-signup-otp", {
-        body: { email: email.trim().toLowerCase() },
+        body: { email: normalizedEmail },
       });
 
       if (otpError) {
         trackEvent("user_sign_up_failed", { error_message: otpError.message });
-        Alert.alert("Could not send code", "Please check your email and try again.");
-        return;
+        // Don't block the user — they can resend from the verify screen
       }
 
       if (otpData?.rateLimited) {
         Alert.alert("Too many attempts", "You've requested too many codes. Please try again in 10 minutes.");
         return;
       }
-
-      pendingSignUp.email = email.trim().toLowerCase();
-      pendingSignUp.password = password;
 
       router.push(isOnboardingFlow ? "/(auth)/verify-email?from=onboarding" : "/(auth)/verify-email");
     } catch (e: any) {

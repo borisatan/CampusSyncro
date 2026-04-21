@@ -25,6 +25,10 @@ export default function OnboardingLayout() {
       <Stack.Screen name="why-manual" />
       <Stack.Screen name="practice-entry" />
       <Stack.Screen
+        name="personalizing"
+        options={{ gestureEnabled: false }}
+      />
+      <Stack.Screen
         name="subscription-trial"
         options={{ gestureEnabled: false }}
       />

@@ -179,9 +179,6 @@ export default function CategoryPreselectionScreen() {
                 Which categories do you want to{" "}
                 <Text className="text-accentBlue font-bold">track</Text>?
               </Text>
-              <Text className="text-secondaryDark text-sm text-center mt-2">
-                Select the expenses you want to monitor
-              </Text>
             </MotiView>
 
             {/* Category Cards */}
