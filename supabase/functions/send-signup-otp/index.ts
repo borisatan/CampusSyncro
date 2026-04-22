@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 
     // Send OTP via Resend
     const resendKey = Deno.env.get("RESEND_API_KEY")!;
-    const fromEmail = Deno.env.get("SUPPORT_EMAIL_FROM") ?? Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@monelo.app";
+    const fromEmail = Deno.env.get("SUPPORT_EMAIL_FROM") ?? Deno.env.get("RESEND_FROM_EMAIL") ?? "support@trymonelo.app";
 
     await fetch("https://api.resend.com/emails", {
       method: "POST",
