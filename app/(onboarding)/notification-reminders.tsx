@@ -57,7 +57,7 @@ export default function NotificationRemindersScreen() {
   const screenEnteredAt = useRef(Date.now());
 
   useEffect(() => {
-    setOnboardingStep(11);
+    setOnboardingStep(12);
     trackEvent("onboarding_notification_reminders_viewed");
   }, [setOnboardingStep, trackEvent]);
 
@@ -66,7 +66,7 @@ export default function NotificationRemindersScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     trackEvent("onboarding_screen_completed", {
       screen: "notification_reminders",
-      step: 11,
+      step: 12,
       notification_frequency: selected ?? "skipped",
       time_on_screen_seconds: Math.round(
         (Date.now() - screenEnteredAt.current) / 1000,
@@ -126,7 +126,7 @@ export default function NotificationRemindersScreen() {
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between">
             <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={11} totalSteps={11} />
+            <OnboardingProgressDots currentStep={12} totalSteps={12} />
             <View style={{ width: 36 }} />
           </View>
         </View>

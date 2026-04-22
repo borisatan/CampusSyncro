@@ -110,7 +110,7 @@ export default function ManualBudgetSetupScreen() {
   const [displayValues, setDisplayValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setOnboardingStep(7);
+    setOnboardingStep(8);
     trackEvent("onboarding_manual_budget_setup_viewed");
   }, [setOnboardingStep, trackEvent]);
 
@@ -171,7 +171,7 @@ export default function ManualBudgetSetupScreen() {
   const handleContinue = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_manual_budget_applied", {
-      step: 7,
+      step: 8,
       category_count: Object.keys(budgets).length,
       total_budgeted: totalBudgeted,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
@@ -188,7 +188,7 @@ export default function ManualBudgetSetupScreen() {
       categoryBudgets,
     });
 
-    setOnboardingStep(8);
+    setOnboardingStep(9);
     router.push("/(onboarding)/why-manual");
   };
 
@@ -203,7 +203,7 @@ export default function ManualBudgetSetupScreen() {
           <View className="px-2 pt-12 pb-4">
             <View className="flex-row items-center justify-between">
               <OnboardingBackButton onPress={handleBack} />
-              <OnboardingProgressDots currentStep={7} totalSteps={11} />
+              <OnboardingProgressDots currentStep={8} totalSteps={12} />
               <View style={{ width: 36 }} />
             </View>
           </View>

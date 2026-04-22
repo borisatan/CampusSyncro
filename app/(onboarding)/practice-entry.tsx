@@ -99,7 +99,7 @@ export default function PracticeEntryScreen() {
   );
 
   useEffect(() => {
-    setOnboardingStep(9);
+    setOnboardingStep(10);
     trackEvent("onboarding_practice_entry_viewed");
   }, [setOnboardingStep, trackEvent]);
 
@@ -121,7 +121,7 @@ export default function PracticeEntryScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       trackEvent("onboarding_screen_completed", {
         screen: "practice_entry",
-        step: 9,
+        step: 10,
         category: selectedCategory,
         time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
       });
@@ -144,7 +144,7 @@ export default function PracticeEntryScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_skipped", {
       screen: "practice_entry",
-      step: 9,
+      step: 10,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     router.replace("/(auth)/sign-up?from=onboarding");
@@ -163,7 +163,7 @@ export default function PracticeEntryScreen() {
           <View className="px-2 pt-12 pb-4">
             <View className="flex-row items-center justify-between">
               <OnboardingBackButton onPress={handleBack} />
-              <OnboardingProgressDots currentStep={9} totalSteps={11} />
+              <OnboardingProgressDots currentStep={10} totalSteps={12} />
               <View style={{ width: 36 }} />
             </View>
           </View>

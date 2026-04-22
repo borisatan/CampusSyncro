@@ -43,7 +43,7 @@ export default function FoundingAccessScreen() {
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOnboardingStep(10);
+    setOnboardingStep(11);
     router.replace("/(onboarding)/subscription-trial");
   };
 
@@ -102,7 +102,7 @@ export default function FoundingAccessScreen() {
       if (data?.valid) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setNewOnboardingData({ foundingMemberEmail: email.trim().toLowerCase() });
-        setOnboardingStep(11);
+        setOnboardingStep(12);
         router.push("/(onboarding)/notification-reminders");
       } else {
         setError("Wrong code. Please try again.");

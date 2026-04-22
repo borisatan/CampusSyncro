@@ -16,6 +16,7 @@ export default function OnboardingLayout() {
         name="welcome"
         options={{ animation: 'fade' }}
       />
+      <Stack.Screen name="use-case" />
       <Stack.Screen name="category-preselection" />
       <Stack.Screen name="monthly-income" />
       <Stack.Screen name="budget-setup-choice" />

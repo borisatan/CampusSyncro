@@ -45,7 +45,7 @@ export default function SubscriptionTrialScreen() {
   const screenEnteredAt = useRef(Date.now());
 
   useEffect(() => {
-    setOnboardingStep(10);
+    setOnboardingStep(11);
     trackEvent("onboarding_subscription_trial_viewed");
     loadOfferings();
   }, [setOnboardingStep, trackEvent]);
@@ -109,7 +109,7 @@ export default function SubscriptionTrialScreen() {
       const timeOnScreen = Math.round((Date.now() - screenEnteredAt.current) / 1000);
       trackEvent("onboarding_screen_completed", {
         screen: "subscription_trial",
-        step: 10,
+        step: 11,
         billing_period: billingPeriod,
         time_on_screen_seconds: timeOnScreen,
       });
@@ -124,7 +124,7 @@ export default function SubscriptionTrialScreen() {
       if (hasCompletedOnboarding && isActive) {
         router.replace("/(tabs)/dashboard");
       } else {
-        setOnboardingStep(11);
+        setOnboardingStep(12);
         router.push("/(onboarding)/notification-reminders");
       }
     } catch (e: any) {
@@ -206,7 +206,7 @@ export default function SubscriptionTrialScreen() {
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between">
             <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={10} totalSteps={11} />
+            <OnboardingProgressDots currentStep={11} totalSteps={12} />
             {(__DEV__ || Platform.OS === 'android') ? (
               <Pressable onPress={handleSkip} className="active:opacity-60">
                 <Text className="text-red-400 text-sm font-medium">Skip (Dev)</Text>

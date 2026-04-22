@@ -17,9 +17,12 @@ interface CategoryBudget {
 }
 
 interface NewOnboardingData {
+  // Use case (Screen 2 - new)
+  useCase?: string;
+
   // Category selection (NEW)
-  selectedCategories?: string[];          // Screen 2 (NEW)
-  selectedAutopilotCategories: string[];  // Screen 2 (DEPRECATED - keeping for backward compatibility)
+  selectedCategories?: string[];          // Screen 3 (NEW)
+  selectedAutopilotCategories: string[];  // Screen 3 (DEPRECATED - keeping for backward compatibility)
 
   // Budget setup (NEW)
   budgetSetupChoice?: 'smart' | 'manual' | 'skip' | null;  // Screen 4

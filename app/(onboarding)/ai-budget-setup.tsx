@@ -86,7 +86,7 @@ export default function AIBudgetSetupScreen() {
   const budgetRemaining = spendingBudget - totalAllocated;
 
   useEffect(() => {
-    setOnboardingStep(6);
+    setOnboardingStep(7);
     trackEvent("onboarding_ai_budget_setup_viewed");
 
     // Simulate AI processing (1 second delay for UX)
@@ -100,7 +100,7 @@ export default function AIBudgetSetupScreen() {
   const handleApply = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     trackEvent("onboarding_ai_budget_applied", {
-      step: 6,
+      step: 7,
       category_count: budgetData.allocations.length,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
@@ -115,7 +115,7 @@ export default function AIBudgetSetupScreen() {
       })),
     });
 
-    setOnboardingStep(8);
+    setOnboardingStep(9);
     router.push("/(onboarding)/why-manual");
   };
 
@@ -140,7 +140,7 @@ export default function AIBudgetSetupScreen() {
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between">
             <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={6} totalSteps={11} />
+            <OnboardingProgressDots currentStep={7} totalSteps={12} />
             <View style={{ width: 36 }} />
           </View>
         </View>

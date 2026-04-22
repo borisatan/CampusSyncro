@@ -14,7 +14,7 @@ export const OnboardingHeader = React.memo(function OnboardingHeader({
   onBack,
   onSkip,
   currentStep,
-  totalSteps = 11,
+  totalSteps = 12,
 }: OnboardingHeaderProps) {
   return (
     <View className="px-2 pt-12 pb-4">

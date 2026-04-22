@@ -34,7 +34,7 @@ export default function MonthlyIncomeScreen() {
   const { trackEvent } = useAnalytics();
 
   useEffect(() => {
-    setOnboardingStep(3);
+    setOnboardingStep(4);
     trackEvent("onboarding_monthly_income_viewed");
     // Sync currency store with current selection so symbol shows correctly
     setLocalCurrency(selectedCurrency);
@@ -51,12 +51,12 @@ export default function MonthlyIncomeScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
       screen: "monthly_income",
-      step: 3,
+      step: 4,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     const incomeValue = parseAmount(amount) || 0;
     setNewOnboardingData({ estimatedIncome: incomeValue, selectedCurrency });
-    setOnboardingStep(4);
+    setOnboardingStep(5);
     router.push("/(onboarding)/cost-of-inattention");
   }, [amount, selectedCurrency, trackEvent, setNewOnboardingData, setOnboardingStep]);
 
@@ -87,8 +87,8 @@ export default function MonthlyIncomeScreen() {
         <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           <OnboardingHeader
             onBack={handleBack}
-            currentStep={3}
-            totalSteps={11}
+            currentStep={4}
+            totalSteps={12}
           />
 
           <View className="px-2 py-8 pt-4">

@@ -27,7 +27,7 @@ export default function WhyManualScreen() {
   const glowOpacity = useSharedValue(0.3);
 
   useEffect(() => {
-    setOnboardingStep(8);
+    setOnboardingStep(9);
     trackEvent("onboarding_why_manual_viewed");
 
     // Start pulsing animation
@@ -50,10 +50,10 @@ export default function WhyManualScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
       screen: "why_manual",
-      step: 8,
+      step: 9,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    setOnboardingStep(9);
+    setOnboardingStep(10);
     router.push("/(onboarding)/practice-entry");
   };
 
@@ -66,7 +66,7 @@ export default function WhyManualScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_skipped", {
       screen: "why_manual",
-      step: 8,
+      step: 9,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     completeOnboarding();
@@ -80,7 +80,7 @@ export default function WhyManualScreen() {
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between">
             <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={8} totalSteps={11} />
+            <OnboardingProgressDots currentStep={9} totalSteps={12} />
             <View style={{ width: 36 }} />
           </View>
         </View>
@@ -126,10 +126,7 @@ export default function WhyManualScreen() {
                         <Text style={{ color: "#8B5CF6" }}>forgettable</Text>
                       </Text>
                       <Text className="text-secondaryDark text-sm leading-relaxed">
-                        Automated apps turn your financial life into a
-                        &ldquo;black box&rdquo; where numbers move in the
-                        background, stripping away the emotional weight of every
-                        dollar lost.
+                        When apps track automatically, spending becomes invisible — and invisible spending is harder to change.
                       </Text>
                     </View>
                   </View>
@@ -185,9 +182,7 @@ export default function WhyManualScreen() {
                           <Text style={{ color: "#60A5FA" }}>Intent</Text>
                         </Text>
                         <Text className="text-textDark text-sm leading-relaxed">
-                          Every time you manually log a transaction, you force
-                          your brain to acknowledge the tangible impact of your
-                          spending on your long-term goals.
+                          Logging a transaction manually makes your brain confront the real cost of each purchase.
                         </Text>
                       </View>
                     </View>
@@ -205,9 +200,7 @@ export default function WhyManualScreen() {
                   <View className="flex-row items-start gap-3">
                     <Brain size={20} color="#3B7EFF" style={{ marginTop: 2 }} />
                     <Text className="text-secondaryDark text-xs leading-relaxed flex-1">
-                      Research shows that the act of recording a transaction
-                      manually increases financial mindfulness by up to 43%
-                      compared to automated tracking.
+                      Manual tracking increases financial mindfulness by up to 43% compared to automated apps.
                     </Text>
                   </View>
                 </View>

@@ -34,7 +34,7 @@ export default function WelcomeScreen() {
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setOnboardingStep(2);
-    router.push("/(onboarding)/category-preselection");
+    router.push("/(onboarding)/use-case");
   };
 
   const handleSkip = () => {
@@ -65,7 +65,7 @@ export default function WelcomeScreen() {
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between">
             <View style={{ width: 36 }} />
-            <OnboardingProgressDots currentStep={1} totalSteps={11} />
+            <OnboardingProgressDots currentStep={1} totalSteps={12} />
             <View style={{ width: 36 }} />
           </View>
         </View>

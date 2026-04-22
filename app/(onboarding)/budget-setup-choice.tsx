@@ -16,7 +16,7 @@ export default function BudgetSetupChoiceScreen() {
   const screenEnteredAt = useRef(Date.now());
 
   useEffect(() => {
-    setOnboardingStep(5);
+    setOnboardingStep(6);
     trackEvent("onboarding_budget_setup_choice_viewed");
   }, [setOnboardingStep, trackEvent]);
 
@@ -24,11 +24,11 @@ export default function BudgetSetupChoiceScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_budget_choice_selected", {
       choice: "smart",
-      step: 5,
+      step: 6,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setNewOnboardingData({ budgetSetupChoice: "smart" });
-    setOnboardingStep(6);
+    setOnboardingStep(7);
     router.push("/(onboarding)/ai-budget-setup");
   };
 
@@ -36,11 +36,11 @@ export default function BudgetSetupChoiceScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_budget_choice_selected", {
       choice: "manual",
-      step: 5,
+      step: 6,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setNewOnboardingData({ budgetSetupChoice: "manual" });
-    setOnboardingStep(7);
+    setOnboardingStep(8);
     router.push("/(onboarding)/manual-budget-setup");
   };
 
@@ -48,11 +48,11 @@ export default function BudgetSetupChoiceScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_budget_choice_selected", {
       choice: "skip",
-      step: 5,
+      step: 6,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setNewOnboardingData({ budgetSetupChoice: "skip" });
-    setOnboardingStep(8);
+    setOnboardingStep(9);
     router.push("/(onboarding)/why-manual");
   };
 
@@ -68,7 +68,7 @@ export default function BudgetSetupChoiceScreen() {
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between">
             <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={5} totalSteps={11} />
+            <OnboardingProgressDots currentStep={6} totalSteps={12} />
             <View style={{ width: 36 }} />
           </View>
         </View>

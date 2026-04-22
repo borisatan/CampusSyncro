@@ -90,7 +90,7 @@ export default function PersonalizingScreen() {
       <View className="px-2 pt-12 pb-4">
         <View className="flex-row items-center justify-between">
           <OnboardingBackButton onPress={handleBack} />
-          <OnboardingProgressDots currentStep={10} totalSteps={11} />
+          <OnboardingProgressDots currentStep={11} totalSteps={12} />
           <View style={{ width: 36 }} />
         </View>
       </View>
@@ -151,16 +151,28 @@ export default function PersonalizingScreen() {
                 justifyContent: "center",
               }}
             >
-              <Text
-                style={{
-                  fontSize: 26,
-                  fontWeight: "700",
-                  color: "#EDF0FA",
-                  letterSpacing: -0.5,
-                }}
+              <MotiView
+                animate={{ opacity: percent >= 100 ? 0 : 1 }}
+                transition={{ type: "timing", duration: 250 }}
               >
-                {percent}%
-              </Text>
+                <Text
+                  style={{
+                    fontSize: 26,
+                    fontWeight: "700",
+                    color: "#EDF0FA",
+                    letterSpacing: -0.5,
+                  }}
+                >
+                  {percent}%
+                </Text>
+              </MotiView>
+              <MotiView
+                animate={{ opacity: percent >= 100 ? 1 : 0 }}
+                transition={{ type: "timing", duration: 300, delay: 150 }}
+                style={{ position: "absolute" }}
+              >
+                <Text style={{ fontSize: 52, color: "#22D97A", fontWeight: "700" }}>✓</Text>
+              </MotiView>
             </View>
           </View>
 

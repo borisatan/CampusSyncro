@@ -29,12 +29,21 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Fetch active code by email only (not filtering by code, so we can track failures)
-    const { data: codeEntry } = await supabase
+    // Use limit(1) + order to avoid maybeSingle() silently returning null on multiple rows
+    const { data: rows, error: fetchError } = await supabase
       .from("email_verification_codes")
       .select("id, code, expires_at, used, failed_attempts")
       .ilike("email", normalizedEmail)
       .eq("used", false)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (fetchError) {
+      console.error("[verify-signup-otp] DB fetch error:", fetchError);
+      return INVALID_RESPONSE;
+    }
+
+    const codeEntry = rows?.[0] ?? null;
 
     if (!codeEntry || new Date(codeEntry.expires_at) < new Date()) {
       return INVALID_RESPONSE;
@@ -49,8 +58,8 @@ Deno.serve(async (req) => {
       return INVALID_RESPONSE;
     }
 
-    // Wrong code — increment failed attempts
-    if (codeEntry.code !== code) {
+    // Wrong code — increment failed attempts (String() guards against integer column type)
+    if (String(codeEntry.code) !== String(code)) {
       await supabase
         .from("email_verification_codes")
         .update({ failed_attempts: codeEntry.failed_attempts + 1 })

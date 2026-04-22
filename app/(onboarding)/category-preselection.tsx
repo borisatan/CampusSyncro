@@ -103,7 +103,7 @@ export default function CategoryPreselectionScreen() {
   selectedCategoriesRef.current = selectedCategories;
 
   useEffect(() => {
-    setOnboardingStep(2);
+    setOnboardingStep(3);
     trackEvent("onboarding_category_preselection_viewed");
   }, [setOnboardingStep, trackEvent]);
 
@@ -131,13 +131,13 @@ export default function CategoryPreselectionScreen() {
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setNewOnboardingData({ selectedCategories: categories });
-    setOnboardingStep(3);
+    setOnboardingStep(4);
     router.push("/(onboarding)/monthly-income");
   }, [trackEvent, setNewOnboardingData, setOnboardingStep]);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/welcome");
+    router.replace("/(onboarding)/use-case");
   };
 
   const handleSkip = () => {
@@ -158,8 +158,8 @@ export default function CategoryPreselectionScreen() {
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
         <OnboardingHeader
           onBack={handleBack}
-          currentStep={2}
-          totalSteps={11}
+          currentStep={3}
+          totalSteps={12}
         />
 
         <View className="px-2 py-8 pt-4">
