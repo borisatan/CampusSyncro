@@ -69,7 +69,11 @@ export default function UseCaseScreen() {
     });
     setNewOnboardingData({ useCase: selected.join(",") });
     setOnboardingStep(3);
-    router.push("/(onboarding)/category-preselection");
+    if (selected.includes("save_for_goal")) {
+      router.push("/(onboarding)/savings-goal");
+    } else {
+      router.push("/(onboarding)/category-preselection");
+    }
   };
 
   const handleBack = () => {
@@ -129,19 +133,19 @@ export default function UseCaseScreen() {
                     style={{
                       backgroundColor: "#161B2E",
                       borderWidth: 1.5,
-                      borderColor: isSelected ? item.color : "#2A3250",
+                      borderColor: isSelected ? "#3B7EFF" : "#2A3250",
                       borderRadius: 12,
                     }}
                   >
                     <View className="p-4 flex-row items-center gap-4">
                       <View
                         className="w-11 h-11 rounded-xl items-center justify-center"
-                        style={{ backgroundColor: isSelected ? item.color : "#1E2440" }}
+                        style={{ backgroundColor: item.color }}
                       >
                         <Ionicons
                           name={item.icon}
                           size={22}
-                          color={isSelected ? "#fff" : item.color}
+                          color="#fff"
                         />
                       </View>
                       <View className="flex-1">
@@ -156,7 +160,7 @@ export default function UseCaseScreen() {
                         </Text>
                       </View>
                       {isSelected && (
-                        <Ionicons name="checkmark-circle" size={22} color={item.color} />
+                        <Ionicons name="checkmark-circle" size={22} color="#fff" />
                       )}
                     </View>
                   </View>

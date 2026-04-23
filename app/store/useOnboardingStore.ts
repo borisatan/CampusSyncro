@@ -16,9 +16,20 @@ interface CategoryBudget {
   budget_percentage?: number;
 }
 
+interface PendingSavingsGoal {
+  name: string;
+  targetAmount: number;
+  monthlyContribution?: number | null;
+  icon: string;
+  color: string;
+}
+
 interface NewOnboardingData {
   // Use case (Screen 2 - new)
   useCase?: string;
+
+  // Savings goal collected during onboarding (optional, created post sign-up)
+  pendingSavingsGoal?: PendingSavingsGoal | null;
 
   // Category selection (NEW)
   selectedCategories?: string[];          // Screen 3 (NEW)

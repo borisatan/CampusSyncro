@@ -1,4 +1,4 @@
-import { bulkCreateCategories, ensureUserProfile } from './backendService';
+import { bulkCreateCategories, createGoal, ensureUserProfile } from './backendService';
 import { V3_DEFAULT_CATEGORIES } from '../constants/onboardingCategories';
 import { supabase } from '../utils/supabase';
 
@@ -14,7 +14,7 @@ const NOTIFICATION_FREQUENCY_MAP: Record<string, number> = {
  */
 export async function persistOnboardingData(userId: string, onboardingData: any) {
 
-  const { selectedCategories, categoryBudgets, estimatedIncome, notificationFrequency, selectedCurrency } = onboardingData;
+  const { selectedCategories, categoryBudgets, estimatedIncome, notificationFrequency, selectedCurrency, pendingSavingsGoal } = onboardingData;
 
   // Step 1: Create categories (errors are logged but don't block profile update)
   try {
@@ -112,6 +112,22 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
       }
     } catch (currencyError: any) {
       console.error('[persistOnboardingData] Error updating currency:', currencyError.message);
+    }
+  }
+
+  // Step 5: Create savings goal collected during onboarding (optional)
+  if (pendingSavingsGoal?.name && pendingSavingsGoal?.targetAmount > 0) {
+    try {
+      await createGoal({
+        user_id: userId,
+        name: pendingSavingsGoal.name,
+        target_amount: pendingSavingsGoal.targetAmount,
+        icon: pendingSavingsGoal.icon,
+        color: pendingSavingsGoal.color,
+        monthly_contribution: pendingSavingsGoal.monthlyContribution ?? null,
+      });
+    } catch (goalError: any) {
+      console.error('[persistOnboardingData] Error creating savings goal:', goalError.message);
     }
   }
 
