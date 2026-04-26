@@ -1,12 +1,12 @@
 import {
   Text as RNText,
   TextInput as RNTextInput,
-  TextProps,
   TextInputProps,
+  TextProps,
 } from 'react-native';
 
 export function Text({ style, ...props }: TextProps) {
-  return <RNText style={[{ fontFamily: 'Inter' }, style as any]} {...props} />;
+  return <RNText style={[{ fontFamily: 'Pacifico' }, style as any]} {...props} />;
 }
 
 export function TextInput({ style, ...props }: TextInputProps) {

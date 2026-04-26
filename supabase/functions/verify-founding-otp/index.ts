@@ -5,10 +5,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const INVALID_RESPONSE = new Response(JSON.stringify({ error: "Invalid or expired code" }), {
-  status: 400,
-  headers: { ...corsHeaders, "Content-Type": "application/json" },
-});
+const jsonResponse = (body: object, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -19,7 +20,7 @@ Deno.serve(async (req) => {
     const { email, code } = await req.json();
 
     if (!email || !code) {
-      return INVALID_RESPONSE;
+      return jsonResponse({ error: "Missing required fields" }, 400);
     }
 
     const normalizedEmail = email.trim().toLowerCase();
@@ -37,7 +38,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!codeEntry || new Date(codeEntry.expires_at) < new Date()) {
-      return INVALID_RESPONSE;
+      return jsonResponse({ valid: false });
     }
 
     // Lockout: too many failed attempts — invalidate the code
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
         .from("founding_verification_codes")
         .update({ used: true })
         .eq("id", codeEntry.id);
-      return INVALID_RESPONSE;
+      return jsonResponse({ valid: false });
     }
 
     // Wrong code — increment failed attempts
@@ -55,7 +56,7 @@ Deno.serve(async (req) => {
         .from("founding_verification_codes")
         .update({ failed_attempts: codeEntry.failed_attempts + 1 })
         .eq("id", codeEntry.id);
-      return INVALID_RESPONSE;
+      return jsonResponse({ valid: false });
     }
 
     // Correct code — mark as used
@@ -64,11 +65,9 @@ Deno.serve(async (req) => {
       .update({ used: true })
       .eq("id", codeEntry.id);
 
-    return new Response(JSON.stringify({ valid: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ valid: true });
   } catch (error) {
     console.error("[verify-founding-otp] Error:", error);
-    return INVALID_RESPONSE;
+    return jsonResponse({ error: "Internal server error" }, 500);
   }
 });
