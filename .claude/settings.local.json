@@ -33,7 +33,8 @@
       "Bash(yarn dev)",
       "Bash(identify:*)",
       "Bash(npx supabase:*)",
-      "Bash(eas update *)"
+      "Bash(eas update *)",
+      "Bash(npm audit *)"
     ]
   }
 }
