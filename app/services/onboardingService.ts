@@ -122,8 +122,8 @@ export async function persistOnboardingData(userId: string, onboardingData: any)
         user_id: userId,
         name: pendingSavingsGoal.name,
         target_amount: pendingSavingsGoal.targetAmount,
-        icon: pendingSavingsGoal.icon,
-        color: pendingSavingsGoal.color,
+        icon: pendingSavingsGoal.icon ?? "flag-outline",
+        color: pendingSavingsGoal.color ?? "#a78bfa",
         monthly_contribution: pendingSavingsGoal.monthlyContribution ?? null,
       });
     } catch (goalError: any) {

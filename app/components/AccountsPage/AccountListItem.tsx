@@ -1,7 +1,8 @@
 import { CreditCard, Edit2, MoreVertical, Trash2 } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import { Text } from '../Shared/AppText';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 
 import { COLOR_MAP, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';

@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import React, { useEffect } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '../Shared/AppText';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,

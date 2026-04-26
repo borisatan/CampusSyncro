@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, TouchableOpacity, View } from 'react-native';
+import { Text } from './AppText';
 import { Calendar } from 'react-native-calendars';
 import { useTheme } from '../../context/ThemeContext';
 

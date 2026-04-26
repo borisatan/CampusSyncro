@@ -1,7 +1,8 @@
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { AnimatePresence, MotiView } from 'moti';
 import React, { useMemo, useState } from 'react';
-import { LayoutAnimation, Pressable, Text, View } from 'react-native';
+import { LayoutAnimation, Pressable, View } from 'react-native';
+import { Text } from '../Shared/AppText';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { Category, CategoryAggregation } from '../../types/types';
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../Shared/AppText';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 
 interface BudgetTrackerProps {

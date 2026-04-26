@@ -62,7 +62,12 @@ export default function VerifyEmailScreen() {
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("verify-signup-otp", {
-        body: { email, code: trimmedCode },
+        body: {
+          email,
+          code: trimmedCode,
+          password: pendingSignUp.password,
+          foundingMemberEmail: newOnboardingData.foundingMemberEmail ?? null,
+        },
       });
 
       if (fnError) throw fnError;
@@ -79,15 +84,17 @@ export default function VerifyEmailScreen() {
         setOnboardingDataPersisted();
       }
 
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // The edge function already created the user via admin API with email auto-confirmed.
+      // Sign in directly instead of calling signUp() to avoid Supabase's email confirmation flow.
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password: pendingSignUp.password,
       });
 
-      if (signUpError) {
+      if (signInError) {
         if (!isOnboardingFlow) clearOnboardingDataPersisted();
-        trackEvent("user_sign_up_failed", { error_message: signUpError.message });
-        setError(signUpError.message);
+        trackEvent("user_sign_up_failed", { error_message: signInError.message });
+        setError(signInError.message);
         return;
       }
 

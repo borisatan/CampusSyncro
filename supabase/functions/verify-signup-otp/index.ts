@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, code } = await req.json();
+    const { email, code, password, foundingMemberEmail } = await req.json();
 
     if (!email || !code) {
       return INVALID_RESPONSE;
@@ -72,6 +72,39 @@ Deno.serve(async (req) => {
       .from("email_verification_codes")
       .update({ used: true })
       .eq("id", codeEntry.id);
+
+    // If a password is provided, create the user via admin API so the email is
+    // auto-confirmed. This avoids Supabase's own confirmation email flow since
+    // we already verified the email with our custom OTP above.
+    if (password) {
+      const { data: createdUser, error: createError } = await supabase.auth.admin.createUser({
+        email: normalizedEmail,
+        password,
+        email_confirm: true,
+      });
+      if (createError && !createError.message.includes("already registered")) {
+        console.error("[verify-signup-otp] Admin createUser error:", createError);
+        return new Response(JSON.stringify({ error: "Failed to create account" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // If this user is a founding member, insert the record immediately so the
+      // founding_members check in SubscriptionContext always finds it on first sign-in.
+      // We do this here (before the client calls signInWithPassword) to avoid the race
+      // condition where initForUser queries founding_members before notify-founding-claim
+      // has had a chance to insert it.
+      const normalizedFoundingEmail = foundingMemberEmail?.trim().toLowerCase();
+      if (normalizedFoundingEmail && normalizedFoundingEmail === normalizedEmail && createdUser?.user?.id) {
+        const { error: insertError } = await supabase
+          .from("founding_members")
+          .upsert({ user_id: createdUser.user.id }, { onConflict: "user_id", ignoreDuplicates: true });
+        if (insertError) {
+          console.error("[verify-signup-otp] founding_members upsert error:", insertError);
+        }
+      }
+    }
 
     return new Response(JSON.stringify({ valid: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

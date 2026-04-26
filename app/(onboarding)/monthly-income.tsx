@@ -57,7 +57,7 @@ export default function MonthlyIncomeScreen() {
     const incomeValue = parseAmount(amount) || 0;
     setNewOnboardingData({ estimatedIncome: incomeValue, selectedCurrency });
     setOnboardingStep(5);
-    router.push("/(onboarding)/cost-of-inattention");
+    router.push("/(onboarding)/savings-goal");
   }, [amount, selectedCurrency, trackEvent, setNewOnboardingData, setOnboardingStep]);
 
   const handleBack = useCallback(() => {

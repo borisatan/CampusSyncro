@@ -45,14 +45,14 @@ export const LockProvider = ({ children }: { children: React.ReactNode }) => {
       const available = securityLevel > 0;
       setDeviceAuthAvailable(available);
 
-      // Load app lock preference (default to ON if not set)
+      // Load app lock preference (default to OFF if not set)
       const storedPref = await SecureStore.getItemAsync(APP_LOCK_KEY);
-      const enabled = storedPref === null ? true : storedPref === 'true';
+      const enabled = storedPref === null ? false : storedPref === 'true';
       setIsAppLockEnabledState(enabled);
 
       // Save default preference if not set
       if (storedPref === null) {
-        await SecureStore.setItemAsync(APP_LOCK_KEY, 'true');
+        await SecureStore.setItemAsync(APP_LOCK_KEY, 'false');
       }
 
       // If app lock is enabled and user is authenticated, start locked

@@ -20,8 +20,8 @@ interface PendingSavingsGoal {
   name: string;
   targetAmount: number;
   monthlyContribution?: number | null;
-  icon: string;
-  color: string;
+  icon?: string;
+  color?: string;
 }
 
 interface NewOnboardingData {

@@ -1,6 +1,7 @@
 import { Check, ChevronDown, ChevronUp, Palette } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
-import { Pressable, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, TouchableOpacity, View } from 'react-native';
+import { Text } from './AppText';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedColorPicker, {
   HueSlider,

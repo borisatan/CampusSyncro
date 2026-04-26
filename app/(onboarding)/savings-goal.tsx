@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { MotiView } from "moti";
@@ -11,65 +10,72 @@ import {
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
-import { ColorPicker } from "../components/Shared/ColorPicker";
 import { OnboardingHeader } from "../components/Shared/OnboardingHeader";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { parseAmount } from "../utils/parseAmount";
 
-const GOAL_ICONS = [
-  "flag-outline", "trophy-outline", "ribbon-outline", "star-outline", "rocket-outline", "flash-outline",
-  "home-outline", "key-outline", "bed-outline", "business-outline", "hammer-outline", "construct-outline",
-  "airplane-outline", "car-outline", "train-outline", "bus-outline", "bicycle-outline", "boat-outline",
-  "map-outline", "globe-outline", "compass-outline", "trail-sign-outline", "navigate-outline", "location-outline",
-  "wallet-outline", "cash-outline", "card-outline", "diamond-outline", "trending-up-outline", "bar-chart-outline",
-  "receipt-outline", "pricetag-outline", "gift-outline", "bag-outline", "cart-outline", "storefront-outline",
-  "heart-outline", "people-outline", "person-outline", "baby-outline", "paw-outline", "rose-outline",
-  "fitness-outline", "barbell-outline", "medkit-outline", "leaf-outline", "pulse-outline", "nutrition-outline",
-  "school-outline", "book-outline", "library-outline", "laptop-outline", "pencil-outline", "briefcase-outline",
-  "film-outline", "musical-notes-outline", "game-controller-outline", "headset-outline", "camera-outline", "ticket-outline",
-  "restaurant-outline", "cafe-outline", "wine-outline", "beer-outline", "pizza-outline", "ice-cream-outline",
-  "phone-portrait-outline", "desktop-outline", "hardware-chip-outline", "tv-outline", "color-palette-outline", "brush-outline",
-  "sunny-outline", "moon-outline", "snow-outline", "umbrella-outline", "flower-outline", "planet-outline",
-  "american-football-outline", "basketball-outline", "tennisball-outline", "baseball-outline", "football-outline", "golf-outline",
-  "shirt-outline", "glasses-outline", "watch-outline", "newspaper-outline", "calculator-outline", "cube-outline",
-];
+const GOAL_PRESETS = [
+  { id: "emergency", label: "Emergency Fund", suggestedAmount: 5000 },
+  { id: "vacation",  label: "Vacation",       suggestedAmount: 2000 },
+  { id: "car",       label: "New Car",         suggestedAmount: 10000 },
+  { id: "custom",    label: "Something else",  suggestedAmount: null  },
+] as const;
 
 const DEFAULT_ICON = "flag-outline";
 const DEFAULT_COLOR = "#a78bfa";
-const COLS = 2;
 
 export default function SavingsGoalScreen() {
-  const { setNewOnboardingData, completeOnboarding } = useOnboardingStore();
+  const { setNewOnboardingData, newOnboardingData, setOnboardingStep } = useOnboardingStore();
   const currencySymbol = useCurrencyStore((s) => s.currencySymbol) || "$";
   const { trackEvent } = useAnalytics();
   const screenEnteredAt = useRef(Date.now());
+  const nameInputRef = useRef<TextInput>(null);
 
+  const [selectedPresetId, setSelectedPresetId] = useState("");
   const [name, setName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
-  const [monthlyContribution, setMonthlyContribution] = useState("");
-  const [selectedIcon, setSelectedIcon] = useState(DEFAULT_ICON);
-  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
+
+  const estimatedIncome = newOnboardingData.estimatedIncome || 0;
+  const incomeHint = estimatedIncome > 0
+    ? { low: Math.round(estimatedIncome * 0.10), high: Math.round(estimatedIncome * 0.20) }
+    : null;
 
   useEffect(() => {
+    setOnboardingStep(5);
     trackEvent("onboarding_savings_goal_viewed");
-  }, [trackEvent]);
+  }, []);
 
   const canSave = name.trim().length > 0 && parseAmount(targetAmount) > 0;
 
-  const navigateNext = () => router.push("/(onboarding)/category-preselection");
+  const navigateNext = () => router.push("/(onboarding)/cost-of-inattention");
+
+  const handlePresetSelect = (preset: typeof GOAL_PRESETS[number]) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    trackEvent("onboarding_savings_goal_preset_selected", { preset: preset.id, step: 5 });
+    setSelectedPresetId(preset.id);
+    if (preset.id !== "custom") {
+      setName(preset.label);
+      if (preset.suggestedAmount) {
+        setTargetAmount(String(preset.suggestedAmount));
+      }
+    } else {
+      setName("");
+      setTargetAmount("");
+      setTimeout(() => nameInputRef.current?.focus(), 100);
+    }
+  };
 
   const handleSave = () => {
     if (!canSave) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
       screen: "savings_goal",
-      step: 2,
+      step: 5,
       skipped: false,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
@@ -77,9 +83,9 @@ export default function SavingsGoalScreen() {
       pendingSavingsGoal: {
         name: name.trim(),
         targetAmount: parseAmount(targetAmount),
-        monthlyContribution: parseAmount(monthlyContribution) > 0 ? parseAmount(monthlyContribution) : null,
-        icon: selectedIcon,
-        color: selectedColor,
+        monthlyContribution: null,
+        icon: DEFAULT_ICON,
+        color: DEFAULT_COLOR,
       },
     });
     navigateNext();
@@ -89,7 +95,7 @@ export default function SavingsGoalScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
       screen: "savings_goal",
-      step: 2,
+      step: 5,
       skipped: true,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
@@ -98,31 +104,14 @@ export default function SavingsGoalScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/use-case");
+    router.replace("/(onboarding)/monthly-income");
   };
-
-  const handleHeaderSkip = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    trackEvent("onboarding_skipped", {
-      screen: "savings_goal",
-      step: 2,
-      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
-    });
-    completeOnboarding();
-    router.replace("/(auth)/sign-up");
-  };
-
-  const monthsToGoal =
-    parseAmount(monthlyContribution) > 0 && parseAmount(targetAmount) > 0
-      ? Math.ceil(parseAmount(targetAmount) / parseAmount(monthlyContribution))
-      : null;
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
       <OnboardingHeader
         onBack={handleBack}
-        onSkip={handleHeaderSkip}
-        currentStep={2}
+        currentStep={5}
         totalSteps={12}
       />
 
@@ -137,6 +126,7 @@ export default function SavingsGoalScreen() {
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
+          {/* Headline */}
           <MotiView
             from={{ opacity: 0, translateY: 20 }}
             animate={{ opacity: 1, translateY: 0 }}
@@ -144,36 +134,50 @@ export default function SavingsGoalScreen() {
             className="pt-4 mb-6"
           >
             <Text className="text-3xl text-white font-bold text-center leading-tight mb-1">
-              Set up your{" "}
-              <Text className="text-accentBlue">savings goal</Text>
+              What are you{" "}
+              <Text className="text-accentBlue">saving for?</Text>
             </Text>
             <Text className="text-secondaryDark text-center text-sm">
               You can always add more goals later
             </Text>
           </MotiView>
 
-          {/* Live preview card */}
+          {/* Preset chips */}
           <MotiView
-            from={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            from={{ opacity: 0, translateY: 12 }}
+            animate={{ opacity: 1, translateY: 0 }}
             transition={{ delay: 250, duration: 400 }}
-            className="mx-2 mb-6"
+            className="mb-5"
           >
-            <View className="rounded-3xl p-6 items-center justify-center border bg-surfaceDark border-borderDark">
-              <View
-                className="w-20 h-20 rounded-2xl items-center justify-center mb-4"
-                style={{ backgroundColor: selectedColor }}
-              >
-                <Ionicons name={selectedIcon as any} size={40} color="#FFFFFF" />
-              </View>
-              <Text className="text-textDark text-xl font-bold text-center" numberOfLines={1}>
-                {name || "Goal Name"}
-              </Text>
-              {parseAmount(targetAmount) > 0 && (
-                <Text className="text-secondaryDark text-sm mt-1">
-                  {currencySymbol}{parseAmount(targetAmount).toLocaleString()} target
-                </Text>
-              )}
+            <View className="flex-row flex-wrap gap-3">
+              {GOAL_PRESETS.map((preset) => {
+                const isSelected = selectedPresetId === preset.id;
+                return (
+                  <Pressable
+                    key={preset.id}
+                    onPress={() => handlePresetSelect(preset)}
+                    className="active:opacity-70"
+                    style={{
+                      paddingHorizontal: 18,
+                      paddingVertical: 10,
+                      borderRadius: 100,
+                      borderWidth: 1.5,
+                      borderColor: isSelected ? "#a78bfa" : "#2A3250",
+                      backgroundColor: isSelected ? "rgba(167,139,250,0.12)" : "#161B2E",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isSelected ? "#a78bfa" : "#8A96B4",
+                        fontWeight: isSelected ? "600" : "400",
+                        fontSize: 14,
+                      }}
+                    >
+                      {preset.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </MotiView>
 
@@ -181,11 +185,12 @@ export default function SavingsGoalScreen() {
           <MotiView
             from={{ opacity: 0, translateY: 12 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 300, duration: 400 }}
+            transition={{ delay: 320, duration: 400 }}
             className="mb-4"
           >
             <Text className="text-secondaryDark text-sm mb-2">Goal Name</Text>
             <TextInput
+              ref={nameInputRef}
               value={name}
               onChangeText={setName}
               placeholder="e.g., Vacation Fund, Emergency Savings"
@@ -198,7 +203,7 @@ export default function SavingsGoalScreen() {
           <MotiView
             from={{ opacity: 0, translateY: 12 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 350, duration: 400 }}
+            transition={{ delay: 370, duration: 400 }}
             className="mb-4"
           >
             <Text className="text-secondaryDark text-sm mb-2">Target Amount</Text>
@@ -218,96 +223,33 @@ export default function SavingsGoalScreen() {
             </View>
           </MotiView>
 
-          {/* Monthly Contribution */}
-          <MotiView
-            from={{ opacity: 0, translateY: 12 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 400, duration: 400 }}
-            className="mb-4"
-          >
-            <Text className="text-secondaryDark text-sm mb-2">
-              Monthly Contribution{" "}
-              <Text className="text-slateMuted">(optional)</Text>
-            </Text>
-            <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark">
-              <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>
-                {currencySymbol}
-              </Text>
-              <TextInput
-                value={monthlyContribution}
-                onChangeText={setMonthlyContribution}
-                placeholder="0"
-                placeholderTextColor="#64748B"
-                keyboardType="decimal-pad"
-                className="flex-1 text-lg text-white"
-                style={{ lineHeight: 18 }}
-              />
-            </View>
-            {monthsToGoal !== null && (
-              <Text className="text-secondaryDark text-xs mt-1.5">
-                ≈ {monthsToGoal} months to reach goal
-              </Text>
-            )}
-          </MotiView>
-
-          {/* Icon Picker */}
-          <MotiView
-            from={{ opacity: 0, translateY: 12 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 450, duration: 400 }}
-            className="mb-4"
-          >
-            <Text className="text-secondaryDark text-sm mb-2">Icon</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={{ flexDirection: "row" }}>
-                {Array.from({ length: Math.ceil(GOAL_ICONS.length / COLS) }).map((_, colIndex) => (
-                  <View key={colIndex} style={{ flexDirection: "column", marginRight: 8 }}>
-                    {GOAL_ICONS.slice(colIndex * COLS, colIndex * COLS + COLS).map((icon) => {
-                      const isSelected = selectedIcon === icon;
-                      return (
-                        <TouchableOpacity
-                          key={icon}
-                          onPress={() => setSelectedIcon(icon)}
-                          activeOpacity={0.7}
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 12,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginBottom: 8,
-                            backgroundColor: isSelected ? selectedColor : "#1F2937",
-                            borderWidth: 1.5,
-                            borderColor: isSelected ? selectedColor : "#374151",
-                          }}
-                        >
-                          <Ionicons
-                            name={icon as any}
-                            size={22}
-                            color={isSelected ? "#FFFFFF" : "#6B7280"}
-                          />
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                ))}
+          {/* Income tip */}
+          {incomeHint ? (
+            <MotiView
+              from={{ opacity: 0, translateY: 8 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ delay: 420, duration: 400 }}
+              className="mb-6"
+            >
+              <View
+                style={{
+                  borderLeftWidth: 3,
+                  borderLeftColor: "#a78bfa",
+                  paddingLeft: 12,
+                  paddingVertical: 6,
+                }}
+              >
+                <Text style={{ color: "#64748B", fontSize: 12 }}>
+                  Tip: Saving 10–20% of your income ={" "}
+                  <Text style={{ color: "#a78bfa" }}>
+                    {currencySymbol}{incomeHint.low.toLocaleString()}–{currencySymbol}{incomeHint.high.toLocaleString()}/month
+                  </Text>
+                </Text>
               </View>
-            </ScrollView>
-          </MotiView>
-
-          {/* Color Picker */}
-          <MotiView
-            from={{ opacity: 0, translateY: 12 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 500, duration: 400 }}
-            className="mb-6"
-          >
-            <ColorPicker
-              selectedColor={selectedColor}
-              onColorSelect={setSelectedColor}
-              isDarkMode
-            />
-          </MotiView>
+            </MotiView>
+          ) : (
+            <View className="mb-6" />
+          )}
 
           {/* CTA */}
           <AnimatedGradientButton
@@ -317,12 +259,12 @@ export default function SavingsGoalScreen() {
             disabled={!canSave}
           />
 
-          {/* Skip for now */}
+          {/* Ghost skip */}
           <Pressable
             onPress={handleSkip}
-            className="items-center mt-4 py-2 active:opacity-60"
+            className="items-center mt-6 py-2 active:opacity-60"
           >
-            <Text className="text-secondaryDark text-sm">Skip for now</Text>
+            <Text style={{ color: "#4B5A7A", fontSize: 12 }}>Set this up later</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

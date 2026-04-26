@@ -14,34 +14,34 @@ const USE_CASES = [
     id: "track_spending",
     label: "Track my spending",
     description: "Know where every dollar goes",
-    icon: "stats-chart" as const,
+    icon: "stats-chart-outline" as const,
     color: "#3B7EFF",
   },
   {
     id: "stick_to_budget",
     label: "Stick to a budget",
     description: "Control and plan my spending",
-    icon: "flag" as const,
+    icon: "flag-outline" as const,
     color: "#22D97A",
   },
   {
     id: "save_more",
     label: "Save more money",
     description: "Build savings habits",
-    icon: "trending-up" as const,
+    icon: "trending-up-outline" as const,
     color: "#F2A93B",
   },
   {
     id: "save_for_goal",
     label: "Save for a goal",
     description: "Work toward something specific",
-    icon: "trophy" as const,
+    icon: "trophy-outline" as const,
     color: "#A78BFA",
   },
 ];
 
 export default function UseCaseScreen() {
-  const { setOnboardingStep, setNewOnboardingData, completeOnboarding } = useOnboardingStore();
+  const { setOnboardingStep, setNewOnboardingData } = useOnboardingStore();
   const [selected, setSelected] = useState<string[]>([]);
   const { trackEvent } = useAnalytics();
   const screenEnteredAt = useRef(Date.now());
@@ -69,11 +69,7 @@ export default function UseCaseScreen() {
     });
     setNewOnboardingData({ useCase: selected.join(",") });
     setOnboardingStep(3);
-    if (selected.includes("save_for_goal")) {
-      router.push("/(onboarding)/savings-goal");
-    } else {
-      router.push("/(onboarding)/category-preselection");
-    }
+    router.push("/(onboarding)/category-preselection");
   };
 
   const handleBack = () => {
@@ -81,23 +77,11 @@ export default function UseCaseScreen() {
     router.replace("/(onboarding)/welcome");
   };
 
-  const handleSkip = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    trackEvent("onboarding_skipped", {
-      screen: "use_case",
-      step: 2,
-      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
-    });
-    completeOnboarding();
-    router.replace("/(auth)/sign-up");
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
         <OnboardingHeader
           onBack={handleBack}
-          onSkip={handleSkip}
           currentStep={2}
           totalSteps={12}
         />

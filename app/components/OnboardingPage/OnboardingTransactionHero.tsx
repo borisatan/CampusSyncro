@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { View } from 'react-native';
+import { Text, TextInput } from '../Shared/AppText';
 import { useCurrencyStore } from '../../store/useCurrencyStore';
 
 interface OnboardingTransactionHeroProps {

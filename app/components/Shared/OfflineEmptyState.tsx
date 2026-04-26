@@ -1,5 +1,6 @@
 import { WifiOff } from 'lucide-react-native';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from './AppText';
 import { useTheme } from '../../context/ThemeContext';
 
 export function OfflineEmptyState() {

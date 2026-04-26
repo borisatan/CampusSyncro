@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { Platform, Pressable, Text, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
+import { Platform, Pressable, TouchableOpacity, UIManager, View } from 'react-native';
+import { Text, TextInput } from '../Shared/AppText';
 
 import { AnimatedToggle } from '../Shared/AnimatedToggle';
 import Animated, {

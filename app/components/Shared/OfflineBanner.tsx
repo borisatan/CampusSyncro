@@ -1,6 +1,7 @@
 import { WifiOff } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from './AppText';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,

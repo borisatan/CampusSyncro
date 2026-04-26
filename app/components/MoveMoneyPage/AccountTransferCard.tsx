@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import { Text } from '../Shared/AppText';
 import { Account } from '../../types/types';
 
 const TYPE_CONFIG: { [key: string]: { icon: string; color: string } } = {
