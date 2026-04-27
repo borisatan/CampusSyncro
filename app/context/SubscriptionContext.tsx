@@ -167,7 +167,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  const isSubscribed = !platformApiKey || !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT] || isFoundingMember;
+  const isSubscribed = true; // Paywall disabled — original: !platformApiKey || !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT] || isFoundingMember
 
   return (
     <SubscriptionContext.Provider value={{ customerInfo, isSubscribed, isFoundingMember, isLoading: isLoading || isLinkingUser, refreshCustomerInfo, linkUser }}>
