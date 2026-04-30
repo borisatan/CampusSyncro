@@ -35,7 +35,9 @@
       "Bash(npx supabase:*)",
       "Bash(eas update *)",
       "Bash(npm audit *)",
-      "Bash(npx eas *)"
+      "Bash(npx eas *)",
+      "Read(//Users/boris/Library/Android/**)",
+      "Read(//usr/local/share/**)"
     ]
   }
 }

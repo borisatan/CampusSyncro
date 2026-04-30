@@ -61,5 +61,22 @@ target 'Monelo' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+
+    # EXReactRootViewFactory.h references RCTDevMenuConfiguration but never declares it.
+    # Patch both public and private copies to add the missing forward declaration.
+    [
+      'Headers/Public/Expo/Expo/EXReactRootViewFactory.h',
+      'Headers/Private/Expo/Expo/EXReactRootViewFactory.h'
+    ].each do |relative_path|
+      header_path = File.join(installer.sandbox.root, relative_path)
+      if File.exist?(header_path)
+        content = File.read(header_path)
+        forward_decl = '@class RCTDevMenuConfiguration;'
+        unless content.include?(forward_decl)
+          content = content.sub('NS_ASSUME_NONNULL_BEGIN', "#{forward_decl}\n\nNS_ASSUME_NONNULL_BEGIN")
+          File.write(header_path, content)
+        end
+      end
+    end
   end
 end
