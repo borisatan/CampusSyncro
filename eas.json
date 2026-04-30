@@ -11,7 +11,14 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rrttwewkekyvwgjilrzo.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_RLCVhk8FEp51JwAopY2QdQ_q89rPqJ_",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_taUQoesANpXPCdFQIJPnZEwMQAf",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_jVEkIoIkDngIWEwWIoBcmwAhnOw",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_og5RQJu6IBgHDpu59SmOQyzUEoAs2tapzSNAspbk0Rg"
+      }
     },
     "production": {
       "autoIncrement": true,
