@@ -472,15 +472,26 @@ export const fetchCategoryAggregates = async (startDate: Date, endDate: Date): P
 
 
 
-export const createAccount = async (accountName: string, balance: number, type: string, user_id: string, sort_order?: number) => {
+export const createAccount = async (accountName: string, balance: number, type: string, user_id: string, sort_order?: number, color?: string) => {
+  const payload: Record<string, any> = { account_name: accountName, balance: r2(balance), user_id, type, sort_order: sort_order ?? 1 };
+  if (color) payload.color = color;
   const { data, error } = await supabase
-  .from('Accounts')
-  .insert({ account_name: accountName, balance: r2(balance), user_id: user_id, type: type, sort_order: sort_order ?? 1 })
-  .select()
-  .single();
+    .from('Accounts')
+    .insert(payload)
+    .select()
+    .single();
 
   if (error) throw error;
   return data;
+}
+
+export const updateAccountColor = async (accountId: string, color: string): Promise<void> => {
+  const { error } = await supabase
+    .from('Accounts')
+    .update({ color })
+    .eq('id', accountId);
+
+  if (error) throw error;
 }
 
 export const updateTransaction = async (id: number, newAmount: number, newDescription: string, 

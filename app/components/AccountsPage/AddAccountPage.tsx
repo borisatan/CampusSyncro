@@ -12,27 +12,14 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-interface Account {
-  id?: number;
-  name: string;
-  type: string;
-  balance: number;
-}
+import { ColorPicker } from '../Shared/ColorPicker';
+import { TYPE_DEFAULT_COLORS } from '../../hooks/useAccountData';
 
 const accountTypeIcons: { [key: string]: any } = {
   checking: CreditCard,
   savings: PiggyBank,
   credit: CreditCard,
   investment: TrendingUp,
-};
-
-// Use your existing Tailwind background classes
-const accountTypeColors: { [key: string]: string } = {
-  checking: 'bg-accentBlue',
-  savings: 'bg-accentPurple',
-  credit: 'bg-accentRed',
-  investment: 'bg-accentTeal',
 };
 
 interface AddAccountProps {
@@ -44,13 +31,14 @@ interface AddAccountProps {
 
 export default function AddAccountPage({ onBack, onSave, currencySymbol, accountCount }: AddAccountProps) {
   const insets = useSafeAreaInsets();
-  // Generate sort order options from 1 to accountCount+1 (1-indexed, new account can go anywhere)
   const sortOrderOptions = Array.from({ length: accountCount + 1 }, (_, i) => i + 1);
   const [name, setName] = useState('');
   const [type, setType] = useState('checking');
   const [balance, setBalance] = useState('');
   const [sortOrder, setSortOrder] = useState(accountCount + 1);
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
+  const [color, setColor] = useState(TYPE_DEFAULT_COLORS['checking']);
+
   const handleSave = () => {
     if (!name.trim()) {
       alert("Please enter an account name");
@@ -66,12 +54,12 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
       type,
       balance: sanitizedBalance,
       sort_order: sortOrder,
+      color,
     });
     onBack();
   };
 
   const Icon = accountTypeIcons[type] || CreditCard;
-  const colorClass = accountTypeColors[type] || 'bg-accentBlue';
 
   return (
     <View style={{ flex: 1, paddingTop: insets.top }} className="bg-backgroundDark">
@@ -95,7 +83,7 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
         </View>
 
         {/* Account Preview Card (Solid Color) */}
-        <View className={`${colorClass} rounded-3xl p-6 mb-8 shadow-lg`}>
+        <View style={{ backgroundColor: color }} className="rounded-3xl p-6 mb-8 shadow-lg">
           <View className="flex-row items-center mb-4">
             <View className="w-14 h-14 bg-white/20 rounded-2xl items-center justify-center mr-4">
               <Icon color="#FFFFFF" size={28} />
@@ -184,6 +172,10 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
                 );
               })}
             </View>
+          </View>
+
+          <View className="mb-6">
+            <ColorPicker selectedColor={color} onColorSelect={setColor} isDarkMode={true} />
           </View>
 
           <View className="mb-6">

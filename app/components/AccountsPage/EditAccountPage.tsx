@@ -12,6 +12,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ColorPicker } from '../Shared/ColorPicker';
+import { TYPE_DEFAULT_COLORS } from '../../hooks/useAccountData';
 
 interface Account {
   id: number;
@@ -20,6 +22,7 @@ interface Account {
   balance: number;
   sort_order?: number;
   monthly_savings_goal?: number | null;
+  color?: string;
 }
 
 const accountTypeIcons: { [key: string]: any } = {
@@ -27,14 +30,6 @@ const accountTypeIcons: { [key: string]: any } = {
   savings: PiggyBank,
   credit: CreditCard,
   investment: TrendingUp,
-};
-
-// Use your existing Tailwind background classes
-const accountTypeColors: { [key: string]: string } = {
-  checking: 'bg-accentBlue',
-  savings: 'bg-accentPurple',
-  credit: 'bg-accentRed',
-  investment: 'bg-accentTeal',
 };
 
 interface EditAccountProps {
@@ -55,15 +50,18 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
   const [balance, setBalance] = useState(account?.balance.toString() || '0');
   const [sortOrder, setSortOrder] = useState(account?.sort_order ?? 0);
   const [showSortOrderPicker, setShowSortOrderPicker] = useState(false);
+  const [color, setColor] = useState(
+    account?.color ?? TYPE_DEFAULT_COLORS[account?.type?.toLowerCase() ?? 'checking'] ?? '#3B7EFF'
+  );
+
   const handleSave = () => {
     if (!name.trim()) {
       alert("Account name cannot be empty");
       return;
     }
 
-    // 2. Default to 0 if input is empty or invalid
-    const sanitizedBalance = balance.trim() === '' || isNaN(parseAmount(balance)) 
-      ? 0 
+    const sanitizedBalance = balance.trim() === '' || isNaN(parseAmount(balance))
+      ? 0
       : parseAmount(balance);
 
     onSave({
@@ -72,12 +70,11 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
       type,
       balance: sanitizedBalance,
       sort_order: sortOrder,
+      color,
     });
   };
 
-  
   const Icon = accountTypeIcons[type] || CreditCard;
-  const colorClass = accountTypeColors[type] || 'bg-accentBlue';
 
   return (
     <View style={{ flex: 1, paddingTop: insets.top }} className="bg-backgroundDark">
@@ -101,7 +98,7 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
         </View>
 
         {/* Account Preview Card (Solid Color) */}
-        <View className={`${colorClass} rounded-3xl p-6 mb-8 shadow-lg`}>
+        <View style={{ backgroundColor: color }} className="rounded-3xl p-6 mb-8 shadow-lg">
           <View className="flex-row items-center mb-4">
             <View className="w-14 h-14 bg-white/20 rounded-2xl items-center justify-center mr-4">
               <Icon color="#FFFFFF" size={28} />
@@ -190,6 +187,10 @@ export default function EditAccountPage({ account, currencySymbol, onBack, onSav
                 );
               })}
             </View>
+          </View>
+
+          <View className="mb-6">
+            <ColorPicker selectedColor={color} onColorSelect={setColor} isDarkMode={true} />
           </View>
 
           <View className="mb-6">

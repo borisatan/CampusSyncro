@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { ArrowLeft, CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
+import { ArrowLeft, CreditCard } from 'lucide-react-native';
+import { getAccountColor, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
 import { parseAmount } from '../../utils/parseAmount';
 import React, { useEffect, useState } from 'react';
 import {
@@ -182,32 +183,11 @@ export default function MoveMoneyPage({
     }
   };
 
-  const TYPE_CONFIG: { [key: string]: { icon: string; color: string } } = {
-    checking: { icon: 'credit-card', color: 'blue' },
-    savings: { icon: 'piggy-bank', color: 'purple' },
-    investment: { icon: 'trending-up', color: 'teal' },
-    investments: { icon: 'trending-up', color: 'teal' },
-    credit: { icon: 'credit-card', color: 'red' },
-  };
-
-  const ICON_MAP: { [key: string]: any } = {
-    'credit-card': CreditCard,
-    'piggy-bank': PiggyBank,
-    'trending-up': TrendingUp,
-  };
-
-  const COLOR_MAP: { [key: string]: string } = {
-    blue: 'bg-accentBlue',
-    teal: 'bg-accentTeal',
-    red: 'bg-accentRed',
-    purple: 'bg-accentPurple',
-  };
-
-  const getAccountIconAndColor = (type: string) => {
-    const config = TYPE_CONFIG[type?.toLowerCase().trim()] || TYPE_CONFIG.checking;
+  const getAccountIconAndColor = (account: Account) => {
+    const config = TYPE_CONFIG[account.type?.toLowerCase().trim()] || TYPE_CONFIG.checking;
     const IconComponent = ICON_MAP[config.icon] || CreditCard;
-    const colorClass = COLOR_MAP[config.color] || 'bg-accentBlue';
-    return { IconComponent, colorClass };
+    const accountColor = getAccountColor(account);
+    return { IconComponent, accountColor };
   };
 
   const renderAccountPicker = (
@@ -231,7 +211,7 @@ export default function MoveMoneyPage({
                 {accounts
                   .filter((acc) => acc.id !== excludeAccountId)
                   .map((account) => {
-                    const { IconComponent, colorClass } = getAccountIconAndColor(account.type);
+                    const { IconComponent, accountColor } = getAccountIconAndColor(account);
                     return (
                       <TouchableOpacity
                         key={account.id}
@@ -239,7 +219,7 @@ export default function MoveMoneyPage({
                         activeOpacity={0.6}
                         className="px-4 py-4 flex-row items-center mb-2 rounded-xl bg-surfaceDark border border-borderDark"
                       >
-                        <View className={`w-12 h-12 ${colorClass} rounded-xl items-center justify-center mr-3`}>
+                        <View style={{ backgroundColor: accountColor }} className="w-12 h-12 rounded-xl items-center justify-center mr-3">
                           <IconComponent color="#FFFFFF" size={24} />
                         </View>
                         <View className="flex-1">

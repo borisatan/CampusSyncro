@@ -5,7 +5,7 @@ import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../Shared/AppText';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 
-import { COLOR_MAP, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
+import { getAccountColor, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
 
 interface AccountListItemProps {
   account: any;
@@ -22,7 +22,7 @@ export const AccountListItem = ({
 }: AccountListItemProps) => {
   const config = TYPE_CONFIG[account.type.toLowerCase().trim()] || TYPE_CONFIG.checking;
   const IconComponent = ICON_MAP[config.icon] || CreditCard;
-  const colorClass = COLOR_MAP[config.color] || 'bg-accentBlue';
+  const accountColor = getAccountColor(account);
 
   return (
     <MotiView
@@ -34,7 +34,7 @@ export const AccountListItem = ({
       <View className="bg-surfaceDark border-borderDark rounded-2xl p-4 border">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
-            <View className={`w-12 h-12 ${colorClass} rounded-xl items-center justify-center`}>
+            <View style={{ backgroundColor: accountColor }} className="w-12 h-12 rounded-xl items-center justify-center">
               <IconComponent color="#FFFFFF" size={24} />
             </View>
             <View className="flex-1 ml-4">

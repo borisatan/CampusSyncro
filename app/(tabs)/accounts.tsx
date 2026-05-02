@@ -46,8 +46,8 @@ export default function Accounts() {
     registerAccountsRefresh(loadAccounts);
   }, [registerAccountsRefresh]);
 
-  const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string; sort_order?: number }) => {
-    const { name, type, sort_order } = newAccountData;
+  const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string; sort_order?: number; color?: string }) => {
+    const { name, type, sort_order, color } = newAccountData;
     const balance = Math.round(newAccountData.balance * 100) / 100;
     if (!name.trim()) {
       Alert.alert('Error', 'Please enter an account name');
@@ -56,14 +56,14 @@ export default function Accounts() {
     try {
       const tempId = Date.now();
       const insertPosition = sort_order ?? accounts.length;
-      addAccountOptimistic({ id: tempId, account_name: name, balance, type, sort_order: insertPosition });
+      addAccountOptimistic({ id: tempId, account_name: name, balance, type, sort_order: insertPosition, color });
 
       // Shift existing accounts if inserting at a position that's not at the end
       if (insertPosition < accounts.length) {
         await AccountService.shiftAccountsForInsert(insertPosition, accounts);
       }
 
-      const newAccount = await AccountService.createAccount(name, balance, type, userId, insertPosition);
+      const newAccount = await AccountService.createAccount(name, balance, type, userId, insertPosition, color);
       deleteAccountOptimistic(tempId);
       addAccountOptimistic(newAccount);
 
@@ -80,14 +80,14 @@ export default function Accounts() {
     setEditingAccountId(null);
   };
 
-  const handleSaveEdit = async (updatedData: { name: string; balance: number; type: string; sort_order?: number; monthly_savings_goal?: number | null }) => {
+  const handleSaveEdit = async (updatedData: { name: string; balance: number; type: string; sort_order?: number; monthly_savings_goal?: number | null; color?: string }) => {
     if (!selectedAccount) return;
     const originalName = selectedAccount.account_name;
     const oldSortOrder = selectedAccount.sort_order ?? 0;
-    const { name: newName, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal } = updatedData;
+    const { name: newName, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal, color: newColor } = updatedData;
     const newBalance = Math.round(updatedData.balance * 100) / 100;
 
-    updateAccountOptimistic(selectedAccount.id, { account_name: newName, balance: newBalance, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal });
+    updateAccountOptimistic(selectedAccount.id, { account_name: newName, balance: newBalance, type: newType, sort_order: newSortOrder, monthly_savings_goal: newGoal, color: newColor });
     setShowEditModal(false);
     setSelectedAccount(null);
 
@@ -95,6 +95,10 @@ export default function Accounts() {
       if (originalName !== newName) await AccountService.updateAccountName(originalName, newName, userId);
       await AccountService.updateAccountBalance(newName, newBalance, userId);
       await AccountService.updateAccountType(newName, newType, userId);
+
+      if (newColor !== undefined && newColor !== selectedAccount.color) {
+        await AccountService.updateAccountColor(selectedAccount.id, newColor);
+      }
 
       // Update savings goal if it changed
       if (newGoal !== selectedAccount.monthly_savings_goal) {

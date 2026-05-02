@@ -97,6 +97,7 @@ export interface Account {
   type: string;
   sort_order?: number;
   monthly_savings_goal?: number | null;
+  color?: string;
 }
 export interface AccountOption {
   id: string;

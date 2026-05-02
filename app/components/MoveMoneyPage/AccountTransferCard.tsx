@@ -1,30 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
+import { CreditCard } from 'lucide-react-native';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../Shared/AppText';
 import { Account } from '../../types/types';
-
-const TYPE_CONFIG: { [key: string]: { icon: string; color: string } } = {
-  checking: { icon: 'credit-card', color: 'blue' },
-  savings: { icon: 'piggy-bank', color: 'purple' },
-  investment: { icon: 'trending-up', color: 'teal' },
-  investments: { icon: 'trending-up', color: 'teal' },
-  credit: { icon: 'credit-card', color: 'red' },
-};
-
-const ICON_MAP: { [key: string]: any } = {
-  'credit-card': CreditCard,
-  'piggy-bank': PiggyBank,
-  'trending-up': TrendingUp,
-};
-
-const COLOR_MAP: { [key: string]: string } = {
-  blue: 'bg-accentBlue',
-  teal: 'bg-accentTeal',
-  red: 'bg-accentRed',
-  purple: 'bg-accentPurple',
-};
+import { getAccountColor, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
 
 interface AccountTransferCardProps {
   account: Account | null;
@@ -97,7 +77,7 @@ export const AccountTransferCard = ({
 
   const config = TYPE_CONFIG[account.type?.toLowerCase().trim()] || TYPE_CONFIG.checking;
   const IconComponent = ICON_MAP[config.icon] || CreditCard;
-  const colorClass = COLOR_MAP[config.color] || 'bg-accentBlue';
+  const accountColor = getAccountColor(account);
 
   return (
     <TouchableOpacity
@@ -106,7 +86,7 @@ export const AccountTransferCard = ({
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">
-          <View className={`w-12 h-12 ${colorClass} rounded-xl items-center justify-center mr-3`}>
+          <View style={{ backgroundColor: accountColor }} className="w-12 h-12 rounded-xl items-center justify-center mr-3">
             <IconComponent color="#FFFFFF" size={24} />
           </View>
           <View className="flex-1">
