@@ -58,7 +58,7 @@ export default function BudgetSetupChoiceScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/cost-of-inattention");
+    router.replace("/(onboarding)/savings-goal");
   };
 
   return (

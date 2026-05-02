@@ -1,10 +1,9 @@
 import * as Haptics from "expo-haptics";
-import { parseAmount } from "../utils/parseAmount";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { MotiView } from "moti";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -17,9 +16,10 @@ import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientBut
 import { CurrencySelector } from "../components/Shared/CurrencySelector";
 import { OnboardingHeader } from "../components/Shared/OnboardingHeader";
 import { useAnalytics } from "../hooks/useAnalytics";
-import { SupportedCurrency } from "../types/types";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useOnboardingStore } from "../store/useOnboardingStore";
+import { SupportedCurrency } from "../types/types";
+import { parseAmount } from "../utils/parseAmount";
 
 
 export default function MonthlyIncomeScreen() {
@@ -57,12 +57,12 @@ export default function MonthlyIncomeScreen() {
     const incomeValue = parseAmount(amount) || 0;
     setNewOnboardingData({ estimatedIncome: incomeValue, selectedCurrency });
     setOnboardingStep(5);
-    router.push("/(onboarding)/savings-goal");
+    router.push("/(onboarding)/cost-of-inattention");
   }, [amount, selectedCurrency, trackEvent, setNewOnboardingData, setOnboardingStep]);
 
   const handleBack = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/category-preselection");
+    router.back();
   }, []);
 
   const handleSkip = useCallback(() => {
@@ -104,32 +104,11 @@ export default function MonthlyIncomeScreen() {
                 transition={{ delay: 200, duration: 600 }}
                 className="items-center mb-6"
               >
-                {/* Coin shadow/ring behind */}
-                <View
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    width: 80,
-                    height: 80,
-                    borderRadius: 40,
-                    backgroundColor: "#065F46",
-                  }}
+                <Image
+                  source={require("../../assets/pictures/money_symbol.png")}
+                  style={{ width: 220, height: 220 }}
+                  resizeMode="contain"
                 />
-                {/* Main coin circle */}
-                <LinearGradient
-                  colors={["#34D399", "#10B981", "#059669"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 40,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 34, fontWeight: "800" }}>$</Text>
-                </LinearGradient>
               </MotiView>
 
               {/* Headline */}
@@ -188,17 +167,15 @@ export default function MonthlyIncomeScreen() {
                     paddingHorizontal: 20,
                   }}
                 >
-                  <Text className="text-secondaryDark text-sm text-center mb-2">
-                    Monthly Take-Home
-                  </Text>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+<View style={{ flexDirection: "row", alignItems: "center", paddingTop: 4 }}>
                     <Text
                       style={{
                         color: isValid ? "#10B981" : "#4B5A7A",
-                        fontSize: 32,
+                        fontSize: 40,
                         fontWeight: "300",
                         includeFontPadding: false,
-                        width: 32,
+                        lineHeight: 48,
+                        marginRight: 4,
                       }}
                     >
                       {currencySymbol}
@@ -215,10 +192,10 @@ export default function MonthlyIncomeScreen() {
                         includeFontPadding: false,
                         paddingVertical: 0,
                         color: "#ffffff",
-                        fontSize: 48,
+                        fontSize: 40,
                         fontWeight: "300",
                         flex: 1,
-                        textAlign: "center",
+                        lineHeight: 48,
                       }}
                     />
                   </View>

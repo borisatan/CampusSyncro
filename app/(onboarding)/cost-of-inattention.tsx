@@ -37,7 +37,7 @@ export default function CostOfInattentionScreen() {
   const arrowY = useSharedValue(0);
 
   useEffect(() => {
-    setOnboardingStep(6);
+    setOnboardingStep(5);
     trackEvent("onboarding_cost_of_inattention_viewed");
 
     glowOpacity.value = withRepeat(
@@ -73,13 +73,13 @@ export default function CostOfInattentionScreen() {
       step: 5,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    setOnboardingStep(7);
-    router.push("/(onboarding)/budget-setup-choice");
+    setOnboardingStep(6);
+    router.push("/(onboarding)/savings-goal");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/savings-goal");
+    router.replace("/(onboarding)/monthly-income");
   };
 
   const handleSkip = () => {
@@ -98,7 +98,7 @@ export default function CostOfInattentionScreen() {
       <ScrollView className="flex-1">
         <OnboardingHeader
           onBack={handleBack}
-          currentStep={6}
+          currentStep={5}
           totalSteps={12}
         />
 

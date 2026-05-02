@@ -110,7 +110,7 @@ export default function UseCaseScreen() {
               >
                 <Pressable
                   onPress={() => handleSelect(item.id)}
-                  className="mb-3 rounded-xl overflow-hidden active:opacity-70"
+                  className="mb-3 rounded-xl overflow-hidden"
                   android_ripple={{ color: "rgba(255,255,255,0.08)" }}
                 >
                   <View

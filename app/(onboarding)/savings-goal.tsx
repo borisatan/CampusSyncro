@@ -46,13 +46,13 @@ export default function SavingsGoalScreen() {
     : null;
 
   useEffect(() => {
-    setOnboardingStep(5);
+    setOnboardingStep(6);
     trackEvent("onboarding_savings_goal_viewed");
   }, []);
 
   const canSave = name.trim().length > 0 && parseAmount(targetAmount) > 0;
 
-  const navigateNext = () => router.push("/(onboarding)/cost-of-inattention");
+  const navigateNext = () => router.push("/(onboarding)/budget-setup-choice");
 
   const handlePresetSelect = (preset: typeof GOAL_PRESETS[number]) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -104,14 +104,14 @@ export default function SavingsGoalScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/monthly-income");
+    router.replace("/(onboarding)/cost-of-inattention");
   };
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
       <OnboardingHeader
         onBack={handleBack}
-        currentStep={5}
+        currentStep={6}
         totalSteps={12}
       />
 
@@ -259,12 +259,17 @@ export default function SavingsGoalScreen() {
             disabled={!canSave}
           />
 
-          {/* Ghost skip */}
+          {/* Skip button */}
           <Pressable
             onPress={handleSkip}
-            className="items-center mt-6 py-2 active:opacity-60"
+            className="items-center mt-4 py-3 active:opacity-60"
+            style={{
+              borderWidth: 1,
+              borderColor: "#374151",
+              borderRadius: 100,
+            }}
           >
-            <Text style={{ color: "#4B5A7A", fontSize: 12 }}>Set this up later</Text>
+            <Text style={{ color: "#8A96B4", fontSize: 15 }}>Set this up later</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
