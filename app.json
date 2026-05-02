@@ -18,7 +18,8 @@
       "bundleIdentifier": "com.borisatanassov.Monelo",
       "runtimeVersion": "1.0.0",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Monelo uses Face ID to unlock your account quickly and securely."
+        "NSFaceIDUsageDescription": "Monelo uses Face ID to unlock your account quickly and securely.",
+        "NSUserNotificationsUsageDescription": "Monelo sends reminders to help you stay on top of logging your daily transactions."
       }
     },
     "android": {
@@ -53,7 +54,15 @@
       "expo-web-browser",
       "expo-secure-store",
       "expo-localization",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icons/adaptive-icon.png",
+          "color": "#3B7EFF",
+          "sounds": []
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

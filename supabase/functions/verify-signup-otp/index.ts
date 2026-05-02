@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const INVALID_RESPONSE = new Response(JSON.stringify({ error: "Invalid or expired code" }), {
-  status: 400,
+const INVALID_RESPONSE = new Response(JSON.stringify({ valid: false }), {
+  status: 200,
   headers: { ...corsHeaders, "Content-Type": "application/json" },
 });
 

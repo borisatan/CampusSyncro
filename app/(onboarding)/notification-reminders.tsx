@@ -7,7 +7,7 @@ import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressD
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
-import { persistOnboardingData } from "../(auth)/sign-up";
+import { persistOnboardingData } from "../services/onboardingService";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { ensureUserProfile } from "../services/backendService";
 import { requestNotificationPermissions, scheduleNotifications } from "../utils/notificationService";

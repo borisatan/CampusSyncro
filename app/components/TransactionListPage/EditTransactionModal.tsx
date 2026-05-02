@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AccountSelector } from '../AddTransactionPage/AccountSelector';
 import { CategoryEditorModal } from '../AddTransactionPage/CategoryEditorModal';
 import { CategoryGrid } from '../AddTransactionPage/CategoryGrid';
@@ -45,6 +45,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const { isDarkMode } = useTheme();
   const { userId } = useAuth();
   const { refreshAll, optimisticDeleteTransaction, optimisticUpdateTransaction } = useDataRefresh();
+  const insets = useSafeAreaInsets();
 
   const categories = useCategoriesStore((state) => state.categories);
   const accountOptions = useAccountsStore((state) => state.accounts);
@@ -175,10 +176,12 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
       visible={visible}
       animationType="slide"
       presentationStyle="fullScreen"
-      statusBarTranslucent
       onRequestClose={onClose}
     >
-      <SafeAreaView edges={['top']} className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`}>
+      <View
+        className={`flex-1 ${isDarkMode ? 'bg-backgroundDark' : 'bg-background'}`}
+        style={{ paddingTop: insets.top }}
+      >
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
         {/* Header */}
@@ -308,7 +311,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
           initialColor={categoryEditorData.color}
         />
 
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };

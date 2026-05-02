@@ -80,10 +80,6 @@ export default function AddAccountPage({ onBack, onSave, currencySymbol, account
         className="flex-1"
       >
         <ScrollView className="flex-1 px-2" keyboardDismissMode="on-drag">
-        {/* Drag handle */}
-        <View className="items-center pt-3 pb-1">
-          <View className="w-10 h-1 rounded-full bg-borderDark" />
-        </View>
         {/* Header */}
         <View className="flex-row items-center mb-8 mt-4">
           <TouchableOpacity

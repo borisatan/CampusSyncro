@@ -24,7 +24,7 @@ import { useOnboardingStore } from "../store/useOnboardingStore";
 import { pendingSignUp } from "../store/pendingSignUp";
 import { useSubscription } from "../context/SubscriptionContext";
 import { supabase } from "../utils/supabase";
-import { persistOnboardingData } from "./sign-up";
+import { persistOnboardingData } from "../services/onboardingService";
 
 function redactEmail(email: string): string {
   const [local, domain] = email.split("@");
@@ -94,7 +94,7 @@ export default function VerifyEmailScreen() {
       if (signInError) {
         if (!isOnboardingFlow) clearOnboardingDataPersisted();
         trackEvent("user_sign_up_failed", { error_message: signInError.message });
-        setError(signInError.message);
+        setError("Could not sign in. Please try again.");
         return;
       }
 
@@ -147,7 +147,7 @@ export default function VerifyEmailScreen() {
     } catch (e: any) {
       clearOnboardingDataPersisted();
       trackEvent("user_sign_up_failed", { error_message: e?.message ?? "Unknown error" });
-      setError(e?.message ?? "Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsVerifying(false);
     }

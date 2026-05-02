@@ -16,7 +16,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useDataRefresh } from '../../context/DataRefreshContext';
 import { contributeToGoal, createTransfer, fetchGoalsByAccount, recordSavingsTransfer } from '../../services/backendService';
@@ -38,6 +38,7 @@ export default function MoveMoneyPage({
   currencySymbol,
 }: MoveMoneyPageProps) {
   const isDark = true;
+  const insets = useSafeAreaInsets();
   const { userId } = useAuth();
   const { refreshAccounts, refreshBudgets, refreshGoals } = useDataRefresh();
   const updateAccountBalanceStore = useAccountsStore((state) => state.updateAccountBalance);
@@ -261,19 +262,19 @@ export default function MoveMoneyPage({
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundDark" edges={['top']}>
+    <View style={{ flex: 1, paddingTop: insets.top }} className="bg-backgroundDark">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
         <View className="flex-1">
           {/* Header */}
-          <View className="flex-row items-center px-2 py-3 mt-6 mb-2">
+          <View className="flex-row items-center px-2 mt-4 mb-8">
             <TouchableOpacity
               onPress={onBack}
-              className="w-10 h-10 items-center justify-center mr-2"
+              className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center mr-4"
             >
-              <ArrowLeft color="#94A3B8" size={24} />
+              <ArrowLeft color="#94A3B8" size={20} />
             </TouchableOpacity>
             <Text className="text-2xl font-semibold text-textDark">{headerText}</Text>
           </View>
@@ -385,6 +386,6 @@ export default function MoveMoneyPage({
         )}
 
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

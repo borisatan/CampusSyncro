@@ -108,7 +108,7 @@ export default function BudgetsScreen() {
   const [activeGoalIndex, setActiveGoalIndex] = useState(0);
   const [isGoalEditMode, setIsGoalEditMode] = useState(false);
   const { width: screenWidth } = useWindowDimensions();
-  const goalCardWidth = screenWidth - 32;
+  const goalCardWidth = screenWidth - 16;
 
   const goalTranslateX = useSharedValue(0);
   const goalCurrentPage = useSharedValue(0);
