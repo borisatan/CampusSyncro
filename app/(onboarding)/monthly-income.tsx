@@ -106,7 +106,7 @@ export default function MonthlyIncomeScreen() {
               >
                 <Image
                   source={require("../../assets/pictures/money_symbol.png")}
-                  style={{ width: 220, height: 220 }}
+                  style={{ width: 200, height: 130 }}
                   resizeMode="contain"
                 />
               </MotiView>
