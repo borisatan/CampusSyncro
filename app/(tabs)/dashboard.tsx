@@ -167,14 +167,16 @@ export default function Dashboard() {
                 </View>
               )}
 
-              <BudgetHealthCard
-                categoryBudgets={filteredCategoryBudgets}
-                allCategoryBudgets={categoryBudgets}
-                currencySymbol={currencySymbol}
-                isLoading={budgetsLoading}
-                isUnlocked={isUnlocked}
-                savingsData={savingsData}
-              />
+              {(budgetsLoading || filteredCategoryBudgets.length > 0 || savingsData !== null) && (
+                <BudgetHealthCard
+                  categoryBudgets={filteredCategoryBudgets}
+                  allCategoryBudgets={categoryBudgets}
+                  currencySymbol={currencySymbol}
+                  isLoading={budgetsLoading}
+                  isUnlocked={isUnlocked}
+                  savingsData={savingsData}
+                />
+              )}
               <CategoryDonut
                 aggregates={categoriesAggregated}                                                 
                 categories={categories}

@@ -119,7 +119,7 @@ export default function VerifyEmailScreen() {
           $set_once: { signup_date: new Date().toISOString() },
         });
         trackEvent("user_signed_up", { method: "email", requires_verification: false });
-        router.replace("/(onboarding)/subscription-trial");
+        router.replace("/(onboarding)/notification-reminders");
       } else {
         await persistOnboardingData(authData.user.id, newOnboardingData);
 

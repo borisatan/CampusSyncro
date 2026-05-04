@@ -35,7 +35,7 @@ export const V3_DEFAULT_CATEGORIES: V3Category[] = [
   { name: 'Subscriptions', icon: 'tv-outline', color: '#8B5CF6' },
   { name: 'Transport', icon: 'car-outline', color: '#3B82F6' },
   { name: 'Shopping', icon: 'bag-outline', color: '#06B6D4' },
-  { name: 'Nightlife', icon: 'beer-outline', color: '#14B8A6' },
+  { name: 'Travel', icon: 'airplane-outline', color: '#3B82F6' },
   { name: 'Healthcare', icon: 'heart-outline', color: '#EC4899' },
   { name: 'Other', icon: 'apps-outline', color: '#6B7280' },
 ];

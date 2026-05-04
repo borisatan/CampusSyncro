@@ -10,8 +10,10 @@ import {
   StatusBar,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AccountSelector } from "../components/AddTransactionPage/AccountSelector";
 import { AddTransactionSkeleton } from "../components/AddTransactionPage/AddTransactionSkeleton";
@@ -46,6 +48,9 @@ const TransactionAdder = () => {
   const isCategoriesLoading = useCategoriesStore((state) => state.isLoading);
   const accountOptions = useAccountsStore((state) => state.accounts);
   const hasNoAccounts = accountOptions.length === 0;
+  const effectiveHandleSubmit = hasNoAccounts
+    ? () => router.push("/(tabs)/accounts?openAddModal=true" as any)
+    : handleSubmit;
   const expenseAccountOptions = accountOptions.filter(
     (acc) => acc.type !== "investment",
   );
@@ -222,8 +227,17 @@ const TransactionAdder = () => {
             />
           </View>
 
-          {isCategoriesLoading || categories.length === 0 ? (
+          {isCategoriesLoading ? (
             <AddTransactionSkeleton isDarkMode={isDarkMode} />
+          ) : categories.length === 0 ? (
+            <TouchableOpacity
+              onPress={() => router.navigate("/components/AddTransactionPage/edit-category")}
+              className="mb-6 rounded-xl border border-dashed border-borderDark bg-surfaceDark items-center justify-center py-10"
+              activeOpacity={0.7}
+            >
+              <Ionicons name="add-circle-outline" size={36} color="#3B7EFF" />
+              <Text className="text-accentBlue font-semibold text-base mt-2">Create a Category</Text>
+            </TouchableOpacity>
           ) : (
             <>
               {transactionType === "expense" && (
@@ -285,11 +299,11 @@ const TransactionAdder = () => {
             >
               <SubmitButton
                 isDarkMode={isDarkMode}
-                handleSubmit={handleSubmit}
+                handleSubmit={effectiveHandleSubmit}
                 transactionType={transactionType}
                 isSubmitting={isSubmitting}
-                disabled={hasNoAccounts}
-                buttonText={hasNoAccounts ? "Add an account from the profile page" : undefined}
+                disabled={false}
+                buttonText={hasNoAccounts ? "Add an account" : undefined}
               />
             </MotiView>
           </View>

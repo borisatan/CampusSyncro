@@ -91,7 +91,7 @@ export default function OAuthCallbackScreen() {
           identifyUser(sessionData.user.id, { email: sessionData.user.email });
         }
         trackEvent("user_authenticated", { method: "google", source: "callback_route" });
-        router.replace("/(onboarding)/subscription-trial");
+        router.replace("/(onboarding)/notification-reminders");
       } else {
         // Normal sign-up or returning user path.
         // Persist onboarding data for new users who completed the full onboarding first.

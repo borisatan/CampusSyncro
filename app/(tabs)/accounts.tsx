@@ -2,6 +2,7 @@
 import { ArrowLeftRight, Plus } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { Text } from '../components/Shared/AppText';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 
@@ -34,6 +35,7 @@ export default function Accounts() {
   const { currencySymbol, loadCurrency } = useCurrencyStore();
   const { isConnected } = useNetwork();
 
+  const { openAddModal } = useLocalSearchParams<{ openAddModal?: string }>();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMoveMoneyModal, setShowMoveMoneyModal] = useState(false);
   const [editingAccountId, setEditingAccountId] = useState<number | null>(null);
@@ -45,6 +47,10 @@ export default function Accounts() {
   useEffect(() => {
     registerAccountsRefresh(loadAccounts);
   }, [registerAccountsRefresh]);
+
+  useEffect(() => {
+    if (openAddModal === "true") setShowAddModal(true);
+  }, [openAddModal]);
 
   const handleAddAccount = async (newAccountData: { name: string; balance: number; type: string; sort_order?: number; color?: string }) => {
     const { name, type, sort_order, color } = newAccountData;

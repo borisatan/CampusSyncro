@@ -162,7 +162,7 @@ export default function SignUpScreen() {
             identifyUser(sessionData.user.id, { email: sessionData.user.email });
           }
           trackEvent("user_authenticated", { method: "google" });
-          router.replace("/(onboarding)/subscription-trial");
+          router.replace("/(onboarding)/notification-reminders");
         } else {
           // Normal sign-up: persist everything now.
           await persistOnboardingData(sessionData.user.id, newOnboardingData);
@@ -245,7 +245,7 @@ export default function SignUpScreen() {
           await linkUser(data.user.id);
           identifyUser(data.user.id, { email: data.user.email });
           trackEvent("user_authenticated", { method: "apple" });
-          router.replace("/(onboarding)/subscription-trial");
+          router.replace("/(onboarding)/notification-reminders");
         } else {
           await persistOnboardingData(data.user.id, newOnboardingData);
           await linkUser(data.user.id);

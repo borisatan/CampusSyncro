@@ -178,6 +178,8 @@ export default function PersonalizingScreen() {
 
           {/* Title */}
           <Text
+            adjustsFontSizeToFit
+            numberOfLines={2}
             style={{
               fontSize: 26,
               fontWeight: "700",

@@ -60,7 +60,7 @@ const CategoryRow = React.memo(function CategoryRow({ category, index, isSelecte
             borderRadius: 12,
           }}
         >
-          <View className="p-3">
+          <View className="p-4">
             <View className="flex-row items-center gap-3">
               <View
                 className="w-12 h-12 rounded-lg items-center justify-center"
