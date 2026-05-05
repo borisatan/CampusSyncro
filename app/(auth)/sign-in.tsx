@@ -126,8 +126,8 @@ export default function SignInScreen() {
       });
       if (e?.message?.includes("Invalid login credentials")) {
         Alert.alert(
-          "No account found",
-          "We couldn't find an account with those details. Would you like to start fresh?",
+          "Sign in failed",
+          "Wrong password or no account found with those details. Would you like to start fresh?",
           [
             { text: "Try again", style: "cancel" },
             { text: "Start over", onPress: () => router.replace("/(onboarding)/welcome") },

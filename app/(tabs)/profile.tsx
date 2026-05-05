@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
+  AlertCircle,
   Bell,
   ChevronRight,
   Fingerprint,
@@ -166,6 +167,10 @@ export default function ProfileScreen() {
     Linking.openURL(
       "https://apps.apple.com/app/id6742437027?action=write-review",
     );
+  };
+
+  const handleReportBug = () => {
+    Linking.openURL("https://trymonelo.app/bug-report");
   };
 
   // Styling Variables
@@ -348,6 +353,24 @@ export default function ProfileScreen() {
               <Text className={`font-medium ${textPrimary}`}>Support</Text>
               <Text className={`text-sm ${textSecondary}`}>
                 Get help and send feedback
+              </Text>
+            </View>
+            <ChevronRight
+              color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+              size={20}
+            />
+          </RipplePressable>
+          <RipplePressable
+            onPress={handleReportBug}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-red-500 rounded-xl items-center justify-center mr-3">
+              <AlertCircle color="white" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>Report a Bug</Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                Let us know about an issue
               </Text>
             </View>
             <ChevronRight
