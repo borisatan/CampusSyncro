@@ -69,19 +69,34 @@ app/
 
 ## Known Pitfalls
 
-### Currency Symbol + TextInput vertical alignment (iOS & Android)
+### Currency Amount Input — canonical pattern
 
-When placing a currency symbol `Text` next to a `TextInput` in a `flex-row items-center` container, both elements **must** have a matching explicit `lineHeight` in their `style` prop equal to the font size. Without this, iOS and Android render text baselines differently, causing the symbol and the typed text to appear vertically misaligned.
+The canonical amount input is in `app/components/AddTransactionPage/TransactionHero.tsx`. **Always match this exactly** — never deviate with different font sizes, padding, or lineHeight values:
 
-**Always do this:**
 ```tsx
-<View className="flex-row items-center px-4 rounded-xl border ...">
-  <Text style={{ lineHeight: 20 }}>{currencySymbol}</Text>
-  <TextInput style={{ lineHeight: 20 }} ... />
+<View className="flex-row items-center px-4 rounded-xl border bg-inputDark border-borderDark">
+  <Text
+    className="text-2xl mr-1 text-slate400"
+    style={{ lineHeight: 24 }}
+  >
+    {currencySymbol}
+  </Text>
+  <TextInput
+    keyboardType="decimal-pad"
+    placeholder="0.00"
+    placeholderTextColor="#475569"
+    className="flex-1 py-4 text-2xl text-textDark"
+    style={{ lineHeight: 24 }}
+  />
 </View>
 ```
 
-Rule: `lineHeight` value = the font size in pixels (`text-base` → 16, `text-xl` → 20, `text-2xl` → 24). Both the symbol `Text` and the `TextInput` must use the same value. Never omit `lineHeight` from either element.
+Rules:
+- Container: `flex-row items-center px-4 rounded-xl border` — **no** `py-*` on the container; vertical padding lives on `TextInput` only (`py-4`)
+- Both `Text` (currency symbol) and `TextInput`: `text-2xl` + `style={{ lineHeight: 24 }}`
+- Currency symbol: `mr-1` (not `mr-2`), color `text-slate400`
+- `TextInput` placeholder: `"0.00"`
+- Never use `text-lg` / `lineHeight: 18` for amount inputs — that was wrong
 
 ## Additional Documentation
 

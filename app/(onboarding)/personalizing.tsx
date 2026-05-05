@@ -203,7 +203,7 @@ export default function PersonalizingScreen() {
       </View>
 
       {/* Save button */}
-      <View style={{ paddingHorizontal: 8, paddingBottom: 16 }}>
+      <View style={{ paddingHorizontal: 8, paddingBottom: 48 }}>
         <MotiView
           animate={{ opacity: showButton ? 1 : 0 }}
           transition={{ type: "timing", duration: 350 }}

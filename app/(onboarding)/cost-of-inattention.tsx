@@ -273,7 +273,7 @@ export default function CostOfInattentionScreen() {
             <View className="mb-2">
               <AnimatedGradientButton
                 onPress={handleNext}
-                text="Secure my clarity ✦"
+                text="Secure my clarity"
                 rounded="3xl"
               />
             </View>

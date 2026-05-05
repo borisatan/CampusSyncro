@@ -207,18 +207,18 @@ export default function SavingsGoalScreen() {
             className="mb-4"
           >
             <Text className="text-secondaryDark text-sm mb-2">Target Amount</Text>
-            <View className="flex-row items-center px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark">
-              <Text className="text-white/70 text-lg mr-2" style={{ lineHeight: 18 }}>
+            <View className="flex-row items-center px-4 rounded-xl bg-surfaceDark border border-borderDark">
+              <Text className="text-slate400 text-2xl mr-1" style={{ lineHeight: 24 }}>
                 {currencySymbol}
               </Text>
               <TextInput
                 value={targetAmount}
                 onChangeText={setTargetAmount}
-                placeholder="0"
+                placeholder="0.00"
                 placeholderTextColor="#64748B"
                 keyboardType="decimal-pad"
-                className="flex-1 text-lg text-white"
-                style={{ lineHeight: 18 }}
+                className="flex-1 py-4 text-2xl text-white"
+                style={{ lineHeight: 24 }}
               />
             </View>
           </MotiView>

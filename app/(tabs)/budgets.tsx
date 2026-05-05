@@ -570,7 +570,7 @@ export default function BudgetsScreen() {
                         <Text className="text-slateMuted text-xs mt-0.5">Emergency fund, vacation, new car...</Text>
                       </Pressable>
                     ) : (
-                      <View className={`rounded-2xl ${isGoalEditMode ? 'bg-black/40' : 'bg-surfaceDark'}`} style={{ overflow: 'hidden' }}>
+                      <View className={`rounded-2xl border border-borderDark ${isGoalEditMode ? 'bg-black/40' : 'bg-surfaceDark'}`} style={{ overflow: 'hidden' }}>
                         <GestureDetector gesture={goalPanGesture}>
                           <Animated.View style={[{ flexDirection: 'row', width: goalCardWidth * goals.length }, goalAnimatedStyle]}>
                             {goals.map((goal) => (
