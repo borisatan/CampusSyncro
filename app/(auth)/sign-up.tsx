@@ -240,12 +240,24 @@ export default function SignUpScreen() {
         await ensureUserProfile(data.user.id);
 
         if (isOnboardingFlow) {
-          // Mid-onboarding: link RevenueCat before paywall but defer data persistence
-          // to notification-reminders where notification frequency will also be set.
+          setOnboardingDataPersisted();
           await linkUser(data.user.id);
+          await persistOnboardingData(data.user.id, newOnboardingData);
+          if (newOnboardingData.foundingMemberEmail) {
+            supabase.functions.invoke('notify-founding-claim', {
+              body: { email: newOnboardingData.foundingMemberEmail, userId: data.user.id },
+            }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
+          }
+          await Promise.all([
+            useCategoriesStore.getState().loadCategories(),
+            useAccountsStore.getState().loadAccounts(),
+            useIncomeStore.getState().loadIncomeSettings(),
+            useCurrencyStore.getState().loadCurrency(),
+          ]);
+          useAppTourStore.getState().resetSeenPages();
           identifyUser(data.user.id, { email: data.user.email });
           trackEvent("user_authenticated", { method: "apple" });
-          router.replace("/(onboarding)/notification-reminders");
+          router.replace("/(tabs)/dashboard");
         } else {
           await persistOnboardingData(data.user.id, newOnboardingData);
           await linkUser(data.user.id);

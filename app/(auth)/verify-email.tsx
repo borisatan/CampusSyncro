@@ -111,15 +111,29 @@ export default function VerifyEmailScreen() {
       await ensureUserProfile(authData.user.id);
 
       if (isOnboardingFlow) {
-        // Mid-onboarding: link RevenueCat before paywall but defer data persistence
-        // to notification-reminders where notification frequency will also be set.
+        // Claim the persistence flag synchronously before any await so AuthContext's
+        // SIGNED_IN handler (which runs on the next tick) sees it and skips double-persist.
+        setOnboardingDataPersisted();
         await linkUser(authData.user.id);
+        await persistOnboardingData(authData.user.id, newOnboardingData);
+        if (newOnboardingData.foundingMemberEmail) {
+          supabase.functions.invoke("notify-founding-claim", {
+            body: { email: newOnboardingData.foundingMemberEmail, userId: authData.user.id },
+          }).catch((e) => console.error("[VerifyEmail] notify-founding-claim error:", e));
+        }
+        await Promise.all([
+          useCategoriesStore.getState().loadCategories(),
+          useAccountsStore.getState().loadAccounts(),
+          useIncomeStore.getState().loadIncomeSettings(),
+          useCurrencyStore.getState().loadCurrency(),
+        ]);
+        useAppTourStore.getState().resetSeenPages();
         identifyUser(authData.user.id, {
           email: authData.user.email,
           $set_once: { signup_date: new Date().toISOString() },
         });
         trackEvent("user_signed_up", { method: "email", requires_verification: false });
-        router.replace("/(onboarding)/notification-reminders");
+        router.replace("/(tabs)/dashboard");
       } else {
         await persistOnboardingData(authData.user.id, newOnboardingData);
 
