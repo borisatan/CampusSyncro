@@ -10,7 +10,7 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import ReanimatedSwipeable, { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
-import Animated, { interpolate, runOnJS, SharedValue, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, { interpolate, interpolateColor, SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
@@ -57,6 +57,17 @@ interface GoalsListItem {
 }
 
 type BudgetListItem = CategoryListItem | GoalsListItem;
+
+function AnimatedDot({ index, currentPage }: { index: number; currentPage: SharedValue<number> }) {
+  const active = useDerivedValue(() =>
+    withTiming(currentPage.value === index ? 1 : 0, { duration: 200 })
+  );
+  const style = useAnimatedStyle(() => ({
+    width: 6 + active.value * 10,
+    backgroundColor: interpolateColor(active.value, [0, 1], ['#374151', '#a78bfa']),
+  }));
+  return <Animated.View style={[{ height: 6, borderRadius: 3 }, style]} />;
+}
 
 export default function BudgetsScreen() {
   const { isDarkMode } = useTheme();
@@ -105,7 +116,6 @@ export default function BudgetsScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [activeGoalIndex, setActiveGoalIndex] = useState(0);
   const [isGoalEditMode, setIsGoalEditMode] = useState(false);
   const { width: screenWidth } = useWindowDimensions();
   const goalCardWidth = screenWidth - 16;
@@ -113,11 +123,6 @@ export default function BudgetsScreen() {
   const goalTranslateX = useSharedValue(0);
   const goalCurrentPage = useSharedValue(0);
   const goalCount = useSharedValue(goals.length);
-
-  useAnimatedReaction(
-    () => goalCurrentPage.value,
-    (page) => runOnJS(setActiveGoalIndex)(page),
-  );
 
   useEffect(() => {
     goalCount.value = goals.length;
@@ -589,15 +594,7 @@ export default function BudgetsScreen() {
                         {goals.length > 1 && (
                           <View className="flex-row justify-center pb-3 gap-1.5">
                             {goals.map((_, i) => (
-                              <View
-                                key={i}
-                                style={{
-                                  width: i === activeGoalIndex ? 16 : 6,
-                                  height: 6,
-                                  borderRadius: 3,
-                                  backgroundColor: i === activeGoalIndex ? '#a78bfa' : '#374151',
-                                }}
-                              />
+                              <AnimatedDot key={i} index={i} currentPage={goalCurrentPage} />
                             ))}
                           </View>
                         )}

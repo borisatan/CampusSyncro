@@ -167,11 +167,6 @@ export default function SignUpScreen() {
           // Normal sign-up: persist everything now.
           await persistOnboardingData(sessionData.user.id, newOnboardingData);
           await linkUser(sessionData.user.id);
-          if (newOnboardingData.foundingMemberEmail) {
-            supabase.functions.invoke('notify-founding-claim', {
-              body: { email: newOnboardingData.foundingMemberEmail, userId: sessionData.user.id },
-            }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
-          }
           await Promise.all([
             useCategoriesStore.getState().loadCategories(),
             useAccountsStore.getState().loadAccounts(),
@@ -243,11 +238,6 @@ export default function SignUpScreen() {
           setOnboardingDataPersisted();
           await linkUser(data.user.id);
           await persistOnboardingData(data.user.id, newOnboardingData);
-          if (newOnboardingData.foundingMemberEmail) {
-            supabase.functions.invoke('notify-founding-claim', {
-              body: { email: newOnboardingData.foundingMemberEmail, userId: data.user.id },
-            }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
-          }
           await Promise.all([
             useCategoriesStore.getState().loadCategories(),
             useAccountsStore.getState().loadAccounts(),
@@ -261,11 +251,6 @@ export default function SignUpScreen() {
         } else {
           await persistOnboardingData(data.user.id, newOnboardingData);
           await linkUser(data.user.id);
-          if (newOnboardingData.foundingMemberEmail) {
-            supabase.functions.invoke('notify-founding-claim', {
-              body: { email: newOnboardingData.foundingMemberEmail, userId: data.user.id },
-            }).catch((e) => console.error('[SignUp] notify-founding-claim error:', e));
-          }
           await Promise.all([
             useCategoriesStore.getState().loadCategories(),
             useAccountsStore.getState().loadAccounts(),

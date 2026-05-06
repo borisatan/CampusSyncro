@@ -11,7 +11,7 @@ const RC_ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
 const PREMIUM_ENTITLEMENT = 'premium';
 // Users created before this date get free access when the paywall is enabled.
 // Update this to the date you flip EXPO_PUBLIC_PAYWALL_ENABLED=true in production.
-const GRANDFATHERED_BEFORE = new Date('2099-01-01T00:00:00Z');
+const GRANDFATHERED_BEFORE = new Date('2026-06-01T00:00:00Z');
 const platformApiKey = Platform.OS === 'android' ? RC_ANDROID_KEY : RC_IOS_KEY;
 
 interface SubscriptionContextType {

@@ -66,7 +66,6 @@ export default function VerifyEmailScreen() {
           email,
           code: trimmedCode,
           password: pendingSignUp.password,
-          foundingMemberEmail: newOnboardingData.foundingMemberEmail ?? null,
         },
       });
 
@@ -116,11 +115,6 @@ export default function VerifyEmailScreen() {
         setOnboardingDataPersisted();
         await linkUser(authData.user.id);
         await persistOnboardingData(authData.user.id, newOnboardingData);
-        if (newOnboardingData.foundingMemberEmail) {
-          supabase.functions.invoke("notify-founding-claim", {
-            body: { email: newOnboardingData.foundingMemberEmail, userId: authData.user.id },
-          }).catch((e) => console.error("[VerifyEmail] notify-founding-claim error:", e));
-        }
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),
           useAccountsStore.getState().loadAccounts(),
@@ -136,12 +130,6 @@ export default function VerifyEmailScreen() {
         router.replace("/(tabs)/dashboard");
       } else {
         await persistOnboardingData(authData.user.id, newOnboardingData);
-
-        if (newOnboardingData.foundingMemberEmail) {
-          supabase.functions.invoke("notify-founding-claim", {
-            body: { email: newOnboardingData.foundingMemberEmail, userId: authData.user.id },
-          }).catch((e) => console.error("[VerifyEmail] notify-founding-claim error:", e));
-        }
 
         await Promise.all([
           useCategoriesStore.getState().loadCategories(),

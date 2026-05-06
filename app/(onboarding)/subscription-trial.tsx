@@ -380,14 +380,6 @@ export default function SubscriptionTrialScreen() {
                 </Text>
               </Pressable>
               <Pressable
-                onPress={() => router.push("/(onboarding)/founding-access")}
-                className="active:opacity-60 mt-3"
-              >
-                <Text className="text-secondaryDark text-sm text-center">
-                  Founding member? Claim free access →
-                </Text>
-              </Pressable>
-              <Pressable
                 onPress={() => router.replace("/(auth)/sign-in")}
                 className="active:opacity-60 mt-3"
               >
