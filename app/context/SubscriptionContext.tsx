@@ -9,12 +9,14 @@ const isRevenueCatAvailable = !!NativeModules.RNPurchases;
 const RC_IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '';
 const RC_ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
 const PREMIUM_ENTITLEMENT = 'premium';
+// Users created before this date get free access when the paywall is enabled.
+// Update this to the date you flip EXPO_PUBLIC_PAYWALL_ENABLED=true in production.
+const GRANDFATHERED_BEFORE = new Date('2099-01-01T00:00:00Z');
 const platformApiKey = Platform.OS === 'android' ? RC_ANDROID_KEY : RC_IOS_KEY;
 
 interface SubscriptionContextType {
   customerInfo: CustomerInfo | null;
   isSubscribed: boolean;
-  isFoundingMember: boolean;
   isLoading: boolean;
   refreshCustomerInfo: () => Promise<void>;
   linkUser: (userId: string) => Promise<void>;
@@ -23,7 +25,6 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType>({
   customerInfo: null,
   isSubscribed: false,
-  isFoundingMember: false,
   isLoading: true,
   refreshCustomerInfo: async () => {},
   linkUser: async () => {},
@@ -33,7 +34,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { userId } = useAuth();
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const customerInfoRef = useRef<CustomerInfo | null>(null);
-  const [isFoundingMember, setIsFoundingMember] = useState(false);
+  const [isGrandfathered, setIsGrandfathered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLinkingUser, setIsLinkingUser] = useState(false);
 
@@ -84,10 +85,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (userId) setIsLinkingUser(true);
   }, [userId]);
 
-  // Auto-link RC user and check founding member status whenever the authenticated user changes
+  // Auto-link RC user and check grandfathered status whenever the authenticated user changes
   useEffect(() => {
     if (!userId) {
-      setIsFoundingMember(false);
+      setIsGrandfathered(false);
       setIsLinkingUser(false);
       return;
     }
@@ -124,18 +125,20 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
           })(),
 
-          // Check founding member flag — must complete before isLinkingUser=false so
-          // the tabs layout has accurate isSubscribed state before it renders.
+          // Check grandfathered status — users created before GRANDFATHERED_BEFORE get free access.
+          // Must complete before isLinkingUser=false so tabs layout has accurate isSubscribed state.
           (async () => {
             try {
               const { data } = await supabase
-                .from('founding_members')
-                .select('user_id')
-                .eq('user_id', userId)
-                .maybeSingle();
-              if (data) setIsFoundingMember(true);
+                .from('profiles')
+                .select('created_at')
+                .eq('id', userId)
+                .single();
+              if (data?.created_at && new Date(data.created_at) < GRANDFATHERED_BEFORE) {
+                setIsGrandfathered(true);
+              }
             } catch (e) {
-              console.error('[SubscriptionContext] Founding member check failed:', e);
+              console.error('[SubscriptionContext] Grandfathered check failed:', e);
             }
           })(),
         ]);
@@ -167,10 +170,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  const isSubscribed = true; // Paywall disabled — original: !platformApiKey || !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT] || isFoundingMember
+  const paywallEnabled = process.env.EXPO_PUBLIC_PAYWALL_ENABLED === 'true';
+  const isSubscribed = !paywallEnabled || !platformApiKey || !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT] || isGrandfathered;
 
   return (
-    <SubscriptionContext.Provider value={{ customerInfo, isSubscribed, isFoundingMember, isLoading: isLoading || isLinkingUser, refreshCustomerInfo, linkUser }}>
+    <SubscriptionContext.Provider value={{ customerInfo, isSubscribed, isLoading: isLoading || isLinkingUser, refreshCustomerInfo, linkUser }}>
       {children}
     </SubscriptionContext.Provider>
   );

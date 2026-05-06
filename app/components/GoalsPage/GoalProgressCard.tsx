@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import React, { useEffect } from 'react';
+import React, { memo, useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from '../Shared/AppText';
 import Animated, {
@@ -22,7 +22,7 @@ interface GoalProgressCardProps {
 const formatAmount = (amount: number, symbol: string) =>
   `${symbol}${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
-export function GoalProgressCard({ goal, currencySymbol, onPress, noBg: _noBg, isEditMode = false }: GoalProgressCardProps) {
+export const GoalProgressCard = memo(function GoalProgressCard({ goal, currencySymbol, onPress, noBg: _noBg, isEditMode = false }: GoalProgressCardProps) {
   const accentColor = goal.color || '#a78bfa';
   const progress = goal.target_amount > 0
     ? Math.min((goal.current_amount / goal.target_amount) * 100, 100)
@@ -145,4 +145,4 @@ export function GoalProgressCard({ goal, currencySymbol, onPress, noBg: _noBg, i
       </View>
     </Pressable>
   );
-}
+});

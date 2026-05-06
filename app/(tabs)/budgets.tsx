@@ -133,7 +133,7 @@ export default function BudgetsScreen() {
   }, [goals.length]);
 
   const goalPanGesture = useMemo(() => Gesture.Pan()
-    .activeOffsetX([-10, 10])
+    .activeOffsetX([-5, 5])
     .failOffsetY([-20, 20])
     .onUpdate((e) => {
       const base = -goalCurrentPage.value * goalCardWidth;
@@ -165,9 +165,9 @@ export default function BudgetsScreen() {
       goalCurrentPage.value = page;
       goalTranslateX.value = withSpring(-page * goalCardWidth, {
         velocity: vx,
-        damping: 22,
-        stiffness: 180,
-        mass: 0.5,
+        damping: 26,
+        stiffness: 260,
+        mass: 0.4,
       });
     }), [goalCardWidth]);
 
@@ -175,14 +175,14 @@ export default function BudgetsScreen() {
     transform: [{ translateX: goalTranslateX.value }],
   }));
 
-  const handleGoalPress = (goal: Goal) => {
+  const handleGoalPress = useCallback((goal: Goal) => {
     setSelectedGoal(goal);
     if (isGoalEditMode) {
       setShowEditModal(true);
     } else {
       setShowTransactionModal(true);
     }
-  };
+  }, [isGoalEditMode]);
 
   useEffect(() => {
     registerBudgetsRefresh(refresh);
