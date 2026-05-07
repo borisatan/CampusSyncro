@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AccountSelector } from "../components/AddTransactionPage/AccountSelector";
 import { AddTransactionSkeleton } from "../components/AddTransactionPage/AddTransactionSkeleton";
 import { CategoryGrid } from "../components/AddTransactionPage/CategoryGrid";
+import { DescriptionSuggestions } from "../components/AddTransactionPage/DescriptionSuggestions";
 import {
   DateSelector,
   SubmitButton
@@ -30,6 +31,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useAnalytics } from "../hooks/useAnalytics";
 import {
   createTransaction,
+  fetchRecentDescriptions,
   updateAccountBalance,
 } from "../services/backendService";
 import { useAccountsStore } from "../store/useAccountsStore";
@@ -48,9 +50,6 @@ const TransactionAdder = () => {
   const isCategoriesLoading = useCategoriesStore((state) => state.isLoading);
   const accountOptions = useAccountsStore((state) => state.accounts);
   const hasNoAccounts = accountOptions.length === 0;
-  const effectiveHandleSubmit = hasNoAccounts
-    ? () => router.push("/(tabs)/accounts?openAddModal=true" as any)
-    : handleSubmit;
   const expenseAccountOptions = accountOptions.filter(
     (acc) => acc.type !== "investment",
   );
@@ -72,6 +71,8 @@ const TransactionAdder = () => {
     null,
   );
   const [description, setDescription] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [descriptionPool, setDescriptionPool] = useState<Record<string, string[]>>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
@@ -89,6 +90,22 @@ const TransactionAdder = () => {
       setSelectedAccount(accountOptions[0].account_name);
     }
   }, [categories, accountOptions]);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetchRecentDescriptions(userId)
+      .then(setDescriptionPool)
+      .catch(() => {});
+  }, [userId]);
+
+  useEffect(() => {
+    const query = description.trim();
+    if (!query) { setSuggestions([]); return; }
+    const categoryName = transactionType === "expense" ? selectedCategory?.category_name ?? '' : '';
+    const pool = descriptionPool[categoryName] ?? [];
+    const filtered = pool.filter(d => d.toLowerCase().startsWith(query.toLowerCase()));
+    setSuggestions(filtered.length === 1 && filtered[0].toLowerCase() === query.toLowerCase() ? [] : filtered);
+  }, [description, selectedCategory, transactionType, descriptionPool]);
 
   const handleDateChange = (event: any, date?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
@@ -181,6 +198,10 @@ const TransactionAdder = () => {
     }
   };
 
+  const effectiveHandleSubmit = hasNoAccounts
+    ? () => router.push("/(tabs)/accounts?openAddModal=true" as any)
+    : handleSubmit;
+
   return (
     <SafeAreaView
       className={`flex-1 ${isDarkMode ? "bg-backgroundDark" : "bg-background"}`}
@@ -214,17 +235,27 @@ const TransactionAdder = () => {
             >
               Description
             </Text>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="e.g. Grocery shopping"
-              placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
-              className={`w-full px-4 py-3 rounded-xl border ${
-                isDarkMode
-                  ? "bg-inputDark border-borderDark text-textDark"
-                  : "bg-background border-borderLight text-textLight"
-              }`}
-            />
+            <View style={{ position: "relative", zIndex: 10 }}>
+              <TextInput
+                value={description}
+                onChangeText={setDescription}
+                placeholder="e.g. Grocery shopping"
+                placeholderTextColor={isDarkMode ? "#475569" : "#9ca3af"}
+                className={`w-full px-4 py-3 rounded-xl border ${
+                  isDarkMode
+                    ? "bg-inputDark border-borderDark text-textDark"
+                    : "bg-background border-borderLight text-textLight"
+                }`}
+              />
+              <DescriptionSuggestions
+                suggestions={suggestions}
+                isDarkMode={isDarkMode}
+                onSelect={(value) => {
+                  setDescription(value);
+                  setSuggestions([]);
+                }}
+              />
+            </View>
           </View>
 
           {isCategoriesLoading ? (
@@ -317,6 +348,7 @@ const TransactionAdder = () => {
               setIsSubmitting(false);
               setAmount("");
               setDescription("");
+              setSuggestions([]);
               setSelectedDate(new Date());
             }}
           />

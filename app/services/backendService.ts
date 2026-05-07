@@ -4,6 +4,30 @@ import * as Crypto from 'expo-crypto';
 
 const r2 = (n: number): number => Math.round(n * 100) / 100;
 
+export const fetchRecentDescriptions = async (
+  userId: string
+): Promise<Record<string, string[]>> => {
+  const { data, error } = await supabase
+    .from('Transactions')
+    .select('description, category_name')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(300);
+
+  if (error) throw error;
+
+  const map: Record<string, string[]> = {};
+  for (const row of data ?? []) {
+    if (!row.description) continue;
+    const cat: string = row.category_name ?? '';
+    if (!map[cat]) map[cat] = [];
+    if (!map[cat].includes(row.description) && map[cat].length < 10) {
+      map[cat].push(row.description);
+    }
+  }
+  return map;
+};
+
 export const createTransaction = async (payload: any) => {
   const { data, error } = await supabase
     .from('Transactions')
