@@ -19,7 +19,11 @@
       "runtimeVersion": "1.0.0",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Monelo uses Face ID to unlock your account quickly and securely.",
-        "NSUserNotificationsUsageDescription": "Monelo sends reminders to help you stay on top of logging your daily transactions."
+        "NSUserNotificationsUsageDescription": "Monelo sends reminders to help you stay on top of logging your daily transactions.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSAllowsLocalNetworking": true
+        }
       }
     },
     "android": {

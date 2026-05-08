@@ -912,18 +912,24 @@ export const updateGoal = async (
   goalId: number,
   updates: Partial<Pick<Goal, 'name' | 'target_amount' | 'color' | 'icon'>>
 ): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
   const { error } = await supabase
     .from('Goals')
     .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', goalId);
+    .eq('id', goalId)
+    .eq('user_id', user.id);
   if (error) throw error;
 };
 
 export const deleteGoal = async (goalId: number): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
   const { error } = await supabase
     .from('Goals')
     .delete()
-    .eq('id', goalId);
+    .eq('id', goalId)
+    .eq('user_id', user.id);
   if (error) throw error;
 };
 
@@ -966,9 +972,9 @@ export const withdrawFromGoal = async (payload: {
   goal_id: number;
   user_id: string;
   amount: number;
-  destination_account_id: string;
-  destination_account_name: string;
+  source_account_id: string;
   source_account_name: string;
+  destination_account_name: string;
 }): Promise<void> => {
   // 1. Create the transfer (updates account balances) - from savings to destination
   await createTransfer({
@@ -984,8 +990,8 @@ export const withdrawFromGoal = async (payload: {
     .insert([{
       goal_id: payload.goal_id,
       user_id: payload.user_id,
-      amount: -r2(payload.amount), // Negative to indicate withdrawal
-      source_account_id: payload.destination_account_id,
+      amount: -r2(payload.amount),
+      source_account_id: payload.source_account_id,
     }]);
   if (contribError) throw contribError;
 
@@ -1050,9 +1056,12 @@ export const fetchMonthlySavingsProgress = async (
   startDate: Date,
   endDate: Date
 ): Promise<number> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
   const { data, error } = await supabase
     .from('GoalContributions')
     .select('amount')
+    .eq('user_id', user.id)
     .gte('created_at', startDate.toISOString())
     .lt('created_at', endDate.toISOString());
 
@@ -1067,7 +1076,7 @@ export const fetchMonthlySavingsProgress = async (
 export const recordSavingsTransfer = async (payload: {
   user_id: string;
   amount: number;
-  source_account_id: number;
+  source_account_id: string;
 }): Promise<void> => {
   const { error } = await supabase
     .from('GoalContributions')
@@ -1084,16 +1093,15 @@ export const recordSavingsTransfer = async (payload: {
 // This is a "set aside" model - money is marked as saved without transferring to another account
 export const quickSaveFromAccount = async (payload: {
   user_id: string;
-  account_name: string;
+  source_account_id: string;
   amount: number;
-  source_account_id: number;
   new_balance: number;
 }): Promise<void> => {
   // Update account balance
   const { error: balanceError } = await supabase
     .from('Accounts')
     .update({ balance: r2(payload.new_balance) })
-    .eq('account_name', payload.account_name);
+    .eq('id', payload.source_account_id);
 
   if (balanceError) throw balanceError;
 

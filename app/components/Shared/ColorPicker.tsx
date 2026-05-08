@@ -1,6 +1,6 @@
 import { Check, ChevronDown, ChevronUp, Palette } from 'lucide-react-native';
-import React, { useRef, useState } from 'react';
-import { Pressable, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, TouchableOpacity, View } from 'react-native';
 import { Text } from './AppText';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedColorPicker, {
@@ -39,6 +39,26 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 }) => {
   const colorPickerRef = useRef<ColorPickerRef>(null);
   const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (showCustomPicker) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showCustomPicker]);
+
+  const toggleCustomPicker = () => {
+    if (!showCustomPicker) {
+      fadeAnim.setValue(0);
+      setShowCustomPicker(true);
+    } else {
+      setShowCustomPicker(false);
+    }
+  };
 
   // Check if selected color is a custom color (not in presets)
   const isCustomColor = !PRESET_COLORS.some(
@@ -93,7 +113,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
       {/* Custom Color Toggle Button */}
       <TouchableOpacity
-        onPress={() => setShowCustomPicker(!showCustomPicker)}
+        onPress={toggleCustomPicker}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -132,33 +152,32 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
       {/* Custom Color Picker (hidden by default) */}
       {showCustomPicker && (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <ReanimatedColorPicker
-            ref={colorPickerRef}
-            value={selectedColor}
-            onCompleteJS={handleColorComplete}
-            sliderThickness={25}
-            thumbSize={24}
-            thumbShape="circle"
-            boundedThumb
-            style={{ gap: 12 }}
-          >
-            {/* Color panel for saturation/brightness */}
-            <Panel1
-              style={{
-                height: 120,
-                borderRadius: 12,
-              }}
-            />
-
-            {/* Hue slider */}
-            <HueSlider
-              style={{
-                borderRadius: 12,
-              }}
-            />
-          </ReanimatedColorPicker>
-        </GestureHandlerRootView>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <ReanimatedColorPicker
+              ref={colorPickerRef}
+              value={selectedColor}
+              onCompleteJS={handleColorComplete}
+              sliderThickness={25}
+              thumbSize={24}
+              thumbShape="circle"
+              boundedThumb
+              style={{ gap: 12 }}
+            >
+              <Panel1
+                style={{
+                  height: 120,
+                  borderRadius: 12,
+                }}
+              />
+              <HueSlider
+                style={{
+                  borderRadius: 12,
+                }}
+              />
+            </ReanimatedColorPicker>
+          </GestureHandlerRootView>
+        </Animated.View>
       )}
     </View>
   );

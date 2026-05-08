@@ -12,9 +12,10 @@ import {
   User,
   Wallet,
 } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
   Linking,
   Pressable,
   ScrollView,
@@ -58,6 +59,13 @@ export default function ProfileScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
+  const frequencyFadeAnim = useRef(new Animated.Value(0)).current;
+  const frequencyItemAnims = useRef(
+    frequencyOptions.map(() => ({
+      opacity: new Animated.Value(0),
+      translateY: new Animated.Value(10),
+    }))
+  ).current;
 
   const { updateCurrency, currencyCode } = useCurrencyStore();
   const { resetOnboarding, setTestMode } = useOnboardingStore();
@@ -95,6 +103,46 @@ export default function ProfileScreen() {
   useEffect(() => {
     loadNotificationSettings();
   }, []);
+
+  useEffect(() => {
+    if (showFrequencyPicker) {
+      Animated.timing(frequencyFadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+      Animated.stagger(
+        40,
+        frequencyItemAnims.map((anim) =>
+          Animated.parallel([
+            Animated.timing(anim.opacity, {
+              toValue: 1,
+              duration: 260,
+              useNativeDriver: true,
+            }),
+            Animated.timing(anim.translateY, {
+              toValue: 0,
+              duration: 260,
+              useNativeDriver: true,
+            }),
+          ])
+        )
+      ).start();
+    }
+  }, [showFrequencyPicker]);
+
+  const toggleFrequencyPicker = () => {
+    if (!showFrequencyPicker) {
+      frequencyFadeAnim.setValue(0);
+      frequencyItemAnims.forEach((anim) => {
+        anim.opacity.setValue(0);
+        anim.translateY.setValue(10);
+      });
+      setShowFrequencyPicker(true);
+    } else {
+      setShowFrequencyPicker(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -270,7 +318,7 @@ export default function ProfileScreen() {
 
           {/* Daily Reminders Selector */}
           <Pressable
-            onPress={() => setShowFrequencyPicker(!showFrequencyPicker)}
+            onPress={toggleFrequencyPicker}
             className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
           >
             <View className="w-10 h-10 bg-blue-600 rounded-xl items-center justify-center mr-3">
@@ -295,7 +343,8 @@ export default function ProfileScreen() {
           </Pressable>
 
           {showFrequencyPicker && (
-            <View
+            <Animated.View
+              style={{ opacity: frequencyFadeAnim }}
               className={`mb-3 rounded-xl overflow-hidden border ${cardBg}`}
             >
               {frequencyOptions.map((option, index) => (
@@ -306,9 +355,11 @@ export default function ProfileScreen() {
                   isSelected={frequency === option.value}
                   onSelect={() => handleFrequencyChange(option.value)}
                   isLast={index === frequencyOptions.length - 1}
+                  animOpacity={frequencyItemAnims[index].opacity}
+                  animTranslateY={frequencyItemAnims[index].translateY}
                 />
               ))}
-            </View>
+            </Animated.View>
           )}
 
           {/* App Lock Toggle */}
@@ -471,14 +522,19 @@ const AnimatedFrequencyRow = ({
   isSelected,
   onSelect,
   isLast,
+  animOpacity,
+  animTranslateY,
 }: {
   option: { value: number; label: string; description: string };
   isDarkMode: boolean;
   isSelected: boolean;
   onSelect: () => void;
   isLast: boolean;
+  animOpacity: Animated.Value;
+  animTranslateY: Animated.Value;
 }) => {
   return (
+    <Animated.View style={{ opacity: animOpacity, transform: [{ translateY: animTranslateY }] }}>
     <Pressable
       onPress={onSelect}
       className={`px-4 py-4 flex-row items-center justify-between ${
@@ -509,5 +565,6 @@ const AnimatedFrequencyRow = ({
         />
       )}
     </Pressable>
+    </Animated.View>
   );
 };

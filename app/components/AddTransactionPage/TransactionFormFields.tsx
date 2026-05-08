@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { Calendar } from "lucide-react-native";
 import React from "react";
 import {
+  Dimensions,
   Modal,
   Platform,
   Text,
@@ -97,7 +98,7 @@ export const TransactionFormFields = ({
                     onChange={handleDateChange}
                     maximumDate={new Date()}
                     themeVariant={isDarkMode ? "dark" : "light"}
-                    style={{ width: '100%' }}
+                    style={{ width: Dimensions.get('window').width }}
                   />
                 </View>
               </TouchableOpacity>
@@ -201,7 +202,7 @@ export const DateSelector = ({
                 onChange={handleDateChange}
                 maximumDate={new Date()}
                 themeVariant={isDarkMode ? "dark" : "light"}
-                style={{ width: '100%' }}
+                style={{ width: Dimensions.get('window').width }}
               />
             </View>
           </TouchableOpacity>

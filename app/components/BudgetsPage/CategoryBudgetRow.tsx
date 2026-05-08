@@ -287,7 +287,7 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                     Budget Amount
                   </Text>
                   <View className="flex-row items-center px-3 h-12 rounded-xl bg-inputDark border border-borderDark">
-                    <Text className="text-slateMuted text-base mr-1">{currencySymbol}</Text>
+                    <Text className="text-slateMuted text-base mr-1" style={{ lineHeight: 16 }}>{currencySymbol}</Text>
                     <TextInput
                       className="flex-1 py-0 text-slate50 text-base"
                       value={amountText}
@@ -296,6 +296,7 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                       placeholder="0"
                       placeholderTextColor="#6B7280"
                       selectionColor={category.color}
+                      style={{ lineHeight: 16 }}
                     />
                   </View>
                   {amountText !== '' && !isNaN(parseFloat(amountText)) && monthlyIncome > 0 && (
@@ -318,8 +319,9 @@ export const CategoryBudgetRow: React.FC<CategoryBudgetRowProps> = ({
                       placeholder="0"
                       placeholderTextColor="#6B7280"
                       selectionColor={category.color}
+                      style={{ lineHeight: 16 }}
                     />
-                    <Text className="text-slateMuted text-base ml-1">%</Text>
+                    <Text className="text-slateMuted text-base ml-1" style={{ lineHeight: 16 }}>%</Text>
                   </View>
                   {percentText !== '' && !isNaN(parseFloat(percentText)) && monthlyIncome > 0 && (
                     <Text className="text-secondaryDark text-xs mt-1.5">

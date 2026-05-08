@@ -3,6 +3,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Calendar } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
+  Dimensions,
   Modal,
   Platform,
   ScrollView,
@@ -251,28 +252,87 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     </View>
                   </TouchableOpacity>
 
-                  {showStartPicker && (
+                  {showStartPicker && Platform.OS !== "ios" && (
                     <DateTimePicker
                       value={startDate}
                       mode="date"
-                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      display="default"
                       onChange={handleStartDateChange}
                       maximumDate={new Date()}
                       themeVariant={isDarkMode ? "dark" : "light"}
                     />
                   )}
 
-                  {showEndPicker && (
+                  {showEndPicker && Platform.OS !== "ios" && (
                     <DateTimePicker
                       value={endDate}
                       mode="date"
-                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      display="default"
                       onChange={handleEndDateChange}
                       minimumDate={startDate}
                       maximumDate={new Date()}
                       themeVariant={isDarkMode ? "dark" : "light"}
                     />
                   )}
+
+                  <Modal visible={showStartPicker && Platform.OS === "ios"} transparent animationType="slide">
+                    <TouchableOpacity
+                      activeOpacity={1}
+                      onPress={() => setShowStartPicker(false)}
+                      className="flex-1 bg-black/50 justify-end"
+                    >
+                      <View className="bg-backgroundDark rounded-t-3xl">
+                        <View className="flex-row justify-between items-center px-4 py-3 border-b border-borderDark">
+                          <TouchableOpacity onPress={() => setShowStartPicker(false)}>
+                            <Text className="text-accentSkyBlue">Cancel</Text>
+                          </TouchableOpacity>
+                          <Text className="font-semibold text-textDark">Select Date</Text>
+                          <TouchableOpacity onPress={() => setShowStartPicker(false)}>
+                            <Text className="text-accentSkyBlue font-semibold">Done</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <DateTimePicker
+                          value={startDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={handleStartDateChange}
+                          maximumDate={new Date()}
+                          themeVariant={isDarkMode ? "dark" : "light"}
+                          style={{ width: Dimensions.get('window').width }}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </Modal>
+
+                  <Modal visible={showEndPicker && Platform.OS === "ios"} transparent animationType="slide">
+                    <TouchableOpacity
+                      activeOpacity={1}
+                      onPress={() => setShowEndPicker(false)}
+                      className="flex-1 bg-black/50 justify-end"
+                    >
+                      <View className="bg-backgroundDark rounded-t-3xl">
+                        <View className="flex-row justify-between items-center px-4 py-3 border-b border-borderDark">
+                          <TouchableOpacity onPress={() => setShowEndPicker(false)}>
+                            <Text className="text-accentSkyBlue">Cancel</Text>
+                          </TouchableOpacity>
+                          <Text className="font-semibold text-textDark">Select Date</Text>
+                          <TouchableOpacity onPress={() => setShowEndPicker(false)}>
+                            <Text className="text-accentSkyBlue font-semibold">Done</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <DateTimePicker
+                          value={endDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={handleEndDateChange}
+                          minimumDate={startDate}
+                          maximumDate={new Date()}
+                          themeVariant={isDarkMode ? "dark" : "light"}
+                          style={{ width: Dimensions.get('window').width }}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </Modal>
                 </View>
               </View>
     

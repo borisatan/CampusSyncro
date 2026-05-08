@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { MotiView } from "moti";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -104,11 +105,25 @@ export default function MonthlyIncomeScreen() {
                 transition={{ delay: 200, duration: 600 }}
                 className="items-center mb-6"
               >
-                <Image
-                  source={require("../../assets/pictures/money_symbol.png")}
-                  style={{ width: 200, height: 130 }}
-                  resizeMode="contain"
-                />
+                <View style={{ width: 200, height: 130 }}>
+                  <Image
+                    source={require("../../assets/pictures/money_symbol.png")}
+                    style={{ width: 200, height: 130 }}
+                    resizeMode="contain"
+                  />
+                  <LinearGradient
+                    colors={["#08090F", "rgba(8,9,15,0.7)", "rgba(8,9,15,0.3)", "transparent"]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 90 }}
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(8,9,15,0.3)", "rgba(8,9,15,0.7)", "#08090F"]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 90 }}
+                  />
+                </View>
               </MotiView>
 
               {/* Headline */}

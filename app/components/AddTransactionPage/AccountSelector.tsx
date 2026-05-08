@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Keyboard, ScrollView, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Keyboard, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Text } from '../Shared/AppText';
 import { Account } from '../../types/types';
 
@@ -27,9 +27,29 @@ export const AccountSelector = ({
   expenseAccountOptions,
   transactionType,
 }: AccountSelectorProps) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const currentOptions = transactionType === 'expense' 
-    ? expenseAccountOptions 
+  useEffect(() => {
+    if (showAccountDropdown) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showAccountDropdown]);
+
+  const toggleDropdown = () => {
+    if (!showAccountDropdown) {
+      fadeAnim.setValue(0);
+      setShowAccountDropdown(true);
+    } else {
+      setShowAccountDropdown(false);
+    }
+  };
+
+  const currentOptions = transactionType === 'expense'
+    ? expenseAccountOptions
     : accountOptions;
 
 
@@ -59,7 +79,7 @@ export const AccountSelector = ({
       <TouchableOpacity
         onPress={() => {
           Keyboard.dismiss();
-          setShowAccountDropdown(!showAccountDropdown);
+          toggleDropdown();
         }}
         activeOpacity={0.7}
         className={`w-full px-4 py-3 rounded-xl flex-row justify-between items-center border ${
@@ -77,9 +97,12 @@ export const AccountSelector = ({
       </TouchableOpacity>
 
       {showAccountDropdown && (
-        <View className={`mt-2 rounded-xl overflow-hidden border ${
-          isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'
-        }`}>
+        <Animated.View
+          style={{ opacity: fadeAnim }}
+          className={`mt-2 rounded-xl overflow-hidden border ${
+            isDarkMode ? 'bg-inputDark border-borderDark' : 'bg-background border-borderLight'
+          }`}
+        >
           <ScrollView className="max-h-60" nestedScrollEnabled={true}>
             {currentOptions.map((account, index) => (
               <AnimatedAccountRow
@@ -87,7 +110,7 @@ export const AccountSelector = ({
                 account={account}
                 isDarkMode={isDarkMode}
                 isSelected={selectedAccount === account.account_name}
-                isVisible={showAccountDropdown} 
+                isVisible={showAccountDropdown}
                 onSelect={(name) => {
                   setSelectedAccount(name);
                   setShowAccountDropdown(false);
@@ -96,7 +119,7 @@ export const AccountSelector = ({
               />
             ))}
           </ScrollView>
-        </View>
+        </Animated.View>
       )}
     </View>
   );

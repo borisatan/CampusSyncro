@@ -139,9 +139,9 @@ export function GoalTransactionModal({
           goal_id: goal.id,
           user_id: userId,
           amount: parsedAmount,
-          destination_account_id: selectedAccount!.id,
-          destination_account_name: selectedAccount!.account_name,
+          source_account_id: goalAccount!.id,
           source_account_name: goalAccount!.account_name,
+          destination_account_name: selectedAccount!.account_name,
         });
       }
 
