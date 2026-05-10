@@ -6,7 +6,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // Custom Components
 import { BudgetHealthCard } from "../components/HomePage/BudgetHealthCard";
-import { CategoryBreakdownList } from "../components/HomePage/CategoryBreakdown";
 import { CategoryDonut } from "../components/HomePage/CategoryDonut";
 import { DashboardSkeleton } from "../components/HomePage/DashboardSkeleton";
 import { OfflineEmptyState } from "../components/Shared/OfflineEmptyState";
@@ -178,16 +177,11 @@ export default function Dashboard() {
                 />
               )}
               <CategoryDonut
-                aggregates={categoriesAggregated}                                                 
+                aggregates={categoriesAggregated}
                 categories={categories}
                 timeFrame={timeFrame}
                 isUnlocked={isUnlocked}
-              />
-
-              <CategoryBreakdownList
                 currency={currencySymbol}
-                categories={categories}
-                categoriesAggregated={categoriesAggregated}
                 onCategoryPress={onCategoryPress}
               />
             </>
