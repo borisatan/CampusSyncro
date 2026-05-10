@@ -10,7 +10,7 @@ import { Account, Goal } from '../../types/types';
 import { CreateGoalModal } from '../GoalsPage/CreateGoalModal';
 import { EditGoalModal } from '../GoalsPage/EditGoalModal';
 import { GoalProgressCard } from '../GoalsPage/GoalProgressCard';
-import { GoalTransactionModal } from '../GoalsPage/GoalTransactionModal';
+import { GoalDetailModal } from '../GoalsPage/GoalDetailModal';
 
 interface GoalsOverviewCardProps {
   currencySymbol: string;
@@ -24,7 +24,6 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [transactionMode, setTransactionMode] = useState<'add' | 'withdraw'>('add');
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
 
   const handleGoalPress = (goal: Goal) => {
@@ -34,13 +33,11 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
 
   const handleAddPress = (goal: Goal) => {
     setSelectedGoal(goal);
-    setTransactionMode('add');
     setShowTransactionModal(true);
   };
 
   const handleWithdrawPress = (goal: Goal) => {
     setSelectedGoal(goal);
-    setTransactionMode('withdraw');
     setShowTransactionModal(true);
   };
 
@@ -234,10 +231,9 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
         onGoalUpdated={loadGoals}
       />
 
-      <GoalTransactionModal
+      <GoalDetailModal
         visible={showTransactionModal}
         goal={selectedGoal}
-        mode={transactionMode}
         accounts={accounts}
         currencySymbol={currencySymbol}
         onClose={() => {
@@ -245,6 +241,7 @@ export function GoalsOverviewCard({ currencySymbol, accounts }: GoalsOverviewCar
           setSelectedGoal(null);
         }}
         onTransactionComplete={loadGoals}
+        onGoalUpdated={loadGoals}
       />
     </>
   );

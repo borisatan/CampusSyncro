@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BudgetHealthCard } from "../components/HomePage/BudgetHealthCard";
 import { CategoryDonut } from "../components/HomePage/CategoryDonut";
 import { DashboardSkeleton } from "../components/HomePage/DashboardSkeleton";
+import { GoalsSection } from "../components/HomePage/GoalsSection";
 import { OfflineEmptyState } from "../components/Shared/OfflineEmptyState";
 import { DashboardSummary } from "../components/HomePage/DashboardSummary";
 import { ScrollableSpendingChart } from "../components/HomePage/ScrollableSpendingChart";
@@ -21,7 +22,9 @@ import { useTheme } from "../context/ThemeContext";
 import { useBudgetsData } from "../hooks/useBudgetsData";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { useSavingsProgress } from "../hooks/useSavingsProgress";
+import { useAccountsStore } from "../store/useAccountsStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
+import { useGoalsStore } from "../store/useGoalsStore";
 import { useIncomeStore } from "../store/useIncomeStore";
 
 export default function Dashboard() {
@@ -56,6 +59,8 @@ export default function Dashboard() {
     isLoading: budgetsLoading,
     refresh: refreshBudgets,
   } = useBudgetsData();
+  const { accounts, loadAccounts } = useAccountsStore();
+  const { loadGoals } = useGoalsStore();
   const { showSavingsOnDashboard } = useIncomeStore();
   const {
     target: savingsTarget,
@@ -83,18 +88,21 @@ export default function Dashboard() {
     };
   }, [showSavingsOnDashboard, savingsTarget, savingsSaved, savingsPercentage]);
 
-  const { registerDashboardRefresh } = useDataRefresh();
+  const { registerDashboardRefresh, registerGoalsRefresh } = useDataRefresh();
 
   const refreshAll = useCallback(async () => {
     await loadCurrency();
     refreshData();
     refreshBudgets();
     refreshSavings();
-  }, [loadCurrency, refreshData, refreshBudgets, refreshSavings]);
+    loadGoals();
+    loadAccounts();
+  }, [loadCurrency, refreshData, refreshBudgets, refreshSavings, loadGoals, loadAccounts]);
 
   useEffect(() => {
     registerDashboardRefresh(refreshAll);
-  }, [refreshAll, registerDashboardRefresh]);
+    registerGoalsRefresh(loadGoals);
+  }, [refreshAll, registerDashboardRefresh, registerGoalsRefresh, loadGoals]);
 
   // Budget data refreshes automatically via:
   // 1. refreshDashboard() after adding/editing transactions
@@ -165,6 +173,12 @@ export default function Dashboard() {
                   )}
                 </View>
               )}
+
+              <GoalsSection
+                currencySymbol={currencySymbol}
+                accounts={accounts}
+                onTransactionComplete={refreshSavings}
+              />
 
               {(budgetsLoading || filteredCategoryBudgets.length > 0 || savingsData !== null) && (
                 <BudgetHealthCard

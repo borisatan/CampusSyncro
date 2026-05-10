@@ -196,6 +196,7 @@ export function CreateGoalModal({
                 placeholder="e.g., Vacation Fund, Emergency Savings"
                 placeholderTextColor="#64748B"
                 className="px-4 py-3 rounded-xl bg-surfaceDark border border-borderDark text-white"
+                style={{ lineHeight: 20 }}
               />
             </View>
 

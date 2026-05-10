@@ -174,7 +174,7 @@ export interface Goal {
 
 export interface GoalContribution {
   id: number;
-  goal_id: number;
+  goal_id: number | null;
   user_id: string;
   amount: number;
   source_account_id: string | null;

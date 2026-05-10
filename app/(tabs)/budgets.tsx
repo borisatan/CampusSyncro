@@ -3,14 +3,13 @@ import { ArrowLeft, Sparkles, TrendingUp } from "lucide-react-native";
 import { MotiView } from "moti";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Haptics from "expo-haptics";
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import ReanimatedSwipeable, { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
-import Animated, { interpolate, interpolateColor, SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AIBudgetPreviewModal } from "../components/BudgetsPage/AIBudgetPreviewModal";
@@ -18,10 +17,6 @@ import { BudgetsSkeleton } from "../components/BudgetsPage/BudgetsSkeleton";
 import { CategoryBudgetRow } from "../components/BudgetsPage/CategoryBudgetRow";
 import { EditBudgetModal } from "../components/BudgetsPage/EditBudgetModal";
 import { IncomeCard } from "../components/BudgetsPage/IncomeCard";
-import { CreateGoalModal } from "../components/GoalsPage/CreateGoalModal";
-import { EditGoalModal } from "../components/GoalsPage/EditGoalModal";
-import { GoalProgressCard } from "../components/GoalsPage/GoalProgressCard";
-import { GoalTransactionModal } from "../components/GoalsPage/GoalTransactionModal";
 import { OfflineEmptyState } from "../components/Shared/OfflineEmptyState";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useNetwork } from "../context/NetworkContext";
@@ -42,9 +37,8 @@ import { useAccountsStore } from "../store/useAccountsStore";
 import { useCategoriesStore } from "../store/useCategoriesStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { toggleCategoryDashboardVisibility } from "../store/useDashboardCategoriesStore";
-import { useGoalsStore } from "../store/useGoalsStore";
 import { useIncomeStore } from "../store/useIncomeStore";
-import { Category, CategoryBudgetStatus, Goal } from "../types/types";
+import { Category, CategoryBudgetStatus } from "../types/types";
 
 interface CategoryListItem {
   type: 'category';
@@ -52,22 +46,7 @@ interface CategoryListItem {
   budgetStatus: CategoryBudgetStatus | null;
 }
 
-interface GoalsListItem {
-  type: 'goals';
-}
-
-type BudgetListItem = CategoryListItem | GoalsListItem;
-
-function AnimatedDot({ index, currentPage }: { index: number; currentPage: SharedValue<number> }) {
-  const active = useDerivedValue(() =>
-    withTiming(currentPage.value === index ? 1 : 0, { duration: 200 })
-  );
-  const style = useAnimatedStyle(() => ({
-    width: 6 + active.value * 10,
-    backgroundColor: interpolateColor(active.value, [0, 1], ['#374151', '#a78bfa']),
-  }));
-  return <Animated.View style={[{ height: 6, borderRadius: 3 }, style]} />;
-}
+type BudgetListItem = CategoryListItem;
 
 export default function BudgetsScreen() {
   const { isDarkMode } = useTheme();
@@ -85,13 +64,11 @@ export default function BudgetsScreen() {
   const { useDynamicIncome, manualIncome, saveIncomeSettings } = useIncomeStore();
   const { categories, updateCategoryOptimistic, reorderCategories, deleteCategoryOptimistic } = useCategoriesStore();
   const { accounts, loadAccounts } = useAccountsStore();
-  const { goals, loadGoals } = useGoalsStore();
   const {
     refreshDashboard,
     refreshAll,
     registerBudgetsRefresh,
     registerCategoriesRefresh,
-    registerGoalsRefresh,
   } = useDataRefresh();
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
 
@@ -111,95 +88,14 @@ export default function BudgetsScreen() {
   const [aiSavingsAmount, setAISavingsAmount] = useState(0);
   const [aiApplying, setAIApplying] = useState(false);
 
-  // Goal modal state
-  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [isGoalEditMode, setIsGoalEditMode] = useState(false);
-  const { width: screenWidth } = useWindowDimensions();
-  const goalCardWidth = screenWidth - 16;
-
-  const goalTranslateX = useSharedValue(0);
-  const goalCurrentPage = useSharedValue(0);
-  const goalCount = useSharedValue(goals.length);
-
-  useEffect(() => {
-    goalCount.value = goals.length;
-    if (goalCurrentPage.value >= goals.length) {
-      const newPage = Math.max(0, goals.length - 1);
-      goalCurrentPage.value = newPage;
-      goalTranslateX.value = withSpring(-newPage * goalCardWidth, {
-        damping: 22,
-        stiffness: 180,
-        mass: 0.5,
-      });
-    }
-  }, [goals.length]);
-
-  const goalPanGesture = useMemo(() => Gesture.Pan()
-    .activeOffsetX([-5, 5])
-    .failOffsetY([-20, 20])
-    .onUpdate((e) => {
-      const base = -goalCurrentPage.value * goalCardWidth;
-      const next = base + e.translationX;
-      const min = -(goalCount.value - 1) * goalCardWidth;
-      if (next > 0) {
-        goalTranslateX.value = next * 0.2;
-      } else if (next < min) {
-        goalTranslateX.value = min + (next - min) * 0.2;
-      } else {
-        goalTranslateX.value = next;
-      }
-    })
-    .onEnd((e) => {
-      const vx = e.velocityX;
-      let page = goalCurrentPage.value;
-      if (vx < -200) {
-        page = Math.min(page + 1, goalCount.value - 1);
-      } else if (vx > 200) {
-        page = Math.max(page - 1, 0);
-      } else {
-        const dragged = -goalTranslateX.value - goalCurrentPage.value * goalCardWidth;
-        if (dragged > goalCardWidth * 0.25) {
-          page = Math.min(page + 1, goalCount.value - 1);
-        } else if (dragged < -goalCardWidth * 0.25) {
-          page = Math.max(page - 1, 0);
-        }
-      }
-      goalCurrentPage.value = page;
-      goalTranslateX.value = withSpring(-page * goalCardWidth, {
-        velocity: vx,
-        damping: 26,
-        stiffness: 260,
-        mass: 0.4,
-      });
-    }), [goalCardWidth]);
-
-  const goalAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: goalTranslateX.value }],
-  }));
-
-  const handleGoalPress = useCallback((goal: Goal) => {
-    setSelectedGoal(goal);
-    if (isGoalEditMode) {
-      setShowEditModal(true);
-    } else {
-      setShowTransactionModal(true);
-    }
-  }, [isGoalEditMode]);
-
   useEffect(() => {
     registerBudgetsRefresh(refresh);
     registerCategoriesRefresh(loadCategories);
-    registerGoalsRefresh(loadGoals);
   }, [
     registerBudgetsRefresh,
     refresh,
     registerCategoriesRefresh,
     loadCategories,
-    registerGoalsRefresh,
-    loadGoals,
   ]);
 
   const handleSaveIncome = async (useDynamic: boolean, income: number) => {
@@ -369,8 +265,6 @@ export default function BudgetsScreen() {
       (cat) => cat.sort_order !== undefined,
     );
 
-    const goalsItem: GoalsListItem = { type: 'goals' };
-
     if (customOrder) {
       const categoryItems: BudgetListItem[] = filteredCategories.map((cat) => ({
         type: 'category' as const,
@@ -378,10 +272,8 @@ export default function BudgetsScreen() {
         budgetStatus: budgetMap.get(cat.id) ?? null,
       }));
 
-      const allItems: BudgetListItem[] = [goalsItem, ...categoryItems];
-
       return {
-        allBudgetItems: allItems,
+        allBudgetItems: categoryItems,
         hasCustomOrder: true,
       };
     }
@@ -398,10 +290,8 @@ export default function BudgetsScreen() {
       }
     });
 
-    const allItems: BudgetListItem[] = [goalsItem, ...budgeted, ...unbudgeted];
-
     return {
-      allBudgetItems: allItems,
+      allBudgetItems: [...budgeted, ...unbudgeted] as BudgetListItem[],
       hasCustomOrder: false,
     };
   }, [categories, categoryBudgets]);
@@ -457,7 +347,7 @@ export default function BudgetsScreen() {
 
       <DraggableFlatList
         data={isLoading ? [] : allBudgetItems}
-        keyExtractor={(item) => item.type === 'goals' ? 'goals' : item.category.id.toString()}
+        keyExtractor={(item) => item.category.id.toString()}
         onDragEnd={handleDragEnd}
         contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 220 }}
         keyboardDismissMode="on-drag"
@@ -509,124 +399,6 @@ export default function BudgetsScreen() {
           getIndex,
         }: RenderItemParams<BudgetListItem>) => {
           const index = getIndex() ?? 0;
-
-          // Render goals section
-          if (item.type === 'goals') {
-            return (
-              <ScaleDecorator>
-                {isReorderMode ? (
-                  <TouchableOpacity
-                    onLongPress={drag}
-                    disabled={isActive}
-                    delayLongPress={100}
-                    className={`mb-2 rounded-2xl p-4 flex-row items-center border ${
-                      isActive ? 'bg-gray600 border-accentPurple opacity-90' : 'bg-surfaceDark border-borderDark'
-                    }`}
-                  >
-                    <View className="mr-3">
-                      <Ionicons name="menu" size={20} color="#7C8CA0" />
-                    </View>
-                    <View className="w-9 h-9 rounded-lg items-center justify-center mr-3 bg-purple-600">
-                      <Ionicons name="flag" size={18} color="#fff" />
-                    </View>
-                    <Text className="text-slate100 text-sm flex-1">
-                      Savings Goals
-                    </Text>
-                    <Text className="text-slateMuted text-xs">
-                      {goals.length} goal{goals.length !== 1 ? 's' : ''}
-                    </Text>
-                  </TouchableOpacity>
-                ) : (
-                  <MotiView
-                    from={{ opacity: 0, translateY: 8 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    transition={{ type: "timing", duration: 250, delay: index * 25 }}
-                    className="mb-2.5"
-                  >
-                    {/* Goals section header */}
-                    <View className="flex-row items-center justify-between mb-2 px-1">
-                      <View className="flex-row items-center">
-                        <View className="w-1.5 h-1.5 rounded-full mr-2 bg-purple-500" />
-                        <Text className={`text-xs font-semibold uppercase tracking-wide ${isDarkMode ? 'text-slateMuted' : 'text-slate300'}`}>
-                          Savings Goals
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => setIsGoalEditMode(!isGoalEditMode)}
-                        className={`px-4 py-1 rounded-lg border items-center justify-center ${
-                          isGoalEditMode
-                            ? 'bg-accentBlue border-surfaceDark'
-                            : 'bg-surfaceDark border-slate700'
-                        }`}
-                      >
-                        <Text className={`text-sm ${isGoalEditMode ? 'text-white' : 'text-textDark'}`}>
-                          {isGoalEditMode ? 'Done Editing' : 'Edit Goals'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {goals.length === 0 ? (
-                      <Pressable
-                        onPress={() => setShowCreateModal(true)}
-                        className="rounded-2xl p-4 border border-dashed border-purple-500/30 items-center"
-                        style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
-                      >
-                        <Text className="text-purple-400 font-medium text-sm">Create your first goal</Text>
-                        <Text className="text-slateMuted text-xs mt-0.5">Emergency fund, vacation, new car...</Text>
-                      </Pressable>
-                    ) : (
-                      <View className={`rounded-2xl border border-borderDark ${isGoalEditMode ? 'bg-black/40' : 'bg-surfaceDark'}`} style={{ overflow: 'hidden' }}>
-                        <GestureDetector gesture={goalPanGesture}>
-                          <Animated.View style={[{ flexDirection: 'row', width: goalCardWidth * goals.length }, goalAnimatedStyle]}>
-                            {goals.map((goal) => (
-                              <View key={goal.id} style={{ width: goalCardWidth }}>
-                                <GoalProgressCard
-                                  goal={goal}
-                                  currencySymbol={currencySymbol}
-                                  onPress={() => handleGoalPress(goal)}
-                                  noBg
-                                  isEditMode={isGoalEditMode}
-                                />
-                              </View>
-                            ))}
-                          </Animated.View>
-                        </GestureDetector>
-                        {goals.length > 1 && (
-                          <View className="flex-row justify-center pb-3 gap-1.5">
-                            {goals.map((_, i) => (
-                              <AnimatedDot key={i} index={i} currentPage={goalCurrentPage} />
-                            ))}
-                          </View>
-                        )}
-                      </View>
-                    )}
-                    {isGoalEditMode && goals.length > 0 && (
-                      <MotiView
-                        from={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ type: 'timing', duration: 250 }}
-                        className="mt-2"
-                      >
-                        <TouchableOpacity
-                          onPress={() => setShowCreateModal(true)}
-                          className="bg-backgroundDark border border-slate500 rounded-2xl px-4 py-3 flex-row items-center justify-center gap-3 self-stretch"
-                          activeOpacity={0.7}
-                        >
-                          <View
-                            className="w-9 h-9 rounded-xl items-center justify-center"
-                            style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#d1d5db' }}
-                          >
-                            <Ionicons name="add-outline" size={20} color="#6366f1" />
-                          </View>
-                          <Text className="text-slate200 text-sm">Add Goal</Text>
-                        </TouchableOpacity>
-                      </MotiView>
-                    )}
-                  </MotiView>
-                )}
-              </ScaleDecorator>
-            );
-          }
 
           // Render category item
           return (
@@ -992,37 +764,6 @@ export default function BudgetsScreen() {
         />
       )}
 
-      {/* Goal Modals */}
-      <CreateGoalModal
-        visible={showCreateModal}
-        currencySymbol={currencySymbol}
-        existingNames={goals.map((g) => g.name)}
-        onClose={() => setShowCreateModal(false)}
-        onGoalCreated={loadGoals}
-      />
-
-      <EditGoalModal
-        visible={showEditModal}
-        goal={selectedGoal}
-        currencySymbol={currencySymbol}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedGoal(null);
-        }}
-        onGoalUpdated={loadGoals}
-      />
-
-      <GoalTransactionModal
-        visible={showTransactionModal}
-        goal={selectedGoal}
-        accounts={accounts}
-        currencySymbol={currencySymbol}
-        onClose={() => {
-          setShowTransactionModal(false);
-          setSelectedGoal(null);
-        }}
-        onTransactionComplete={loadGoals}
-      />
     </SafeAreaView>
   );
 }

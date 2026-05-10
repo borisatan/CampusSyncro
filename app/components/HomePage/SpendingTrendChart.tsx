@@ -72,10 +72,16 @@ const normalizeTotalBudgetToTimeframe = (
   return totalBudget * 12; // year
 };
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
 // Format label for the tooltip display (not x-axis)
 const formatDisplayLabel = (
   label: string,
   timeFrame: "week" | "month" | "year",
+  date?: Date,
 ): string => {
   if (!label) return "";
   if (timeFrame === "week") {
@@ -108,10 +114,9 @@ const formatDisplayLabel = (
     return monthMap[label] || label;
   }
   if (timeFrame === "month") {
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(Number(label)).padStart(2, "0");
-    return `${day}.${month}`;
+    const d = date ?? new Date();
+    const monthName = MONTH_NAMES[d.getMonth()];
+    return `${monthName} ${Number(label)}`;
   }
   return label;
 };
@@ -353,29 +358,64 @@ export const SpendingTrendChart = React.memo(
         };
       }
       const pt = cumulativeData[lastActualIndex];
-      const amount = Math.round(pt.amount);
+      const amount = pt.amount;
       const pace = Math.round(pt.pace);
       const diff = amount - pace;
       const sign = diff >= 0 ? "+" : "-";
+      const whole = Math.floor(amount);
+      const cents = Math.round((amount - whole) * 100);
+      const absDiff = Math.abs(diff);
+      const diffWhole = Math.floor(absDiff);
+      const diffCents = Math.round((absDiff - diffWhole) * 100);
       return {
-        label: formatDisplayLabel(pt.label, timeFrame),
-        value: `${currencySymbol}${amount.toLocaleString()}`,
+        label: formatDisplayLabel(pt.label, timeFrame, refDate),
+        value: `${currencySymbol}${whole.toLocaleString()}.${String(cents).padStart(2, "0")}`,
         paceValue: `${currencySymbol}${pace.toLocaleString()}`,
-        diffStr: `${sign}${currencySymbol}${Math.abs(diff).toLocaleString()}`,
+        diffStr: `${sign}${currencySymbol}${diffWhole.toLocaleString()}.${String(diffCents).padStart(2, "0")}`,
         diffPctStr:
           pace > 0 ? `${(Math.abs(diff / pace) * 100).toFixed(1)}%` : "0.0%",
         isOverBudget: pt.isOverBudget,
         isFuture: false,
       };
-    }, [cumulativeData, lastActualIndex, currencySymbol]);
+    }, [cumulativeData, lastActualIndex, currencySymbol, refDate]);
 
     // Check if there's any actual spending data
     const hasSpendingData = useMemo(() => {
       return cumulativeData.some((d) => !d.isFuture && d.amount > 0);
     }, [cumulativeData]);
 
+    // Projected end-of-period spending based on current pace
+    const projection = useMemo(() => {
+      if (!isCurrentPeriod || totalBudget <= 0 || lastActualIndex < 0) return null;
+      const currentSpending = cumulativeData[lastActualIndex]?.amount || 0;
+      if (currentSpending <= 0) return null;
+
+      let timeElapsedRatio = 0;
+      if (timeFrame === "week") {
+        const dayOfWeek = refDate.getDay();
+        const adjustedDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+        timeElapsedRatio = adjustedDay / 7;
+      } else if (timeFrame === "month") {
+        const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0).getDate();
+        timeElapsedRatio = refDate.getDate() / daysInMonth;
+      } else {
+        timeElapsedRatio = (refDate.getMonth() + 1) / 12;
+      }
+
+      if (timeElapsedRatio <= 0) return null;
+
+      const projectedTotal = currentSpending / timeElapsedRatio;
+      const isOver = projectedTotal > totalBudget;
+      const diff = Math.abs(projectedTotal - totalBudget);
+      const pct = `${((diff / totalBudget) * 100).toFixed(1)}%`;
+      return { isOver, pct };
+    }, [isCurrentPeriod, totalBudget, cumulativeData, lastActualIndex, timeFrame, refDate]);
+
     // Show scrubbed data if available, otherwise default to latest actual point
     const displayData = tooltipData.value ? tooltipData : defaultTooltip;
+    const amountDotIndex = displayData.value.lastIndexOf(".");
+    const amountIntPart = amountDotIndex >= 0 ? displayData.value.slice(0, amountDotIndex) : displayData.value;
+    const amountDecPart = amountDotIndex >= 0 ? displayData.value.slice(amountDotIndex) : "";
 
     const instanceKey = useMemo(() => {
       return `${timeFrame}-${totalBudget}-${isCurrentPeriod}-${isUnlocked}`;
@@ -443,16 +483,21 @@ export const SpendingTrendChart = React.memo(
         cumulativeData[Math.min(originalIndex, cumulativeData.length - 1)];
 
       // Use actual data point values for display, not interpolated values
-      const label = formatDisplayLabel(nearestOriginal?.label || "", timeFrame);
+      const label = formatDisplayLabel(nearestOriginal?.label || "", timeFrame, refDate);
       const isOverBudget = nearestOriginal?.isOverBudget || false;
-      const amount = Math.round(nearestOriginal?.amount || 0);
+      const amount = nearestOriginal?.amount || 0;
       const pace = Math.round(nearestOriginal?.pace || 0);
-      const valueStr = `${currencySymbol}${amount.toLocaleString()}`;
+      const whole = Math.floor(amount);
+      const cents = Math.round((amount - whole) * 100);
+      const valueStr = `${currencySymbol}${whole.toLocaleString()}.${String(cents).padStart(2, "0")}`;
       const paceValueStr = `${currencySymbol}${pace.toLocaleString()}`;
 
       const diff = amount - pace;
       const sign = diff >= 0 ? "+" : "-";
-      const diffStr = `${sign}${currencySymbol}${Math.abs(diff).toLocaleString()}`;
+      const absDiff = Math.abs(diff);
+      const diffWhole = Math.floor(absDiff);
+      const diffCents = Math.round((absDiff - diffWhole) * 100);
+      const diffStr = `${sign}${currencySymbol}${diffWhole.toLocaleString()}.${String(diffCents).padStart(2, "0")}`;
       const diffPct = pace > 0 ? Math.abs(diff / pace) * 100 : 0;
       const diffPctStr = `${diffPct.toFixed(1)}%`;
 
@@ -466,7 +511,7 @@ export const SpendingTrendChart = React.memo(
         isFuture: false,
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [smoothData, smoothLastActualIndex, cumulativeData, currencySymbol, timeFrame, INTERPOLATION_STEPS]);
+    }, [smoothData, smoothLastActualIndex, cumulativeData, currencySymbol, timeFrame, INTERPOLATION_STEPS, refDate]);
 
     const handleTooltipClear = useCallback(() => {
       // Use functional update and bail out if already cleared — prevents
@@ -535,77 +580,98 @@ export const SpendingTrendChart = React.memo(
           transition={{ type: "timing", duration: 500 }}
         >
           <View>
-            <View className="mb-2">
+            <View className="mb-2 flex-row justify-between items-start">
               {hasSpendingData ? (
                 <>
-                  <View className="flex-row items-baseline">
-                    {!displayData.isFuture && displayData.label !== "" && (
-                      <Text className="text-textDark text-3xl font-bold mr-2">
-                        {displayData.label}:
+                  <View>
+                    <View className="flex-row items-baseline">
+                      <Text className="text-white text-3xl font-bold">
+                        {amountIntPart}
                       </Text>
-                    )}
-                    <Text className="text-white text-3xl font-bold">
-                      {displayData.value}
-                    </Text>
-                    <Text className="text-slate-500 text-xl font-bold ml-2">
-                      spent
-                    </Text>
-                  </View>
-                  <View
-                    className="flex-row items-center mt-0.5"
-                    style={{ minHeight: 18 }}
-                  >
-                    {totalBudget > 0 && !displayData.isFuture && (
-                      <>
+                      {amountDecPart !== "" && (
                         <Text
-                          style={{
-                            color: displayData.isOverBudget
-                              ? "#ef4444"
-                              : "#22c55e",
-                            fontSize: 15,
-                          }}
+                          className="font-bold"
+                          style={{ color: "#94a3b8", fontSize: 22 }}
                         >
-                          {displayData.diffStr}
+                          {amountDecPart}
                         </Text>
-                        <Text
-                          style={{
-                            color: displayData.isOverBudget
-                              ? "#ef4444"
-                              : "#22c55e",
-                            fontSize: 15,
-                            marginLeft: 2,
-                          }}
-                        >
-                          {displayData.isOverBudget ? "\u25B2" : "\u25BC"}
-                        </Text>
-                        <Text
-                          style={{
-                            color: displayData.isOverBudget
-                              ? "#ef4444"
-                              : "#22c55e",
-                            fontSize: 15,
-                            fontWeight: "700",
-                            marginLeft: 4,
-                          }}
-                        >
-                          {displayData.diffPctStr}
-                        </Text>
-                        <Text className="text-slate-500 text-sm ml-1.5">
-                          {displayData.isOverBudget
-                            ? "over budget"
-                            : "under budget"}
-                        </Text>
-                      </>
+                      )}
+                    </View>
+                    <View
+                      className="flex-row items-center mt-0.5"
+                      style={{ minHeight: 18 }}
+                    >
+                      {totalBudget > 0 && !displayData.isFuture && (
+                        <>
+                          <Text
+                            style={{
+                              color: displayData.isOverBudget
+                                ? "#ef4444"
+                                : "#22c55e",
+                              fontSize: 15,
+                            }}
+                          >
+                            {displayData.diffStr}
+                          </Text>
+                          <Text
+                            style={{
+                              color: displayData.isOverBudget
+                                ? "#ef4444"
+                                : "#22c55e",
+                              fontSize: 15,
+                              marginLeft: 2,
+                            }}
+                          >
+                            {displayData.isOverBudget ? "\u25B2" : "\u25BC"}
+                          </Text>
+                          <Text
+                            style={{
+                              color: displayData.isOverBudget
+                                ? "#ef4444"
+                                : "#22c55e",
+                              fontSize: 15,
+                              fontWeight: "700",
+                              marginLeft: 4,
+                            }}
+                          >
+                            {displayData.diffPctStr}
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                    {!displayData.isFuture && displayData.label !== "" && (
+                      <Text
+                        className="text-white"
+                        style={{ fontSize: 15, marginTop: 2 }}
+                      >
+                        {displayData.label}
+                      </Text>
                     )}
                   </View>
                 </>
               ) : (
-                <>
+                <View>
                   <Text className="text-slate-500 text-3xl font-bold">
                     No Data: Add a transaction
                   </Text>
                   <View style={{ minHeight: 18 }} />
-                </>
+                </View>
+              )}
+              {projection && (
+                <View className="items-end">
+                  <Text className="text-slate-500" style={{ fontSize: 11 }}>
+                    Projected
+                  </Text>
+                  <Text
+                    style={{
+                      color: projection.isOver ? "#ef4444" : "#22c55e",
+                      fontSize: 13,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {projection.isOver ? "over budget" : "under budget"}
+                  </Text>
+                </View>
               )}
             </View>
 

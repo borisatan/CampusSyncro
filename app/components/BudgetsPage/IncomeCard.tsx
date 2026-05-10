@@ -148,6 +148,30 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
             </View>
           </View>
 
+          {monthlySaved > 0 && (
+            <>
+              <View className={`h-px ${isDarkMode ? 'bg-borderDark' : 'bg-slate100'}`} />
+              <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
+                <View className="flex-row items-center justify-between mb-1.5">
+                  <View className="flex-row items-center" style={{ gap: 6 }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#3B82F6" }} />
+                    <Text className={`text-xs font-medium ${isDarkMode ? 'text-slate300' : 'text-slate500'}`}>
+                      Savings
+                    </Text>
+                  </View>
+                  <Text className={`text-xs font-semibold ${isDarkMode ? 'text-slate100' : 'text-slate700'}`}>
+                    {formatAmount(monthlySaved, currencySymbol)}
+                  </Text>
+                </View>
+                <View className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-borderDark' : 'bg-slate200'}`}>
+                  <View
+                    style={{ width: `${Math.min(savingsPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#3B82F6" }}
+                  />
+                </View>
+              </View>
+            </>
+          )}
+
           <View className={`h-px ${isDarkMode ? 'bg-borderDark' : 'bg-slate100'}`} />
 
           {/* Unallocated / Over Budget row */}

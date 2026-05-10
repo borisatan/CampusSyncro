@@ -925,6 +925,12 @@ export const updateGoal = async (
 export const deleteGoal = async (goalId: number): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
+  const { error: nullifyError } = await supabase
+    .from('GoalContributions')
+    .update({ goal_id: null })
+    .eq('goal_id', goalId)
+    .eq('user_id', user.id);
+  if (nullifyError) throw nullifyError;
   const { error } = await supabase
     .from('Goals')
     .delete()
@@ -972,33 +978,49 @@ export const withdrawFromGoal = async (payload: {
   goal_id: number;
   user_id: string;
   amount: number;
-  source_account_id: string;
-  source_account_name: string;
-  destination_account_name: string;
+  // Linked goal path:
+  source_account_id?: string;
+  source_account_name?: string;
+  destination_account_name?: string;
+  // Unlinked goal path:
+  destination_account_id?: string;
 }): Promise<void> => {
-  // 1. Create the transfer (updates account balances) - from savings to destination
-  await createTransfer({
-    from_account: payload.source_account_name,
-    to_account: payload.destination_account_name,
-    amount: payload.amount,
-    user_id: payload.user_id,
-  });
+  if (payload.source_account_name && payload.destination_account_name) {
+    // Linked: transfer between accounts
+    await createTransfer({
+      from_account: payload.source_account_name,
+      to_account: payload.destination_account_name,
+      amount: payload.amount,
+      user_id: payload.user_id,
+    });
+  } else if (payload.destination_account_id) {
+    // Unlinked: credit destination account directly
+    const { data: accountData, error: fetchError } = await supabase
+      .from('Accounts')
+      .select('balance')
+      .eq('id', payload.destination_account_id)
+      .single();
+    if (fetchError) throw fetchError;
+    const { error: balanceError } = await supabase
+      .from('Accounts')
+      .update({ balance: r2(accountData.balance + payload.amount) })
+      .eq('id', payload.destination_account_id);
+    if (balanceError) throw balanceError;
+  }
 
-  // 2. Record the withdrawal (negative contribution)
   const { error: contribError } = await supabase
     .from('GoalContributions')
     .insert([{
       goal_id: payload.goal_id,
       user_id: payload.user_id,
       amount: -r2(payload.amount),
-      source_account_id: payload.source_account_id,
+      source_account_id: payload.source_account_id ?? payload.destination_account_id ?? null,
     }]);
   if (contribError) throw contribError;
 
-  // 3. Update goal's current_amount (decrement)
   const { error: updateError } = await supabase.rpc('increment_goal_amount', {
     p_goal_id: payload.goal_id,
-    p_amount: -r2(payload.amount), // Negative to decrement
+    p_amount: -r2(payload.amount),
   });
   if (updateError) throw updateError;
 };

@@ -1,10 +1,12 @@
 import { create } from 'zustand';
-import { fetchGoals, fetchGoalsByAccount } from '../services/backendService';
-import { Goal } from '../types/types';
+import { fetchGoalContributions, fetchGoals, fetchGoalsByAccount } from '../services/backendService';
+import { Goal, GoalContribution } from '../types/types';
 
 interface GoalsState {
   goals: Goal[];
   isLoading: boolean;
+  contributions: Record<number, GoalContribution[]>;
+  isLoadingContributions: boolean;
   loadGoals: () => Promise<void>;
   loadGoalsByAccount: (accountId: number) => Promise<Goal[]>;
   setGoals: (goals: Goal[]) => void;
@@ -12,11 +14,15 @@ interface GoalsState {
   updateGoalOptimistic: (id: number, updates: Partial<Goal>) => void;
   deleteGoalOptimistic: (id: number) => void;
   incrementGoalAmount: (id: number, amount: number) => void;
+  loadContributions: (goalId: number) => Promise<void>;
+  clearContributions: (goalId: number) => void;
 }
 
-export const useGoalsStore = create<GoalsState>((set, get) => ({
+export const useGoalsStore = create<GoalsState>((set) => ({
   goals: [],
   isLoading: false,
+  contributions: {},
+  isLoadingContributions: false,
 
   loadGoals: async () => {
     try {
@@ -58,4 +64,25 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
         g.id === id ? { ...g, current_amount: g.current_amount + amount } : g
       ),
     })),
+
+  loadContributions: async (goalId: number) => {
+    set({ isLoadingContributions: true });
+    try {
+      const data = await fetchGoalContributions(goalId);
+      set((state) => ({
+        contributions: { ...state.contributions, [goalId]: data },
+        isLoadingContributions: false,
+      }));
+    } catch (error) {
+      console.error('Error loading contributions:', error);
+      set({ isLoadingContributions: false });
+    }
+  },
+
+  clearContributions: (goalId: number) =>
+    set((state) => {
+      const next = { ...state.contributions };
+      delete next[goalId];
+      return { contributions: next };
+    }),
 }));
