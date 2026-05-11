@@ -113,9 +113,9 @@ async function processRecurring() {
 }
 
 async function notifyUpcoming() {
-  const twoDaysOut = new Date();
-  twoDaysOut.setUTCDate(twoDaysOut.getUTCDate() + 2);
-  const target = twoDaysOut.toISOString().split("T")[0];
+  const threeDaysOut = new Date();
+  threeDaysOut.setUTCDate(threeDaysOut.getUTCDate() + 3);
+  const target = threeDaysOut.toISOString().split("T")[0];
 
   const { data: upcoming, error } = await supabase
     .from("RecurringTransactions")
@@ -134,11 +134,12 @@ async function notifyUpcoming() {
       month: "short",
       day: "numeric",
     });
-    await sendExpoPush(
-      pushToken,
-      "Upcoming Recurring Transaction",
-      `${label} (${absAmount}) is scheduled for ${dateLabel}.`
-    );
+    const isIncome = item.amount > 0;
+    const title = isIncome ? "Upcoming Income" : "Upcoming Payment";
+    const body = isIncome
+      ? `Your ${label} ($${absAmount}) is coming up on ${dateLabel}`
+      : `Your ${label} ($${absAmount}) is due on ${dateLabel}`;
+    await sendExpoPush(pushToken, title, body);
   }
 
   return { notified: upcoming?.length ?? 0 };

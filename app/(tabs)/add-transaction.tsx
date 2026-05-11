@@ -38,6 +38,7 @@ import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
 import { useAnalytics } from "../hooks/useAnalytics";
+import { useRecurringNudge } from "../hooks/useRecurringNudge";
 import {
   createRecurringTransaction,
   createTransaction,
@@ -112,6 +113,13 @@ const TransactionAdder = () => {
     color: interpolateColor(intervalProgress.value, [0, 1], ['#64748B', '#ffffff']),
   }));
   const addOptimisticRecurring = useRecurringTransactionsStore((state) => state.addOptimistic);
+
+  const { checkAndNudge } = useRecurringNudge();
+  const prevIsRecurring = useRef(false);
+  useEffect(() => {
+    if (isRecurring && !prevIsRecurring.current) checkAndNudge();
+    prevIsRecurring.current = isRecurring;
+  }, [isRecurring]);
 
   // Set initial selections when data is loaded
   useEffect(() => {

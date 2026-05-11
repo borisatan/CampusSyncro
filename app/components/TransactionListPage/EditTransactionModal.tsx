@@ -29,6 +29,7 @@ import { CategoryEditorModal } from '../AddTransactionPage/CategoryEditorModal';
 import { CategoryGrid } from '../AddTransactionPage/CategoryGrid';
 import { TransactionHero } from '../AddTransactionPage/TransactionHero';
 import { AnimatedToggle } from '../Shared/AnimatedToggle';
+import { useRecurringNudge } from '../../hooks/useRecurringNudge';
 import { useAuth } from '../../context/AuthContext';
 import { useDataRefresh } from '../../context/DataRefreshContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -84,6 +85,13 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const amountInputRef = useRef<TextInput>(null);
 
   const addOptimisticRecurring = useRecurringTransactionsStore((state) => state.addOptimistic);
+
+  const { checkAndNudge } = useRecurringNudge();
+  const prevIsRecurring = useRef(false);
+  useEffect(() => {
+    if (isRecurring && !prevIsRecurring.current) checkAndNudge();
+    prevIsRecurring.current = isRecurring;
+  }, [isRecurring]);
 
   const intervalProgress = useSharedValue(0);
   useEffect(() => {
