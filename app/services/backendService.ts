@@ -1,4 +1,4 @@
-import { CategoryAggregation, CategoryIconInfo, Goal, GoalContribution, Transaction } from "../types/types";
+import { CategoryAggregation, CategoryIconInfo, Goal, GoalContribution, RecurringTransaction, Transaction } from "../types/types";
 import { supabase } from "../utils/supabase";
 import * as Crypto from 'expo-crypto';
 
@@ -1173,6 +1173,65 @@ export async function updateNotificationFrequency(frequency: number): Promise<vo
     .eq('id', user.id);
 
   if (error) throw new Error(error.message);
+}
+
+// ============ Recurring Transactions ============
+
+export async function fetchRecurringTransactions(): Promise<RecurringTransaction[]> {
+  const { data, error } = await supabase
+    .from('RecurringTransactions')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createRecurringTransaction(
+  payload: Omit<RecurringTransaction, 'id' | 'created_at' | 'updated_at'>
+): Promise<RecurringTransaction> {
+  const { data, error } = await supabase
+    .from('RecurringTransactions')
+    .insert([{ ...payload, amount: r2(payload.amount) }])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateRecurringTransaction(
+  id: string,
+  updates: Partial<Pick<RecurringTransaction, 'end_date' | 'is_active' | 'description'>>
+): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  const { error } = await supabase
+    .from('RecurringTransactions')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', user.id);
+  if (error) throw error;
+}
+
+export async function deleteRecurringTransaction(id: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  const { error } = await supabase
+    .from('RecurringTransactions')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+  if (error) throw error;
+}
+
+export async function updatePushToken(token: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase
+    .from('Profiles')
+    .update({ push_token: token, updated_at: new Date().toISOString() })
+    .eq('id', user.id);
+  if (error) console.error('[Push] Failed to save push token:', error.message);
+  // Never throw — a failed token save must not crash the app
 }
 
 // ============ Transaction Check for Smart Logic ============

@@ -316,6 +316,23 @@ export default function ProfileScreen() {
             </View>
           </RipplePressable>
 
+          {/* Recurring Transactions */}
+          <RipplePressable
+            onPress={() => router.push("/recurring-transactions" as any)}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-indigo-600 rounded-xl items-center justify-center mr-3">
+              <RotateCcw color="white" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>Recurring Transactions</Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                Manage automatic payments
+              </Text>
+            </View>
+            <ChevronRight color={isDarkMode ? "#9CA3AF" : "#4B5563"} size={20} />
+          </RipplePressable>
+
           {/* Daily Reminders Selector */}
           <Pressable
             onPress={toggleFrequencyPicker}

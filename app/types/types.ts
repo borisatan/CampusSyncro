@@ -69,6 +69,24 @@ export interface Profile {
   use_dynamic_income?: boolean;
   manual_income?: number;
   monthly_savings_target?: number;
+  push_token?: string | null;
+}
+
+export type RecurringInterval = 'biweekly' | 'monthly';
+
+export interface RecurringTransaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  category_name: string;
+  account_name: string;
+  description: string;
+  interval_type: RecurringInterval;
+  next_run_date: string;   // "YYYY-MM-DD"
+  end_date: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CategoryAggregation {

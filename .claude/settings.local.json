@@ -37,7 +37,8 @@
       "Bash(npm audit *)",
       "Bash(npx eas *)",
       "Read(//Users/boris/Library/Android/**)",
-      "Read(//usr/local/share/**)"
+      "Read(//usr/local/share/**)",
+      "Bash(sed \"s/'$//\")"
     ]
   }
 }

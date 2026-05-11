@@ -1,5 +1,5 @@
 // utils/dateUtils.ts
-import { TimeFrame } from '../types/types'; // Assuming TimeFrame type is in your types file
+import { RecurringInterval, TimeFrame } from '../types/types';
 
 export const getDateRange = (period: TimeFrame, offset: number = 0): { startDate: Date, endDate: Date } => {
   const now = new Date();
@@ -43,3 +43,25 @@ export const getDateRange = (period: TimeFrame, offset: number = 0): { startDate
 
   return { startDate, endDate };
 };
+
+// Advance a date string ("YYYY-MM-DD") by one recurrence interval.
+// Monthly: same day next month, clamped to last day if original day doesn't exist (e.g. Jan 31 → Feb 28).
+// Biweekly: +14 days.
+export function computeNextRunDate(dateStr: string, interval: RecurringInterval): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+
+  if (interval === 'biweekly') {
+    const d = new Date(Date.UTC(year, month - 1, day));
+    d.setUTCDate(d.getUTCDate() + 14);
+    return d.toISOString().split('T')[0];
+  }
+
+  // monthly: advance month, clamp day to last day of target month
+  const nextMonth = month === 12 ? 1 : month + 1;
+  const nextYear = month === 12 ? year + 1 : year;
+  const lastDayOfNextMonth = new Date(Date.UTC(nextYear, nextMonth, 0)).getUTCDate();
+  const clampedDay = Math.min(day, lastDayOfNextMonth);
+  const mm = String(nextMonth).padStart(2, '0');
+  const dd = String(clampedDay).padStart(2, '0');
+  return `${nextYear}-${mm}-${dd}`;
+}

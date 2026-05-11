@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -238,6 +239,45 @@ export function addNotificationResponseListener(
   callback: (response: Notifications.NotificationResponse) => void,
 ): Notifications.Subscription {
   return Notifications.addNotificationResponseReceivedListener(callback);
+}
+
+/**
+ * Register device for Expo push notifications and return the push token.
+ * Returns null on simulator or if permission has not been granted.
+ * Safe to call on every app launch — Expo returns the same token until reinstall.
+ */
+export async function registerForPushNotificationsAsync(): Promise<string | null> {
+  if (!Device.isDevice) return null;
+
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== 'granted') return null;
+
+  const projectId =
+    Constants.expoConfig?.extra?.eas?.projectId ??
+    (Constants as any).easConfig?.projectId;
+
+  if (!projectId) {
+    console.warn('[Push] No EAS projectId found — push tokens unavailable');
+    return null;
+  }
+
+  try {
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('recurring-transactions', {
+        name: 'Recurring Transactions',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#4f46e5',
+      });
+    }
+
+    return token;
+  } catch (e) {
+    console.error('[Push] Failed to get push token:', e);
+    return null;
+  }
 }
 
 /**
