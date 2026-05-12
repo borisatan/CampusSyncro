@@ -29,7 +29,7 @@ export const DEMO_GOALS: Goal[] = [
     current_amount: 8200,
     color: '#10B981',
     icon: 'shield-checkmark-outline',
-    monthly_contribution: 300,
+    monthly_contribution: 1000,
     created_at: '2025-01-15T00:00:00Z',
     updated_at: '2026-05-01T00:00:00Z',
   },
