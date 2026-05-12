@@ -8,20 +8,27 @@ import { useIncomeStore } from '../../store/useIncomeStore';
 import { migrateDashboardCategoriesToDatabase } from '../../store/useDashboardCategoriesStore';
 import { useGoalsStore } from '../../store/useGoalsStore';
 import { CategoryBudgetStatus } from '../../types/types';
+import { DEMO_ACCOUNTS, DEMO_BUDGET_STATUSES, DEMO_CATEGORIES, DEMO_GOALS, DEMO_INCOME } from '../../utils/demoData';
 
 /**
  * DataPreloader - Loads accounts, categories, and budgets on mount.
  * Currency is loaded separately by CurrencyInitializer (after auth).
- * Only runs after user authentication is complete.
+ * For guests, seeds stores with static demo data instead of Supabase calls.
  */
 export default function DataPreloader() {
-  const { userId, isLoading: authLoading } = useAuth();
+  const { userId, isGuest, isLoading: authLoading } = useAuth();
   const loadAccounts = useAccountsStore((state) => state.loadAccounts);
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
 
   useEffect(() => {
-    // Only run when authenticated
-    if (authLoading || !userId) return;
+    if (authLoading) return;
+
+    if (isGuest) {
+      seedGuestStores();
+      return;
+    }
+
+    if (!userId) return;
 
     const preloadAllData = async () => {
       try {
@@ -31,11 +38,7 @@ export default function DataPreloader() {
           useGoalsStore.getState().loadGoals(),
         ]);
 
-        // Migrate old AsyncStorage dashboard categories to database
-        // This runs after categories are loaded so we have the data available
         await migrateDashboardCategoriesToDatabase();
-
-        // Preload budget data after categories are loaded
         await preloadBudgetData();
       } catch (error) {
         console.error('Error preloading app data:', error);
@@ -44,24 +47,20 @@ export default function DataPreloader() {
 
     const preloadBudgetData = async () => {
       try {
-        // Get current month date range
         const now = new Date();
         const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-        // Load income settings and fetch current month data
         const [, fetchedDynamicIncome, spendingByCategory] = await Promise.all([
           useIncomeStore.getState().loadIncomeSettings(),
           fetchIncomeForPeriod(startDate, endDate),
           fetchSpendingByCategory(startDate, endDate),
         ]);
 
-        // Get categories and income settings
         const categories = useCategoriesStore.getState().categories;
         const { useDynamicIncome, manualIncome } = useIncomeStore.getState();
         const effectiveIncome = useDynamicIncome ? fetchedDynamicIncome : manualIncome;
 
-        // Build budget data
         const budgetedCategories = categories.filter(
           (cat) => (cat.budget_amount != null && cat.budget_amount > 0) || (cat.budget_percentage != null && cat.budget_percentage > 0)
         );
@@ -75,7 +74,6 @@ export default function DataPreloader() {
           return { category: cat, budget_amount, spent, percentage_used };
         });
 
-        // Set budget data in store
         useBudgetStore.getState().setCategoryBudgets(budgetResults);
         useBudgetStore.getState().setLoading(false);
       } catch (error) {
@@ -85,8 +83,21 @@ export default function DataPreloader() {
     };
 
     preloadAllData();
-  }, [userId, authLoading, loadAccounts, loadCategories]);
+  }, [userId, isGuest, authLoading, loadAccounts, loadCategories]);
 
   return null;
 }
 
+function seedGuestStores() {
+  useCategoriesStore.getState().setCategories(DEMO_CATEGORIES);
+  useAccountsStore.getState().setAccounts(DEMO_ACCOUNTS);
+  useGoalsStore.getState().setGoals(DEMO_GOALS);
+  useBudgetStore.getState().setCategoryBudgets(DEMO_BUDGET_STATUSES);
+  useBudgetStore.getState().setLoading(false);
+  useIncomeStore.setState({
+    manualIncome: DEMO_INCOME.manualIncome,
+    monthlySavingsTarget: DEMO_INCOME.monthlySavingsTarget,
+    useDynamicIncome: false,
+    isLoading: false,
+  });
+}

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { ArrowLeft, CreditCard } from 'lucide-react-native';
-import { getAccountColor, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
+import { ArrowLeft } from 'lucide-react-native';
+import { getAccountColor, TYPE_CONFIG } from '../../hooks/useAccountData';
 import { parseAmount } from '../../utils/parseAmount';
 import React, { useEffect, useState } from 'react';
 import {
@@ -185,9 +185,8 @@ export default function MoveMoneyPage({
 
   const getAccountIconAndColor = (account: Account) => {
     const config = TYPE_CONFIG[account.type?.toLowerCase().trim()] || TYPE_CONFIG.checking;
-    const IconComponent = ICON_MAP[config.icon] || CreditCard;
     const accountColor = getAccountColor(account);
-    return { IconComponent, accountColor };
+    return { iconName: config.icon, accountColor };
   };
 
   const renderAccountPicker = (
@@ -211,7 +210,7 @@ export default function MoveMoneyPage({
                 {accounts
                   .filter((acc) => acc.id !== excludeAccountId)
                   .map((account) => {
-                    const { IconComponent, accountColor } = getAccountIconAndColor(account);
+                    const { iconName, accountColor } = getAccountIconAndColor(account);
                     return (
                       <TouchableOpacity
                         key={account.id}
@@ -220,7 +219,7 @@ export default function MoveMoneyPage({
                         className="px-4 py-4 flex-row items-center mb-2 rounded-xl bg-surfaceDark border border-borderDark"
                       >
                         <View style={{ backgroundColor: accountColor }} className="w-12 h-12 rounded-xl items-center justify-center mr-3">
-                          <IconComponent color="#FFFFFF" size={24} />
+                          <Ionicons name={iconName as any} size={24} color="#FFFFFF" />
                         </View>
                         <View className="flex-1">
                           <Text className="text-base font-medium text-textDark">

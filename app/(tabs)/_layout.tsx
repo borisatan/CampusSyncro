@@ -9,7 +9,7 @@ import "../globals.css";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { userId, isLoading: authLoading } = useAuth();
+  const { userId, isGuest, isLoading: authLoading } = useAuth();
   const { isSubscribed, isLoading: subLoading } = useSubscription();
 
   // Show loading while checking auth or subscription
@@ -17,13 +17,13 @@ export default function TabLayout() {
     return <LoadingSpinner />;
   }
 
-  // Redirect to sign-in if not authenticated
-  if (!userId) {
+  // Redirect to sign-in if not authenticated and not in guest mode
+  if (!userId && !isGuest) {
     return <Redirect href="/(auth)/sign-in" />;
   }
 
-  // Redirect to paywall if trial/subscription not active
-  if (!isSubscribed && !__DEV__) {
+  // Redirect to paywall if not subscribed (guests bypass this check)
+  if (!isGuest && !isSubscribed && !__DEV__) {
     return <Redirect href="/(onboarding)/subscription-trial" />;
   }
 

@@ -24,6 +24,7 @@ const isValidEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 import { useAnalytics } from "../hooks/useAnalytics";
 import { ensureUserProfile } from "../services/backendService";
+import { useAuth } from "../context/AuthContext";
 import { useSubscription } from "../context/SubscriptionContext";
 import { supabase } from "../utils/supabase";
 
@@ -33,6 +34,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function SignInScreen() {
   const router = useRouter();
   const { trackEvent, identifyUser } = useAnalytics();
+  const { enterGuestMode } = useAuth();
   const { linkUser } = useSubscription();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -421,6 +423,17 @@ export default function SignInScreen() {
                   </Text>
                 </Pressable>
               )}
+
+              {/* Continue as Guest */}
+              <Pressable
+                onPress={async () => {
+                  await enterGuestMode();
+                  router.replace('/(tabs)/dashboard');
+                }}
+                className="items-center py-3 mb-2 active:opacity-60"
+              >
+                <Text className="text-secondaryDark text-sm">Continue as Guest</Text>
+              </Pressable>
 
               {/* Sign Up */}
               <View className="flex-row justify-center mt-auto pt-0">

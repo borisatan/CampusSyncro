@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { persistOnboardingData } from '../services/onboardingService';
 import { ensureUserProfile } from '../services/backendService';
@@ -9,16 +10,38 @@ import { useIncomeStore } from '../store/useIncomeStore';
 import { useOnboardingStore } from '../store/useOnboardingStore';
 import { supabase } from '../utils/supabase';
 
+const GUEST_MODE_KEY = '@monelo_guest_mode';
+
 type AuthContextValue = {
   userId: string | null;
   isLoading: boolean;
+  isGuest: boolean;
+  enterGuestMode: () => Promise<void>;
+  exitGuestMode: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextValue>({ userId: null, isLoading: true });
+const AuthContext = createContext<AuthContextValue>({
+  userId: null,
+  isLoading: true,
+  isGuest: false,
+  enterGuestMode: async () => {},
+  exitGuestMode: async () => {},
+});
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
+
+  const enterGuestMode = async () => {
+    await AsyncStorage.setItem(GUEST_MODE_KEY, 'true');
+    setIsGuest(true);
+  };
+
+  const exitGuestMode = async () => {
+    await AsyncStorage.removeItem(GUEST_MODE_KEY);
+    setIsGuest(false);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -26,12 +49,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const loadUser = async () => {
       try {
-        // getUser() validates with the server, unlike cached session data
-        const { data } = await supabase.auth.getUser();
+        const [{ data }, guestFlag] = await Promise.all([
+          supabase.auth.getUser(),
+          AsyncStorage.getItem(GUEST_MODE_KEY),
+        ]);
         if (!isMounted) return;
-        setUserId(data.user?.id ?? null);
+
+        if (data.user?.id) {
+          // Real auth always wins — clear any stale guest flag
+          await AsyncStorage.removeItem(GUEST_MODE_KEY);
+          setUserId(data.user.id);
+          setIsGuest(false);
+        } else if (guestFlag === 'true') {
+          setIsGuest(true);
+        }
       } catch (error: any) {
-        // Stale/revoked refresh token — clear the session and treat as signed out
         if (error?.message?.includes('Refresh Token')) {
           await supabase.auth.signOut();
         }
@@ -47,19 +79,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loadUser();
 
     const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Only trust auth state changes AFTER initial server validation completes
-      // This prevents flash from stale/cached sessions
       if (initialLoadComplete) {
         setUserId(session?.user?.id ?? null);
       }
 
-      // Persist onboarding data for new users on first sign-in.
-      // This covers the email-verification path where no session exists at sign-up time.
       if (event === 'SIGNED_IN' && session?.user) {
+        // Real sign-in always clears guest mode
+        await AsyncStorage.removeItem(GUEST_MODE_KEY);
+        setIsGuest(false);
+
         const store = useOnboardingStore.getState();
         if (store.hasCompletedOnboarding && !store.hasPersistedOnboardingData) {
-          // Claim the flag immediately (before awaiting) to prevent the sign-up
-          // handler from also running persistOnboardingData concurrently.
           store.setOnboardingDataPersisted();
           try {
             await ensureUserProfile(session.user.id);
@@ -84,11 +114,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const value = useMemo(() => ({ userId, isLoading }), [userId, isLoading]);
+  const value = useMemo(
+    () => ({ userId, isLoading, isGuest, enterGuestMode, exitGuestMode }),
+    [userId, isLoading, isGuest]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-

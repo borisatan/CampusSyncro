@@ -7,8 +7,10 @@ import {
   fetchTotalIncome,
   fetchTransactionsByDateRange
 } from '../services/backendService';
+import { useAuth } from '../context/AuthContext';
 import { useCategoriesStore } from '../store/useCategoriesStore';
 import { Category, CategoryAggregation, ChartDataPoint, TimeFrame } from '../types/types';
+import { DEMO_CATEGORIES, DEMO_DASHBOARD } from '../utils/demoData';
 import {
   aggregateTransactionsByDay,
   aggregateTransactionsByDayOfMonth,
@@ -21,12 +23,12 @@ type PeriodOffset = typeof OFFSETS[number];
 const cacheKey = (period: TimeFrame, offset: number) => `${period}_${offset}`;
 
 export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
+  const { isGuest } = useAuth();
   const [timeFrame, setTimeFrame] = useState<TimeFrame>(initialTimeFrame);
   const [offset, setOffset] = useState<PeriodOffset>(0);
   const [loading, setLoading] = useState(true);
   const cacheRef = useRef<Record<string, any>>({});
 
-  // State for the UI (summary data for the active offset)
   const [data, setData] = useState({
     totalBalance: 0,
     totalIncome: 0,
@@ -36,11 +38,9 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
     chartData: [] as ChartDataPoint[],
   });
 
-  // Chart data for all offsets of the current timeFrame (for scrollable view)
   const [chartDataByOffset, setChartDataByOffset] = useState<Record<number, ChartDataPoint[]>>({});
 
   const applyData = useCallback((fetchedData: any) => {
-    // Read categories from the Zustand store instead of fetching them
     const categories = useCategoriesStore.getState().categories;
     setData({
       totalBalance: fetchedData.balance,
@@ -55,7 +55,6 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
   const fetchAllDataForPeriod = async (period: TimeFrame, periodOffset: number = 0) => {
     const { startDate, endDate } = getDateRange(period, periodOffset);
 
-    // No more fetchCategories() here — read from store instead
     const [balance, income, expenses, aggregates, transactions] = await Promise.all([
       fetchCheckingBalance(),
       fetchTotalIncome(startDate, endDate),
@@ -97,7 +96,6 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
     setChartDataByOffset(map);
   }, []);
 
-  // Initial load: only fetch offset 0 for the initial timeframe, then lazy-load the rest
   const initialLoad = async (force = false) => {
     if (force) {
       cacheRef.current = {};
@@ -105,8 +103,6 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
 
     try {
       setLoading(true);
-
-      // 1. Fetch only the current timeframe + offset 0
       await fetchAndCache(timeFrame, 0, force);
       const currentKey = cacheKey(timeFrame, 0);
       if (cacheRef.current[currentKey]) {
@@ -119,7 +115,6 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
       setLoading(false);
     }
 
-    // 2. Background: fetch all offsets for all timeframes
     const allTimeFrames: TimeFrame[] = ['week', 'month', 'year'];
     try {
       await Promise.all(
@@ -135,17 +130,22 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
     }
   };
 
-  // Apply cached data on timeframe change
   const handleSetTimeFrame = useCallback((newTimeFrame: TimeFrame) => {
     setTimeFrame(newTimeFrame);
     setOffset(0);
+
+    if (isGuest) {
+      const demoChartData = DEMO_DASHBOARD.chartByTimeFrame[newTimeFrame]?.[0] ?? [];
+      setData(prev => ({ ...prev, chartData: demoChartData, categories: DEMO_CATEGORIES }));
+      setChartDataByOffset(DEMO_DASHBOARD.chartByTimeFrame[newTimeFrame] as Record<number, ChartDataPoint[]> ?? {});
+      return;
+    }
+
     const key = cacheKey(newTimeFrame, 0);
     if (cacheRef.current[key]) {
-      // Data already cached — apply instantly, no fetch needed
       applyData(cacheRef.current[key]);
       updateChartDataByOffset(newTimeFrame);
     } else {
-      // Not cached yet — fetch just offset 0, then background-load the rest
       setLoading(true);
       fetchAndCache(newTimeFrame, 0).then((result) => {
         applyData(result);
@@ -156,16 +156,23 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
         setLoading(false);
       });
 
-      // Background: load remaining offsets
       Promise.all(
         OFFSETS.filter(o => o !== 0).map(o => fetchAndCache(newTimeFrame, o))
       ).then(() => updateChartDataByOffset(newTimeFrame)).catch(() => {});
     }
-  }, [applyData, updateChartDataByOffset]);
+  }, [applyData, updateChartDataByOffset, isGuest]);
 
-  // Apply cached data on offset change (when user scrolls chart).
   const handleSetOffset = useCallback((newOffset: PeriodOffset) => {
     setOffset(newOffset);
+
+    if (isGuest) {
+      const demoForOffset = DEMO_DASHBOARD.chartByTimeFrame[timeFrame]?.[newOffset];
+      if (demoForOffset) {
+        setData(prev => ({ ...prev, chartData: demoForOffset }));
+      }
+      return;
+    }
+
     const key = cacheKey(timeFrame, newOffset);
     if (cacheRef.current[key]) {
       const cached = cacheRef.current[key];
@@ -176,19 +183,30 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
         categoriesAggregated: cached.aggregates,
       }));
     }
-  }, [timeFrame]);
+  }, [timeFrame, isGuest]);
 
   useEffect(() => {
+    if (isGuest) {
+      setData({
+        totalBalance: DEMO_DASHBOARD.totalBalance,
+        totalIncome: DEMO_DASHBOARD.totalIncome,
+        totalExpenses: DEMO_DASHBOARD.totalExpenses,
+        categories: DEMO_CATEGORIES,
+        categoriesAggregated: DEMO_DASHBOARD.categoriesAggregated,
+        chartData: DEMO_DASHBOARD.chartData,
+      });
+      setChartDataByOffset(DEMO_DASHBOARD.chartDataByOffset);
+      setLoading(false);
+      return;
+    }
     initialLoad();
-  }, []);
+  }, [isGuest]);
 
-  // Re-apply cached data when categories load into the store after a fresh sign-up.
-  // On first mount, DataPreloader may not have finished yet, so applyData sees an empty
-  // categories array. Once DataPreloader populates the store, this effect fires and
-  // re-applies the cached API result with the correct categories.
+  // Re-apply cached data when categories load for new sign-ups (not needed for guests)
   const storeCategories = useCategoriesStore(state => state.categories);
   const prevCategoriesLengthRef = useRef(0);
   useEffect(() => {
+    if (isGuest) return;
     const prevLen = prevCategoriesLengthRef.current;
     prevCategoriesLengthRef.current = storeCategories.length;
     if (storeCategories.length > 0 && prevLen === 0) {
@@ -197,7 +215,7 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
         applyData(cacheRef.current[key]);
       }
     }
-  }, [storeCategories, timeFrame, offset, applyData]);
+  }, [storeCategories, timeFrame, offset, applyData, isGuest]);
 
   return {
     timeFrame,
@@ -207,6 +225,6 @@ export const useDashboardData = (initialTimeFrame: TimeFrame = 'month') => {
     loading,
     ...data,
     chartDataByOffset,
-    refresh: () => initialLoad(true)
+    refresh: () => isGuest ? Promise.resolve() : initialLoad(true)
   };
 };

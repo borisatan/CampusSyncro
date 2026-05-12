@@ -15,6 +15,7 @@ import { useNetwork } from "../context/NetworkContext";
 import { useTheme } from "../context/ThemeContext";
 import { deleteTransaction, fetchAccountNames, fetchCategoryIcons, fetchFilteredTransactions, fetchTransactions, updateAccountBalance } from "../services/backendService";
 import { useAccountsStore } from "../store/useAccountsStore";
+import { DEMO_CATEGORY_ICONS, DEMO_TRANSACTIONS } from "../utils/demoData";
 import { CategoryIconInfo, TimeFrame, Transaction } from "../types/types";
 import { getDateRange } from "../utils/dateUtils";
 
@@ -60,7 +61,7 @@ const groupTransactionsByDate = (
 const TransactionsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const { isConnected } = useNetwork();
-  const { userId } = useAuth();
+  const { userId, isGuest } = useAuth();
   const { updateAccountBalance: updateAccountBalanceStore, accounts } = useAccountsStore();
   const { registerTransactionListRefresh, registerOptimisticDeleteTransaction, registerOptimisticUpdateTransaction, refreshAll } = useDataRefresh();
 
@@ -94,6 +95,15 @@ const TransactionsScreen: React.FC = () => {
 
   // --- Load initial transactions (first page / refresh)
   const loadInitialTransactions = async () => {
+    if (isGuest) {
+      setTransactions(DEMO_TRANSACTIONS);
+      setCategoryIcons(DEMO_CATEGORY_ICONS);
+      setHasMore(false);
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
+      return;
+    }
+
     setIsRefreshing(true);
     setLoadError(null);
     try {

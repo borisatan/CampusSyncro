@@ -33,11 +33,13 @@ import { DescriptionSuggestions } from "../components/AddTransactionPage/Descrip
 import { SubmitButton } from "../components/AddTransactionPage/TransactionFormFields";
 import { TransactionHero } from "../components/AddTransactionPage/TransactionHero";
 import { AnimatedToggle } from "../components/Shared/AnimatedToggle";
+import { GuestWritePrompt } from "../components/Shared/GuestWritePrompt";
 import { SuccessModal } from "../components/Shared/SuccessModal";
 import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useTheme } from "../context/ThemeContext";
 import { useAnalytics } from "../hooks/useAnalytics";
+import { useGuestWritePrompt } from "../hooks/useGuestWritePrompt";
 import { useRecurringNudge } from "../hooks/useRecurringNudge";
 import {
   createRecurringTransaction,
@@ -53,7 +55,8 @@ import { computeNextRunDate } from "../utils/dateUtils";
 
 const TransactionAdder = () => {
   const { isDarkMode } = useTheme();
-  const { userId, isLoading } = useAuth();
+  const { userId, isGuest, isLoading } = useAuth();
+  const { visible: guestPromptVisible, setVisible: setGuestPromptVisible, guardWrite } = useGuestWritePrompt();
   const router = useRouter();
   const { refreshDashboard, refreshAccounts, refreshTransactionList } = useDataRefresh();
   const { trackEvent } = useAnalytics();
@@ -258,7 +261,7 @@ const TransactionAdder = () => {
 
   const effectiveHandleSubmit = hasNoAccounts
     ? () => router.push("/(tabs)/accounts?openAddModal=true" as any)
-    : handleSubmit;
+    : () => guardWrite(handleSubmit);
 
   return (
     <SafeAreaView
@@ -567,6 +570,10 @@ const TransactionAdder = () => {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+      <GuestWritePrompt
+        visible={guestPromptVisible}
+        onDismiss={() => setGuestPromptVisible(false)}
+      />
     </SafeAreaView>
   );
 };

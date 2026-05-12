@@ -2,20 +2,20 @@ import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrencyStore } from '../../store/useCurrencyStore';
 
-/**
- * Component that initializes the currency store when user is authenticated
- * Should be placed in the root layout
- */
 export default function CurrencyInitializer() {
-  const { userId, isLoading: authLoading } = useAuth();
+  const { userId, isGuest, isLoading: authLoading } = useAuth();
   const { loadCurrency } = useCurrencyStore();
 
   useEffect(() => {
-    if (!authLoading && userId) {
+    if (authLoading) return;
+    if (isGuest) {
+      useCurrencyStore.setState({ currencyCode: 'USD', currencySymbol: '$', isLoading: false });
+      return;
+    }
+    if (userId) {
       loadCurrency();
     }
-  }, [userId, authLoading, loadCurrency]);
+  }, [userId, isGuest, authLoading, loadCurrency]);
 
   return null;
 }
-

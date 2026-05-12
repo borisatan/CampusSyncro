@@ -29,6 +29,7 @@ import { CurrencySelector } from "../components/Shared/CurrencySelector";
 import { RipplePressable } from "../components/Shared/RipplePressable";
 
 // Custom Hooks & Utils
+import { useAuth } from "../context/AuthContext";
 import { useLock } from "../context/LockContext";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrencyStore } from "../store/useCurrencyStore";
@@ -48,6 +49,7 @@ const frequencyOptions = [
 
 export default function ProfileScreen() {
   const { isDarkMode } = useTheme();
+  const { isGuest, exitGuestMode } = useAuth();
   const router = useRouter();
   const { isAppLockEnabled, deviceAuthAvailable, setAppLockEnabled } =
     useLock();
@@ -230,6 +232,51 @@ export default function ProfileScreen() {
     ? "bg-surfaceDark border-borderDark"
     : "bg-white border-borderLight";
   const screenBg = isDarkMode ? "bg-backgroundDark" : "bg-background";
+
+  if (isGuest) {
+    return (
+      <SafeAreaView className={`flex-1 ${screenBg}`} edges={['top']}>
+        <View className="flex-1 items-center justify-center px-8">
+          <View
+            className="w-20 h-20 rounded-full items-center justify-center mb-6"
+            style={{ backgroundColor: '#2A3450' }}
+          >
+            <Ionicons name="person-outline" size={38} color="#4F8EF7" />
+          </View>
+          <Text className="text-textDark text-2xl font-bold mb-3 text-center">
+            You're exploring as a guest
+          </Text>
+          <Text className="text-secondaryDark text-base text-center leading-6 mb-8">
+            Create a free account to save your data, track real spending, and unlock all features.
+          </Text>
+          <Pressable
+            onPress={async () => {
+              await exitGuestMode();
+              const { hasCompletedOnboarding, hasPersistedOnboardingData } = useOnboardingStore.getState();
+              if (hasCompletedOnboarding && !hasPersistedOnboardingData) {
+                router.replace('/(auth)/sign-up?from=onboarding' as any);
+              } else {
+                router.replace('/(onboarding)/welcome');
+              }
+            }}
+            className="rounded-2xl py-4 px-8 items-center active:opacity-80"
+            style={{ backgroundColor: '#4F8EF7' }}
+          >
+            <Text className="text-white font-semibold text-base">Create Account</Text>
+          </Pressable>
+          <Pressable
+            onPress={async () => {
+              await exitGuestMode();
+              router.replace('/(auth)/sign-in');
+            }}
+            className="mt-4 py-3 px-8 active:opacity-60"
+          >
+            <Text className="text-accentBlue text-base">Sign in instead</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className={`flex-1 ${screenBg}`} edges={["top"]}>

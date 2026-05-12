@@ -1064,6 +1064,28 @@ export const trackGoalAmount = async (payload: {
   if (updateError) throw updateError;
 };
 
+export const deleteGoalContribution = async (contributionId: number, goalId: number, amount: number): Promise<void> => {
+  const { error: delError } = await supabase
+    .from('GoalContributions')
+    .delete()
+    .eq('id', contributionId);
+  if (delError) throw delError;
+
+  const { data: goal, error: fetchError } = await supabase
+    .from('Goals')
+    .select('current_amount')
+    .eq('id', goalId)
+    .single();
+  if (fetchError) throw fetchError;
+
+  const newAmount = Math.max(0, (goal.current_amount ?? 0) - amount);
+  const { error: patchError } = await supabase
+    .from('Goals')
+    .update({ current_amount: newAmount })
+    .eq('id', goalId);
+  if (patchError) throw patchError;
+};
+
 export const fetchGoalContributions = async (goalId: number): Promise<GoalContribution[]> => {
   const { data, error } = await supabase
     .from('GoalContributions')

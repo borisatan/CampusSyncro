@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchMonthlySavingsProgress } from '../services/backendService';
+import { useAuth } from '../context/AuthContext';
 import { useIncomeStore } from '../store/useIncomeStore';
+import { DEMO_SAVINGS_PROGRESS } from '../utils/demoData';
 import { getPeriodDates } from './useBudgetsData';
 
 interface SavingsProgressResult {
@@ -12,6 +14,7 @@ interface SavingsProgressResult {
 }
 
 export const useSavingsProgress = (): SavingsProgressResult => {
+  const { isGuest } = useAuth();
   const { monthlySavingsTarget } = useIncomeStore();
   const [saved, setSaved] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,12 +30,27 @@ export const useSavingsProgress = (): SavingsProgressResult => {
   }, []);
 
   useEffect(() => {
+    if (isGuest) {
+      setIsLoading(false);
+      return;
+    }
     fetchProgress().finally(() => setIsLoading(false));
-  }, [fetchProgress]);
+  }, [fetchProgress, isGuest]);
 
   const refresh = useCallback(async () => {
+    if (isGuest) return;
     await fetchProgress();
-  }, [fetchProgress]);
+  }, [fetchProgress, isGuest]);
+
+  if (isGuest) {
+    return {
+      target: DEMO_SAVINGS_PROGRESS.target,
+      saved: DEMO_SAVINGS_PROGRESS.saved,
+      percentage: DEMO_SAVINGS_PROGRESS.percentage,
+      isLoading: false,
+      refresh: async () => {},
+    };
+  }
 
   const percentage = monthlySavingsTarget > 0
     ? Math.min((saved / monthlySavingsTarget) * 100, 100)

@@ -242,7 +242,7 @@ export function EditGoalModal({
             <View className="bg-surfaceDark rounded-xl p-4 mb-4 border border-borderDark">
               <View className="flex-row justify-between mb-2">
                 <Text className="text-secondaryDark text-sm">Current Progress</Text>
-                <Text className="font-semibold" style={{ color: accentColor }}>
+                <Text className="font-semibold" style={{ color: '#22c55e' }}>
                   {Math.round(progress)}%
                 </Text>
               </View>
@@ -251,7 +251,7 @@ export function EditGoalModal({
                   className="h-full rounded-full"
                   style={{
                     width: `${progress}%`,
-                    backgroundColor: accentColor,
+                    backgroundColor: '#22c55e',
                   }}
                 />
               </View>

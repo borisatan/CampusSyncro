@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useAuth } from '../../context/AuthContext';
 import { useAccountsStore } from '../../store/useAccountsStore';
 import { useGoalsStore } from '../../store/useGoalsStore';
 import { Account } from '../../types/types';
@@ -35,6 +36,7 @@ function AnimatedDot({ index, currentPage }: { index: number; currentPage: Retur
 }
 
 export function GoalsSection({ currencySymbol, accounts, onTransactionComplete }: GoalsSectionProps) {
+  const { isGuest } = useAuth();
   const { goals, loadGoals } = useGoalsStore();
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = screenWidth - 16; // 8px padding each side (dashboard px-2)
@@ -47,7 +49,7 @@ export function GoalsSection({ currencySymbol, accounts, onTransactionComplete }
   const goalCount = useSharedValue(goals.length);
 
   useEffect(() => {
-    loadGoals();
+    if (!isGuest) loadGoals();
   }, []);
 
   useEffect(() => {
@@ -116,11 +118,11 @@ export function GoalsSection({ currencySymbol, accounts, onTransactionComplete }
       {goals.length === 0 ? (
         <Pressable
           onPress={() => setShowCreateModal(true)}
-          className="rounded-2xl p-5 border border-dashed items-center"
-          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, borderColor: '#a78bfa55' }]}
+          className="rounded-2xl border border-borderDark bg-surfaceDark p-5 items-center"
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
         >
-          <Text className="text-purple-400 font-semibold text-sm mb-1">Create your first goal</Text>
-          <Text className="text-slateMuted text-xs">Emergency fund, vacation, new car...</Text>
+          <Text className="text-purple-400 font-bold text-sm mb-1">Create your first goal</Text>
+          <Text className="text-slateMuted text-xs font-semibold">Emergency fund, vacation, new car...</Text>
         </Pressable>
       ) : (
         <View style={{ overflow: 'hidden' }}>

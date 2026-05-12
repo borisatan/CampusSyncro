@@ -104,6 +104,100 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
           </View>
         </View>
 
+        {/* Total Budget Summary */}
+        {categoryBudgets.length >= 1 &&
+          (() => {
+            const totalPercentage =
+              totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
+            const totalIsOver = totalPercentage > 100;
+            const totalIsWarning =
+              totalPercentage >= 80 && totalPercentage < 100;
+            const totalRemaining = Math.max(totalLimit - totalSpent, 0);
+
+            const totalProgressColor = totalIsOver
+              ? "#ef4444"
+              : totalIsWarning
+                ? "#F59E0B"
+                : "#22c55e";
+            const totalStatusColor = totalIsOver
+              ? "#ef4444"
+              : totalIsWarning
+                ? "#FCD34D"
+                : "#22c55e";
+
+            const itemCount = categoryBudgets.length + (hasSavings ? 1 : 0);
+
+            return (
+              <MotiView
+                from={
+                  isUnlocked
+                    ? { opacity: 0, translateY: 8 }
+                    : { opacity: 1, translateY: 0 }
+                }
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{
+                  type: "timing",
+                  duration: 250,
+                  delay: isUnlocked
+                    ? 100 + itemCount * 50 + 50
+                    : 0,
+                }}
+                className="px-4 py-3 border-b border-borderDark bg-surfaceDark mb-3"
+              >
+                {/* Total Header */}
+                <View className="flex-row items-center justify-between mb-2">
+                  <View className="flex-row items-center">
+                    <View className="w-11 h-11 rounded-xl items-center justify-center mr-3 bg-accentTeal">
+                      <Ionicons name="wallet-outline" size={22} color="#fff" />
+                    </View>
+                    <View>
+                      <Text className="text-sm font-semibold text-slate-100">
+                        Total Budget
+                      </Text>
+                      <Text
+                        className="text-[11px] mt-px"
+                        style={{ color: totalStatusColor }}
+                      >
+                        {totalIsOver
+                          ? `${formatAmount(totalSpent - totalLimit, currencySymbol)} over`
+                          : `${formatAmount(totalRemaining, currencySymbol)} left`}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="items-end">
+                    <Text className="text-[15px] font-bold text-slate-100">
+                      {formatAmount(totalSpent, currencySymbol)}
+                    </Text>
+                    <Text className="text-[11px] mt-px text-secondaryDark">
+                      / {formatAmount(totalLimit, currencySymbol)}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Progress Bar */}
+                <View className="h-2 rounded-full overflow-hidden bg-borderDark">
+                  <View
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.min(Math.max(totalPercentage, 0), 100)}%`,
+                      backgroundColor: totalProgressColor,
+                    }}
+                  />
+                </View>
+
+                {/* Percentage */}
+                <View className="flex-row justify-end mt-1">
+                  <Text
+                    className="text-[11px] font-semibold"
+                    style={{ color: totalProgressColor }}
+                  >
+                    {Math.round(totalPercentage)}%
+                  </Text>
+                </View>
+              </MotiView>
+            );
+          })()}
+
         {/* Individual Category Budget Items */}
         <View className="px-4">
           {categoryBudgets.map((cb, index) => {
@@ -271,99 +365,6 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
           )}
         </View>
 
-        {/* Total Budget Summary */}
-        {categoryBudgets.length >= 1 &&
-          (() => {
-            const totalPercentage =
-              totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
-            const totalIsOver = totalPercentage > 100;
-            const totalIsWarning =
-              totalPercentage >= 80 && totalPercentage < 100;
-            const totalRemaining = Math.max(totalLimit - totalSpent, 0);
-
-            const totalProgressColor = totalIsOver
-              ? "#ef4444"
-              : totalIsWarning
-                ? "#F59E0B"
-                : "#22c55e";
-            const totalStatusColor = totalIsOver
-              ? "#ef4444"
-              : totalIsWarning
-                ? "#FCD34D"
-                : "#22c55e";
-
-            const itemCount = categoryBudgets.length + (hasSavings ? 1 : 0);
-
-            return (
-              <MotiView
-                from={
-                  isUnlocked
-                    ? { opacity: 0, translateY: 8 }
-                    : { opacity: 1, translateY: 0 }
-                }
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{
-                  type: "timing",
-                  duration: 250,
-                  delay: isUnlocked
-                    ? 100 + itemCount * 50 + 50
-                    : 0,
-                }}
-                className="px-4 py-3 border-t border-borderDark bg-surfaceDark"
-              >
-                {/* Total Header */}
-                <View className="flex-row items-center justify-between mb-2">
-                  <View className="flex-row items-center">
-                    <View className="w-11 h-11 rounded-xl items-center justify-center mr-3 bg-accentTeal">
-                      <Ionicons name="wallet-outline" size={22} color="#fff" />
-                    </View>
-                    <View>
-                      <Text className="text-sm font-semibold text-slate-100">
-                        Total Budget
-                      </Text>
-                      <Text
-                        className="text-[11px] mt-px"
-                        style={{ color: totalStatusColor }} // Dynamic color based on status
-                      >
-                        {totalIsOver
-                          ? `${formatAmount(totalSpent - totalLimit, currencySymbol)} over`
-                          : `${formatAmount(totalRemaining, currencySymbol)} left`}
-                      </Text>
-                    </View>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-[15px] font-bold text-slate-100">
-                      {formatAmount(totalSpent, currencySymbol)}
-                    </Text>
-                    <Text className="text-[11px] mt-px text-secondaryDark">
-                      / {formatAmount(totalLimit, currencySymbol)}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Progress Bar */}
-                <View className="h-2 rounded-full overflow-hidden bg-borderDark">
-                  <View
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${Math.min(Math.max(totalPercentage, 0), 100)}%`,
-                      backgroundColor: totalProgressColor,
-                    }}
-                  />
-                </View>
-
-                {/* Percentage */}
-                <View className="flex-row justify-end mt-1">
-                  <Text
-                    className="text-[11px] font-semibold"
-                    style={{ color: totalProgressColor }}
-                  >
-                    {Math.round(totalPercentage)}%
-                  </Text>
-                </View>
-              </MotiView>
-            );
-          })()}
       </View>
     </MotiView>
   );

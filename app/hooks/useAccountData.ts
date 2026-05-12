@@ -1,14 +1,13 @@
-import { Building2, CreditCard, PiggyBank, TrendingUp } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
 import { Account } from '../types/types';
 
 export const TYPE_CONFIG: { [key: string]: { icon: string } } = {
-  checking: { icon: 'credit-card' },
-  savings: { icon: 'piggy-bank' },
-  investment: { icon: 'trending-up' },
-  investments: { icon: 'trending-up' },
-  credit: { icon: 'credit-card' },
+  checking: { icon: 'card-outline' },
+  savings: { icon: 'wallet-outline' },
+  investment: { icon: 'trending-up-outline' },
+  investments: { icon: 'trending-up-outline' },
+  credit: { icon: 'card-outline' },
 };
 
 export const TYPE_DEFAULT_COLORS: { [key: string]: string } = {
@@ -17,13 +16,6 @@ export const TYPE_DEFAULT_COLORS: { [key: string]: string } = {
   investment: '#1DB8A3',
   investments: '#1DB8A3',
   credit: '#F2514A',
-};
-
-export const ICON_MAP: { [key: string]: any } = {
-  'credit-card': CreditCard,
-  'piggy-bank': PiggyBank,
-  'trending-up': TrendingUp,
-  'building': Building2,
 };
 
 export const getAccountColor = (account: Account): string =>

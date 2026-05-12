@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { CreditCard } from 'lucide-react-native';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../Shared/AppText';
 import { Account } from '../../types/types';
-import { getAccountColor, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
+import { getAccountColor, TYPE_CONFIG } from '../../hooks/useAccountData';
 
 interface AccountTransferCardProps {
   account: Account | null;
@@ -76,7 +75,6 @@ export const AccountTransferCard = ({
   }
 
   const config = TYPE_CONFIG[account.type?.toLowerCase().trim()] || TYPE_CONFIG.checking;
-  const IconComponent = ICON_MAP[config.icon] || CreditCard;
   const accountColor = getAccountColor(account);
 
   return (
@@ -87,7 +85,7 @@ export const AccountTransferCard = ({
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">
           <View style={{ backgroundColor: accountColor }} className="w-12 h-12 rounded-xl items-center justify-center mr-3">
-            <IconComponent color="#FFFFFF" size={24} />
+            <Ionicons name={config.icon as any} size={24} color="#FFFFFF" />
           </View>
           <View className="flex-1">
             <View className="flex-row items-center">

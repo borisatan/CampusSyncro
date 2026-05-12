@@ -15,6 +15,7 @@ import { ScrollableSpendingChart } from "../components/HomePage/ScrollableSpendi
 import { TimeFrameSelector } from "../components/HomePage/TimeFrameSelector";
 
 // Hooks & Utilities
+import { useAuth } from "../context/AuthContext";
 import { useDataRefresh } from "../context/DataRefreshContext";
 import { useLock } from "../context/LockContext";
 import { useNetwork } from "../context/NetworkContext";
@@ -29,6 +30,7 @@ import { useIncomeStore } from "../store/useIncomeStore";
 
 export default function Dashboard() {
   const router = useRouter();
+  const { isGuest } = useAuth();
   const { isDarkMode } = useTheme();
   const { isUnlocked } = useLock();
   const { isConnected } = useNetwork();
@@ -91,13 +93,14 @@ export default function Dashboard() {
   const { registerDashboardRefresh, registerGoalsRefresh } = useDataRefresh();
 
   const refreshAll = useCallback(async () => {
+    if (isGuest) return;
     await loadCurrency();
     refreshData();
     refreshBudgets();
     refreshSavings();
     loadGoals();
     loadAccounts();
-  }, [loadCurrency, refreshData, refreshBudgets, refreshSavings, loadGoals, loadAccounts]);
+  }, [isGuest, loadCurrency, refreshData, refreshBudgets, refreshSavings, loadGoals, loadAccounts]);
 
   useEffect(() => {
     registerDashboardRefresh(refreshAll);

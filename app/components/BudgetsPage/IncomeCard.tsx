@@ -132,7 +132,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
             <View className="flex-row items-center justify-between mb-1.5">
               <View className="flex-row items-center" style={{ gap: 6 }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#22D97A" }} />
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#3B82F6" }} />
                 <Text className={`text-xs font-medium ${isDarkMode ? 'text-slate300' : 'text-slate500'}`}>
                   Budgeted
                 </Text>
@@ -143,7 +143,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
             </View>
             <View className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-borderDark' : 'bg-slate200'}`}>
               <View
-                style={{ width: `${Math.min(categoriesPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#22D97A" }}
+                style={{ width: `${Math.min(categoriesPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#3B82F6" }}
               />
             </View>
           </View>
@@ -154,7 +154,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
               <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
                 <View className="flex-row items-center justify-between mb-1.5">
                   <View className="flex-row items-center" style={{ gap: 6 }}>
-                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#8B5CF6" }} />
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#1DB8A3" }} />
                     <Text className={`text-xs font-medium ${isDarkMode ? 'text-slate300' : 'text-slate500'}`}>
                       Savings
                     </Text>
@@ -165,7 +165,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                 </View>
                 <View className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-borderDark' : 'bg-slate200'}`}>
                   <View
-                    style={{ width: `${Math.min(savingsPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#8B5CF6" }}
+                    style={{ width: `${Math.min(savingsPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#1DB8A3" }}
                   />
                 </View>
               </View>
@@ -178,7 +178,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
           <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
             <View className="flex-row items-center justify-between mb-1.5">
               <View className="flex-row items-center" style={{ gap: 6 }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isOverAllocated ? "#F2514A" : "#8B5CF6" }} />
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isOverAllocated ? "#F2514A" : "#F59E0B" }} />
                 <Text className={`text-xs font-medium ${isOverAllocated ? 'text-accentRed' : isDarkMode ? 'text-slate300' : 'text-slate500'}`}>
                   {isOverAllocated ? "Over Budget" : "Unallocated"}
                 </Text>
@@ -193,7 +193,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                   width: `${isOverAllocated ? 100 : Math.min(unallocatedPercent, 100)}%`,
                   height: "100%",
                   borderRadius: 999,
-                  backgroundColor: isOverAllocated ? "#F2514A" : "#8B5CF6",
+                  backgroundColor: isOverAllocated ? "#F2514A" : "#F59E0B",
                 }}
               />
             </View>

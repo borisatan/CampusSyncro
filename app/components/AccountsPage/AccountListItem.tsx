@@ -1,11 +1,12 @@
-import { CreditCard, Edit2, MoreVertical, Trash2 } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Edit2, MoreVertical, Trash2 } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../Shared/AppText';
 import { AnimatedRollingNumber } from 'react-native-animated-rolling-numbers';
 
-import { getAccountColor, ICON_MAP, TYPE_CONFIG } from '../../hooks/useAccountData';
+import { getAccountColor, TYPE_CONFIG } from '../../hooks/useAccountData';
 
 interface AccountListItemProps {
   account: any;
@@ -21,7 +22,6 @@ export const AccountListItem = ({
   account, index, currencySymbol, isMenuOpen, onToggleMenu, onEdit, onDelete
 }: AccountListItemProps) => {
   const config = TYPE_CONFIG[account.type.toLowerCase().trim()] || TYPE_CONFIG.checking;
-  const IconComponent = ICON_MAP[config.icon] || CreditCard;
   const accountColor = getAccountColor(account);
 
   return (
@@ -35,7 +35,7 @@ export const AccountListItem = ({
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
             <View style={{ backgroundColor: accountColor }} className="w-12 h-12 rounded-xl items-center justify-center">
-              <IconComponent color="#FFFFFF" size={24} />
+              <Ionicons name={config.icon as any} size={24} color="#FFFFFF" />
             </View>
             <View className="flex-1 ml-4">
               <Text className="font-medium text-textDark">{account.account_name}</Text>

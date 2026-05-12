@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchIncomeForPeriod, fetchSpendingByCategory } from '../services/backendService';
+import { useAuth } from '../context/AuthContext';
 import { useBudgetStore } from '../store/useBudgetStore';
 import { useCategoriesStore } from '../store/useCategoriesStore';
 import { useIncomeStore } from '../store/useIncomeStore';
@@ -25,6 +26,7 @@ export const getPeriodDates = (): { startDate: Date; endDate: Date } => {
 };
 
 export const useBudgetsData = (): BudgetsDataResult => {
+  const { isGuest } = useAuth();
   const { useDynamicIncome, manualIncome, loadIncomeSettings } = useIncomeStore();
 
   // Subscribe to state values (will trigger re-render when these change)
@@ -82,6 +84,11 @@ export const useBudgetsData = (): BudgetsDataResult => {
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
+      if (isGuest) {
+        // Store already seeded by DataPreloader — just clear loading state
+        setLoading(false);
+        return;
+      }
       // Fetch if no data yet — covers the race condition where DataPreloader
       // ran before persistOnboardingData created categories with budgets.
       if (categoryBudgets.length === 0) {
@@ -93,16 +100,17 @@ export const useBudgetsData = (): BudgetsDataResult => {
         setLoading(false);
       }
     }
-  }, [fetchAndBuild, setLoading, categoryBudgets.length, isBudgetLoading]);
+  }, [fetchAndBuild, setLoading, categoryBudgets.length, isBudgetLoading, isGuest]);
 
   // Background refresh — no loading flash, no list clearing
   const refresh = useCallback(async () => {
+    if (isGuest) return;
     try {
       await fetchAndBuild();
     } catch (error) {
       console.error('Error refreshing budgets data:', error);
     }
-  }, [fetchAndBuild]);
+  }, [fetchAndBuild, isGuest]);
 
   const totalBudgeted = categoryBudgets.reduce((sum, cb) => sum + cb.budget_amount, 0);
   const totalSpent = categoryBudgets.reduce((sum, cb) => sum + cb.spent, 0);
