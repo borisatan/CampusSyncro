@@ -21,14 +21,14 @@
         "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_taUQoesANpXPCdFQIJPnZEwMQAf",
         "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_jVEkIoIkDngIWEwWIoBcmwAhnOw",
         "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_og5RQJu6IBgHDpu59SmOQyzUEoAs2tapzSNAspbk0Rg",
-        "EXPO_PUBLIC_PAYWALL_ENABLED": "false"
+        "EXPO_PUBLIC_PAYWALL_ENABLED": "true"
       }
     },
     "production": {
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_PAYWALL_ENABLED": "false"
+        "EXPO_PUBLIC_PAYWALL_ENABLED": "true"
       }
     }
   },

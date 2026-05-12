@@ -2,16 +2,12 @@ import React, { createContext, useCallback, useContext, useEffect, useLayoutEffe
 import Purchases, { CustomerInfo, LOG_LEVEL } from 'react-native-purchases';
 import { NativeModules, Platform } from 'react-native';
 import { useAuth } from './AuthContext';
-import { supabase } from '../utils/supabase';
 
 const isRevenueCatAvailable = !!NativeModules.RNPurchases;
 
 const RC_IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '';
 const RC_ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
 const PREMIUM_ENTITLEMENT = 'premium';
-// Users created before this date get free access when the paywall is enabled.
-// Update this to the date you flip EXPO_PUBLIC_PAYWALL_ENABLED=true in production.
-const GRANDFATHERED_BEFORE = new Date('2026-06-01T00:00:00Z');
 const platformApiKey = Platform.OS === 'android' ? RC_ANDROID_KEY : RC_IOS_KEY;
 
 interface SubscriptionContextType {
@@ -34,7 +30,6 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { userId } = useAuth();
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const customerInfoRef = useRef<CustomerInfo | null>(null);
-  const [isGrandfathered, setIsGrandfathered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLinkingUser, setIsLinkingUser] = useState(false);
 
@@ -85,63 +80,40 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (userId) setIsLinkingUser(true);
   }, [userId]);
 
-  // Auto-link RC user and check grandfathered status whenever the authenticated user changes
+  // Auto-link RC user whenever the authenticated user changes
   useEffect(() => {
     if (!userId) {
-      setIsGrandfathered(false);
       setIsLinkingUser(false);
       return;
     }
 
     const initForUser = async () => {
       try {
-        await Promise.all([
-          // Link Supabase user ID to RevenueCat — converts anonymous customer → identified customer
-          (async () => {
-            if (!isRevenueCatAvailable || !platformApiKey) return;
+        if (!isRevenueCatAvailable || !platformApiKey) return;
+        try {
+          const { customerInfo: info } = await Purchases.logIn(userId);
+
+          // If logIn returned a newly-created identified customer (created=true) or
+          // the identified customer has no entitlement, invalidate the cache and
+          // re-fetch. This handles the anonymous→identified merge case where the
+          // entitlement lives on the anonymous customer and RC hasn't propagated it yet.
+          const isNowActive = !!info.entitlements.active[PREMIUM_ENTITLEMENT];
+
+          if (!isNowActive) {
             try {
-              const { customerInfo: info } = await Purchases.logIn(userId);
-
-              // If logIn returned a newly-created identified customer (created=true) or
-              // the identified customer has no entitlement, invalidate the cache and
-              // re-fetch. This handles the anonymous→identified merge case where the
-              // entitlement lives on the anonymous customer and RC hasn't propagated it yet.
-              const isNowActive = !!info.entitlements.active[PREMIUM_ENTITLEMENT];
-
-              if (!isNowActive) {
-                try {
-                  await Purchases.invalidateCustomerInfoCache();
-                  const fresh = await Purchases.getCustomerInfo();
-                  setCustomerInfo(fresh);
-                } catch (e) {
-                  console.error('[SubscriptionContext] Post-logIn refresh failed:', e);
-                  setCustomerInfo(info);
-                }
-              } else {
-                setCustomerInfo(info);
-              }
+              await Purchases.invalidateCustomerInfoCache();
+              const fresh = await Purchases.getCustomerInfo();
+              setCustomerInfo(fresh);
             } catch (e) {
-              console.error('[SubscriptionContext] Failed to link user on auth change:', e);
+              console.error('[SubscriptionContext] Post-logIn refresh failed:', e);
+              setCustomerInfo(info);
             }
-          })(),
-
-          // Check grandfathered status — users created before GRANDFATHERED_BEFORE get free access.
-          // Must complete before isLinkingUser=false so tabs layout has accurate isSubscribed state.
-          (async () => {
-            try {
-              const { data } = await supabase
-                .from('profiles')
-                .select('created_at')
-                .eq('id', userId)
-                .single();
-              if (data?.created_at && new Date(data.created_at) < GRANDFATHERED_BEFORE) {
-                setIsGrandfathered(true);
-              }
-            } catch (e) {
-              console.error('[SubscriptionContext] Grandfathered check failed:', e);
-            }
-          })(),
-        ]);
+          } else {
+            setCustomerInfo(info);
+          }
+        } catch (e) {
+          console.error('[SubscriptionContext] Failed to link user on auth change:', e);
+        }
       } finally {
         setIsLinkingUser(false);
       }
@@ -171,7 +143,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const paywallEnabled = process.env.EXPO_PUBLIC_PAYWALL_ENABLED === 'true';
-  const isSubscribed = !paywallEnabled || !platformApiKey || !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT] || isGrandfathered;
+  const isSubscribed = !paywallEnabled || !platformApiKey || !!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT];
 
   return (
     <SubscriptionContext.Provider value={{ customerInfo, isSubscribed, isLoading: isLoading || isLinkingUser, refreshCustomerInfo, linkUser }}>
