@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { ArrowLeft } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -14,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { contributeToGoal, trackGoalAmount, withdrawFromGoal } from '../../services/backendService';
@@ -62,6 +63,7 @@ export function GoalDetailModal({
   const { userId } = useAuth();
   const { isDarkMode } = useTheme();
   const { contributions, isLoadingContributions, loadContributions } = useGoalsStore();
+  const insets = useSafeAreaInsets();
 
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState<'add' | 'withdraw'>('add');
@@ -248,19 +250,28 @@ export function GoalDetailModal({
           className="flex-1"
         >
           {/* Header */}
-          <View className="flex-row items-center px-4 pt-3 pb-4">
-            <View
-              className="w-10 h-10 rounded-xl items-center justify-center mr-3"
-              style={{ backgroundColor: accentColor }}
+          <View className="flex-row items-center justify-between px-2 pt-3 pb-4">
+            <TouchableOpacity
+              onPress={onClose}
+              className="w-10 h-10 bg-surfaceDark border border-borderDark rounded-full items-center justify-center ml-2"
+              activeOpacity={0.7}
             >
-              <Ionicons name={(goal.icon as any) || 'flag-outline'} size={20} color="#fff" />
+              <ArrowLeft color="#94A3B8" size={20} />
+            </TouchableOpacity>
+            <View className="flex-1 flex-row items-center mx-3">
+              <View
+                className="w-8 h-8 rounded-lg items-center justify-center mr-2"
+                style={{ backgroundColor: accentColor }}
+              >
+                <Ionicons name={(goal.icon as any) || 'flag-outline'} size={16} color="#fff" />
+              </View>
+              <Text
+                className="flex-1 text-white text-lg font-bold -tracking-tight"
+                numberOfLines={1}
+              >
+                {goal.name}
+              </Text>
             </View>
-            <Text
-              className="flex-1 text-white text-xl font-bold -tracking-tight"
-              numberOfLines={1}
-            >
-              {goal.name}
-            </Text>
             <TouchableOpacity
               onPress={() => setShowEditModal(true)}
               className="px-3 py-1.5 rounded-lg border border-borderDark mr-2"
@@ -268,12 +279,6 @@ export function GoalDetailModal({
             >
               <Text className="text-slate300 text-sm font-medium">Edit</Text>
             </TouchableOpacity>
-            <Pressable
-              onPress={onClose}
-              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1, backgroundColor: '#1E293B', borderRadius: 999, padding: 6 }]}
-            >
-              <Ionicons name="close" size={18} color="#94A3B8" />
-            </Pressable>
           </View>
 
           <ScrollView
@@ -381,7 +386,7 @@ export function GoalDetailModal({
 
           {/* Inline form (slides in) */}
           <Animated.View style={{ maxHeight: formMaxHeight, overflow: 'hidden' }}>
-            <View className="border-t border-borderDark bg-backgroundDark px-4 pt-4 pb-2">
+            <View className="border-t border-borderDark bg-backgroundDark px-4 pt-4" style={{ paddingBottom: insets.bottom + 8 }}>
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-white text-base font-semibold">
                   {formMode === 'add' ? 'Add Funds' : 'Withdraw'}
@@ -450,7 +455,10 @@ export function GoalDetailModal({
 
           {/* Sticky bottom bar */}
           {!showForm && (
-            <View className="flex-row gap-3 px-4 py-4 border-t border-borderDark bg-backgroundDark">
+            <View
+              className="flex-row gap-3 px-4 pt-4 border-t border-borderDark bg-backgroundDark"
+              style={{ paddingBottom: insets.bottom + 12 }}
+            >
               <TouchableOpacity
                 onPress={() => handleOpenForm('add')}
                 className="flex-1 py-4 rounded-xl items-center bg-accentTeal"

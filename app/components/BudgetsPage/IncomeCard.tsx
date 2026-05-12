@@ -49,7 +49,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
     manualIncome > 0 ? manualIncome.toString() : "",
   );
 
-  const totalAllocated = totalBudgeted + monthlySaved;
+  const totalAllocated = totalBudgeted;
   const remaining = income - totalAllocated;
   const categoriesPercent = income > 0 ? (totalBudgeted / income) * 100 : 0;
   const savingsPercent = income > 0 ? (monthlySaved / income) * 100 : 0;
@@ -154,7 +154,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
               <View className={`px-3 py-2.5 ${isDarkMode ? 'bg-inputDark' : 'bg-slate50'}`}>
                 <View className="flex-row items-center justify-between mb-1.5">
                   <View className="flex-row items-center" style={{ gap: 6 }}>
-                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#3B82F6" }} />
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#8B5CF6" }} />
                     <Text className={`text-xs font-medium ${isDarkMode ? 'text-slate300' : 'text-slate500'}`}>
                       Savings
                     </Text>
@@ -165,7 +165,7 @@ export const IncomeCard: React.FC<IncomeCardProps> = ({
                 </View>
                 <View className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-borderDark' : 'bg-slate200'}`}>
                   <View
-                    style={{ width: `${Math.min(savingsPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#3B82F6" }}
+                    style={{ width: `${Math.min(savingsPercent, 100)}%`, height: "100%", borderRadius: 999, backgroundColor: "#8B5CF6" }}
                   />
                 </View>
               </View>
