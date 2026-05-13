@@ -143,6 +143,14 @@ export default function SubscriptionTrialScreen() {
       setNewOnboardingData({ selectedBillingPeriod: billingPeriod === "weekly" ? "monthly" : billingPeriod });
 
       const isActive = !!customerInfo.entitlements.active["premium"];
+      if (isActive) {
+        trackEvent("subscription_activated", {
+          plan_type: selectedPackage.packageType,
+          product_id: selectedPackage.product.identifier,
+          price: selectedPackage.product.price,
+          currency: selectedPackage.product.currencyCode,
+        });
+      }
       if (hasCompletedOnboarding && isActive) {
         router.replace("/(tabs)/dashboard");
       } else {
@@ -150,8 +158,17 @@ export default function SubscriptionTrialScreen() {
         router.push("/(onboarding)/notification-reminders");
       }
     } catch (e: any) {
-      if (e?.userCancelled) return;
+      if (e?.userCancelled) {
+        trackEvent("subscription_purchase_cancelled", {
+          plan_type: selectedPackage?.packageType,
+        });
+        return;
+      }
       console.error("[SubscriptionTrial] Purchase failed:", e);
+      trackEvent("subscription_purchase_failed", {
+        error_message: String(e?.message ?? e),
+        plan_type: selectedPackage?.packageType,
+      });
       Alert.alert("Purchase failed", e?.message ?? "Something went wrong. Please try again.");
     } finally {
       setIsPurchasing(false);

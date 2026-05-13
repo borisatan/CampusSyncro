@@ -159,7 +159,7 @@ export default function SignUpScreen() {
           // to notification-reminders where notification frequency will also be set.
           await linkUser(sessionData.user.id);
           if (sessionData.user) {
-            identifyUser(sessionData.user.id, { email: sessionData.user.email });
+            identifyUser(sessionData.user.id, { email: sessionData.user.email, $set_once: { signup_date: new Date().toISOString() } });
           }
           trackEvent("user_authenticated", { method: "google" });
           router.replace("/(onboarding)/notification-reminders");
@@ -175,7 +175,7 @@ export default function SignUpScreen() {
           ]);
           useAppTourStore.getState().resetSeenPages();
           if (sessionData.user) {
-            identifyUser(sessionData.user.id, { email: sessionData.user.email });
+            identifyUser(sessionData.user.id, { email: sessionData.user.email, $set_once: { signup_date: new Date().toISOString() } });
           }
           trackEvent("user_authenticated", { method: "google" });
           router.replace("/(tabs)/profile");
@@ -245,7 +245,7 @@ export default function SignUpScreen() {
             useCurrencyStore.getState().loadCurrency(),
           ]);
           useAppTourStore.getState().resetSeenPages();
-          identifyUser(data.user.id, { email: data.user.email });
+          identifyUser(data.user.id, { email: data.user.email, $set_once: { signup_date: new Date().toISOString() } });
           trackEvent("user_authenticated", { method: "apple" });
           router.replace("/(tabs)/dashboard");
         } else {
@@ -258,7 +258,7 @@ export default function SignUpScreen() {
             useCurrencyStore.getState().loadCurrency(),
           ]);
           useAppTourStore.getState().resetSeenPages();
-          identifyUser(data.user.id, { email: data.user.email });
+          identifyUser(data.user.id, { email: data.user.email, $set_once: { signup_date: new Date().toISOString() } });
           trackEvent("user_authenticated", { method: "apple" });
           router.replace("/(tabs)/profile");
         }

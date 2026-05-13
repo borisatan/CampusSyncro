@@ -88,7 +88,7 @@ export default function OAuthCallbackScreen() {
         // to notification-reminders where notification frequency will also be set.
         await linkUser(sessionData.user.id);
         if (sessionData.user) {
-          identifyUser(sessionData.user.id, { email: sessionData.user.email });
+          identifyUser(sessionData.user.id, { email: sessionData.user.email, $set_once: { signup_date: new Date().toISOString() } });
         }
         trackEvent("user_authenticated", { method: "google", source: "callback_route" });
         router.replace("/(onboarding)/notification-reminders");
@@ -108,7 +108,7 @@ export default function OAuthCallbackScreen() {
         }
 
         if (sessionData.user) {
-          identifyUser(sessionData.user.id, { email: sessionData.user.email });
+          identifyUser(sessionData.user.id, { email: sessionData.user.email, $set_once: { signup_date: new Date().toISOString() } });
         }
         trackEvent("user_authenticated", { method: "google", source: "callback_route" });
 
