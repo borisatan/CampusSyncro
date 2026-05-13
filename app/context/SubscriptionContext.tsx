@@ -7,7 +7,7 @@ const isRevenueCatAvailable = !!NativeModules.RNPurchases;
 
 const RC_IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '';
 const RC_ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
-const PREMIUM_ENTITLEMENT = 'premium';
+const PREMIUM_ENTITLEMENT = 'Monelo Pro';
 const platformApiKey = Platform.OS === 'android' ? RC_ANDROID_KEY : RC_IOS_KEY;
 
 interface SubscriptionContextType {
@@ -122,9 +122,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     initForUser();
   }, [userId]);
 
+  useEffect(() => {
+    if (!customerInfo) return;
+    console.log('[RC] Active entitlements:', Object.keys(customerInfo.entitlements.active));
+    console.log('[RC] RC App User ID:', customerInfo.originalAppUserId);
+  }, [customerInfo]);
+
   const refreshCustomerInfo = useCallback(async () => {
     if (!isRevenueCatAvailable || !platformApiKey) return;
     try {
+      await Purchases.invalidateCustomerInfoCache();
       const info = await Purchases.getCustomerInfo();
       setCustomerInfo(info);
     } catch (e) {
