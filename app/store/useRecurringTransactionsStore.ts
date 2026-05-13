@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import {
   deleteRecurringTransaction,
   fetchRecurringTransactions,
+  updateRecurringTransaction,
 } from '../services/backendService';
 import { RecurringTransaction } from '../types/types';
 
@@ -13,6 +14,7 @@ interface RecurringTransactionsState {
   addOptimistic: (item: RecurringTransaction) => void;
   removeOptimistic: (id: string) => void;
   removeItem: (id: string) => Promise<void>;
+  updateItem: (id: string, updates: Partial<RecurringTransaction>) => Promise<void>;
 }
 
 export const useRecurringTransactionsStore = create<RecurringTransactionsState>((set, get) => ({
@@ -43,6 +45,18 @@ export const useRecurringTransactionsStore = create<RecurringTransactionsState>(
       await deleteRecurringTransaction(id);
     } catch (error) {
       console.error('[RecurringTransactions] Delete error:', error);
+      set({ items: previous });
+      throw error;
+    }
+  },
+
+  updateItem: async (id, updates) => {
+    const previous = get().items;
+    set((state) => ({ items: state.items.map((i) => i.id === id ? { ...i, ...updates } : i) }));
+    try {
+      await updateRecurringTransaction(id, updates);
+    } catch (error) {
+      console.error('[RecurringTransactions] Update error:', error);
       set({ items: previous });
       throw error;
     }

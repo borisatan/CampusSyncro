@@ -47,6 +47,16 @@ export const getDateRange = (period: TimeFrame, offset: number = 0): { startDate
 // Advance a date string ("YYYY-MM-DD") by one recurrence interval.
 // Monthly: same day next month, clamped to last day if original day doesn't exist (e.g. Jan 31 → Feb 28).
 // Biweekly: +14 days.
+// Advance next_run_date forward by the interval until it's >= today. Client-side only, no DB write.
+export function getEffectiveNextRunDate(dateStr: string, interval: RecurringInterval): string {
+  const today = new Date().toISOString().split('T')[0];
+  let current = dateStr;
+  while (current < today) {
+    current = computeNextRunDate(current, interval);
+  }
+  return current;
+}
+
 export function computeNextRunDate(dateStr: string, interval: RecurringInterval): string {
   const [year, month, day] = dateStr.split('-').map(Number);
 

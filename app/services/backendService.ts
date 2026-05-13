@@ -1222,7 +1222,7 @@ export async function createRecurringTransaction(
 
 export async function updateRecurringTransaction(
   id: string,
-  updates: Partial<Pick<RecurringTransaction, 'end_date' | 'is_active' | 'description'>>
+  updates: Partial<Pick<RecurringTransaction, 'end_date' | 'is_active' | 'description' | 'amount' | 'category_name' | 'account_name' | 'interval_type' | 'next_run_date'>>
 ): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');

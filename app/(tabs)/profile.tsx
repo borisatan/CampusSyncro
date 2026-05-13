@@ -51,7 +51,7 @@ const frequencyOptions = [
 export default function ProfileScreen() {
   const { isDarkMode } = useTheme();
   const { isGuest, exitGuestMode } = useAuth();
-  const { refreshCustomerInfo } = useSubscription();
+  useSubscription();
   const router = useRouter();
   const { isAppLockEnabled, deviceAuthAvailable, setAppLockEnabled } =
     useLock();
@@ -562,29 +562,6 @@ export default function ProfileScreen() {
                 </Text>
                 <Text className={`text-sm ${textSecondary}`}>
                   Preview the subscription trial screen
-                </Text>
-              </View>
-              <ChevronRight
-                color={isDarkMode ? "#9CA3AF" : "#4B5563"}
-                size={20}
-              />
-            </RipplePressable>
-            <RipplePressable
-              onPress={() => {
-                refreshCustomerInfo();
-                Alert.alert('RC Refresh', 'Customer info cache cleared and refetched. Check logs for active entitlements.');
-              }}
-              className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
-            >
-              <View className="w-10 h-10 bg-emerald-600 rounded-xl items-center justify-center mr-3">
-                <RotateCcw color="white" size={20} />
-              </View>
-              <View className="flex-1">
-                <Text className={`font-medium ${textPrimary}`}>
-                  Force Refresh Subscription
-                </Text>
-                <Text className={`text-sm ${textSecondary}`}>
-                  Clears RC cache and re-fetches entitlements
                 </Text>
               </View>
               <ChevronRight
