@@ -209,6 +209,10 @@ export default function ProfileScreen() {
     router.push("/(onboarding)/welcome");
   };
 
+  const handleTestPaywall = () => {
+    router.push("/(onboarding)/subscription-trial" as any);
+  };
+
   const handleSupport = () => {
     Linking.openURL("https://trymonelo.app/support");
   };
@@ -525,7 +529,7 @@ export default function ProfileScreen() {
             </Text>
             <RipplePressable
               onPress={handleTestOnboarding}
-              className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
+              className={`flex-row items-center border rounded-2xl p-4 mb-3 ${cardBg}`}
             >
               <View className="w-10 h-10 bg-amber-600 rounded-xl items-center justify-center mr-3">
                 <RotateCcw color="white" size={20} />
@@ -536,6 +540,26 @@ export default function ProfileScreen() {
                 </Text>
                 <Text className={`text-sm ${textSecondary}`}>
                   Reset and restart onboarding flow
+                </Text>
+              </View>
+              <ChevronRight
+                color={isDarkMode ? "#9CA3AF" : "#4B5563"}
+                size={20}
+              />
+            </RipplePressable>
+            <RipplePressable
+              onPress={handleTestPaywall}
+              className={`flex-row items-center border rounded-2xl p-4 ${cardBg}`}
+            >
+              <View className="w-10 h-10 bg-indigo-500 rounded-xl items-center justify-center mr-3">
+                <Star color="white" size={20} />
+              </View>
+              <View className="flex-1">
+                <Text className={`font-medium ${textPrimary}`}>
+                  Test Paywall
+                </Text>
+                <Text className={`text-sm ${textSecondary}`}>
+                  Preview the subscription trial screen
                 </Text>
               </View>
               <ChevronRight

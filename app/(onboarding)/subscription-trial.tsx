@@ -1,11 +1,20 @@
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { Calendar, CreditCard, Mail } from "lucide-react-native";
-import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
-import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
+import { Check, PieChart, TrendingUp, Wallet, ShieldCheck } from "lucide-react-native";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, NativeModules, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
+  NativeModules,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import Purchases, { PurchasesPackage } from "react-native-purchases";
 
 const isRevenueCatAvailable = !!NativeModules.RNPurchases;
@@ -14,21 +23,30 @@ import { useOnboardingStore } from "../store/useOnboardingStore";
 
 type BillingPeriod = "weekly" | "monthly" | "annual";
 
-const TIMELINE_ITEMS = [
+const FEATURES = [
   {
-    icon: Calendar,
-    label: "Today",
-    description: "Your conscious journey begins",
+    icon: Check,
+    title: "Instant transaction tracking",
+    subtitle: "Log income and expenses in seconds",
+    bg: "#1D4ED8",
   },
   {
-    icon: Mail,
-    label: "Day 5",
-    description: "Reminder email",
+    icon: PieChart,
+    title: "Budgets that keep you honest",
+    subtitle: "Set limits by category",
+    bg: "#15803D",
   },
   {
-    icon: CreditCard,
-    label: "Day 7",
-    description: "Trial ends, subscription begins",
+    icon: TrendingUp,
+    title: "Spending Insights that surprise",
+    subtitle: "Visual breakdowns reveal patterns you never noticed",
+    bg: "#7C3AED",
+  },
+  {
+    icon: Wallet,
+    title: "All your accounts, one view",
+    subtitle: "Net worth and balances always at a glance",
+    bg: "#BE185D",
   },
 ];
 
@@ -71,21 +89,25 @@ export default function SubscriptionTrialScreen() {
     }
   };
 
-  // Price helpers — fall back to hardcoded values if offerings not loaded
-  const weeklyPrice = weeklyPackage?.product.priceString ?? "$1.99";
-  const monthlyPrice = monthlyPackage?.product.priceString ?? "$5.99";
+  const weeklyPrice = weeklyPackage?.product.priceString ?? "$2.99";
+  const monthlyPrice = monthlyPackage?.product.priceString ?? "$9.99";
   const annualTotalPrice = annualPackage?.product.priceString ?? "$49.99";
   const annualMonthlyPrice = annualPackage
-    ? `$${(annualPackage.product.price / 12).toFixed(2)}/month`
-    : "$4.17/month";
+    ? `$${(annualPackage.product.price / 12).toFixed(2)} / month`
+    : "$4.17 / month";
 
-  // Savings badge: difference between paying monthly for 12 months vs annual
-  const annualSavings = (() => {
-    if (monthlyPackage && annualPackage) {
-      const saved = monthlyPackage.product.price * 12 - annualPackage.product.price;
-      if (saved > 0) return `Save $${saved.toFixed(2)}`;
+  const annualSavingsPct = (() => {
+    if (weeklyPackage && annualPackage) {
+      const annualizedWeekly = weeklyPackage.product.price * 52;
+      const pct = Math.round(((annualizedWeekly - annualPackage.product.price) / annualizedWeekly) * 100);
+      if (pct > 0) return `Save ${pct}%`;
     }
-    return "Save 30%";
+    if (monthlyPackage && annualPackage) {
+      const annualizedMonthly = monthlyPackage.product.price * 12;
+      const pct = Math.round(((annualizedMonthly - annualPackage.product.price) / annualizedMonthly) * 100);
+      if (pct > 0) return `Save ${pct}%`;
+    }
+    return "Save 67%";
   })();
 
   const handleComplete = async () => {
@@ -177,217 +199,245 @@ export default function SubscriptionTrialScreen() {
     key: BillingPeriod;
     label: string;
     price: string;
-    subtitle?: string;
-    badge?: string;
+    perPeriod: string;
+    subtitle: string;
+    savingsBadge?: string;
+    bestValue?: boolean;
   }> = [
     {
       key: "annual",
       label: "Yearly",
       price: annualTotalPrice,
-      subtitle: `(${annualMonthlyPrice})`,
-      badge: `Best value · ${annualSavings}`,
+      perPeriod: annualMonthlyPrice,
+      subtitle: annualSavingsPct,
+      bestValue: true,
     },
     {
       key: "monthly",
       label: "Monthly",
       price: monthlyPrice,
+      perPeriod: `${monthlyPrice} / month`,
+      subtitle: "Billed monthly",
     },
     {
       key: "weekly",
       label: "Weekly",
       price: weeklyPrice,
+      perPeriod: `${weeklyPrice} / week`,
+      subtitle: "Billed weekly",
     },
   ];
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
-      <ScrollView className="flex-1">
-        {/* Progress Bar */}
-        <View className="px-2 pt-12 pb-4">
-          <View className="flex-row items-center justify-between">
-            <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={11} totalSteps={12} />
-            {__DEV__ ? (
-              <Pressable onPress={handleSkip} className="active:opacity-60">
-                <Text className="text-red-400 text-sm font-medium">Skip (Dev)</Text>
-              </Pressable>
-            ) : (
-              <View className="w-10" />
-            )}
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+        {__DEV__ && (
+          <View className="pt-4 px-2">
+            <Pressable onPress={handleSkip} className="active:opacity-60 self-end">
+              <Text className="text-red-400 text-sm font-medium">Skip (Dev)</Text>
+            </Pressable>
           </View>
-        </View>
+        )}
 
-        <View className="flex-1 px-2 py-8 pt-4">
+        <View className="px-2 pt-4">
+          {/* Logo + headline */}
           <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 600 }}
+            from={{ opacity: 0, translateY: -10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ duration: 500 }}
+            className="items-center mb-6"
           >
-            {/* Headline */}
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 200, duration: 600 }}
-              className="mb-8"
-            >
-              <Text className="text-3xl text-white text-center leading-tight mb-2">
-                Start your journey to financial{" "}
-                <Text className="text-accentGreen">peace</Text>
-              </Text>
-            </MotiView>
+            <Image
+              source={require("../../assets/icons/logo-gray-300.png")}
+              style={{ width: 72, height: 72, tintColor: "#ffffff" }}
+              resizeMode="contain"
+            />
+            <Text className="text-3xl font-bold text-white text-center mt-3">
+              Unlock Premium
+            </Text>
+          </MotiView>
 
-            {/* Timeline */}
-            <View className="space-y-4 mb-8">
-              {TIMELINE_ITEMS.map((item, index) => {
-                const Icon = item.icon;
+          {/* Feature list */}
+          <MotiView
+            from={{ opacity: 0, translateY: 12 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ delay: 150, duration: 500 }}
+            className="mb-6 rounded-2xl overflow-hidden bg-surfaceDark border border-borderDark"
+          >
+            {FEATURES.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <View key={index}>
+                  <View className="flex-row items-center px-4 py-3.5 gap-3">
+                    <View className="w-11 h-11 rounded-xl items-center justify-center" style={{ backgroundColor: feature.bg, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" }}>
+                      <Icon size={20} color="#ffffff" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-white font-semibold text-sm">
+                        {feature.title}
+                      </Text>
+                      <Text className="text-secondaryDark text-xs mt-0.5">
+                        {feature.subtitle}
+                      </Text>
+                    </View>
+                  </View>
+                  {index < FEATURES.length - 1 && (
+                    <View className="h-px bg-borderDark mx-4" />
+                  )}
+                </View>
+              );
+            })}
+          </MotiView>
+
+          {/* Plan selector */}
+          <MotiView
+            from={{ opacity: 0, translateY: 12 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ delay: 300, duration: 500 }}
+            className="gap-3 mb-4"
+            pointerEvents="box-none"
+          >
+            {!offeringsLoaded ? (
+              <ActivityIndicator color="#ffffff" className="py-8" />
+            ) : (
+              plans.map((plan) => {
+                const isSelected = billingPeriod === plan.key;
                 return (
-                  <MotiView
-                    key={index}
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: 400 + index * 100, duration: 600 }}
+                  <Pressable
+                    key={plan.key}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setBillingPeriod(plan.key);
+                    }}
+                    className="active:opacity-80"
                   >
-                    <View className="flex-row items-start gap-4">
-                      <View className="w-10 h-10 rounded-full bg-accentBlue items-center justify-center">
-                        <Icon size={20} color="#ffffff" />
+                    <View
+                      className={`rounded-2xl border px-4 py-4 flex-row items-center gap-3 ${
+                        isSelected
+                          ? "border-accentBlue bg-accentBlue/10"
+                          : "border-borderDark bg-surfaceDark"
+                      }`}
+                    >
+                      {/* Radio */}
+                      <View
+                        className={`w-6 h-6 rounded-full border-2 items-center justify-center ${
+                          isSelected ? "border-accentBlue bg-accentBlue" : "border-borderDark"
+                        }`}
+                      >
+                        {isSelected && <Check size={14} color="#ffffff" strokeWidth={3} />}
                       </View>
-                      <View className="flex-1 pt-1">
-                        <Text className="text-white font-medium mb-1">
-                          {item.label}
+
+                      {/* Label + subtitle */}
+                      <View className="flex-1">
+                        <View className="flex-row items-center gap-2">
+                          <Text className="text-white font-semibold text-base">
+                            {plan.label}
+                          </Text>
+                          {plan.bestValue && (
+                            <View className="bg-accentGreen/20 px-2 py-0.5 rounded-md">
+                              <Text className="text-accentGreen text-xs font-bold tracking-wide">
+                                BEST VALUE
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text
+                          className={`text-xs mt-0.5 ${
+                            plan.bestValue && isSelected ? "text-accentGreen" : "text-secondaryDark"
+                          }`}
+                        >
+                          {plan.subtitle}
                         </Text>
-                        <Text className="text-secondaryDark text-sm">
-                          {item.description}
+                      </View>
+
+                      {/* Price */}
+                      <View className="items-end">
+                        <Text className="text-white font-bold text-base">
+                          {plan.price}
+                        </Text>
+                        <Text className="text-secondaryDark text-xs mt-0.5">
+                          {plan.perPeriod}
                         </Text>
                       </View>
                     </View>
-                    {index < TIMELINE_ITEMS.length - 1 && (
-                      <View className="w-10 items-center py-2">
-                        <View className="w-0.5 h-6 bg-accentBlue/30" />
-                      </View>
-                    )}
-                  </MotiView>
+                  </Pressable>
                 );
-              })}
+              })
+            )}
+          </MotiView>
+
+          {/* Trial guarantee box */}
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 450, duration: 500 }}
+            className="mb-5"
+          >
+            <View className="rounded-2xl border border-borderDark bg-surfaceDark flex-row items-center px-4 py-3.5 gap-3">
+              <ShieldCheck size={28} color="#22D97A" />
+              <View className="flex-1">
+                <Text className="text-white font-semibold text-sm">
+                  7-day free trial · Cancel anytime
+                </Text>
+                <Text className="text-secondaryDark text-xs mt-0.5">
+                  You won't be charged until the trial ends.
+                </Text>
+              </View>
             </View>
+          </MotiView>
 
-            {/* Plan selector */}
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 800, duration: 600 }}
-              className="mb-6 gap-3"
-              pointerEvents="box-none"
+          {/* CTA */}
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ delay: 550, duration: 500 }}
+            className="mb-3"
+          >
+            <Pressable
+              onPress={handleComplete}
+              disabled={isPurchasing || !offeringsLoaded}
+              className="w-full py-5 rounded-3xl bg-accentBlue active:opacity-80 disabled:opacity-50"
+              android_ripple={{ color: "rgba(255,255,255,0.1)" }}
             >
-              {!offeringsLoaded ? (
-                <ActivityIndicator color="#ffffff" className="py-8" />
+              {isPurchasing ? (
+                <ActivityIndicator color="#ffffff" />
               ) : (
-                plans.map((plan) => {
-                  const isSelected = billingPeriod === plan.key;
-                  return (
-                    <Pressable
-                      key={plan.key}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setBillingPeriod(plan.key);
-                      }}
-                      className="active:opacity-80"
-                    >
-                      <View
-                        className={`rounded-2xl border overflow-hidden ${
-                          isSelected ? "border-accentBlue bg-accentBlue/10" : "border-borderDark bg-surfaceDark"
-                        }`}
-                      >
-                        {/* Best value badge */}
-                        {plan.badge && (
-                          <View className="bg-accentBlue px-4 py-1.5">
-                            <Text className="text-white text-xs font-semibold text-center tracking-wide">
-                              {plan.badge}
-                            </Text>
-                          </View>
-                        )}
-
-                        <View className="flex-row items-center px-4 py-4 gap-4">
-                          {/* Radio button */}
-                          <View
-                            className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
-                              isSelected ? "border-accentBlue" : "border-borderDark"
-                            }`}
-                          >
-                            {isSelected && (
-                              <View className="w-2.5 h-2.5 rounded-full bg-accentBlue" />
-                            )}
-                          </View>
-
-                          {/* Plan info */}
-                          <View className="flex-1">
-                            <Text className="text-white font-semibold text-base">
-                              {plan.label}
-                            </Text>
-                            {plan.subtitle && (
-                              <Text className="text-secondaryDark text-sm mt-0.5">
-                                {plan.subtitle}
-                              </Text>
-                            )}
-                          </View>
-
-                          {/* Price */}
-                          <Text className={`font-semibold text-base ${isSelected ? "text-white" : "text-secondaryDark"}`}>
-                            {plan.price}
-                          </Text>
-                        </View>
-                      </View>
-                    </Pressable>
-                  );
-                })
+                <Text className="text-white text-lg text-center font-semibold">
+                  Start Free Trial
+                </Text>
               )}
-            </MotiView>
+            </Pressable>
+          </MotiView>
 
-            {/* Primary CTA */}
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 1000, duration: 500 }}
-              className="mb-4"
-            >
-              <Pressable
-                onPress={handleComplete}
-                disabled={isPurchasing || !offeringsLoaded}
-                className="w-full py-5 rounded-3xl bg-accentBlue active:opacity-80 disabled:opacity-50"
-                android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
-              >
-                {isPurchasing ? (
-                  <ActivityIndicator color="#ffffff" />
-                ) : (
-                  <Text className="text-white text-lg text-center font-semibold">
-                    Begin 7-Day Free Trial
-                  </Text>
-                )}
-              </Pressable>
-            </MotiView>
-
-            {/* Footer */}
-            <MotiView
-              from={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1100, duration: 600 }}
-            >
-              <Text className="text-secondaryDark text-sm text-center mb-3">
-                Cancel anytime. No hidden fees.
-              </Text>
+          {/* Footer */}
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 650, duration: 500 }}
+            className="items-center"
+          >
+            <Text className="text-secondaryDark text-xs text-center mb-4">
+              No commitment. Cancel anytime.
+            </Text>
+            <View className="flex-row items-center gap-3">
               <Pressable onPress={handleRestore} className="active:opacity-60">
-                <Text className="text-accentBlue text-xs text-center">
-                  Restore purchases
-                </Text>
+                <Text className="text-accentGreen text-xs">Restore Purchases</Text>
               </Pressable>
+              <Text className="text-borderDark">|</Text>
               <Pressable
-                onPress={() => router.replace("/(auth)/sign-in")}
-                className="active:opacity-60 mt-3"
+                onPress={() => Linking.openURL("https://placeholder.example.com/terms")}
+                className="active:opacity-60"
               >
-                <Text className="text-secondaryDark text-xs text-center">
-                  Already have an account?
-                </Text>
+                <Text className="text-accentGreen text-xs">Terms of Use</Text>
               </Pressable>
-            </MotiView>
+              <Text className="text-borderDark">|</Text>
+              <Pressable
+                onPress={() => Linking.openURL("https://placeholder.example.com/privacy")}
+                className="active:opacity-60"
+              >
+                <Text className="text-accentGreen text-xs">Privacy Policy</Text>
+              </Pressable>
+            </View>
           </MotiView>
         </View>
       </ScrollView>
