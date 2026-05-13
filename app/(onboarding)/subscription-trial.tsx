@@ -425,14 +425,14 @@ export default function SubscriptionTrialScreen() {
               </Pressable>
               <Text className="text-borderDark">|</Text>
               <Pressable
-                onPress={() => Linking.openURL("https://placeholder.example.com/terms")}
+                onPress={() => Linking.openURL("https://trymonelo.app/terms-and-conditions")}
                 className="active:opacity-60"
               >
                 <Text className="text-accentGreen text-xs">Terms of Use</Text>
               </Pressable>
               <Text className="text-borderDark">|</Text>
               <Pressable
-                onPress={() => Linking.openURL("https://placeholder.example.com/privacy")}
+                onPress={() => Linking.openURL("https://trymonelo.app/privacy-policy")}
                 className="active:opacity-60"
               >
                 <Text className="text-accentGreen text-xs">Privacy Policy</Text>
