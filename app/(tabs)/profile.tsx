@@ -401,6 +401,8 @@ export default function ProfileScreen() {
               <Text className={`text-sm ${textSecondary}`}>
                 {isLoading
                   ? "Loading..."
+                  : !hasPermission && frequency > 0
+                  ? "Off (no permission)"
                   : frequencyOptions.find((o) => o.value === frequency)
                       ?.label || "Off"}
               </Text>
