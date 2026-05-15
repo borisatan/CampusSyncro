@@ -131,7 +131,7 @@ export default function NotificationRemindersScreen() {
           </View>
         </View>
 
-        <View className="flex-1 px-4 pb-8 pt-4">
+        <View className="flex-1 px-2 pb-8 pt-4">
           <MotiView
             from={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -142,29 +142,33 @@ export default function NotificationRemindersScreen() {
               from={{ opacity: 0, translateY: 20 }}
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 100, duration: 600 }}
-              className="items-center mb-6"
+              className="items-center mb-8"
             >
               <View style={{ position: "relative" }}>
                 <View
-                  className="w-20 h-20 rounded-full items-center justify-center"
-                  style={{ backgroundColor: "#3B7EFF" }}
+                  style={{
+                    width: 120, height: 120, borderRadius: 60,
+                    backgroundColor: "#3B7EFF",
+                    alignItems: "center", justifyContent: "center",
+                  }}
                 >
-                  <Bell size={36} color="#ffffff" />
+                  <Bell size={56} color="#ffffff" />
                 </View>
                 <View
-                  className="absolute w-6 h-6 rounded-full items-center justify-center"
                   style={{
-                    top: -2,
-                    right: -2,
+                    position: "absolute",
+                    top: -2, right: -2,
+                    width: 34, height: 34, borderRadius: 17,
                     backgroundColor: "#22D97A",
+                    alignItems: "center", justifyContent: "center",
                   }}
                 >
                   <Text
                     style={{
                       color: "#ffffff",
-                      fontSize: 12,
+                      fontSize: 16,
                       fontWeight: "700",
-                      lineHeight: 14,
+                      lineHeight: 18,
                     }}
                   >
                     ✦
@@ -223,8 +227,8 @@ export default function NotificationRemindersScreen() {
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
-                          gap: 16,
-                          padding: 16,
+                          gap: 18,
+                          padding: 20,
                           borderRadius: 24,
                           borderWidth: 1,
                           borderColor: isSelected ? "#3B7EFF" : "#1E293B",
@@ -236,9 +240,9 @@ export default function NotificationRemindersScreen() {
                         {/* Icon */}
                         <View
                           style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 24,
+                            width: 58,
+                            height: 58,
+                            borderRadius: 29,
                             overflow: "hidden",
                           }}
                         >
@@ -258,7 +262,7 @@ export default function NotificationRemindersScreen() {
                             }}
                           >
                             <Icon
-                              size={22}
+                              size={26}
                               color={isSelected ? "#ffffff" : "#8A96B4"}
                             />
                           </LinearGradient>
@@ -269,9 +273,9 @@ export default function NotificationRemindersScreen() {
                           <Text
                             style={{
                               color: "#ffffff",
-                              fontSize: 15,
+                              fontSize: 17,
                               fontWeight: "600",
-                              marginBottom: 2,
+                              marginBottom: 3,
                             }}
                           >
                             {option.title}
@@ -279,8 +283,8 @@ export default function NotificationRemindersScreen() {
                           <Text
                             style={{
                               color: "#8A96B4",
-                              fontSize: 13,
-                              marginBottom: 4,
+                              fontSize: 14,
+                              marginBottom: 5,
                             }}
                           >
                             {option.description}
@@ -292,8 +296,8 @@ export default function NotificationRemindersScreen() {
                               gap: 4,
                             }}
                           >
-                            <Clock size={12} color="#8A96B4" />
-                            <Text style={{ color: "#8A96B4", fontSize: 12 }}>
+                            <Clock size={13} color="#8A96B4" />
+                            <Text style={{ color: "#8A96B4", fontSize: 13 }}>
                               {option.time}
                             </Text>
                           </View>
@@ -386,7 +390,7 @@ export default function NotificationRemindersScreen() {
       </ScrollView>
 
       {/* CTA - fixed at bottom */}
-      <View className="px-4 pb-10 pt-2">
+      <View className="px-2 pb-10 pt-2">
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}

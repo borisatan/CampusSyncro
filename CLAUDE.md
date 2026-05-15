@@ -98,6 +98,23 @@ Rules:
 - `TextInput` placeholder: `"0.00"`
 - Never use `text-lg` / `lineHeight: 18` for amount inputs — that was wrong
 
+## Onboarding Screen Layout — canonical pattern
+
+All onboarding screens use `px-2` (not `px-4` or `px-6`) for the outer horizontal padding on the main content wrapper. This applies to both the full-screen content view and fixed CTA footer views:
+
+```tsx
+{/* Nav header — always px-2 */}
+<View className="px-2 pt-12 pb-4"> ... </View>
+
+{/* Main content area — always px-2 */}
+<View className="flex-1 px-2 py-8 pt-4"> ... </View>
+
+{/* Fixed CTA footer — always px-2 */}
+<View className="px-2 pb-8"> ... </View>
+```
+
+`px-4` is only acceptable for padding *inside* component internals (card insets, input fields, etc.), never for the screen-level wrapper.
+
 ## Additional Documentation
 
 Check these files for detailed patterns when working on related features:

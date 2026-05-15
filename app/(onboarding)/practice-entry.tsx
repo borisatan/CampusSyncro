@@ -132,12 +132,12 @@ export default function PracticeEntryScreen() {
 
   const handleSuccessModalDismiss = () => {
     setShowSuccess(false);
-    router.push("/(onboarding)/journey-summary");
+    router.push("/(onboarding)/monthly-income");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/aha-moment");
+    router.replace("/(onboarding)/category-preselection");
   };
 
   const handleSkip = () => {
@@ -147,7 +147,7 @@ export default function PracticeEntryScreen() {
       step: 10,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    router.replace("/(auth)/sign-up?from=onboarding");
+    router.push("/(onboarding)/monthly-income");
   };
 
   const isComplete = amount.trim() !== "" && !isNaN(parseFloat(amount));

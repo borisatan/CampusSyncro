@@ -59,7 +59,7 @@ export default function WelcomeScreen() {
         end={{ x: 0.8, y: 1 }}
       />
 
-      <View style={{ flex: 1, paddingHorizontal: 20 }}>
+      <View style={{ flex: 1, paddingHorizontal: 8 }}>
         {/* Progress dots */}
         <View style={{ paddingTop: 48, paddingBottom: 16 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>

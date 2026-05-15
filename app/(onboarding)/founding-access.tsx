@@ -135,7 +135,7 @@ export default function FoundingAccessScreen() {
             </View>
           </View>
 
-          <View className="flex-1 px-6 py-8 pt-4">
+          <View className="flex-1 px-2 py-8 pt-4">
             <MotiView
               from={{ opacity: 0, translateY: 16 }}
               animate={{ opacity: 1, translateY: 0 }}

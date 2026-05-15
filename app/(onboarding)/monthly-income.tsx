@@ -105,23 +105,23 @@ export default function MonthlyIncomeScreen() {
                 transition={{ delay: 200, duration: 600 }}
                 className="items-center mb-6"
               >
-                <View style={{ width: 200, height: 130 }}>
+                <View style={{ width: 280, height: 190 }}>
                   <Image
                     source={require("../../assets/pictures/money_symbol.png")}
-                    style={{ width: 200, height: 130 }}
+                    style={{ width: 280, height: 190 }}
                     resizeMode="contain"
                   />
                   <LinearGradient
                     colors={["#08090F", "rgba(8,9,15,0.7)", "rgba(8,9,15,0.3)", "transparent"]}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
-                    style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 90 }}
+                    style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 120 }}
                   />
                   <LinearGradient
                     colors={["transparent", "rgba(8,9,15,0.3)", "rgba(8,9,15,0.7)", "#08090F"]}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
-                    style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 90 }}
+                    style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 120 }}
                   />
                 </View>
               </MotiView>
@@ -131,23 +131,11 @@ export default function MonthlyIncomeScreen() {
                 from={{ opacity: 0, translateY: 20 }}
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{ delay: 300, duration: 600 }}
-                className="mb-2 px-4"
+                className="mb-6 px-2"
               >
                 <Text className="text-3xl text-white text-center leading-tight">
                   What&apos;s your rough monthly{" "}
                   <Text className="text-accentGreen">take-home pay?</Text>
-                </Text>
-              </MotiView>
-
-              {/* Subtext */}
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: 350, duration: 600 }}
-                className="mb-6 px-4"
-              >
-                <Text className="text-secondaryDark text-sm text-center">
-                  This helps us calculate your potential savings. Just a rough estimate is fine.
                 </Text>
               </MotiView>
 

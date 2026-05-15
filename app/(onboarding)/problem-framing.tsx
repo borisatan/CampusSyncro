@@ -45,20 +45,20 @@ export default function ProblemFramingScreen() {
         </View>
       </View>
 
-      <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: "center", paddingBottom: 64 }}>
+      <View style={{ flex: 1, paddingHorizontal: 8, justifyContent: "center", paddingBottom: 32 }}>
         {/* Main question */}
         <MotiView
           from={{ opacity: 0, translateY: 24 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ delay: 200, duration: 700 }}
-          style={{ marginBottom: 36 }}
+          style={{ marginBottom: 44 }}
         >
           <Text
             style={{
-              fontSize: 38,
+              fontSize: 46,
               fontWeight: "700",
               color: "#EDF0FA",
-              lineHeight: 50,
+              lineHeight: 58,
             }}
           >
             Is your account{" "}
@@ -68,27 +68,23 @@ export default function ProblemFramingScreen() {
         </MotiView>
 
         {/* Supporting lines */}
-        <MotiView
-          from={{ opacity: 0, translateY: 16 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ delay: 600, duration: 600 }}
-          style={{ marginBottom: 14 }}
-        >
-          <Text style={{ fontSize: 18, color: "#8A96B4", lineHeight: 28 }}>
-            Feeling anxious about your money?
-          </Text>
-        </MotiView>
-
-        <MotiView
-          from={{ opacity: 0, translateY: 16 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ delay: 800, duration: 600 }}
-          style={{ marginBottom: 64 }}
-        >
-          <Text style={{ fontSize: 18, color: "#8A96B4", lineHeight: 28 }}>
-            Spending on things that don't actually matter?
-          </Text>
-        </MotiView>
+        {[
+          { text: "Feeling anxious about your money?", delay: 600 },
+          { text: "Spending on things that don't actually matter?", delay: 800 },
+        ].map(({ text, delay }, i) => (
+          <MotiView
+            key={i}
+            from={{ opacity: 0, translateY: 16 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ delay, duration: 600 }}
+            style={{ marginBottom: i === 0 ? 18 : 52, flexDirection: "row", alignItems: "flex-start" }}
+          >
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#F87171", marginTop: 11, marginRight: 14 }} />
+            <Text style={{ flex: 1, fontSize: 22, color: "#8A96B4", lineHeight: 32 }}>
+              {text}
+            </Text>
+          </MotiView>
+        ))}
 
         {/* CTA */}
         <MotiView

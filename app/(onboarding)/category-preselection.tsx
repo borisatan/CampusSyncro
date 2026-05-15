@@ -132,7 +132,7 @@ export default function CategoryPreselectionScreen() {
     });
     setNewOnboardingData({ selectedCategories: categories });
     setOnboardingStep(4);
-    router.push("/(onboarding)/monthly-income");
+    router.push("/(onboarding)/practice-entry");
   }, [trackEvent, setNewOnboardingData, setOnboardingStep]);
 
   const handleBack = () => {
@@ -198,10 +198,10 @@ export default function CategoryPreselectionScreen() {
       </ScrollView>
 
       {/* Continue Button — fixed footer, outside ScrollView to avoid iOS gesture zone touch issues */}
-      <View className="px-4 pb-8">
+      <View className="px-2 pb-8">
         <AnimatedGradientButton
           onPress={handleNext}
-          text="Continue"
+          text="Try a practice entry"
           rounded="3xl"
           disabled={isNextDisabled}
         />
