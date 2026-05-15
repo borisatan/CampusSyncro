@@ -26,7 +26,6 @@ import { useSavingsProgress } from "../hooks/useSavingsProgress";
 import { useAccountsStore } from "../store/useAccountsStore";
 import { useCurrencyStore } from "../store/useCurrencyStore";
 import { useGoalsStore } from "../store/useGoalsStore";
-import { useIncomeStore } from "../store/useIncomeStore";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -63,13 +62,7 @@ export default function Dashboard() {
   } = useBudgetsData();
   const { accounts, loadAccounts } = useAccountsStore();
   const { loadGoals } = useGoalsStore();
-  const { showSavingsOnDashboard } = useIncomeStore();
-  const {
-    target: savingsTarget,
-    saved: savingsSaved,
-    percentage: savingsPercentage,
-    refresh: refreshSavings,
-  } = useSavingsProgress();
+  const { refresh: refreshSavings } = useSavingsProgress();
 
   const hasAnyChartData = useMemo(() => {
     return Object.values(chartDataByOffset).some((arr) => arr.some((d) => d.amount > 0));
@@ -80,15 +73,6 @@ export default function Dashboard() {
       cb.category.show_on_dashboard ?? true
     );
   }, [categoryBudgets]);
-
-  const savingsData = useMemo(() => {
-    if (!showSavingsOnDashboard || savingsTarget <= 0) return null;
-    return {
-      target: savingsTarget,
-      saved: savingsSaved,
-      percentage: savingsPercentage,
-    };
-  }, [showSavingsOnDashboard, savingsTarget, savingsSaved, savingsPercentage]);
 
   const { registerDashboardRefresh, registerGoalsRefresh } = useDataRefresh();
 
@@ -183,14 +167,13 @@ export default function Dashboard() {
                 onTransactionComplete={refreshSavings}
               />
 
-              {(budgetsLoading || filteredCategoryBudgets.length > 0 || savingsData !== null) && (
+              {(budgetsLoading || filteredCategoryBudgets.length > 0) && (
                 <BudgetHealthCard
                   categoryBudgets={filteredCategoryBudgets}
                   allCategoryBudgets={categoryBudgets}
                   currencySymbol={currencySymbol}
                   isLoading={budgetsLoading}
                   isUnlocked={isUnlocked}
-                  savingsData={savingsData}
                 />
               )}
               <CategoryDonut

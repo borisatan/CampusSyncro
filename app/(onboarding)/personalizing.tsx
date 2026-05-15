@@ -81,7 +81,7 @@ export default function PersonalizingScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/practice-entry");
+    router.replace("/(onboarding)/journey-summary");
   };
 
   return (

@@ -58,7 +58,7 @@ export default function BudgetSetupChoiceScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/savings-goal");
+    router.replace("/(onboarding)/subscription-trial");
   };
 
   return (

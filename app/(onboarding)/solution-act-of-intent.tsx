@@ -2,11 +2,9 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Brain, Hand, Zap } from "lucide-react-native";
-import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
-import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
-import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { SafeAreaView, ScrollView, Text, View } from "react-native";
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -15,22 +13,22 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { AnimatedGradientButton } from "../components/Shared/AnimatedGradientButton";
+import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
+import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
-export default function WhyManualScreen() {
-  const { setOnboardingStep, completeOnboarding } = useOnboardingStore();
+export default function SolutionActOfIntentScreen() {
+  const { setOnboardingStep } = useOnboardingStore();
   const { trackEvent } = useAnalytics();
   const screenEnteredAt = useRef(Date.now());
 
-  // Pulsing glow animation for "Choice Point" card
   const glowOpacity = useSharedValue(0.3);
 
   useEffect(() => {
-    setOnboardingStep(9);
-    trackEvent("onboarding_why_manual_viewed");
+    setOnboardingStep(3);
+    trackEvent("onboarding_solution_viewed");
 
-    // Start pulsing animation
     glowOpacity.value = withRepeat(
       withTiming(0.6, { duration: 3000 }),
       -1,
@@ -49,38 +47,26 @@ export default function WhyManualScreen() {
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     trackEvent("onboarding_screen_completed", {
-      screen: "why_manual",
-      step: 9,
+      screen: "solution_act_of_intent",
+      step: 3,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    setOnboardingStep(10);
-    router.push("/(onboarding)/notification-reminders");
+    setOnboardingStep(4);
+    router.push("/(onboarding)/use-case");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/budget-setup-choice");
-  };
-
-  const handleSkip = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    trackEvent("onboarding_skipped", {
-      screen: "why_manual",
-      step: 9,
-      time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
-    });
-    completeOnboarding();
-    router.replace("/(onboarding)/notification-reminders");
+    router.replace("/(onboarding)/problem-framing");
   };
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
       <ScrollView className="flex-1">
-        {/* Progress Bar */}
         <View className="px-2 pt-12 pb-4">
           <View className="flex-row items-center justify-between">
             <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={9} totalSteps={12} />
+            <OnboardingProgressDots currentStep={3} totalSteps={12} />
             <View style={{ width: 36 }} />
           </View>
         </View>
@@ -93,22 +79,33 @@ export default function WhyManualScreen() {
             className="flex-1"
           >
             {/* Headline */}
-            <View className="text-center mb-8">
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: 200, duration: 600 }}
-              >
-                <Text className="text-3xl text-white text-center leading-tight">
-                  Awareness starts at the{" "}
-                  <Text style={{ color: "#8B5CF6" }}>source</Text>.
-                </Text>
-              </MotiView>
-            </View>
+            <MotiView
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ delay: 200, duration: 600 }}
+              className="mb-3"
+            >
+              <Text className="text-3xl text-white text-center leading-tight">
+                It takes{" "}
+                <Text style={{ color: "#22D97A" }}>3 seconds</Text>.
+                {"\n"}That's all.
+              </Text>
+            </MotiView>
 
-            {/* Philosophy Content */}
+            <MotiView
+              from={{ opacity: 0, translateY: 12 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ delay: 400, duration: 600 }}
+              className="mb-8"
+            >
+              <Text className="text-secondaryDark text-center text-base leading-relaxed">
+                Log it yourself. Own every dollar.
+              </Text>
+            </MotiView>
+
+            {/* Cards */}
             <View className="mb-8">
-              {/* Automation Card */}
+              {/* Automation card */}
               <MotiView
                 from={{ opacity: 0, translateX: -30 }}
                 animate={{ opacity: 1, translateX: 0 }}
@@ -133,7 +130,7 @@ export default function WhyManualScreen() {
                 </View>
               </MotiView>
 
-              {/* Choice Point Card with Pulsing Glow */}
+              {/* Act of Intent card — highlighted */}
               <MotiView
                 from={{ opacity: 0, translateX: 30 }}
                 animate={{ opacity: 1, translateX: 0 }}
@@ -141,7 +138,6 @@ export default function WhyManualScreen() {
                 className="mb-6"
               >
                 <View className="relative rounded-3xl overflow-hidden">
-                  {/* Gradient background with pulsing glow */}
                   <LinearGradient
                     colors={["#0F172A", "#1E3A8A", "#0C1E3D"]}
                     start={{ x: 0, y: 0 }}
@@ -158,7 +154,6 @@ export default function WhyManualScreen() {
                       glowStyle,
                     ]}
                   />
-
                   <View className="border border-accentBlue rounded-3xl p-6 relative">
                     <View className="flex-row gap-4">
                       <View className="w-12 h-12 rounded-3xl overflow-hidden items-center justify-center">
@@ -190,7 +185,7 @@ export default function WhyManualScreen() {
                 </View>
               </MotiView>
 
-              {/* Brain Science Card */}
+              {/* Stat card */}
               <MotiView
                 from={{ opacity: 0, translateY: 20 }}
                 animate={{ opacity: 1, translateY: 0 }}
@@ -207,10 +202,9 @@ export default function WhyManualScreen() {
               </MotiView>
             </View>
 
-            {/* Continue Button */}
             <AnimatedGradientButton
               onPress={handleNext}
-              text="Try a practice entry"
+              text="I'm in"
               rounded="3xl"
             />
           </MotiView>

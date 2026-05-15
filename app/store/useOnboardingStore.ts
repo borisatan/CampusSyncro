@@ -49,6 +49,7 @@ interface NewOnboardingData {
   selectedBillingPeriod: 'monthly' | 'annual' | null; // Screen 10 (was 7)
   notificationFrequency: 'once' | 'three' | 'five' | null; // Screen 11
   foundingMemberEmail?: string | null;
+  ahaChoice?: string | null;
 }
 
 interface OnboardingStoreState {
@@ -124,6 +125,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         practiceEntryCompleted: false,
         selectedBillingPeriod: null,
         notificationFrequency: null,
+        ahaChoice: null,
       },
 
       setOnboardingStep: (step) => set({ onboardingStep: step }),
@@ -189,6 +191,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
             practiceEntryCompleted: false,
             selectedBillingPeriod: null,
             notificationFrequency: null,
+            ahaChoice: null,
           },
         });
       },

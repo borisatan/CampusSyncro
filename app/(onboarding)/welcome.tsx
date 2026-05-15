@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setOnboardingStep(2);
-    router.push("/(onboarding)/use-case");
+    router.push("/(onboarding)/problem-framing");
   };
 
   const handleSkip = () => {

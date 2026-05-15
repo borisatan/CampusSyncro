@@ -40,6 +40,8 @@ app-example
 .env
 .claude/
 SECURITY_REPORT.md
+Screenshots/
+apple-resubmission-checklist.md
 
 # Build outputs
 build-*.apk

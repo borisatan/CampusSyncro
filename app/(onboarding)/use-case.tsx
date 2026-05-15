@@ -74,7 +74,7 @@ export default function UseCaseScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/welcome");
+    router.replace("/(onboarding)/solution-act-of-intent");
   };
 
   return (

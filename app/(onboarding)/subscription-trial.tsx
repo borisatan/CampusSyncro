@@ -142,7 +142,7 @@ export default function SubscriptionTrialScreen() {
 
       setNewOnboardingData({ selectedBillingPeriod: billingPeriod === "weekly" ? "monthly" : billingPeriod });
 
-      const isActive = !!customerInfo.entitlements.active["premium"];
+      const isActive = !!customerInfo.entitlements.active["Monelo Pro"];
       if (isActive) {
         trackEvent("subscription_activated", {
           plan_type: selectedPackage.packageType,
@@ -155,7 +155,7 @@ export default function SubscriptionTrialScreen() {
         router.replace("/(tabs)/dashboard");
       } else {
         setOnboardingStep(12);
-        router.push("/(onboarding)/notification-reminders");
+        router.push("/(onboarding)/budget-setup-choice");
       }
     } catch (e: any) {
       if (e?.userCancelled) {
@@ -179,15 +179,15 @@ export default function SubscriptionTrialScreen() {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       const customerInfo = await Purchases.restorePurchases();
-      if (customerInfo.entitlements.active["premium"]) {
+      if (customerInfo.entitlements.active["Monelo Pro"]) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         trackEvent("purchases_restored");
         setNewOnboardingData({ selectedBillingPeriod: billingPeriod === "weekly" ? "monthly" : billingPeriod });
         if (hasCompletedOnboarding) {
           router.replace("/(tabs)/dashboard");
         } else {
-          setOnboardingStep(11);
-          router.push("/(onboarding)/notification-reminders");
+          setOnboardingStep(12);
+          router.push("/(onboarding)/budget-setup-choice");
         }
       } else {
         Alert.alert("No active subscription found", "We couldn't find a previous purchase to restore.");
@@ -209,7 +209,7 @@ export default function SubscriptionTrialScreen() {
       step: 10,
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
-    router.replace("/(onboarding)/notification-reminders");
+    router.replace("/(onboarding)/budget-setup-choice");
   };
 
   const plans: Array<{
@@ -369,7 +369,7 @@ export default function SubscriptionTrialScreen() {
 
                       {/* Price */}
                       <View className="items-end">
-                        <Text className="text-white font-bold text-base">
+                        <Text className="text-white font-bold text-xl">
                           {plan.price}
                         </Text>
                         <Text className="text-secondaryDark text-xs mt-0.5">
@@ -424,6 +424,13 @@ export default function SubscriptionTrialScreen() {
                 </Text>
               )}
             </Pressable>
+            <Text className="text-secondaryDark text-xs text-center mt-2">
+              {billingPeriod === "annual"
+                ? `then ${annualTotalPrice}/yr after 7-day trial`
+                : billingPeriod === "monthly"
+                ? `then ${monthlyPrice}/mo after 7-day trial`
+                : `then ${weeklyPrice}/wk after 7-day trial`}
+            </Text>
           </MotiView>
 
           {/* Footer */}

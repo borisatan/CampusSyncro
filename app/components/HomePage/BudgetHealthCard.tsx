@@ -2,15 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import React from "react";
 import { Text, View } from "react-native";
-import { PiggyBank } from "lucide-react-native";
 
 import { CategoryBudgetStatus } from "../../types/types";
-
-interface SavingsData {
-  target: number;
-  saved: number;
-  percentage: number;
-}
 
 interface BudgetHealthCardProps {
   categoryBudgets: CategoryBudgetStatus[];
@@ -18,7 +11,6 @@ interface BudgetHealthCardProps {
   currencySymbol: string;
   isLoading?: boolean;
   isUnlocked?: boolean;
-  savingsData?: SavingsData | null;
 }
 
 const formatAmount = (amount: number, symbol: string): string => {
@@ -34,7 +26,6 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
   currencySymbol,
   isLoading = false,
   isUnlocked = true,
-  savingsData = null,
 }) => {
   if (isLoading) {
     return (
@@ -50,9 +41,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
     );
   }
 
-  const hasSavings = savingsData && savingsData.target > 0;
-
-  if (categoryBudgets.length === 0 && !hasSavings) {
+  if (categoryBudgets.length === 0) {
     return (
       <MotiView
         from={
@@ -125,8 +114,6 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                 ? "#FCD34D"
                 : "#22c55e";
 
-            const itemCount = categoryBudgets.length + (hasSavings ? 1 : 0);
-
             return (
               <MotiView
                 from={
@@ -139,7 +126,7 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
                   type: "timing",
                   duration: 250,
                   delay: isUnlocked
-                    ? 100 + itemCount * 50 + 50
+                    ? 100 + categoryBudgets.length * 50 + 50
                     : 0,
                 }}
                 className="px-4 py-3 border-b border-borderDark bg-surfaceDark mb-3"
@@ -294,75 +281,6 @@ export const BudgetHealthCard: React.FC<BudgetHealthCardProps> = ({
             );
           })}
 
-          {/* Savings Progress Item */}
-          {hasSavings && savingsData && (
-            <MotiView
-              from={
-                isUnlocked
-                  ? { opacity: 0, translateY: 8 }
-                  : { opacity: 1, translateY: 0 }
-              }
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{
-                type: "timing",
-                duration: 250,
-                delay: isUnlocked ? 100 + categoryBudgets.length * 50 : 0,
-              }}
-              className="mb-4"
-            >
-              {/* Savings Row */}
-              <View className="flex-row items-center mb-2">
-                {/* Savings Icon */}
-                <View
-                  className="w-11 h-11 rounded-xl items-center justify-center mr-3"
-                  style={{ backgroundColor: "#8A00C2" }}
-                >
-                  <PiggyBank size={22} color="#fff" />
-                </View>
-
-                {/* Savings Name & Status */}
-                <View className="flex-1">
-                  <Text className="text-[15px] font-semibold text-slate-100">
-                    Monthly Savings
-                  </Text>
-                  <Text className="text-xs mt-0.5 text-accentGreen">
-                    {formatAmount(savingsData.target - savingsData.saved, currencySymbol)} to go
-                  </Text>
-                </View>
-
-                {/* Amount Display */}
-                <View className="items-end">
-                  <Text className="text-base font-bold text-accentGreen">
-                    {formatAmount(savingsData.saved, currencySymbol)}
-                  </Text>
-                  <Text className="text-xs mt-px text-secondaryDark">
-                    / {formatAmount(savingsData.target, currencySymbol)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Progress Bar */}
-              <View className="h-1.5 rounded-full overflow-hidden bg-borderDark">
-                <View
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${Math.min(Math.max(savingsData.percentage, 0), 100)}%`,
-                    backgroundColor: "#22C55E",
-                  }}
-                />
-              </View>
-
-              {/* Percentage */}
-              <View className="flex-row justify-end mt-1">
-                <Text
-                  className="text-[11px] font-semibold"
-                  style={{ color: "#22C55E" }}
-                >
-                  {Math.round(savingsData.percentage)}%
-                </Text>
-              </View>
-            </MotiView>
-          )}
         </View>
 
       </View>

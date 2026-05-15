@@ -132,12 +132,12 @@ export default function PracticeEntryScreen() {
 
   const handleSuccessModalDismiss = () => {
     setShowSuccess(false);
-    router.push("/(onboarding)/personalizing");
+    router.push("/(onboarding)/journey-summary");
   };
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace("/(onboarding)/why-manual");
+    router.replace("/(onboarding)/aha-moment");
   };
 
   const handleSkip = () => {

@@ -52,7 +52,7 @@ export default function SavingsGoalScreen() {
 
   const canSave = name.trim().length > 0 && parseAmount(targetAmount) > 0;
 
-  const navigateNext = () => router.push("/(onboarding)/budget-setup-choice");
+  const navigateNext = () => router.push("/(onboarding)/aha-moment");
 
   const handlePresetSelect = (preset: typeof GOAL_PRESETS[number]) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
