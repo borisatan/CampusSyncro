@@ -2,9 +2,11 @@ import { useRouter } from "expo-router";
 import {
   AlertCircle,
   ArrowLeft,
+  CreditCard,
   ExternalLink,
   FileText,
   HelpCircle,
+  RotateCcw,
   Trash2,
 } from "lucide-react-native";
 import React, { useState } from "react";
@@ -17,13 +19,17 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Purchases from "react-native-purchases";
+import { useSubscription } from "./context/SubscriptionContext";
 import { useTheme } from "./context/ThemeContext";
 import { supabase } from "./utils/supabase";
 
 export default function UserSettingsScreen() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
+  const { refreshCustomerInfo } = useSubscription();
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // URLs - Update these with your actual URLs
   const PRIVACY_POLICY_URL = "https://trymonelo.app/privacy-policy";
@@ -83,6 +89,27 @@ export default function UserSettingsScreen() {
     }
   };
 
+  const handleRestorePurchases = async () => {
+    try {
+      setIsRestoring(true);
+      const customerInfo = await Purchases.restorePurchases();
+      if (customerInfo.entitlements.active["Monelo Pro"]) {
+        await refreshCustomerInfo();
+        Alert.alert("Purchases Restored", "Your subscription has been restored successfully.");
+      } else {
+        Alert.alert("No Active Subscription", "We couldn't find a previous purchase to restore.");
+      }
+    } catch (e: any) {
+      Alert.alert("Restore Failed", e?.message ?? "Something went wrong.");
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const handleManageSubscription = () => {
+    openURL("https://apps.apple.com/account/subscriptions", "Subscription Management");
+  };
+
   const openURL = async (url: string, name: string) => {
     try {
       const supported = await Linking.canOpenURL(url);
@@ -140,6 +167,53 @@ export default function UserSettingsScreen() {
               Manage your account and preferences
             </Text>
           </View>
+        </View>
+
+        {/* Subscription Section */}
+        <View className="mb-8 mt-4">
+          <Text
+            className={`text-xs font-semibold uppercase mb-3 px-1 ${textSecondary}`}
+          >
+            Subscription
+          </Text>
+
+          {/* Manage Subscription */}
+          <Pressable
+            onPress={handleManageSubscription}
+            className={`flex-row items-center border rounded-2xl p-4 mb-3 active:bg-slate-800/10 ${cardBg}`}
+          >
+            <View className="w-10 h-10 bg-indigo-500 rounded-xl items-center justify-center mr-3">
+              <CreditCard color="white" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>
+                Manage Subscription
+              </Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                Cancel or change your plan in the App Store
+              </Text>
+            </View>
+            <ExternalLink color={isDarkMode ? "#9CA3AF" : "#4B5563"} size={20} />
+          </Pressable>
+
+          {/* Restore Purchases */}
+          <Pressable
+            onPress={handleRestorePurchases}
+            disabled={isRestoring}
+            className={`flex-row items-center border rounded-2xl p-4 active:bg-slate-800/10 ${cardBg} ${isRestoring ? "opacity-50" : ""}`}
+          >
+            <View className="w-10 h-10 bg-emerald-600 rounded-xl items-center justify-center mr-3">
+              <RotateCcw color="white" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className={`font-medium ${textPrimary}`}>
+                {isRestoring ? "Restoring…" : "Restore Purchases"}
+              </Text>
+              <Text className={`text-sm ${textSecondary}`}>
+                Recover a previous subscription
+              </Text>
+            </View>
+          </Pressable>
         </View>
 
         {/* Resources Section */}

@@ -5,8 +5,6 @@ import { router } from "expo-router";
 import { MotiView } from "moti";
 import { useEffect, useRef } from "react";
 import { Linking, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
-import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
-import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
@@ -52,8 +50,8 @@ export default function BudgetSetupChoiceScreen() {
       time_on_screen_seconds: Math.round((Date.now() - screenEnteredAt.current) / 1000),
     });
     setNewOnboardingData({ budgetSetupChoice: "skip" });
-    setOnboardingStep(9);
-    router.push("/(onboarding)/why-manual");
+    setOnboardingStep(12);
+    router.push("/(onboarding)/notification-reminders");
   };
 
   const handleBack = () => {
@@ -64,16 +62,7 @@ export default function BudgetSetupChoiceScreen() {
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
       <ScrollView className="flex-1">
-        {/* Progress Bar */}
-        <View className="px-2 pt-12 pb-4">
-          <View className="flex-row items-center justify-between">
-            <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={6} totalSteps={12} />
-            <View style={{ width: 36 }} />
-          </View>
-        </View>
-
-        <View className="flex-1 px-2 py-8 pt-4">
+        <View className="flex-1 px-2 py-8 pt-12">
           <MotiView
             from={{ opacity: 0 }}
             animate={{ opacity: 1 }}

@@ -19,6 +19,7 @@ import Purchases, { PurchasesPackage } from "react-native-purchases";
 
 const isRevenueCatAvailable = !!NativeModules.RNPurchases;
 import { useAnalytics } from "../hooks/useAnalytics";
+import { useSubscription } from "../context/SubscriptionContext";
 import { useOnboardingStore } from "../store/useOnboardingStore";
 
 type BillingPeriod = "weekly" | "monthly" | "annual";
@@ -53,6 +54,7 @@ const FEATURES = [
 export default function SubscriptionTrialScreen() {
   const { setOnboardingStep, setNewOnboardingData, completeOnboarding, hasCompletedOnboarding } =
     useOnboardingStore();
+  const { refreshCustomerInfo } = useSubscription();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
   const [weeklyPackage, setWeeklyPackage] = useState<PurchasesPackage | null>(null);
   const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
@@ -142,6 +144,9 @@ export default function SubscriptionTrialScreen() {
 
       setNewOnboardingData({ selectedBillingPeriod: billingPeriod === "weekly" ? "monthly" : billingPeriod });
 
+      // Always sync context before navigating so the tabs layout sees isSubscribed=true
+      await refreshCustomerInfo();
+
       const isActive = !!customerInfo.entitlements.active["Monelo Pro"];
       if (isActive) {
         trackEvent("subscription_activated", {
@@ -151,7 +156,7 @@ export default function SubscriptionTrialScreen() {
           currency: selectedPackage.product.currencyCode,
         });
       }
-      if (hasCompletedOnboarding && isActive) {
+      if (hasCompletedOnboarding) {
         router.replace("/(tabs)/dashboard");
       } else {
         setOnboardingStep(12);
@@ -176,10 +181,17 @@ export default function SubscriptionTrialScreen() {
   };
 
   const handleRestore = async () => {
+    if (!isRevenueCatAvailable) {
+      Alert.alert("Not available", "In-app purchases are not available on this device.");
+      return;
+    }
     try {
+      setIsPurchasing(true);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       const customerInfo = await Purchases.restorePurchases();
       if (customerInfo.entitlements.active["Monelo Pro"]) {
+        // Sync context so tabs layout sees isSubscribed=true before we navigate
+        await refreshCustomerInfo();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         trackEvent("purchases_restored");
         setNewOnboardingData({ selectedBillingPeriod: billingPeriod === "weekly" ? "monthly" : billingPeriod });
@@ -194,6 +206,8 @@ export default function SubscriptionTrialScreen() {
       }
     } catch (e: any) {
       Alert.alert("Restore failed", e?.message ?? "Something went wrong.");
+    } finally {
+      setIsPurchasing(false);
     }
   };
 
@@ -444,7 +458,7 @@ export default function SubscriptionTrialScreen() {
               No commitment. Cancel anytime.
             </Text>
             <View className="flex-row items-center gap-3">
-              <Pressable onPress={handleRestore} className="active:opacity-60">
+              <Pressable onPress={handleRestore} disabled={isPurchasing} className="active:opacity-60 disabled:opacity-40">
                 <Text className="text-accentGreen text-xs">Restore Purchases</Text>
               </Pressable>
               <Text className="text-borderDark">|</Text>

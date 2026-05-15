@@ -3,8 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Sparkles, TrendingUp } from "lucide-react-native";
-import { OnboardingBackButton } from "../components/Shared/OnboardingBackButton";
-import { OnboardingProgressDots } from "../components/Shared/OnboardingProgressDots";
 import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -115,8 +113,8 @@ export default function AIBudgetSetupScreen() {
       })),
     });
 
-    setOnboardingStep(9);
-    router.push("/(onboarding)/why-manual");
+    setOnboardingStep(12);
+    router.push("/(onboarding)/notification-reminders");
   };
 
   const handleBack = () => {
@@ -136,16 +134,7 @@ export default function AIBudgetSetupScreen() {
   return (
     <SafeAreaView className="flex-1 bg-backgroundDark">
       <ScrollView className="flex-1">
-        {/* Progress Bar */}
-        <View className="px-2 pt-12 pb-4">
-          <View className="flex-row items-center justify-between">
-            <OnboardingBackButton onPress={handleBack} />
-            <OnboardingProgressDots currentStep={7} totalSteps={12} />
-            <View style={{ width: 36 }} />
-          </View>
-        </View>
-
-        <View className="flex-1 px-2 py-8 pt-4">
+        <View className="flex-1 px-2 py-8 pt-12">
           {isLoading ? (
             <MotiView
               from={{ opacity: 0 }}

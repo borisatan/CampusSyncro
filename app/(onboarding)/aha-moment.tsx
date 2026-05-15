@@ -69,16 +69,6 @@ export default function AhaMomentScreen() {
       }, interval);
       return () => clearInterval(timer);
     }
-
-    glowOpacity.value = withRepeat(
-      withTiming(0.5, { duration: 2500 }),
-      -1,
-      true,
-    );
-
-    return () => {
-      cancelAnimation(glowOpacity);
-    };
   }, [setOnboardingStep, trackEvent]);
 
   // Persistent glow pulse after count-up
@@ -175,11 +165,16 @@ export default function AhaMomentScreen() {
               </View>
 
               <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.5}
                 style={{
                   fontSize: 80,
                   fontWeight: "800",
                   color: "#FFFFFF",
                   lineHeight: 88,
+                  alignSelf: "stretch",
+                  textAlign: "center",
                 }}
               >
                 {currencySymbol}{displayedAmount > 0 ? displayedAmount.toLocaleString() : annualSavings > 0 ? "0" : "—"}
