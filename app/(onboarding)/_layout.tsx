@@ -29,7 +29,8 @@ export default function OnboardingLayout() {
       {/* Conclusion */}
       <Stack.Screen name="journey-summary" />
       <Stack.Screen name="personalizing" options={{ gestureEnabled: false }} />
-      {/* Post sign-up: subscription then budget config */}
+      {/* Post sign-up: notification promise → subscription then budget config */}
+      <Stack.Screen name="trial-notification-promise" options={{ gestureEnabled: false }} />
       <Stack.Screen name="subscription-trial" options={{ gestureEnabled: false }} />
       <Stack.Screen name="budget-setup-choice" />
       <Stack.Screen name="ai-budget-setup" />

@@ -438,7 +438,7 @@ export default function SubscriptionTrialScreen() {
                 </Text>
               )}
             </Pressable>
-            <Text className="text-secondaryDark text-xs text-center mt-2">
+            <Text className="text-white text-sm text-center mt-2 font-medium">
               {billingPeriod === "annual"
                 ? `then ${annualTotalPrice}/yr after 7-day trial`
                 : billingPeriod === "monthly"
@@ -455,7 +455,7 @@ export default function SubscriptionTrialScreen() {
             className="items-center"
           >
             <Text className="text-secondaryDark text-xs text-center mb-4">
-              No commitment. Cancel anytime.
+              Subscription automatically renews unless cancelled at least 24 hours before the end of the trial period. Cancel anytime in your App Store settings.
             </Text>
             <View className="flex-row items-center gap-3">
               <Pressable onPress={handleRestore} disabled={isPurchasing} className="active:opacity-60 disabled:opacity-40">

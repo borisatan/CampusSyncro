@@ -24,7 +24,7 @@ export default function TabLayout() {
 
   // Redirect to paywall if not subscribed (guests bypass this check)
   if (!isGuest && !isSubscribed && !__DEV__) {
-    return <Redirect href="/(onboarding)/subscription-trial" />;
+    return <Redirect href="/(onboarding)/trial-notification-promise" />;
   }
 
   return (
